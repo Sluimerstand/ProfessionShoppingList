@@ -8,4 +8,5 @@ This AddOn is still in development and I am not an experienced programmer.
 Feel free to give me advice on how to improve this AddOn and please report any issues to the Github (which I am also still familiarising myself with).
 
 Chat commands
+
 /psl - Opens or closes the tracking windows.
