@@ -329,6 +329,10 @@ if event == "TRADE_SKILL_SHOW" then
             reagentLinks[reagentName] = C_TradeSkillUI.GetRecipeReagentItemLink(recipeID, idx)
         end
 
+        -- Show windows
+        pslFrame1:Show()
+        pslFrame2:Show()
+
         -- Update numbers
         trackReagents()
     end)
@@ -361,6 +365,10 @@ if event == "TRADE_SKILL_SHOW" then
                 recipeLinks[recipeID] = nil
             end
         end
+
+        -- Show windows
+        pslFrame1:Show()
+        pslFrame2:Show()
 
         -- Update numbers
         trackReagents()
