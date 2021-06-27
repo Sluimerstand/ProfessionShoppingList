@@ -1,0 +1,9 @@
+## Interface: 90001
+## Title: Profession Shopping List
+## Author: Sluimerstand
+## Version: 9.0.1-001
+
+## SavedVariables: recipesTracked, reagentNumbers, reagentLinks, recipeLinks
+
+Libs\lib-st\lib-st.xml
+ProfessionShoppingList.lua
