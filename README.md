@@ -7,6 +7,8 @@ It does not replace the profession windows, it only adds a few buttons and two t
 This AddOn is still in development and I am not an experienced programmer.
 Feel free to give me advice on how to improve this AddOn and please report any issues to the Github (which I am also still familiarising myself with).
 
-Chat commands
+[CurseForge page](https://www.curseforge.com/wow/addons/profession-shopping-list)
 
-/psl - Opens or closes the tracking windows.
+**Chat commands**
+
+/psl - Open or close the tracking windows
