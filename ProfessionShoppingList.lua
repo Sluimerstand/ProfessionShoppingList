@@ -84,7 +84,7 @@ if event == "ADDON_LOADED" then
             local cols = {}
             cols[1] = {
                 ["name"] = "Reagents",
-                ["width"] = 155,
+                ["width"] = 145,
                 ["align"] = "LEFT",
                 ["color"] = {
                     ["r"] = 1.0,
@@ -107,7 +107,7 @@ if event == "ADDON_LOADED" then
             -- Column formatting, Amount
             cols[2] = {
                 ["name"] = "Amount",
-                ["width"] = 45,
+                ["width"] = 55,
                 ["align"] = "RIGHT",
                 ["color"] = {
                     ["r"] = 1.0,
@@ -256,7 +256,7 @@ if event == "ADDON_LOADED" then
         -- Update reagents tracked
         local data = {}
             for i, no in pairs(reagentNumbers) do 
-                table.insert(data, {reagentLinks[i], GetItemCount(reagentLinks[i]).."/"..no})
+                table.insert(data, {reagentLinks[i], GetItemCount(reagentLinks[i], true, false, true).."/"..no})
             end
         table1:SetData(data, true)
 
