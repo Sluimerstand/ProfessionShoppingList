@@ -12,4 +12,5 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 **Chat commands**
 
 /psl - Open or close the tracking windows
+
 /psl button - Toggle the small and normal button sizes
