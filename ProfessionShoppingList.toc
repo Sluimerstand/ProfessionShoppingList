@@ -3,7 +3,7 @@
 ## Author: Sluimerstand
 ## Version: v9.0.5-002-beta
 
-## SavedVariables: recipesTracked, reagentNumbers, reagentLinks, recipeLinks
+## SavedVariables: userSettings, recipesTracked, reagentNumbers, reagentLinks, recipeLinks
 
 Libs\lib-st\lib-st.xml
 ProfessionShoppingList.lua
