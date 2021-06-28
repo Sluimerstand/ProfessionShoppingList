@@ -16,11 +16,20 @@ if event == "ADDON_LOADED" then
     end
 
     -- Declare some variables
+    if not userSettings then userSettings = {} end
     if not recipesTracked then recipesTracked = {} end
     if not reagentNumbers then reagentNumbers = {} end
     if not reagentLinks then reagentLinks = {} end
     if not recipeLinks then recipeLinks = {} end
-   
+
+    --Enable default user settings
+    function userSettingsDefault()
+        -- Button size
+        if not userSettings["buttonSize"] then userSettings["buttonSize"] = "normal" end
+    end
+
+    userSettingsDefault()
+
     --Create Tracking windows
     function createTrackingWindows()
         -- Reagent tracking
@@ -243,11 +252,24 @@ if event == "ADDON_LOADED" then
     -- Slash command to toggle window
     SLASH_PSL1 = "/psl";
     function SlashCmdList.PSL(msg, editBox)
-        -- If shown, hide. If hidden, show.
-        if pslFrame1:IsShown() then pslFrame1:Hide() pslFrame2:Hide()
-        else pslFrame1:Show() pslFrame2:Show()
-        -- Only update numbers if numbers exist
-        if reagentNumbers then trackReagents() end
+        -- Toggle button size
+        if msg == "button" then
+            if userSettings["buttonSize"] == "normal" then userSettings["buttonSize"] = "small"
+            elseif userSettings["buttonSize"] == "small" then userSettings["buttonSize"] = "normal"
+            end
+            ChatFrame1:AddMessage("[PSL] Button size is now: "..userSettings["buttonSize"]..". A /reload is required.")
+        -- No arguments
+        else
+            -- Toggle tracking windows
+            if pslFrame1:IsShown() then
+                pslFrame1:Hide()
+                pslFrame2:Hide()
+            else
+                pslFrame1:Show()
+                pslFrame2:Show()
+            end
+            -- Only update numbers if numbers exist
+            if reagentNumbers then trackReagents() end
         end
     end
 
@@ -272,15 +294,31 @@ end
 if event == "TRADE_SKILL_SHOW" then
     -- Create the "Add to list" button
     addCraftListButton = CreateFrame("Button", nil, TradeSkillFrame, "UIPanelButtonTemplate")
-    addCraftListButton:SetText("Add to list")
-    addCraftListButton:SetWidth(90)
-    addCraftListButton:SetPoint("TOPRIGHT", TradeSkillFrame.DetailsFrame.CreateButton, "TOPRIGHT", -150, 418)
+    -- If button size is normal
+    if userSettings["buttonSize"] == "normal" then
+        addCraftListButton:SetText("Add to list")
+        addCraftListButton:SetWidth(90)
+        addCraftListButton:SetPoint("TOPRIGHT", TradeSkillFrame.DetailsFrame.CreateButton, "TOPRIGHT", -150, 418)
+    -- If button size is small
+    elseif userSettings["buttonSize"] == "small" then
+        addCraftListButton:SetText("+")
+        addCraftListButton:SetWidth(30)
+        addCraftListButton:SetPoint("TOPRIGHT", TradeSkillFrame.DetailsFrame.CreateButton, "TOPRIGHT", -210, 418)
+    end
 
     -- Create the "Remove from list" button
     removeCraftListButton = CreateFrame("Button", nil, TradeSkillFrame, "UIPanelButtonTemplate")
-    removeCraftListButton:SetText("Remove from list")
-    removeCraftListButton:SetWidth(130)
-    removeCraftListButton:SetPoint("TOPRIGHT", TradeSkillFrame.DetailsFrame.CreateButton, "TOPRIGHT", -20, 418)
+    -- If button size is normal
+    if userSettings["buttonSize"] == "normal" then
+        removeCraftListButton:SetText("Remove from list")
+        removeCraftListButton:SetWidth(130)
+        removeCraftListButton:SetPoint("TOPRIGHT", TradeSkillFrame.DetailsFrame.CreateButton, "TOPRIGHT", -20, 418)
+    -- If button size is small
+    elseif userSettings["buttonSize"] == "small" then
+        removeCraftListButton:SetText("-")
+        removeCraftListButton:SetWidth(30)
+        removeCraftListButton:SetPoint("TOPRIGHT", TradeSkillFrame.DetailsFrame.CreateButton, "TOPRIGHT", -180, 418)
+    end
 
     -- Check if the Remove button should be disabled
     function checkRemoveButton()
@@ -344,7 +382,12 @@ if event == "TRADE_SKILL_SHOW" then
 
         -- Untrack recipe
         recipesTracked[recipeID] = recipesTracked[recipeID] - 1
-        if recipesTracked[recipeID] == 0 then recipesTracked[recipeID] = nil end
+
+        -- Set numbers to nil if it doesn't exist anymore
+        if recipesTracked[recipeID] == 0 then
+            recipesTracked[recipeID] = nil
+            recipeLinks[recipeID] = nil
+        end
 
         -- Disable the remove button if the recipe isn't tracked anymore
         if not recipesTracked[recipeID] then removeCraftListButton:Disable() end
@@ -359,10 +402,6 @@ if event == "TRADE_SKILL_SHOW" then
             if reagentNumbers[reagentName] == 0 then
                 reagentNumbers[reagentName] = nil
                 reagentLinks[reagentName] = nil
-            end
-            if recipesTracked[recipeID] == 0 then
-                recipesTracked[recipeID] = nil
-                recipeLinks[recipeID] = nil
             end
         end
 
