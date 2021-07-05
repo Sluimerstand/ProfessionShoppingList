@@ -86,8 +86,8 @@ if event == "ADDON_LOADED" then
             pslFrame1.text:SetPoint("BOTTOM", 0, 5)
             pslFrame1.text:SetText("Drag me")
             pslFrame1.text:Hide()
-            pslFrame1:SetScript('OnEnter', function() pslFrame1.text:Show() end)
-            pslFrame1:SetScript('OnLeave', function() pslFrame1.text:Hide() end)
+            pslFrame1:SetScript("OnEnter", function() pslFrame1.text:Show() end)
+            pslFrame1:SetScript("OnLeave", function() pslFrame1.text:Hide() end)
 
             -- Column formatting, Reagents
             local cols = {}
@@ -337,6 +337,15 @@ if event == "TRADE_SKILL_SHOW" then
 
     -- Check whenever a new recipe is selected
     hooksecurefunc(TradeSkillFrame.RecipeList, "OnRecipeButtonClicked", function(self, recipeButton, recipeInfo, mouseButton)
+        checkRemoveButton()
+    end)
+
+    -- Check whenever hovering over either button
+    addCraftListButton:SetScript("OnEnter", function()
+        checkRemoveButton()
+    end)
+
+    removeCraftListButton:SetScript("OnEnter", function()
         checkRemoveButton()
     end)
 
