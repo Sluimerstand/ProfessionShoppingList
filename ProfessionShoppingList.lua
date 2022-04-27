@@ -255,6 +255,13 @@ function SlashCmdList.PSL(msg, editBox)
         end
         --ChatFrame1:AddMessage("[PSL] Button size is now: "..userSettings["buttonSize"]..". Re-open the tradeskill window for the change to take effect.")
         pslCreateButtons()
+    -- Clear list
+    elseif msg == "clear" then
+        recipesTracked = {}
+        reagentNumbers = {}
+        reagentLinks = {}
+        recipeLinks = {}
+        trackReagents()
     -- No arguments
     else
         -- Toggle tracking windows

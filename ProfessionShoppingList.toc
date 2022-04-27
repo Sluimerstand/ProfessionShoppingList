@@ -1,9 +1,11 @@
-## Interface: 90100
+## Interface: 90200
 ## Title: Profession Shopping List
 ## Author: Sluimerstand
-## Version: v9.1.0-002-beta
+## Version: v9.2.0-001-beta
 
 ## SavedVariables: userSettings, recipesTracked, reagentNumbers, reagentLinks, recipeLinks
 
+Libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua
+Libs\LibDBIcon-1.0\embeds.xml
 Libs\lib-st\lib-st.xml
 ProfessionShoppingList.lua
