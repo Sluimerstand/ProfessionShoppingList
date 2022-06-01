@@ -1,7 +1,7 @@
-## Interface: 90200
+## Interface: 90205
 ## Title: Profession Shopping List
 ## Author: Sluimerstand
-## Version: v9.2.0-001-beta
+## Version: v9.2.5-001-beta
 
 ## SavedVariables: userSettings, recipesTracked, reagentNumbers, reagentLinks, recipeLinks
 
