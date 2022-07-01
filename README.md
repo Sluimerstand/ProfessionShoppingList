@@ -25,6 +25,6 @@ Left-click + drag: Move the tracking windows.
 
 Right-click on the Tracked column: Untrack 1 recipe.
 
-** Other features**
+**Other features**
 
 - Adds a Chef's Hat button to the Cooking window, if the toy is known.
