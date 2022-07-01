@@ -13,17 +13,17 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 
 **Chat commands**
 
-/psl - Toggle the tracking windows.
+- /psl - Toggle the tracking windows.
 
-/psl settings - Open the settings window.
+- /psl settings - Open the settings window.
 
-/psl clear - Clear all tracked recipes
+- /psl clear - Clear all tracked recipes
 
 **Mouse interactions**
 
-Left-click + drag: Move the tracking windows.
+- Left-click + drag: Move the tracking windows.
 
-Right-click on the Tracked column: Untrack 1 recipe.
+- Right-click on the Tracked column: Untrack 1 recipe.
 
 **Other features**
 
