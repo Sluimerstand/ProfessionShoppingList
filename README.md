@@ -13,8 +13,18 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 
 **Chat commands**
 
-/psl - Open or close the tracking windows
+/psl - Toggle the tracking windows.
 
-/psl button - Toggle the small and normal button sizes
+/psl settings - Open the settings window.
 
 /psl clear - Clear all tracked recipes
+
+**Mouse interactions**
+
+Left-click + drag: Move the tracking windows.
+
+Right-click on the Tracked column: Untrack 1 recipe.
+
+** Other features**
+
+- Adds a Chef's Hat button to the Cooking window, if the toy is known.
