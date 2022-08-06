@@ -5,6 +5,7 @@ local ScrollingTable = LibStub("ScrollingTable")
 -- API Events
 f:RegisterEvent("TRADE_SKILL_SHOW")
 f:RegisterEvent("BAG_UPDATE")
+f:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 f:RegisterEvent("ADDON_LOADED")
 
 -- Load the TradeSkillUI to prevent stuff from being wonky
@@ -22,6 +23,7 @@ function pslInitialise()
 
     -- Enable default user settings
     if not userSettings["smallButtons"] then userSettings["smallButtons"] = false end
+    if not userSettings["removeCraft"] then userSettings["removeCraft"] = true end
 end
 pslInitialise()
 
@@ -376,7 +378,7 @@ table1:RegisterEvents({
 })
 table1:RegisterEvents({
     ["OnDragStart"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-        ChatFrame1:AddMessage("[PSL] Dragging")
+        --ChatFrame1:AddMessage("[PSL] Dragging")
     end
 })
 table1:RegisterEvents({
@@ -487,7 +489,7 @@ table2:RegisterEvents({
     end
 })
 
-f:SetScript("OnEvent", function(self,event, loadedAddon, ...)
+f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
     if event == "ADDON_LOADED" and loadedAddon == "ProfessionShoppingList" then
         pslInitialise()
         pslCreateTrackingWindows()
@@ -574,6 +576,14 @@ f:SetScript("OnEvent", function(self,event, loadedAddon, ...)
             pslCreateButtons()
         end
 
+        local cbRemoveCraft = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+        cbRemoveCraft.Text:SetText("Untrack on crafting")
+        cbRemoveCraft:SetPoint("TOPLEFT", cbSmallButtons, "BOTTOMLEFT", 0, 0)
+        cbRemoveCraft:SetChecked(userSettings["removeCraft"])
+        cbRemoveCraft.SetValue = function()
+            userSettings["removeCraft"] = cbRemoveCraft:GetChecked()
+        end
+
         local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
         pslSettingsText1:SetPoint("TOP", cbMinimapButton.Text, "TOP")
         pslSettingsText1:SetPoint("LEFT", scrollChild, "LEFT", 250, 0)
@@ -646,6 +656,43 @@ f:SetScript("OnEvent", function(self,event, loadedAddon, ...)
             chefsHatButton:Show()
         else
             chefsHatButton:Hide()
+        end
+    end
+
+    -- Remove 1 tracked recipe when it has been crafted
+    if event == "UNIT_SPELLCAST_SUCCEEDED" and userSettings["removeCraft"] == true then
+        -- Get selected recipe ID
+        local one, recipeID = ...
+        --ChatFrame1:AddMessage("[PSL] " .. one .. " & " .. recipeID)
+
+        if recipesTracked[recipeID] ~= nil then
+            -- Untrack recipe
+            recipesTracked[recipeID] = recipesTracked[recipeID] - 1
+        
+            -- Set numbers to nil if it doesn't exist anymore
+            if recipesTracked[recipeID] == 0 then
+                recipesTracked[recipeID] = nil
+                recipeLinks[recipeID] = nil
+            end
+        
+            -- Disable the remove button if the recipe isn't tracked anymore
+            if not recipesTracked[recipeID] then removeCraftListButton:Disable() end
+        
+            -- Remove the reagents from the total count
+            for idx = 1, C_TradeSkillUI.GetRecipeNumReagents(recipeID) do
+                -- Get name, icon and number
+                local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, idx)
+                -- Do maths
+                reagentNumbers[reagentName] = reagentNumbers[reagentName] - reagentCount
+                -- Set numbers to nil if it doesn't exist anymore
+                if reagentNumbers[reagentName] == 0 then
+                    reagentNumbers[reagentName] = nil
+                    reagentLinks[reagentName] = nil
+                end
+            end
+        
+            -- Update numbers
+            trackReagents()
         end
     end
 
