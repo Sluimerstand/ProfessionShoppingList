@@ -18,8 +18,11 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 **Mouse interactions**
 
 - Left-click + drag: Move the tracking windows.
-- Right-click on the Tracked column: Untrack 1 recipe.
+- Right-click on the Tracked column: Untrack 1 of the selected recipe.
+- Shift + Right-click on the Tracked column: Untrack all of the selected recipe.
 
 **Other features**
 
+- Optionally untracks recipes after crafting them.
+- Optional tooltip information for tracked reagents.
 - Adds a Chef's Hat button to the Cooking window, if the toy is known.

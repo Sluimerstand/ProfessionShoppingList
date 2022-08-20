@@ -23,13 +23,70 @@ function pslInitialise()
 
     -- Enable default user settings
     if not userSettings["smallButtons"] then userSettings["smallButtons"] = false end
+    if not userSettings["showRemaining"] then userSettings["showRemaining"] = false end
+    if not userSettings["recipeRows"] then userSettings["recipeRows"] = 15 end
+    if not userSettings["reagentRows"] then userSettings["reagentRows"] = 15 end
+    if not userSettings["recipeWidth"] then userSettings["recipeWidth"] = 150 end
+    if not userSettings["recipeNoWidth"] then userSettings["recipeNoWidth"] = 30 end
+    if not userSettings["reagentWidth"] then userSettings["reagentWidth"] = 150 end
+    if not userSettings["reagentNoWidth"] then userSettings["reagentNoWidth"] = 50 end
+
+    -- These settings keep resetting and I don't know why. :(
     if not userSettings["removeCraft"] then userSettings["removeCraft"] = true end
+    if not userSettings["showTooltip"] then userSettings["showTooltip"] = true end
 end
 pslInitialise()
 
 --Create Tracking windows
 function pslCreateTrackingWindows()
     -- Reagent tracking
+
+    -- Column formatting, Reagents
+    local cols = {}
+    cols[1] = {
+        ["name"] = "Reagents",
+        ["width"] = userSettings["reagentWidth"],
+        ["align"] = "LEFT",
+        ["color"] = {
+            ["r"] = 1.0,
+            ["g"] = 1.0,
+            ["b"] = 1.0,
+            ["a"] = 1.0
+        },
+        ["colorargs"] = nil,
+        ["bgcolor"] = {
+            ["r"] = 0.0,
+            ["g"] = 0.0,
+            ["b"] = 0.0,
+            ["a"] = 0.0
+        },
+        ["defaultsort"] = "dsc",
+        ["sort"] = "dsc",
+        ["DoCellUpdate"] = nil,
+    }
+    
+    -- Column formatting, Amount
+    cols[2] = {
+        ["name"] = "#",
+        ["width"] = userSettings["reagentNoWidth"],
+        ["align"] = "RIGHT",
+        ["color"] = {
+            ["r"] = 1.0,
+            ["g"] = 1.0,
+            ["b"] = 1.0,
+            ["a"] = 1.0
+        },
+        ["bgcolor"] = {
+            ["r"] = 0.0,
+            ["g"] = 0.0,
+            ["b"] = 0.0,
+            ["a"] = 0.0
+        },
+        ["defaultsort"] = "dsc",
+        ["sort"] = "dsc",
+        ["DoCellUpdate"] = nil,
+    }
+
     if not pslFrame1 then
         -- Frame
         pslFrame1 = CreateFrame("Frame", "pslTrackingWindow1", UIParent, "BackdropTemplateMixin" and "BackdropTemplate")
@@ -55,72 +112,59 @@ function pslCreateTrackingWindows()
             pslFrame1:Hide()
         end)
 
-        -- This doesn't resize the actual table, so useless.
-        -- Resize button
-        -- local rb1 = CreateFrame("Button", nil, pslFrame1)
-        -- rb1:SetPoint("BOTTOMRIGHT", 0, 0)
-        -- rb1:SetSize(16, 16)
-        -- rb1:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-        -- rb1:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
-        -- rb1:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-        -- rb1:SetScript("OnMouseDown", function()
-        --     pslFrame1:StartSizing("BOTTOMRIGHT")
-        -- end)
-        -- rb1:SetScript("OnMouseUp", function()
-        --     pslFrame1:StopMovingOrSizing()
-        -- end)
-        -- pslFrame1:SetResizable(true)
-        -- pslFrame1:SetMinResize(255, 270)
-
-        -- Column formatting, Reagents
-        local cols = {}
-        cols[1] = {
-            ["name"] = "Reagents",
-            ["width"] = 155,
-            ["align"] = "LEFT",
-            ["color"] = {
-                ["r"] = 1.0,
-                ["g"] = 1.0,
-                ["b"] = 1.0,
-                ["a"] = 1.0
-            },
-            ["colorargs"] = nil,
-            ["bgcolor"] = {
-                ["r"] = 0.0,
-                ["g"] = 0.0,
-                ["b"] = 0.0,
-                ["a"] = 0.0
-            },
-            ["defaultsort"] = "dsc",
-            ["sort"] = "dsc",
-            ["DoCellUpdate"] = nil,
-        }
-        
-        -- Column formatting, Amount
-        cols[2] = {
-            ["name"] = "Amount",
-            ["width"] = 70,
-            ["align"] = "RIGHT",
-            ["color"] = {
-                ["r"] = 1.0,
-                ["g"] = 1.0,
-                ["b"] = 1.0,
-                ["a"] = 1.0
-            },
-            ["bgcolor"] = {
-                ["r"] = 0.0,
-                ["g"] = 0.0,
-                ["b"] = 0.0,
-                ["a"] = 0.0
-            },
-            ["defaultsort"] = "dsc",
-            ["sort"] = "dsc",
-            ["DoCellUpdate"] = nil,
-        }
-
         -- Create tracking window
-        table1 = ScrollingTable:CreateST(cols, 15, nil, nil, pslFrame1)
+        table1 = ScrollingTable:CreateST(cols, 50, nil, nil, pslFrame1)
     end
+
+    table1:SetDisplayRows(userSettings["reagentRows"], 15)
+    table1:SetDisplayCols(cols)
+    pslFrame1:SetSize(userSettings["reagentWidth"]+userSettings["reagentNoWidth"]+30, userSettings["reagentRows"]*15+45)
+
+    -- Column formatting, Recipes
+    local cols = {}
+    cols[1] = {
+        ["name"] = "Recipes",
+        ["width"] = userSettings["recipeWidth"],
+        ["align"] = "LEFT",
+        ["color"] = {
+            ["r"] = 1.0,
+            ["g"] = 1.0,
+            ["b"] = 1.0,
+            ["a"] = 1.0
+        },
+        ["colorargs"] = nil,
+        ["bgcolor"] = {
+            ["r"] = 0.0,
+            ["g"] = 0.0,
+            ["b"] = 0.0,
+            ["a"] = 0.0
+        },
+        ["defaultsort"] = "dsc",
+        ["sort"] = "dsc",
+        ["DoCellUpdate"] = nil,
+    }
+    
+    -- Column formatting, Tracked
+    cols[2] = {
+        ["name"] = "#",
+        ["width"] = userSettings["recipeNoWidth"],
+        ["align"] = "RIGHT",
+        ["color"] = {
+            ["r"] = 1.0,
+            ["g"] = 1.0,
+            ["b"] = 1.0,
+            ["a"] = 1.0
+        },
+        ["bgcolor"] = {
+            ["r"] = 0.0,
+            ["g"] = 0.0,
+            ["b"] = 0.0,
+            ["a"] = 0.0
+        },
+        ["defaultsort"] = "dsc",
+        ["sort"] = "dsc",
+        ["DoCellUpdate"] = nil,
+    }
 
     -- Recipe tracking
     if not pslFrame2 then
@@ -148,72 +192,13 @@ function pslCreateTrackingWindows()
             pslFrame2:Hide()
         end)
 
-        -- This doesn't resize the actual table, so useless.
-        -- Resize button
-        -- local rb2 = CreateFrame("Button", nil, pslFrame2)
-        -- rb2:SetPoint("BOTTOMRIGHT", 0, 0)
-        -- rb2:SetSize(16, 16)
-        -- rb2:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-        -- rb2:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
-        -- rb2:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-        -- rb2:SetScript("OnMouseDown", function()
-        --     pslFrame2:StartSizing("BOTTOMRIGHT")
-        -- end)
-        -- rb2:SetScript("OnMouseUp", function()
-        --     pslFrame2:StopMovingOrSizing()
-        -- end)
-        -- pslFrame2:SetResizable(true)
-        -- pslFrame2:SetMinResize(230, 270)
-
-        -- Column formatting, Recipes
-        local cols = {}
-        cols[1] = {
-            ["name"] = "Recipes",
-            ["width"] = 155,
-            ["align"] = "LEFT",
-            ["color"] = {
-                ["r"] = 1.0,
-                ["g"] = 1.0,
-                ["b"] = 1.0,
-                ["a"] = 1.0
-            },
-            ["colorargs"] = nil,
-            ["bgcolor"] = {
-                ["r"] = 0.0,
-                ["g"] = 0.0,
-                ["b"] = 0.0,
-                ["a"] = 0.0
-            },
-            ["defaultsort"] = "dsc",
-            ["sort"] = "dsc",
-            ["DoCellUpdate"] = nil,
-        }
-        
-        -- Column formatting, Tracked
-        cols[2] = {
-            ["name"] = "Tracked",
-            ["width"] = 45,
-            ["align"] = "RIGHT",
-            ["color"] = {
-                ["r"] = 1.0,
-                ["g"] = 1.0,
-                ["b"] = 1.0,
-                ["a"] = 1.0
-            },
-            ["bgcolor"] = {
-                ["r"] = 0.0,
-                ["g"] = 0.0,
-                ["b"] = 0.0,
-                ["a"] = 0.0
-            },
-            ["defaultsort"] = "dsc",
-            ["sort"] = "dsc",
-            ["DoCellUpdate"] = nil,
-        }
-
         -- Create tracking window
-        table2 = ScrollingTable:CreateST(cols, 15, nil, nil, pslFrame2)
+        table2 = ScrollingTable:CreateST(cols, 50, nil, nil, pslFrame2)
     end
+
+    table2:SetDisplayRows(userSettings["recipeRows"], 15)
+    table2:SetDisplayCols(cols)
+    pslFrame2:SetSize(userSettings["recipeWidth"]+userSettings["recipeNoWidth"]+30, userSettings["recipeRows"]*15+45)
 end
 pslCreateTrackingWindows()
 
@@ -221,8 +206,12 @@ pslCreateTrackingWindows()
 function trackReagents()
     -- Update reagents tracked
     local data = {}
-        for i, no in pairs(reagentNumbers) do 
-            table.insert(data, {reagentLinks[i], GetItemCount(reagentLinks[i], true, false, true).."/"..no})
+        for i, no in pairs(reagentNumbers) do
+            if userSettings["showRemaining"] == false then
+                table.insert(data, {reagentLinks[i], GetItemCount(reagentLinks[i], true, false, true).."/"..no})
+            else
+                table.insert(data, {reagentLinks[i], math.max(0,no-GetItemCount(reagentLinks[i], true, false, true))})
+            end
         end
     table1:SetData(data, true)
 
@@ -358,6 +347,34 @@ removeCraftListButton:SetScript("OnClick", function()
     trackReagents()
 end)
 
+-- -- Tooltip info
+-- local match = string.match
+-- local strsplit = strsplit
+
+-- local function GameTooltip_OnTooltipSetItem(tooltip)
+--     local _, link = tooltip:GetItem()
+--     if not link then return; end
+    
+--     local itemString = match(link, "item[%-?%d:]+")
+--     --local _, itemID = strsplit(":", itemString)
+--     local itemName = GetItemInfo(itemString)
+
+--     if userSettings["showTooltip"] == true then
+--         if itemName then
+--             --ChatFrame1:AddMessage("PSL1 "..itemName)
+--             for k in pairs(reagentNumbers) do
+--                 --ChatFrame1:AddMessage("PSL2 "..k)
+--                 if itemName == k then
+--                     tooltip:AddLine(" ")
+--                     tooltip:AddLine("PSL: "..GetItemCount(reagentLinks[k], true, false, true).."/"..reagentNumbers[k].." ("..math.max(0,reagentNumbers[k]-GetItemCount(reagentLinks[k], true, false, true)).." more needed)")
+--                 end
+--             end
+--         end
+--     end
+-- end
+
+GameTooltip:HookScript("OnTooltipSetItem", GameTooltip_OnTooltipSetItem)
+
 -- Window functions
 table1:RegisterEvents({
     ["OnEnter"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
@@ -374,11 +391,6 @@ table1:RegisterEvents({
     ["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
         GameTooltip:ClearLines()
         GameTooltip:Hide()
-    end
-})
-table1:RegisterEvents({
-    ["OnDragStart"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-        --ChatFrame1:AddMessage("[PSL] Dragging")
     end
 })
 table1:RegisterEvents({
@@ -432,8 +444,12 @@ table2:RegisterEvents({
             end
             local recipeID = getkey(recipeLinks, data[realrow][1])
 
-            -- Untrack recipe
-            recipesTracked[recipeID] = recipesTracked[recipeID] - 1
+            -- Untrack recipe / Untrack all if Shift is pressed
+            if IsShiftKeyDown() == true then
+                recipesTracked[recipeID] = 0
+            else
+                recipesTracked[recipeID] = recipesTracked[recipeID] - 1
+            end
 
             -- Set numbers to nil if it doesn't exist anymore
             if recipesTracked[recipeID] == 0 then
@@ -456,10 +472,6 @@ table2:RegisterEvents({
                     reagentLinks[reagentName] = nil
                 end
             end
-
-            -- Show windows
-            pslFrame1:Show()
-            pslFrame2:Show()
 
             -- Update numbers
             trackReagents()
@@ -584,21 +596,172 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
             userSettings["removeCraft"] = cbRemoveCraft:GetChecked()
         end
 
+        local cbShowRemaining = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+        cbShowRemaining.Text:SetText("Show remaining reagents, not total")
+        cbShowRemaining:SetPoint("TOPLEFT", cbRemoveCraft, "BOTTOMLEFT", 0, 0)
+        cbShowRemaining:SetChecked(userSettings["showRemaining"])
+        cbShowRemaining.SetValue = function()
+            userSettings["showRemaining"] = cbShowRemaining:GetChecked()
+            trackReagents()
+        end
+
+        local cbShowTooltip = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+        cbShowTooltip.Text:SetText("Show tooltip information")
+        cbShowTooltip:SetPoint("TOPLEFT", cbShowRemaining, "BOTTOMLEFT", 0, 0)
+        cbShowTooltip:SetChecked(userSettings["showTooltip"])
+        cbShowTooltip.SetValue = function()
+            userSettings["showTooltip"] = cbShowTooltip:GetChecked()
+        end
+        cbShowTooltip:Disable()
+
+        local labelRecipeRows = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+        labelRecipeRows:SetPoint("TOPLEFT", cbShowTooltip, "BOTTOMLEFT", 5, 0)
+        labelRecipeRows:SetJustifyH("LEFT");
+        labelRecipeRows:SetText("|cffFFFFFFRecipe rows:")
+
+        local ebRecipeRows = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
+        ebRecipeRows:SetSize(20,20)
+        ebRecipeRows:SetPoint("LEFT", labelRecipeRows, "RIGHT", 10, 0)
+        ebRecipeRows:SetAutoFocus(false)
+        ebRecipeRows:SetText(userSettings["recipeRows"])
+        ebRecipeRows:SetCursorPosition(0)
+        ebRecipeRows:SetScript("OnEditFocusLost", function(self, newValue)
+            newValue = math.floor(self:GetNumber())
+            if newValue >= 1 and newValue <= 50 then
+                userSettings["recipeRows"] = newValue
+            elseif newValue > 50 then
+                userSettings["recipeRows"] = 50
+            else
+                userSettings["recipeRows"] = 1
+            end
+            self:SetText(userSettings["recipeRows"])
+            pslCreateTrackingWindows()
+        end)
+
+        local labelReagentRows = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+        labelReagentRows:SetPoint("TOPLEFT", labelRecipeRows, "BOTTOMLEFT", 0, -10)
+        labelReagentRows:SetJustifyH("LEFT");
+        labelReagentRows:SetText("|cffFFFFFFReagent rows:")
+
+        local ebReagentRows = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
+        ebReagentRows:SetSize(20,20)
+        ebReagentRows:SetPoint("LEFT", labelReagentRows, "RIGHT", 10, 0)
+        ebReagentRows:SetAutoFocus(false)
+        ebReagentRows:SetText(userSettings["reagentRows"])
+        ebReagentRows:SetCursorPosition(0)
+        ebReagentRows:SetScript("OnEditFocusLost", function(self, newValue)
+            newValue = math.floor(self:GetNumber())
+            if newValue >= 1 and newValue <= 50 then
+                userSettings["reagentRows"] = newValue
+            elseif newValue > 50 then
+                userSettings["reagentRows"] = 50
+            else
+                userSettings["reagentRows"] = 1
+            end
+            self:SetText(userSettings["reagentRows"])
+            pslCreateTrackingWindows()
+        end)
+
+        local labelRecipeColumns = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+        labelRecipeColumns:SetPoint("TOPLEFT", labelReagentRows, "BOTTOMLEFT", 0, -10)
+        labelRecipeColumns:SetJustifyH("LEFT");
+        labelRecipeColumns:SetText("|cffFFFFFFRecipe column width:")
+
+        local ebRecipeWidth = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
+        ebRecipeWidth:SetSize(30,20)
+        ebRecipeWidth:SetPoint("LEFT", labelRecipeColumns, "RIGHT", 10, 0)
+        ebRecipeWidth:SetAutoFocus(false)
+        ebRecipeWidth:SetText(userSettings["recipeWidth"])
+        ebRecipeWidth:SetCursorPosition(0)
+        ebRecipeWidth:SetScript("OnEditFocusLost", function(self, newValue)
+            newValue = math.floor(self:GetNumber())
+            if newValue >= 60 and newValue <= 500 then
+                userSettings["recipeWidth"] = newValue
+            elseif newValue > 500 then
+                userSettings["recipeWidth"] = 500
+            else
+                userSettings["recipeWidth"] = 60
+            end
+            self:SetText(userSettings["recipeWidth"])
+            pslCreateTrackingWindows()
+        end)
+
+        local ebRecipeNoWidth = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
+        ebRecipeNoWidth:SetSize(30,20)
+        ebRecipeNoWidth:SetPoint("LEFT", ebRecipeWidth, "RIGHT", 10, 0)
+        ebRecipeNoWidth:SetAutoFocus(false)
+        ebRecipeNoWidth:SetText(userSettings["recipeNoWidth"])
+        ebRecipeNoWidth:SetCursorPosition(0)
+        ebRecipeNoWidth:SetScript("OnEditFocusLost", function(self, newValue)
+            newValue = math.floor(self:GetNumber())
+            if newValue >= 20 and newValue <= 500 then
+                userSettings["recipeNoWidth"] = newValue
+            elseif newValue > 500 then
+                userSettings["recipeNoWidth"] = 500
+            else
+                userSettings["recipeNoWidth"] = 20
+            end
+            self:SetText(userSettings["recipeNoWidth"])
+            pslCreateTrackingWindows()
+        end)
+
+        local labelReagentColumns = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+        labelReagentColumns:SetPoint("TOPLEFT", labelRecipeColumns, "BOTTOMLEFT", 0, -10)
+        labelReagentColumns:SetJustifyH("LEFT");
+        labelReagentColumns:SetText("|cffFFFFFFReagent column width:")
+
+        local ebReagentWidth = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
+        ebReagentWidth :SetSize(30,20)
+        ebReagentWidth :SetPoint("LEFT", labelReagentColumns, "RIGHT", 10, 0)
+        ebReagentWidth :SetAutoFocus(false)
+        ebReagentWidth :SetText(userSettings["reagentWidth"])
+        ebReagentWidth :SetCursorPosition(0)
+        ebReagentWidth :SetScript("OnEditFocusLost", function(self, newValue)
+            newValue = math.floor(self:GetNumber())
+            if newValue >= 60 and newValue <= 500 then
+                userSettings["reagentWidth"] = newValue
+            elseif newValue > 500 then
+                userSettings["reagentWidth"] = 500
+            else
+                userSettings["reagentWidth"] = 60
+            end
+            self:SetText(userSettings["reagentWidth"])
+            pslCreateTrackingWindows()
+        end)
+
+        local ebReagentNoWidth = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
+        ebReagentNoWidth:SetSize(30,20)
+        ebReagentNoWidth:SetPoint("LEFT", ebReagentWidth, "RIGHT", 10, 0)
+        ebReagentNoWidth:SetAutoFocus(false)
+        ebReagentNoWidth:SetText(userSettings["reagentNoWidth"])
+        ebReagentNoWidth:SetCursorPosition(0)
+        ebReagentNoWidth:SetScript("OnEditFocusLost", function(self, newValue)
+            newValue = math.floor(self:GetNumber())
+            if newValue >= 20 and newValue <= 500 then
+                userSettings["reagentNoWidth"] = newValue
+            elseif newValue > 500 then
+                userSettings["reagentNoWidth"] = 500
+            else
+                userSettings["reagentNoWidth"] = 20
+            end
+            self:SetText(userSettings["reagentNoWidth"])
+            pslCreateTrackingWindows()
+        end)
+
         local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-        pslSettingsText1:SetPoint("TOP", cbMinimapButton.Text, "TOP")
-        pslSettingsText1:SetPoint("LEFT", scrollChild, "LEFT", 250, 0)
+        pslSettingsText1:SetPoint("TOPLEFT", labelReagentColumns, "BOTTOMLEFT", 5, -10)
         pslSettingsText1:SetJustifyH("LEFT");
         pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.")
 
         local pslSettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
         pslSettingsText2:SetPoint("TOPLEFT", pslSettingsText1, "BOTTOMLEFT", 0, -15)
         pslSettingsText2:SetJustifyH("LEFT");
-        pslSettingsText2:SetText("Mouse interactions:\nLeft-click + Drag|cffFFFFFF: Move the PSL windows.\n|RRight-click in the Tracked column|cffFFFFFF: Untrack 1 recipe.")
+        pslSettingsText2:SetText("Mouse interactions:\nLeft-click + Drag|cffFFFFFF: Move the PSL windows.\n|RRight-click in the Tracked column|cffFFFFFF: Untrack 1 of the selected recipe.\n|RShift + Right-click in the Tracked column|cffFFFFFF: Untrack all of the selected recipe.")
 
         local pslSettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
         pslSettingsText3:SetPoint("TOPLEFT", pslSettingsText2, "BOTTOMLEFT", 0, -15)
         pslSettingsText3:SetJustifyH("LEFT");
-        pslSettingsText3:SetText("Other features:\n|cffFFFFFF- Adds a Chef's Hat button to the Cooking window,\nif the toy is owned.")
+        pslSettingsText3:SetText("Other features:\n|cffFFFFFF- Adds a Chef's Hat button to the Cooking window, if the toy is known.")
 
         -- Slash commands
         SLASH_PSL1 = "/psl";
@@ -663,7 +826,6 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
     if event == "UNIT_SPELLCAST_SUCCEEDED" and userSettings["removeCraft"] == true then
         -- Get selected recipe ID
         local one, recipeID = ...
-        --ChatFrame1:AddMessage("[PSL] " .. one .. " & " .. recipeID)
 
         if recipesTracked[recipeID] ~= nil then
             -- Untrack recipe
