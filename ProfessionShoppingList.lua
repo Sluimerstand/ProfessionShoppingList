@@ -705,7 +705,7 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
             table1:RegisterEvents({
                 ["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
                     -- Activate if shift+clicking on the reagents column
-                    if column == 1 and button == "LeftButton" and IsShiftKeyDown() == true then
+                    if column == 1 and button == "LeftButton" and IsShiftKeyDown() == true and realrow ~= nil then
                         -- Get recipeID
                         local itemID = select(3, strfind(data[realrow][1], "item:(%d+)")) --Define this as a function somewhere, gonna use it a lot probably
 
