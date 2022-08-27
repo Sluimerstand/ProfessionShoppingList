@@ -793,7 +793,7 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
                         local recipeID = getkey(recipeLinks, data[realrow][1])
 
                         -- (TEMPORARY HOPEFULLY) Only remove recipes if we can get API info.
-                        if C_TradeSkillUI.GetRecipeNumReagents(recipeID) ~= 0
+                        if C_TradeSkillUI.GetRecipeNumReagents(recipeID) ~= 0 then
                             -- Show windows
                             pslFrame1:Show()
                             pslFrame2:Show()
