@@ -210,20 +210,24 @@ function trackReagents()
     end
     table2:SetData(data, true)
 
-    -- Recalculate reagents
-    reagentNumbers = {}
+    -- Recalculate reagents (if we can get info from the API)
+    local tempReagents = {}
 
-    for i, no in pairs(recipesTracked) do
-        local recipeID = i
-        for idx = 1, C_TradeSkillUI.GetRecipeNumReagents(recipeID) do
-            -- Get name, icon and number
-            local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, idx)
-            -- Set value to zero if it doesn't exist
-            if not reagentNumbers[reagentName] then reagentNumbers[reagentName] = 0 end
-            -- Do maths
-            reagentNumbers[reagentName] = reagentNumbers[reagentName] + no * reagentCount
-            -- Get item link
-            reagentLinks[reagentName] = C_TradeSkillUI.GetRecipeReagentItemLink(recipeID, idx)
+    for recipeID, no in pairs(recipesTracked) do
+        if C_TradeSkillUI.GetRecipeNumReagents(recipeID) ~= 0 then
+            for idx = 1, C_TradeSkillUI.GetRecipeNumReagents(recipeID) do
+                -- Get name, icon and number
+                local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, idx)
+                -- Set value to zero if it doesn't exist
+                if not tempReagents[reagentName] then
+                    tempReagents[reagentName] = true
+                    reagentNumbers[reagentName] = 0
+                end
+                -- Do maths
+                reagentNumbers[reagentName] = reagentNumbers[reagentName] + no * reagentCount
+                -- Get item link
+                reagentLinks[reagentName] = C_TradeSkillUI.GetRecipeReagentItemLink(recipeID, idx)
+            end
         end
     end
 
@@ -292,6 +296,18 @@ function pslCreateButtons()
         pslFrame1:Show()
         pslFrame2:Show()
 
+        -- Update reagents
+        for idx = 1, C_TradeSkillUI.GetRecipeNumReagents(recipeID) do
+            -- Get name, icon and number
+            local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, idx)
+            -- Set number to 0 if it doesn't exist so we can do maths
+            if not reagentNumbers[reagentName] then reagentNumbers[reagentName] = 0 end
+            -- Do maths
+            reagentNumbers[reagentName] = reagentNumbers[reagentName] + reagentCount
+            -- Get item link
+            reagentLinks[reagentName] = C_TradeSkillUI.GetRecipeReagentItemLink(recipeID, idx)
+        end
+
         -- Update numbers
         trackReagents()
     end)
@@ -300,6 +316,23 @@ function pslCreateButtons()
     removeCraftListButton:SetScript("OnClick", function()
         -- Get selected recipe ID
         local recipeID = TradeSkillFrame.RecipeList:GetSelectedRecipeID()
+
+        -- Show windows
+        pslFrame1:Show()
+        pslFrame2:Show()
+
+        -- Update reagents
+        for idx = 1, C_TradeSkillUI.GetRecipeNumReagents(recipeID) do
+            -- Get name, icon and number
+            local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, idx)
+            -- Do maths
+            reagentNumbers[reagentName] = reagentNumbers[reagentName] - reagentCount
+            -- Set numbers to nil if they don't exist anymore
+            if reagentNumbers[reagentName] == 0 then
+                reagentNumbers[reagentName] = nil
+                reagentLinks[reagentName] = nil
+            end
+        end
 
         -- Untrack recipe
         recipesTracked[recipeID] = recipesTracked[recipeID] - 1
@@ -312,10 +345,6 @@ function pslCreateButtons()
 
         -- Disable the remove button if the recipe isn't tracked anymore
         if not recipesTracked[recipeID] then removeCraftListButton:Disable() end
-
-        -- Show windows
-        pslFrame1:Show()
-        pslFrame2:Show()
 
         -- Update numbers
         trackReagents()
@@ -709,7 +738,7 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
                         -- Get recipeID
                         local itemID = select(3, strfind(data[realrow][1], "item:(%d+)")) --Define this as a function somewhere, gonna use it a lot probably
 
-                        if recipeLibrary[itemID] then
+                        if recipeLibrary[itemID] and C_TradeSkillUI.GetRecipeNumReagents(recipeLibrary[itemID]) ~= 0 then
                             --Get selected recipe ID
                             local recipeID = recipeLibrary[itemID]
 
@@ -763,37 +792,41 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
                         end
                         local recipeID = getkey(recipeLinks, data[realrow][1])
 
-                        -- Untrack recipe / Untrack all if Shift is pressed
-                        if IsShiftKeyDown() == true then
-                            recipesTracked[recipeID] = 0
-                        else
-                            recipesTracked[recipeID] = recipesTracked[recipeID] - 1
-                        end
+                        -- (TEMPORARY HOPEFULLY) Only remove recipes if we can get API info.
+                        if C_TradeSkillUI.GetRecipeNumReagents(recipeID) ~= 0
+                            -- Show windows
+                            pslFrame1:Show()
+                            pslFrame2:Show()
 
-                        -- Set numbers to nil if it doesn't exist anymore
-                        if recipesTracked[recipeID] == 0 then
-                            recipesTracked[recipeID] = nil
-                            recipeLinks[recipeID] = nil
-                        end
+                            -- Untrack recipe / Untrack all if Shift is pressed
+                            local removeAmount = 1
+                            if IsShiftKeyDown() == true then removeAmount = recipesTracked[recipeID] end
 
-                        -- Disable the remove button if the recipe isn't tracked anymore
-                        if not recipesTracked[recipeID] then removeCraftListButton:Disable() end
-
-                        -- Remove the reagents from the total count
-                        for idx = 1, C_TradeSkillUI.GetRecipeNumReagents(recipeID) do
-                            -- Get name, icon and number
-                            local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, idx)
-                            -- Do maths
-                            reagentNumbers[reagentName] = reagentNumbers[reagentName] - reagentCount
-                            -- Set numbers to nil if it doesn't exist anymore
-                            if reagentNumbers[reagentName] == 0 then
-                                reagentNumbers[reagentName] = nil
-                                reagentLinks[reagentName] = nil
+                            -- Update reagents
+                            for idx = 1, C_TradeSkillUI.GetRecipeNumReagents(recipeID) do
+                                -- Get name, icon and number
+                                local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, idx)
+                                -- Do maths
+                                reagentNumbers[reagentName] = reagentNumbers[reagentName] - reagentCount * removeAmount
+                                -- Set numbers to nil if they don't exist anymore
+                                if reagentNumbers[reagentName] == 0 then
+                                    reagentNumbers[reagentName] = nil
+                                    reagentLinks[reagentName] = nil
+                                end
                             end
-                        end
 
-                        -- Update numbers
-                        trackReagents()
+                            -- Untrack recipe
+                            recipesTracked[recipeID] = recipesTracked[recipeID] - removeAmount
+
+                            -- Set numbers to nil if it doesn't exist anymore
+                            if recipesTracked[recipeID] == 0 then
+                                recipesTracked[recipeID] = nil
+                                recipeLinks[recipeID] = nil
+                            end
+
+                            -- Update numbers
+                            trackReagents()
+                        end
                     end
                 end
             })
