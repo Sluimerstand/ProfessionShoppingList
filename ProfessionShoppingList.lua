@@ -219,7 +219,7 @@ function trackReagents()
                 -- Get name, icon and number
                 local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, idx)
                 -- Set value to zero if it doesn't exist
-                if not tempReagents[reagentName] then
+                if tempReagents[reagentName] == nil then
                     tempReagents[reagentName] = true
                     reagentNumbers[reagentName] = 0
                 end
@@ -374,11 +374,9 @@ function pslTooltipInfo()
 
     local function GameTooltip_OnTooltipSetItem(tooltip)
         local _, link = tooltip:GetItem()
-        if not link then return; end
+        if not link then return end
         
-        local itemString = match(link, "item[%-?%d:]+")
-        --local _, itemID = strsplit(":", itemString)
-        local itemName = GetItemInfo(itemString)
+        local itemName = GetItemInfo(link)
 
         if userSettings["showTooltip"] == true then
             if itemName then
