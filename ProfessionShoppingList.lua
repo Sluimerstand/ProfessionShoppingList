@@ -706,7 +706,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                             local recipeID = recipeIDs[no]
 
                             -- Track recipe
-                            recipesTracked[recipeID] = math.max(0, reagentsTracked[itemID] - GetItemCount(itemID))
+                            local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
+                            recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
 
                             -- Add recipe link
                             recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
@@ -798,7 +799,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                 local recipeID = recipeIDs[1]
                         
                                 -- Track recipe
-                                recipesTracked[recipeID] = math.max(0, reagentsTracked[itemID] - GetItemCount(itemID))
+                                local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
+                                recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
                         
                                 -- Add recipe link
                                 recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
@@ -864,7 +866,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                     local recipeID = recipeIDs[2]
                             
                                     -- Track recipe
-                                    recipesTracked[recipeID] = math.max(0, reagentsTracked[itemID] - GetItemCount(itemID))
+                                    local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
+                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
                             
                                     -- Add recipe link
                                     recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
@@ -931,7 +934,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                     local recipeID = recipeIDs[3]
                             
                                     -- Track recipe
-                                    recipesTracked[recipeID] = math.max(0, reagentsTracked[itemID] - GetItemCount(itemID))
+                                    local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
+                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
                             
                                     -- Add recipe link
                                     recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
@@ -998,7 +1002,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                     local recipeID = recipeIDs[4]
                             
                                     -- Track recipe
-                                    recipesTracked[recipeID] = math.max(0, reagentsTracked[itemID] - GetItemCount(itemID))
+                                    local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
+                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
                             
                                     -- Add recipe link
                                     recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
@@ -1062,7 +1067,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                     local recipeID = recipeIDs[5]
                             
                                     -- Track recipe
-                                    recipesTracked[recipeID] = math.max(0, reagentsTracked[itemID] - GetItemCount(itemID))
+                                    local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
+                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
                             
                                     -- Add recipe link
                                     recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
@@ -1126,7 +1132,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                     local recipeID = recipeIDs[6]
                             
                                     -- Track recipe
-                                    recipesTracked[recipeID] = math.max(0, reagentsTracked[itemID] - GetItemCount(itemID))
+                                    local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
+                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
                             
                                     -- Add recipe link
                                     recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
