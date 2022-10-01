@@ -238,6 +238,12 @@ function pslReagents()
             end
         end
     table1:SetData(data, true)
+
+    -- Check if the Untrack button should be enabled
+    if not recipesTracked[pslSelectedRecipeID] then removeCraftListButton:Disable()
+    elseif recipesTracked[pslSelectedRecipeID] == 0 then removeCraftListButton:Disable()
+    else removeCraftListButton:Enable()
+    end
 end
 
 -- Create buttons
@@ -591,8 +597,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             local pslSettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
             pslSettingsText2:SetPoint("TOPLEFT", pslSettingsText1, "BOTTOMLEFT", 0, -15)
             pslSettingsText2:SetJustifyH("LEFT");
-            pslSettingsText2:SetText("Mouse interactions:\nLeft-click + Drag|cffFFFFFF: Move the PSL windows.\n|RLeft-click in the Recipes column|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click in the Tracked column|cffFFFFFF: Untrack 1 of the selected recipe.\n|RShift + Right-click in the Tracked column|cffFFFFFF: Untrack all of the selected recipe.\n|RShift + Click in the Reagent column|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
-            
+            pslSettingsText2:SetText("Mouse interactions:\nDrag|cffFFFFFF: Move the PSL windows.\n|RLeft-click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click Recipe #|cffFFFFFF: Untrack 1 of the selected recipe.\n|RShift+right-click Recipe #|cffFFFFFF: Untrack all of the selected recipe.\n|RShift+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
+
             local pslSettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
             pslSettingsText3:SetPoint("TOPLEFT", pslSettingsText2, "BOTTOMLEFT", 0, -15)
             pslSettingsText3:SetJustifyH("LEFT");
