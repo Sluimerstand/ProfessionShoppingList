@@ -8,10 +8,11 @@ f:RegisterEvent("BAG_UPDATE")
 f:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
 f:RegisterEvent("TRADE_SKILL_SHOW")
 f:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+f:RegisterEvent("SPELL_DATA_LOAD_RESULT")
 
 -- Load the TradeSkillUI to prevent stuff from being wonky
-if not TradeSkillFrame then
-    UIParentLoadAddOn("Blizzard_TradeSkillUI")
+if not C_TradeSkillUI then
+    UIParentLoadAddOn("C_TradeSkillUI")
 end
 
 -- Create SavedVariables
@@ -19,13 +20,12 @@ function pslInitialise()
     -- Declare some variables
     if not userSettings then userSettings = {} end
     if not recipesTracked then recipesTracked = {} end
-    if not reagentNumbers then reagentNumbers = {} end
-    if not reagentLinks then reagentLinks = {} end
     if not recipeLinks then recipeLinks = {} end
+    if not reagentsTracked then reagentsTracked = {} end
     if not recipeLibrary then recipeLibrary = {} end
 
     -- Enable default user settings
-    if userSettings["smallButtons"] == nil then userSettings["smallButtons"] = false end
+    if userSettings["hide"] == nil then userSettings["hide"] = false end
     if userSettings["removeCraft"] == nil then userSettings["removeCraft"] = true end
     if userSettings["showRemaining"] == nil then userSettings["showRemaining"] = false end
     if userSettings["showTooltip"] == nil then userSettings["showTooltip"] = true end
@@ -39,8 +39,6 @@ end
 
 --Create tracking windows
 function pslCreateTrackingWindows()
-    -- Reagent tracking
-
     -- Column formatting, Reagents
     local cols = {}
     cols[1] = {
@@ -87,6 +85,7 @@ function pslCreateTrackingWindows()
         ["DoCellUpdate"] = nil,
     }
 
+    -- Reagent tracking
     if not pslFrame1 then
         -- Frame
         pslFrame1 = CreateFrame("Frame", "pslTrackingWindow1", UIParent, "BackdropTemplateMixin" and "BackdropTemplate")
@@ -96,18 +95,9 @@ function pslCreateTrackingWindows()
         pslFrame1:SetMovable(true)
         pslFrame1:Hide()
 
-        -- Background
-        -- pslFrame1:SetBackdrop({
-        --     bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-        --     edgeFile = "Interface\\ChatFrame\\ChatFrameBackground",
-        --     edgeSize = 1,
-        -- })
-        -- pslFrame1:SetBackdropColor(0, 0, 0, .8)
-        -- pslFrame1:SetBackdropBorderColor(0, 0, 0)
-
         -- Close button
         local close = CreateFrame("Button", "pslCloseButtonName1", pslFrame1, "UIPanelCloseButton")
-        close:SetPoint("TOPRIGHT", pslFrame1, "TOPRIGHT", 6, 6)
+        close:SetPoint("TOPRIGHT", pslFrame1, "TOPRIGHT", 1, -2)
         close:SetScript("OnClick", function()
             pslFrame1:Hide()
         end)
@@ -175,19 +165,12 @@ function pslCreateTrackingWindows()
         pslFrame2:EnableMouse(true)
         pslFrame2:SetMovable(true)
         pslFrame2:Hide()
-
-        -- Background
-        -- pslFrame2:SetBackdrop({
-        --     bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-        --     edgeFile = "Interface\\ChatFrame\\ChatFrameBackground",
-        --     edgeSize = 1,
-        -- })
-        -- pslFrame2:SetBackdropColor(0, 0, 0, .8)
-        -- pslFrame2:SetBackdropBorderColor(0, 0, 0)
+        pslFrame2:SetScript("OnDragStart", function(self, button) self:StartMoving() end)
+        pslFrame2:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
 
         -- Close button
         local close = CreateFrame("Button", "pslCloseButtonName2", pslFrame2, "UIPanelCloseButton")
-        close:SetPoint("TOPRIGHT", pslFrame2, "TOPRIGHT", 6, 6)
+        close:SetPoint("TOPRIGHT", pslFrame2, "TOPRIGHT", 1, -2)
         close:SetScript("OnClick", function()
             pslFrame2:Hide()
         end)
@@ -202,42 +185,56 @@ function pslCreateTrackingWindows()
 end
 
 -- Update numbers
-function trackReagents()
+function pslReagents()
     -- Update recipes tracked
     local data = {};
-    for i, no in pairs(recipesTracked) do 
-        table.insert(data, {recipeLinks[i], no})
+    for recipeID, no in pairs(recipesTracked) do
+        table.insert(data, {C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink, no})
     end
     table2:SetData(data, true)
 
-    -- Recalculate reagents (if we can get info from the API)
-    local tempReagents = {}
+    -- Recalculate reagents
+    reagentsTracked = {}
 
     for recipeID, no in pairs(recipesTracked) do
-        if C_TradeSkillUI.GetRecipeNumReagents(recipeID) ~= 0 then
-            for idx = 1, C_TradeSkillUI.GetRecipeNumReagents(recipeID) do
-                -- Get name, icon and number
-                local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, idx)
+        -- Get numReagents
+        local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).reagentSlotSchematics
+        local numReagents = 0
+        if reagentsTable[9] then numReagents = 9
+        elseif reagentsTable[8] then numReagents = 8
+        elseif reagentsTable[7] then numReagents = 7
+        elseif reagentsTable[6] then numReagents = 6
+        elseif reagentsTable[5] then numReagents = 5
+        elseif reagentsTable[4] then numReagents = 4
+        elseif reagentsTable[3] then numReagents = 3
+        elseif reagentsTable[2] then numReagents = 2
+        elseif reagentsTable[1] then numReagents = 1
+        end
+
+        if numReagents ~= 0 then
+            for idx = 1, numReagents do
+                -- Get info
+                local reagentID = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).reagentSlotSchematics[idx].reagents[1].itemID
+                local reagentAmount = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).reagentSlotSchematics[idx].quantityRequired
+
                 -- Set value to zero if it doesn't exist
-                if tempReagents[reagentName] == nil then
-                    tempReagents[reagentName] = true
-                    reagentNumbers[reagentName] = 0
-                end
+                if reagentsTracked[reagentID] == nil then reagentsTracked[reagentID] = 0 end
+
                 -- Do maths
-                reagentNumbers[reagentName] = reagentNumbers[reagentName] + no * reagentCount
-                -- Get item link
-                reagentLinks[reagentName] = C_TradeSkillUI.GetRecipeReagentItemLink(recipeID, idx)
+                reagentsTracked[reagentID] = reagentsTracked[reagentID] + reagentAmount * no
             end
         end
     end
 
     -- Update reagents tracked
     local data = {}
-        for i, no in pairs(reagentNumbers) do
+        for i, no in pairs(reagentsTracked) do
+            local itemName, itemLink = GetItemInfo(i)
+
             if userSettings["showRemaining"] == false then
-                table.insert(data, {reagentLinks[i], GetItemCount(reagentLinks[i], true, false, true).."/"..no})
+                table.insert(data, {itemLink, GetItemCount(i, true, false, true).."/"..no})
             else
-                table.insert(data, {reagentLinks[i], math.max(0,no-GetItemCount(reagentLinks[i], true, false, true))})
+                table.insert(data, {itemLink, math.max(0,no-GetItemCount(i, true, false, true))})
             end
         end
     table1:SetData(data, true)
@@ -245,94 +242,56 @@ end
 
 -- Create buttons
 function pslCreateButtons()
-    -- Create the "Add to list" button
-    if not addCraftListButton then
-        addCraftListButton = CreateFrame("Button", nil, TradeSkillFrame, "UIPanelButtonTemplate")
-    end
-    -- If button size is normal
-    if userSettings["smallButtons"] == false then
-        addCraftListButton:SetText("Track")
-        addCraftListButton:SetWidth(60)
-        addCraftListButton:SetPoint("TOPRIGHT", TradeSkillFrame.DetailsFrame.CreateButton, "TOPRIGHT", -180, 418)
-    -- If button size is small
-    elseif userSettings["smallButtons"] == true then
-        addCraftListButton:SetText("+")
-        addCraftListButton:SetWidth(30)
-        addCraftListButton:SetPoint("TOPRIGHT", TradeSkillFrame.DetailsFrame.CreateButton, "TOPRIGHT", -210, 418)
-    end
+    -- Hide and disable existing tracking button
+    ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckBox:SetAlpha(0)
+    ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckBox:EnableMouse(false)
 
-    -- Create the "Remove from list" button
+    -- Create the "Track" button
+    if not addCraftListButton then
+        addCraftListButton = CreateFrame("Button", nil, ProfessionsFrame, "UIPanelButtonTemplate")
+    end
+    addCraftListButton:SetText("Track")
+    addCraftListButton:SetWidth(60)
+    addCraftListButton:SetPoint("TOPRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "TOPRIGHT", -9, -10)
+    addCraftListButton:SetFrameStrata("HIGH")
+
+    -- Create the "Untrack" button
     if not removeCraftListButton then
-        removeCraftListButton = CreateFrame("Button", nil, TradeSkillFrame, "UIPanelButtonTemplate")
+        removeCraftListButton = CreateFrame("Button", nil, ProfessionsFrame, "UIPanelButtonTemplate")
     end
-    -- If button size is normal
-    if userSettings["smallButtons"] == false then
-        removeCraftListButton:SetText("Untrack")
-        removeCraftListButton:SetWidth(70)
-        removeCraftListButton:SetPoint("TOPRIGHT", TradeSkillFrame.DetailsFrame.CreateButton, "TOPRIGHT", -110, 418)
-    -- If button size is small
-    elseif userSettings["smallButtons"] == true then
-        removeCraftListButton:SetText("-")
-        removeCraftListButton:SetWidth(30)
-        removeCraftListButton:SetPoint("TOPRIGHT", TradeSkillFrame.DetailsFrame.CreateButton, "TOPRIGHT", -180, 418)
-    end
+    removeCraftListButton:SetText("Untrack")
+    removeCraftListButton:SetWidth(70)
+    removeCraftListButton:SetPoint("TOPRIGHT", addCraftListButton, "TOPLEFT", -4, 0)
+    removeCraftListButton:SetFrameStrata("HIGH")
 
     -- Make the "Track" button actually do the thing
     addCraftListButton:SetScript("OnClick", function()
         -- Get selected recipe ID
-        local recipeID = TradeSkillFrame.RecipeList:GetSelectedRecipeID()
+        local recipeID = pslSelectedRecipeID
 
         -- Track recipe
         if not recipesTracked[recipeID] then recipesTracked[recipeID] = 0 end
         recipesTracked[recipeID] = recipesTracked[recipeID] + 1
 
-        -- Get recipe link
-        recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeItemLink(recipeID)
-
-        -- Enable the remove button
-        removeCraftListButton:Enable()
+        -- Add recipe link
+        recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
 
         -- Show windows
         pslFrame1:Show()
         pslFrame2:Show()
 
-        -- Update reagents
-        for idx = 1, C_TradeSkillUI.GetRecipeNumReagents(recipeID) do
-            -- Get name, icon and number
-            local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, idx)
-            -- Set number to 0 if it doesn't exist so we can do maths
-            if not reagentNumbers[reagentName] then reagentNumbers[reagentName] = 0 end
-            -- Do maths
-            reagentNumbers[reagentName] = reagentNumbers[reagentName] + reagentCount
-            -- Get item link
-            reagentLinks[reagentName] = C_TradeSkillUI.GetRecipeReagentItemLink(recipeID, idx)
-        end
-
         -- Update numbers
-        trackReagents()
+        pslReagents()
     end)
 
     -- Make the "Untrack" button actually do the thing
     removeCraftListButton:SetScript("OnClick", function()
         -- Get selected recipe ID
-        local recipeID = TradeSkillFrame.RecipeList:GetSelectedRecipeID()
+        local recipeID = pslSelectedRecipeID
 
         -- Show windows
         pslFrame1:Show()
         pslFrame2:Show()
-
-        -- Update reagents
-        for idx = 1, C_TradeSkillUI.GetRecipeNumReagents(recipeID) do
-            -- Get name, icon and number
-            local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, idx)
-            -- Do maths
-            reagentNumbers[reagentName] = reagentNumbers[reagentName] - reagentCount
-            -- Set numbers to nil if they don't exist anymore
-            if reagentNumbers[reagentName] == 0 then
-                reagentNumbers[reagentName] = nil
-                reagentLinks[reagentName] = nil
-            end
-        end
 
         -- Untrack recipe
         recipesTracked[recipeID] = recipesTracked[recipeID] - 1
@@ -343,25 +302,20 @@ function pslCreateButtons()
             recipeLinks[recipeID] = nil
         end
 
-        -- Disable the remove button if the recipe isn't tracked anymore
-        if not recipesTracked[recipeID] then removeCraftListButton:Disable() end
-
         -- Update numbers
-        trackReagents()
+        pslReagents()
     end)
 
-    -- Add Chef's Hat button
-    if not cookingFireButton then
-        cookingFireButton = CreateFrame("Button", nil, TradeSkillFrame, "UIPanelButtonTemplate")
+    -- Create Chef's Hat button
+    if not chefsHatButton then
+        chefsHatButton = CreateFrame("Button", "ChefsHatButton", ProfessionsFrame, "UIPanelButtonTemplate")
     end
 
-    if not chefsHatButton then
-        chefsHatButton = CreateFrame("Button", nil, TradeSkillFrame, "UIPanelButtonTemplate")
-    end
     chefsHatButton:SetWidth(40)
     chefsHatButton:SetHeight(40)
     chefsHatButton:SetNormalTexture(236571)
-    chefsHatButton:SetPoint("BOTTOMRIGHT", TradeSkillFrame.DetailsFrame, "BOTTOMRIGHT", 0, 4)
+    chefsHatButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
+    chefsHatButton:SetFrameStrata("HIGH")
     chefsHatButton:SetScript("OnClick", function()
         UseToyByName("Chef's Hat")
     end)
@@ -373,46 +327,42 @@ function pslTooltipInfo()
     local strsplit = strsplit
 
     local function GameTooltip_OnTooltipSetItem(tooltip)
+        -- Don't do anything if no item link
         local _, link = tooltip:GetItem()
         if not link then return end
         
-        local itemName = GetItemInfo(link)
+        -- Get itemID
+        local itemID = GetItemInfoFromHyperlink(link)
 
-        if userSettings["showTooltip"] == true then
-            if itemName then
-                for k in pairs(reagentNumbers) do
-                    if itemName == k then
-                        tooltip:AddLine(" ")
-                        tooltip:AddLine("PSL: "..GetItemCount(reagentLinks[k], true, false, true).."/"..reagentNumbers[k].." ("..math.max(0,reagentNumbers[k]-GetItemCount(reagentLinks[k], true, false, true)).." more needed)")
-                    end
-                end
-            end
+        if userSettings["showTooltip"] == true and reagentsTracked[itemID] then
+            tooltip:AddLine(" ")
+            tooltip:AddLine("PSL: "..GetItemCount(reagentsTracked[itemID], true, false, true).."/"..reagentsTracked[itemID].." ("..math.max(0,reagentsTracked[itemID]-GetItemCount(reagentsTracked[itemID], true, false, true)).." more needed)")
         end
     end
 
     GameTooltip:HookScript("OnTooltipSetItem", GameTooltip_OnTooltipSetItem)
 end
 
-f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
+f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
     -- When the AddOn is fully loaded, actually run the components
-    if event == "ADDON_LOADED" and loadedAddon == "ProfessionShoppingList" then
+    if event == "ADDON_LOADED" and arg1 == "ProfessionShoppingList" then
         pslInitialise()
         pslCreateTrackingWindows()
         pslCreateButtons()
         pslTooltipInfo()
 
-        -- Settings page
+        -- Settings and minimap icon
         function pslSettings()
             -- Initialise the Settings page so the Minimap button can go there
-            local settings = CreateFrame("Frame")
-            settings.name = "ProfessionShoppingList"
-            InterfaceOptions_AddCategory(settings)
+            local settings = CreateFrame("Frame")            
+            local category = Settings.RegisterCanvasLayoutCategory(settings, "Profession Shopping List")
+            Settings.RegisterAddOnCategory(category)
 
             -- Initialise the minimap button before the settings button is made, so it can toggle it
             local miniButton = LibStub("LibDataBroker-1.1"):NewDataObject("ProfessionShoppingList", {
                 type = "data source",
                 text = "Profession Shopping List",
-                icon = 136249,
+                icon = "Interface\\AddOns\\ProfessionShoppingList\\assets\\psl_icon",
                 
                 OnClick = function(self, button)
                     if button == "LeftButton" then
@@ -425,10 +375,9 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
                             pslFrame2:Show()
                         end
                         -- Only update numbers if numbers exist
-                        if reagentNumbers then trackReagents() end
+                        if reagentsTracked then pslReagents() end
                     elseif button == "RightButton" then
-                        InterfaceAddOnsList_Update()
-                        InterfaceOptionsFrame_OpenToCategory(settings)
+                        InterfaceOptionsFrame_OpenToCategory("Profession Shopping List")
                     end
                 end,
                 
@@ -447,14 +396,14 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
                 icon:Show("ProfessionShoppingList")
             end
 
-            -- Settings scroll frame
+            -- Settings frame
             local scrollFrame = CreateFrame("ScrollFrame", nil, settings, "UIPanelScrollFrameTemplate")
             scrollFrame:SetPoint("TOPLEFT", 3, -4)
             scrollFrame:SetPoint("BOTTOMRIGHT", -27, 4)
 
             local scrollChild = CreateFrame("Frame")
             scrollFrame:SetScrollChild(scrollChild)
-            scrollChild:SetWidth(InterfaceOptionsFramePanelContainer:GetWidth()-18)
+            scrollChild:SetWidth(SettingsPanel.Container.SettingsCanvas:GetWidth()-18)
             scrollChild:SetHeight(1) 
 
             -- Settings
@@ -466,48 +415,39 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
             cbMinimapButton.Text:SetText("Minimap button")
             cbMinimapButton:SetPoint("TOPLEFT", 10, -25)
             cbMinimapButton:SetChecked(not userSettings["hide"])
-            cbMinimapButton.SetValue = function()
-                userSettings["hide"] = not cbMinimapButton:GetChecked()
+            cbMinimapButton:SetScript("OnClick", function(self)
+                userSettings["hide"] = not self:GetChecked()
                 if userSettings["hide"] == true then
                     icon:Hide("ProfessionShoppingList")
                 else
                     icon:Show("ProfessionShoppingList")
                 end
-            end
-
-            local cbSmallButtons = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-            cbSmallButtons.Text:SetText("Small buttons")
-            cbSmallButtons:SetPoint("TOPLEFT", cbMinimapButton, "BOTTOMLEFT", 0, 0)
-            cbSmallButtons:SetChecked(userSettings["smallButtons"])
-            cbSmallButtons.SetValue = function()
-                userSettings["smallButtons"] = cbSmallButtons:GetChecked()
-                pslCreateButtons()
-            end
+            end)
 
             local cbRemoveCraft = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
             cbRemoveCraft.Text:SetText("Untrack on crafting")
-            cbRemoveCraft:SetPoint("TOPLEFT", cbSmallButtons, "BOTTOMLEFT", 0, 0)
+            cbRemoveCraft:SetPoint("TOPLEFT", cbMinimapButton, "BOTTOMLEFT", 0, 0)
             cbRemoveCraft:SetChecked(userSettings["removeCraft"])
-            cbRemoveCraft.SetValue = function()
+            cbRemoveCraft:SetScript("OnClick", function(self)
                 userSettings["removeCraft"] = cbRemoveCraft:GetChecked()
-            end
+            end)
 
             local cbShowRemaining = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
             cbShowRemaining.Text:SetText("Show remaining reagents, not total")
             cbShowRemaining:SetPoint("TOPLEFT", cbRemoveCraft, "BOTTOMLEFT", 0, 0)
             cbShowRemaining:SetChecked(userSettings["showRemaining"])
-            cbShowRemaining.SetValue = function()
+            cbShowRemaining:SetScript("OnClick", function(self)
                 userSettings["showRemaining"] = cbShowRemaining:GetChecked()
-                trackReagents()
-            end
+                pslReagents()
+            end)
 
             local cbShowTooltip = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
             cbShowTooltip.Text:SetText("Show tooltip information")
             cbShowTooltip:SetPoint("TOPLEFT", cbShowRemaining, "BOTTOMLEFT", 0, 0)
             cbShowTooltip:SetChecked(userSettings["showTooltip"])
-            cbShowTooltip.SetValue = function()
+            cbShowTooltip:SetScript("OnClick", function(self)
                 userSettings["showTooltip"] = cbShowTooltip:GetChecked()
-            end
+            end)
 
             local labelRecipeRows = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
             labelRecipeRows:SetPoint("TOPLEFT", cbShowTooltip, "BOTTOMLEFT", 5, 0)
@@ -644,15 +584,15 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
             end)
 
             local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-            pslSettingsText1:SetPoint("TOPLEFT", labelReagentColumns, "BOTTOMLEFT", 5, -10)
+            pslSettingsText1:SetPoint("TOPLEFT", labelReagentColumns, "BOTTOMLEFT", 0, -10)
             pslSettingsText1:SetJustifyH("LEFT");
             pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.")
 
             local pslSettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
             pslSettingsText2:SetPoint("TOPLEFT", pslSettingsText1, "BOTTOMLEFT", 0, -15)
             pslSettingsText2:SetJustifyH("LEFT");
-            pslSettingsText2:SetText("Mouse interactions:\nLeft-click + Drag|cffFFFFFF: Move the PSL windows.\n|RRight-click in the Tracked column|cffFFFFFF: Untrack 1 of the selected recipe.\n|RShift + Right-click in the Tracked column|cffFFFFFF: Untrack all of the selected recipe.\n|RShift + Click in the Reagent column|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
-
+            pslSettingsText2:SetText("Mouse interactions:\nLeft-click + Drag|cffFFFFFF: Move the PSL windows.\n|RLeft-click in the Recipes column|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click in the Tracked column|cffFFFFFF: Untrack 1 of the selected recipe.\n|RShift + Right-click in the Tracked column|cffFFFFFF: Untrack all of the selected recipe.\n|RShift + Click in the Reagent column|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
+            
             local pslSettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
             pslSettingsText3:SetPoint("TOPLEFT", pslSettingsText2, "BOTTOMLEFT", 0, -15)
             pslSettingsText3:SetJustifyH("LEFT");
@@ -669,10 +609,18 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
             -- Clear list
             elseif msg == "clear" then
                 recipesTracked = {}
-                reagentNumbers = {}
-                reagentLinks = {}
-                recipeLinks = {}
-                trackReagents()
+                reagentsTracked = {}
+                pslReagents()
+
+                -- Check if recipe is tracked
+                if not recipesTracked[pslSelectedRecipeID] then removeCraftListButton:Disable()
+                elseif recipesTracked[pslSelectedRecipeID] == 0 then removeCraftListButton:Disable()
+                else removeCraftListButton:Enable()
+                end
+
+                -- Remove old version variables
+                reagentNumbers = nil
+                reagentLinks = nil
             -- No arguments
             else
                 -- Toggle tracking windows
@@ -684,7 +632,7 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
                     pslFrame2:Show()
                 end
                 -- Only update numbers if numbers exist
-                if reagentNumbers then trackReagents() end
+                if reagentsTracked then pslReagents() end
             end
         end
 
@@ -734,27 +682,458 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
                     -- Activate if shift+clicking on the reagents column
                     if column == 1 and button == "LeftButton" and IsShiftKeyDown() == true and realrow ~= nil then
                         -- Get recipeID
-                        local itemID = select(3, strfind(data[realrow][1], "item:(%d+)")) --Define this as a function somewhere, gonna use it a lot probably
+                        local itemID = GetItemInfoFromHyperlink(data[realrow][1])
 
-                        if recipeLibrary[itemID] and C_TradeSkillUI.GetRecipeNumReagents(recipeLibrary[itemID]) ~= 0 then
-                            --Get selected recipe ID
-                            local recipeID = recipeLibrary[itemID]
+                        -- Get possible recipeIDs
+                        local recipeIDs = {}
+                        local no = 0
+
+                        for r, i in pairs(recipeLibrary) do
+                            if i == itemID then
+                                no = no + 1
+                                recipeIDs[no] = r
+                            end
+                        end
+
+                        -- If there is only one possible recipe, use that
+                        if no == 1 then
+                            local recipeID = recipeIDs[no]
 
                             -- Track recipe
-                            if not recipesTracked[recipeID] then recipesTracked[recipeID] = 0 end
+                            recipesTracked[recipeID] = math.max(0, reagentsTracked[itemID] - GetItemCount(itemID))
 
-                            local itemName = GetItemInfo(itemID)
-                            recipesTracked[recipeID] = math.max(0, reagentNumbers[itemName] - GetItemCount(itemID))
-
-                            -- Get recipe link
-                            recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeItemLink(recipeID)
+                            -- Add recipe link
+                            recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
 
                             -- Show windows
                             pslFrame1:Show()
                             pslFrame2:Show()
 
                             -- Update numbers
-                            trackReagents()
+                            pslReagents()
+
+                        -- If there is more than one possible recipe, provide options
+                        elseif no > 1 then
+                            -- Create popup frame
+                            local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+                            f:SetPoint("CENTER")
+                            f:SetBackdrop({
+                                bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+                                edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+                                edgeSize = 16,
+                                insets = { left = 4, right = 4, top = 4, bottom = 4 },
+                            })
+                            f:SetBackdropColor(0, 0, 0, 1)
+                            f:EnableMouse(true)
+                            f:SetMovable(true)
+                            f:RegisterForDrag("LeftButton")
+                            f:SetScript("OnDragStart", function(self, button) self:StartMoving() end)
+                            f:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)     
+                            f:Show()
+
+                            -- Close button
+                            local close = CreateFrame("Button", "pslOptionCloseButton", f, "UIPanelCloseButton")
+                            close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
+                            close:SetScript("OnClick", function()
+                                f:Hide()
+                            end)
+
+                            -- Text
+                            local pslOptionText = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+                            pslOptionText:SetPoint("CENTER", f, "CENTER", 0, 0)
+                            pslOptionText:SetPoint("TOP", f, "TOP", 0, -10)
+                            pslOptionText:SetJustifyH("CENTER")
+                            pslOptionText:SetText("|cffFFFFFFThere are multiple recipes which can create\n"..data[realrow][1]..".\n\nPlease select one of the following:")
+
+                            -- Get numReagents #1
+                            local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).reagentSlotSchematics
+                            local numReagents = 0
+                            if reagentsTable[9] then numReagents = 9
+                            elseif reagentsTable[8] then numReagents = 8
+                            elseif reagentsTable[7] then numReagents = 7
+                            elseif reagentsTable[6] then numReagents = 6
+                            elseif reagentsTable[5] then numReagents = 5
+                            elseif reagentsTable[4] then numReagents = 4
+                            elseif reagentsTable[3] then numReagents = 3
+                            elseif reagentsTable[2] then numReagents = 2
+                            elseif reagentsTable[1] then numReagents = 1
+                            end
+
+                            -- Text
+                            local pslOption1 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+                            pslOption1:SetPoint("LEFT", f, "LEFT", 10, 0)
+                            pslOption1:SetPoint("TOP", pslOptionText, "BOTTOM", 0, -40)
+                            pslOption1:SetWidth(200)
+                            pslOption1:SetJustifyH("LEFT")
+                            pslOption1:SetText("|cffFFFFFF")
+
+                            -- Get reagents #1
+                            if numReagents ~= 0 then
+                                for idx = 1, numReagents do
+                                    -- Get info
+                                    local reagentID = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).reagentSlotSchematics[idx].reagents[1].itemID
+                                    local reagentAmount = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).reagentSlotSchematics[idx].quantityRequired
+                                    local itemName, itemLink = GetItemInfo(reagentID)
+
+                                    -- Text
+                                    oldText = pslOption1:GetText()
+                                    pslOption1:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                end
+                            end
+
+                            -- Button #1
+                            pslOptionButton1 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+                            pslOptionButton1:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).name)
+                            pslOptionButton1:SetWidth(200)
+                            pslOptionButton1:SetPoint("BOTTOM", pslOption1, "TOP", 0, 5)
+                            pslOptionButton1:SetPoint("CENTER", pslOption1, "CENTER", 0, 0)
+                            pslOptionButton1:SetScript("OnClick", function()
+                                -- Get selected recipe ID
+                                local recipeID = recipeIDs[1]
+                        
+                                -- Track recipe
+                                recipesTracked[recipeID] = math.max(0, reagentsTracked[itemID] - GetItemCount(itemID))
+                        
+                                -- Add recipe link
+                                recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
+                        
+                                -- Show windows
+                                pslFrame1:Show()
+                                pslFrame2:Show()
+                                f:Hide()
+                        
+                                -- Update numbers
+                                pslReagents()
+                            end)
+                            
+                            -- If two options
+                            if no >= 2 then
+                                -- Adjust popup frame
+                                f:SetSize(430, 205)
+
+                                -- Get numReagents #2
+                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).reagentSlotSchematics
+                                local numReagents = 0
+                                if reagentsTable[9] then numReagents = 9
+                                elseif reagentsTable[8] then numReagents = 8
+                                elseif reagentsTable[7] then numReagents = 7
+                                elseif reagentsTable[6] then numReagents = 6
+                                elseif reagentsTable[5] then numReagents = 5
+                                elseif reagentsTable[4] then numReagents = 4
+                                elseif reagentsTable[3] then numReagents = 3
+                                elseif reagentsTable[2] then numReagents = 2
+                                elseif reagentsTable[1] then numReagents = 1
+                                end
+
+                                -- Text
+                                local pslOption2 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+                                pslOption2:SetPoint("LEFT", pslOption1, "RIGHT", 10, 0)
+                                pslOption2:SetPoint("TOP", pslOption1, "TOP", 0, 0)
+                                pslOption2:SetWidth(200)
+                                pslOption2:SetJustifyH("LEFT")
+                                pslOption2:SetText("|cffFFFFFF")
+
+                                -- Get reagents #2
+                                if numReagents ~= 0 then
+                                    for idx = 1, numReagents do
+                                        -- Get info
+                                        local reagentID = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).reagentSlotSchematics[idx].reagents[1].itemID
+                                        local reagentAmount = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).reagentSlotSchematics[idx].quantityRequired
+                                        local itemName, itemLink = GetItemInfo(reagentID)
+
+                                        -- Text
+                                        oldText = pslOption2:GetText()
+                                        pslOption2:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                    end
+                                end
+
+                                -- Button #2
+                                pslOptionButton2 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+                                pslOptionButton2:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).name)
+                                pslOptionButton2:SetWidth(200)
+                                pslOptionButton2:SetPoint("BOTTOM", pslOption2, "TOP", 0, 5)
+                                pslOptionButton2:SetPoint("CENTER", pslOption2, "CENTER", 0, 0)
+                                pslOptionButton2:SetScript("OnClick", function()
+                                    -- Get selected recipe ID
+                                    local recipeID = recipeIDs[2]
+                            
+                                    -- Track recipe
+                                    recipesTracked[recipeID] = math.max(0, reagentsTracked[itemID] - GetItemCount(itemID))
+                            
+                                    -- Add recipe link
+                                    recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
+                            
+                                    -- Show windows
+                                    pslFrame1:Show()
+                                    pslFrame2:Show()
+                                    f:Hide()
+                            
+                                    -- Update numbers
+                                    pslReagents()
+                                end)
+                            end
+
+                            -- If three options
+                            if no >= 3 then
+                                -- Adjust popup frame
+                                f:SetSize(640, 200)
+
+                                -- Get numReagents #3
+                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).reagentSlotSchematics
+                                local numReagents = 0
+                                if reagentsTable[9] then numReagents = 9
+                                elseif reagentsTable[8] then numReagents = 8
+                                elseif reagentsTable[7] then numReagents = 7
+                                elseif reagentsTable[6] then numReagents = 6
+                                elseif reagentsTable[5] then numReagents = 5
+                                elseif reagentsTable[4] then numReagents = 4
+                                elseif reagentsTable[3] then numReagents = 3
+                                elseif reagentsTable[2] then numReagents = 2
+                                elseif reagentsTable[1] then numReagents = 1
+                                end
+
+                                -- Text
+                                local pslOption3 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+                                pslOption3:SetPoint("LEFT", pslOption1, "RIGHT", 220, 0)
+                                pslOption3:SetPoint("TOP", pslOption1, "TOP", 0, 0)
+                                pslOption3:SetWidth(200)
+                                pslOption3:SetJustifyH("LEFT")
+                                pslOption3:SetText("|cffFFFFFF")
+
+                                -- Get reagents #3
+                                if numReagents ~= 0 then
+                                    for idx = 1, numReagents do
+                                        -- Get info
+                                        local reagentID = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).reagentSlotSchematics[idx].reagents[1].itemID
+                                        local reagentAmount = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).reagentSlotSchematics[idx].quantityRequired
+                                        local itemName, itemLink = GetItemInfo(reagentID)
+
+                                        -- Text
+                                        oldText = pslOption3:GetText()
+                                        pslOption3:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                    end
+                                end
+
+                                -- Button #3
+                                pslOptionButton3 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+                                pslOptionButton3:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).name)
+                                pslOptionButton3:SetWidth(200)
+                                pslOptionButton3:SetPoint("BOTTOM", pslOption3, "TOP", 0, 5)
+                                pslOptionButton3:SetPoint("CENTER", pslOption3, "CENTER", 0, 0)
+                                pslOptionButton3:SetScript("OnClick", function()
+                                    -- Get selected recipe ID
+                                    local recipeID = recipeIDs[3]
+                            
+                                    -- Track recipe
+                                    recipesTracked[recipeID] = math.max(0, reagentsTracked[itemID] - GetItemCount(itemID))
+                            
+                                    -- Add recipe link
+                                    recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
+                            
+                                    -- Show windows
+                                    pslFrame1:Show()
+                                    pslFrame2:Show()
+                                    f:Hide()
+                            
+                                    -- Update numbers
+                                    pslReagents()
+                                end)
+                            end
+
+                            -- If four options
+                            if no >= 4 then
+                                -- Adjust popup frame
+                                f:SetSize(640, 335)
+
+                                -- Get numReagents #4
+                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).reagentSlotSchematics
+                                local numReagents = 0
+                                if reagentsTable[9] then numReagents = 9
+                                elseif reagentsTable[8] then numReagents = 8
+                                elseif reagentsTable[7] then numReagents = 7
+                                elseif reagentsTable[6] then numReagents = 6
+                                elseif reagentsTable[5] then numReagents = 5
+                                elseif reagentsTable[4] then numReagents = 4
+                                elseif reagentsTable[3] then numReagents = 3
+                                elseif reagentsTable[2] then numReagents = 2
+                                elseif reagentsTable[1] then numReagents = 1
+                                end
+
+                                -- Text
+                                local pslOption4 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+                                pslOption4:SetPoint("LEFT", pslOption1, "LEFT", 0, 0)
+                                pslOption4:SetPoint("TOP", pslOption1, "TOP", 0, -130)
+                                pslOption4:SetWidth(200)
+                                pslOption4:SetJustifyH("LEFT")
+                                pslOption4:SetText("|cffFFFFFF")
+
+                                -- Get reagents #4
+                                if numReagents ~= 0 then
+                                    for idx = 1, numReagents do
+                                        -- Get info
+                                        local reagentID = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).reagentSlotSchematics[idx].reagents[1].itemID
+                                        local reagentAmount = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).reagentSlotSchematics[idx].quantityRequired
+                                        local itemName, itemLink = GetItemInfo(reagentID)
+
+                                        -- Text
+                                        oldText = pslOption4:GetText()
+                                        pslOption4:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                    end
+                                end
+
+                                -- Button #4
+                                pslOptionButton4 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+                                pslOptionButton4:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).name)
+                                pslOptionButton4:SetWidth(200)
+                                pslOptionButton4:SetPoint("BOTTOM", pslOption4, "TOP", 0, 5)
+                                pslOptionButton4:SetPoint("CENTER", pslOption4, "CENTER", 0, 0)
+                                pslOptionButton4:SetScript("OnClick", function()
+                                    -- Get selected recipe ID
+                                    local recipeID = recipeIDs[4]
+                            
+                                    -- Track recipe
+                                    recipesTracked[recipeID] = math.max(0, reagentsTracked[itemID] - GetItemCount(itemID))
+                            
+                                    -- Add recipe link
+                                    recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
+                            
+                                    -- Show windows
+                                    pslFrame1:Show()
+                                    pslFrame2:Show()
+                                    f:Hide()
+                            
+                                    -- Update numbers
+                                    pslReagents()
+                                end)
+                            end
+
+                            -- If five options
+                            if no >= 5 then
+                                -- Get numReagents #5
+                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).reagentSlotSchematics
+                                local numReagents = 0
+                                if reagentsTable[9] then numReagents = 9
+                                elseif reagentsTable[8] then numReagents = 8
+                                elseif reagentsTable[7] then numReagents = 7
+                                elseif reagentsTable[6] then numReagents = 6
+                                elseif reagentsTable[5] then numReagents = 5
+                                elseif reagentsTable[4] then numReagents = 4
+                                elseif reagentsTable[3] then numReagents = 3
+                                elseif reagentsTable[2] then numReagents = 2
+                                elseif reagentsTable[1] then numReagents = 1
+                                end
+
+                                -- Text
+                                local pslOption5 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+                                pslOption5:SetPoint("LEFT", pslOption1, "RIGHT", 10, 0)
+                                pslOption5:SetPoint("TOP", pslOption1, "TOP", 0, -130)
+                                pslOption5:SetWidth(200)
+                                pslOption5:SetJustifyH("LEFT")
+                                pslOption5:SetText("|cffFFFFFF")
+
+                                -- Get reagents #5
+                                if numReagents ~= 0 then
+                                    for idx = 1, numReagents do
+                                        -- Get info
+                                        local reagentID = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).reagentSlotSchematics[idx].reagents[1].itemID
+                                        local reagentAmount = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).reagentSlotSchematics[idx].quantityRequired
+                                        local itemName, itemLink = GetItemInfo(reagentID)
+
+                                        -- Text
+                                        oldText = pslOption5:GetText()
+                                        pslOption5:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                    end
+                                end
+
+                                -- Button #5
+                                pslOptionButton5 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+                                pslOptionButton5:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).name)
+                                pslOptionButton5:SetWidth(200)
+                                pslOptionButton5:SetPoint("BOTTOM", pslOption5, "TOP", 0, 5)
+                                pslOptionButton5:SetPoint("CENTER", pslOption5, "CENTER", 0, 0)
+                                pslOptionButton5:SetScript("OnClick", function()
+                                    -- Get selected recipe ID
+                                    local recipeID = recipeIDs[5]
+                            
+                                    -- Track recipe
+                                    recipesTracked[recipeID] = math.max(0, reagentsTracked[itemID] - GetItemCount(itemID))
+                            
+                                    -- Add recipe link
+                                    recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
+                            
+                                    -- Show windows
+                                    pslFrame1:Show()
+                                    pslFrame2:Show()
+                                    f:Hide()
+                            
+                                    -- Update numbers
+                                    pslReagents()
+                                end)
+                            end
+
+                            -- If six options
+                            if no >= 6 then
+                                -- Get numReagents #6
+                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).reagentSlotSchematics
+                                local numReagents = 0
+                                if reagentsTable[9] then numReagents = 9
+                                elseif reagentsTable[8] then numReagents = 8
+                                elseif reagentsTable[7] then numReagents = 7
+                                elseif reagentsTable[6] then numReagents = 6
+                                elseif reagentsTable[5] then numReagents = 5
+                                elseif reagentsTable[4] then numReagents = 4
+                                elseif reagentsTable[3] then numReagents = 3
+                                elseif reagentsTable[2] then numReagents = 2
+                                elseif reagentsTable[1] then numReagents = 1
+                                end
+
+                                -- Text
+                                local pslOption6 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+                                pslOption6:SetPoint("LEFT", pslOption1, "RIGHT", 220, 0)
+                                pslOption6:SetPoint("TOP", pslOption1, "TOP", 0, -130)
+                                pslOption6:SetWidth(200)
+                                pslOption6:SetJustifyH("LEFT")
+                                pslOption6:SetText("|cffFFFFFF")
+
+                                -- Get reagents #6
+                                if numReagents ~= 0 then
+                                    for idx = 1, numReagents do
+                                        -- Get info
+                                        local reagentID = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).reagentSlotSchematics[idx].reagents[1].itemID
+                                        local reagentAmount = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).reagentSlotSchematics[idx].quantityRequired
+                                        local itemName, itemLink = GetItemInfo(reagentID)
+
+                                        -- Text
+                                        oldText = pslOption6:GetText()
+                                        pslOption6:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                    end
+                                end
+
+                                -- Button #6
+                                pslOptionButton6 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+                                pslOptionButton6:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).name)
+                                pslOptionButton6:SetWidth(200)
+                                pslOptionButton6:SetPoint("BOTTOM", pslOption6, "TOP", 0, 5)
+                                pslOptionButton6:SetPoint("CENTER", pslOption6, "CENTER", 0, 0)
+                                pslOptionButton6:SetScript("OnClick", function()
+                                    -- Get selected recipe ID
+                                    local recipeID = recipeIDs[6]
+                            
+                                    -- Track recipe
+                                    recipesTracked[recipeID] = math.max(0, reagentsTracked[itemID] - GetItemCount(itemID))
+                            
+                                    -- Add recipe link
+                                    recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
+                            
+                                    -- Show windows
+                                    pslFrame1:Show()
+                                    pslFrame2:Show()
+                                    f:Hide()
+                            
+                                    -- Update numbers
+                                    pslReagents()
+                                end)
+                            end
                         end
                     end
                 end
@@ -780,51 +1159,57 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
             table2:RegisterEvents({
                 ["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
                     -- Activate if right-clicking on the tracked column
-                    if column == 2 and button == "RightButton" then
-                        -- Get selected recipe ID
-                        function getkey(t, value)
-                            for k,v in pairs(t) do
-                            if v == value then return k end
+                    if column == 2 and button == "RightButton" and row ~= nil and realrow ~= nil then
+                        -- Get itemID
+                        local itemID = GetItemInfoFromHyperlink(data[realrow][1])
+
+                        -- Get possible recipeIDs
+                        local recipeIDs = {}
+                        local no = 0
+
+                        for r, i in pairs(recipeLibrary) do
+                            if i == itemID then
+                                no = no + 1
+                                recipeIDs[no] = r
                             end
-                            return nil
                         end
-                        local recipeID = getkey(recipeLinks, data[realrow][1])
 
-                        -- (TEMPORARY HOPEFULLY) Only remove recipes if we can get API info.
-                        if C_TradeSkillUI.GetRecipeNumReagents(recipeID) ~= 0 then
-                            -- Show windows
-                            pslFrame1:Show()
-                            pslFrame2:Show()
+                        -- Untrack one of each possible recipeID if it is tracked (should be exactly one recipeID)
+                        if no ~= 0 then
+                            for idx = 1, no do
+                                if recipesTracked[recipeIDs[idx]] ~= nil then
+                                    if IsShiftKeyDown() == true then
+                                        recipesTracked[recipeIDs[idx]] = nil
+                                    else
+                                        recipesTracked[recipeIDs[idx]] = recipesTracked[recipeIDs[idx]] - 1
+                                    end
 
-                            -- Untrack recipe / Untrack all if Shift is pressed
-                            local removeAmount = 1
-                            if IsShiftKeyDown() == true then removeAmount = recipesTracked[recipeID] end
-
-                            -- Update reagents
-                            for idx = 1, C_TradeSkillUI.GetRecipeNumReagents(recipeID) do
-                                -- Get name, icon and number
-                                local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, idx)
-                                -- Do maths
-                                reagentNumbers[reagentName] = reagentNumbers[reagentName] - reagentCount * removeAmount
-                                -- Set numbers to nil if they don't exist anymore
-                                if reagentNumbers[reagentName] == 0 then
-                                    reagentNumbers[reagentName] = nil
-                                    reagentLinks[reagentName] = nil
+                                    -- Set numbers to nil if it doesn't exist anymore
+                                    if recipesTracked[recipeIDs[idx]] == 0 then
+                                        recipesTracked[recipeIDs[idx]] = nil
+                                        recipeLinks[recipeIDs[idx]] = nil
+                                    end
                                 end
                             end
-
-                            -- Untrack recipe
-                            recipesTracked[recipeID] = recipesTracked[recipeID] - removeAmount
-
-                            -- Set numbers to nil if it doesn't exist anymore
-                            if recipesTracked[recipeID] == 0 then
-                                recipesTracked[recipeID] = nil
-                                recipeLinks[recipeID] = nil
-                            end
-
-                            -- Update numbers
-                            trackReagents()
                         end
+
+                        -- Show windows
+                        pslFrame1:Show()
+                        pslFrame2:Show()
+                        
+                        -- Update numbers
+                        pslReagents()
+
+                    elseif column == 1 and button == "LeftButton" and row ~= nil and realrow ~= nil then
+                        -- Find recipeID
+                        local recipeID = 0
+                        local itemName, itemLink = GetItemInfo(data[realrow][1])
+                        for r, i in pairs(recipeLinks) do
+                            if GetItemInfoFromHyperlink(i) == GetItemInfoFromHyperlink(data[realrow][1]) then recipeID = r end
+                        end
+
+                        -- Open recipe if profession is known
+                        if recipeID ~= 0 and C_TradeSkillUI.IsRecipeProfessionLearned(recipeID) == true then C_TradeSkillUI.OpenRecipe(recipeID) end
                     end
                 end
             })
@@ -854,53 +1239,47 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
         pslWindowFunctions()
     end
 
-    -- Do stuff when a profession window is opened
-    if event == "TRADE_SKILL_SHOW" then
+    -- When a recipe is selected or the profession window is opened
+    if event == "SPELL_DATA_LOAD_RESULT" then
         -- Check if the Remove button should be disabled
         function checkRemoveButton()
             -- Get selected recipe ID
-            local recipeID = TradeSkillFrame.RecipeList:GetSelectedRecipeID()
+            if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
+            pslSelectedRecipeID = arg1
 
             -- Check if recipe is tracked
-            if not recipesTracked[recipeID] then removeCraftListButton:Disable()
-            elseif recipesTracked[recipeID] == 0 then removeCraftListButton:Disable()
+            if not recipesTracked[pslSelectedRecipeID] then removeCraftListButton:Disable()
+            elseif recipesTracked[pslSelectedRecipeID] == 0 then removeCraftListButton:Disable()
             else removeCraftListButton:Enable()
             end
         end
         checkRemoveButton()
 
-        -- Check whenever a new recipe is selected
-        hooksecurefunc(TradeSkillFrame.RecipeList, "OnRecipeButtonClicked", function(self, recipeButton, recipeInfo, mouseButton)
-            checkRemoveButton()
-        end)
-
         -- Show the Chef's Hat if the Cooking window is open and the toy is known
-        skillLineID = C_TradeSkillUI.GetTradeSkillLine()
+        professionID = C_TradeSkillUI.GetProfessionInfoBySkillLineID(C_TradeSkillUI.GetProfessionChildSkillLineID()).profession
 
-        if skillLineID == 185 and PlayerHasToy(134020) then
+        if professionID == 5 and PlayerHasToy(134020) then
             chefsHatButton:Show()
         else
             chefsHatButton:Hide()
         end
     end
-
+    
     -- Do stuff when a profession window is loaded
     if event == "TRADE_SKILL_LIST_UPDATE" then
         -- Register all recipes for this profession
         for _, id in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
-            local recipeInfo = C_TradeSkillUI.GetRecipeInfo(id)
-            local craftID = C_TradeSkillUI.GetRecipeItemLink(recipeInfo.recipeID)
-            local itemID = select(3, strfind(craftID, "item:(%d+)"))
+            local itemID = C_TradeSkillUI.GetRecipeOutputItemData(id).itemID
             if itemID ~= nil then
-                recipeLibrary[itemID] = recipeInfo.recipeID
+                recipeLibrary[id] = itemID
             end
         end
     end
 
     -- Remove 1 tracked recipe when it has been crafted
     if event == "UNIT_SPELLCAST_SUCCEEDED" and userSettings["removeCraft"] == true then
-        -- Get selected recipe ID
-        local one, recipeID = ...
+        -- Get selected recipeID
+        local recipeID = ...
 
         if recipesTracked[recipeID] ~= nil then
             -- Untrack recipe
@@ -909,33 +1288,19 @@ f:SetScript("OnEvent", function(self, event, loadedAddon, ...)
             -- Set numbers to nil if it doesn't exist anymore
             if recipesTracked[recipeID] == 0 then
                 recipesTracked[recipeID] = nil
-                recipeLinks[recipeID] = nil
             end
         
             -- Disable the remove button if the recipe isn't tracked anymore
             if not recipesTracked[recipeID] then removeCraftListButton:Disable() end
         
-            -- Remove the reagents from the total count
-            for idx = 1, C_TradeSkillUI.GetRecipeNumReagents(recipeID) do
-                -- Get name, icon and number
-                local reagentName, reagentTexture, reagentCount = C_TradeSkillUI.GetRecipeReagentInfo(recipeID, idx)
-                -- Do maths
-                reagentNumbers[reagentName] = reagentNumbers[reagentName] - reagentCount
-                -- Set numbers to nil if it doesn't exist anymore
-                if reagentNumbers[reagentName] == 0 then
-                    reagentNumbers[reagentName] = nil
-                    reagentLinks[reagentName] = nil
-                end
-            end
-        
             -- Update numbers
-            trackReagents()
+            pslReagents()
         end
     end
 
     -- Update the numbers when bag changes occur
     if event == "BAG_UPDATE" then
-        trackReagents()
+        pslReagents()
     end
 
 end)
