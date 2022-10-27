@@ -1,9 +1,9 @@
-## Interface: 90207
+## Interface: 100000
 ## Title: Profession Shopping List
 ## Author: Sluimerstand
-## Version: v9.2.7-005-beta
+## Version: v10.0.0-001
 
-## SavedVariables: userSettings, recipesTracked, reagentNumbers, reagentLinks, recipeLinks, recipeLibrary
+## SavedVariables: userSettings, recipesTracked, recipeLinks, reagentsTracked, recipeLibrary
 
 libs\LibDBIcon-1.0\embeds.xml
 libs\lib-st\lib-st.xml
