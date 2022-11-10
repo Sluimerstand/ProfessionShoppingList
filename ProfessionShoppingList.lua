@@ -361,8 +361,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
         function pslSettings()
             -- Initialise the Settings page so the Minimap button can go there
             local settings = CreateFrame("Frame")            
-            local category = Settings.RegisterCanvasLayoutCategory(settings, "Profession Shopping List")
-            Settings.RegisterAddOnCategory(category)
+            settings.name = "Profession Shopping List"
+            InterfaceOptions_AddCategory(settings)
 
             -- Initialise the minimap button before the settings button is made, so it can toggle it
             local miniButton = LibStub("LibDataBroker-1.1"):NewDataObject("ProfessionShoppingList", {
