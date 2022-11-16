@@ -341,12 +341,17 @@ end
 
 -- Tooltip information
 function pslTooltipInfo()
-    local match = string.match
-    local strsplit = strsplit
+    --local match = string.match
+    --local strsplit = strsplit
 
     local function OnTooltipSetItem(tooltip)
-        -- Don't do anything if no item link
+        -- Catch the GetItem() error
+        if not tooltip.GetItem then return end
+
         local _, link = tooltip:GetItem()
+        print(link)
+
+        -- Don't do anything if no item link
         if not link then return end
 
         -- Get itemID
