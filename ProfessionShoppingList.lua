@@ -349,7 +349,6 @@ function pslTooltipInfo()
         if not tooltip.GetItem then return end
 
         local _, link = tooltip:GetItem()
-        print(link)
 
         -- Don't do anything if no item link
         if not link then return end
