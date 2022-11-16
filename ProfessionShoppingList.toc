@@ -1,7 +1,7 @@
 ## Interface: 100002
 ## Title: Profession Shopping List
 ## Author: Sluimerstand
-## Version: v10.0.2-002
+## Version: v10.0.2-003
 
 ## SavedVariables: userSettings, recipesTracked, recipeLinks, reagentsTracked, recipeLibrary
 
