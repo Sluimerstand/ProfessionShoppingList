@@ -192,6 +192,7 @@ function pslReagents()
         table.insert(data, {recipeLinks[recipeID], no})
         table2:SetData(data, true)
     end
+    table2:SetData(data, true)
     
     -- Recalculate reagents
     reagentsTracked = {}
@@ -248,6 +249,7 @@ function pslReagents()
         end
         getInfo()
     end
+    table1:SetData(data, true)
 
     -- Check if the Untrack button should be enabled
     if not recipesTracked[pslSelectedRecipeID] then removeCraftListButton:Disable()
@@ -631,11 +633,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                 recipeLibrary = {}
                 pslReagents()
 
-                -- Check if recipe is tracked
-                if not recipesTracked[pslSelectedRecipeID] then removeCraftListButton:Disable()
-                elseif recipesTracked[pslSelectedRecipeID] == 0 then removeCraftListButton:Disable()
-                else removeCraftListButton:Enable()
-                end
+                -- Disable remove button
+                removeCraftListButton:Disable()
 
                 -- Remove old version variables
                 reagentNumbers = nil
