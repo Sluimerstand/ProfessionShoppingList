@@ -189,10 +189,10 @@ function pslReagents()
     -- Update recipes tracked
     local data = {};
     for recipeID, no in pairs(recipesTracked) do
-        table.insert(data, {C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink, no})
+        table.insert(data, {recipeLinks[recipeID], no})
+        table2:SetData(data, true)
     end
-    table2:SetData(data, true)
-
+    
     -- Recalculate reagents
     reagentsTracked = {}
 
@@ -228,16 +228,26 @@ function pslReagents()
 
     -- Update reagents tracked
     local data = {}
-        for i, no in pairs(reagentsTracked) do
+    for i, no in pairs(reagentsTracked) do
+        local function getInfo()
             local itemName, itemLink = GetItemInfo(i)
 
+            -- Try again if error
+            if itemName == nil or itemLink == nil then
+                C_Timer.After(.5, getInfo)
+                do return end
+            end
+            
             if userSettings["showRemaining"] == false then
                 table.insert(data, {itemLink, GetItemCount(i, true, false, true).."/"..no})
             else
                 table.insert(data, {itemLink, math.max(0,no-GetItemCount(i, true, false, true))})
             end
+
+            table1:SetData(data, true)
         end
-    table1:SetData(data, true)
+        getInfo()
+    end
 
     -- Check if the Untrack button should be enabled
     if not recipesTracked[pslSelectedRecipeID] then removeCraftListButton:Disable()
@@ -332,11 +342,11 @@ function pslTooltipInfo()
     local match = string.match
     local strsplit = strsplit
 
-    local function GameTooltip_OnTooltipSetItem(tooltip)
+    local function OnTooltipSetItem(tooltip)
         -- Don't do anything if no item link
         local _, link = tooltip:GetItem()
         if not link then return end
-        
+
         -- Get itemID
         local itemID = GetItemInfoFromHyperlink(link)
 
@@ -346,7 +356,7 @@ function pslTooltipInfo()
         end
     end
 
-    GameTooltip:HookScript("OnTooltipSetItem", GameTooltip_OnTooltipSetItem)
+    TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnTooltipSetItem)
 end
 
 f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
@@ -380,7 +390,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                             pslFrame1:Show()
                             pslFrame2:Show()
                         end
-                        -- Only update numbers if numbers exist
+                        -- Only update numbers if numbers exist, delayed to fix WoWThingSync interference
                         if reagentsTracked then pslReagents() end
                     elseif button == "RightButton" then
                         InterfaceOptionsFrame_OpenToCategory("Profession Shopping List")
@@ -614,8 +624,11 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                 InterfaceOptionsFrame_OpenToCategory(settings)
             -- Clear list
             elseif msg == "clear" then
+                -- Clear recipes and reagents
                 recipesTracked = {}
                 reagentsTracked = {}
+                recipeLinks = {}
+                recipeLibrary = {}
                 pslReagents()
 
                 -- Check if recipe is tracked
@@ -637,7 +650,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                     pslFrame1:Show()
                     pslFrame2:Show()
                 end
-                -- Only update numbers if numbers exist
+                -- Only update numbers if numbers exist, delayed to fix WoWThingSync interference
                 if reagentsTracked then pslReagents() end
             end
         end
