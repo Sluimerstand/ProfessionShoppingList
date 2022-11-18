@@ -25,6 +25,7 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 
 **Other features**
 
-- Optionally untracks recipes after crafting them.
-- Optional tooltip information for tracked reagents.
+- Can untrack recipes after crafting them.
+- Can show tooltip information for tracked reagents.
+- Can automatically set vendors' filter to 'All'.
 - Adds a Chef's Hat button to the Cooking window, if the toy is known.
