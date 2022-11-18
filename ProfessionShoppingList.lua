@@ -9,6 +9,7 @@ f:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
 f:RegisterEvent("TRADE_SKILL_SHOW")
 f:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 f:RegisterEvent("SPELL_DATA_LOAD_RESULT")
+f:RegisterEvent("MERCHANT_SHOW")
 
 -- Load the TradeSkillUI to prevent stuff from being wonky
 if not C_TradeSkillUI then
@@ -35,6 +36,7 @@ function pslInitialise()
     if userSettings["recipeNoWidth"] == nil then userSettings["recipeNoWidth"] = 30 end
     if userSettings["reagentWidth"] == nil then userSettings["reagentWidth"] = 150 end
     if userSettings["reagentNoWidth"] == nil then userSettings["reagentNoWidth"] = 50 end
+    if userSettings["vendorAll"] == nil then userSettings["vendorAll"] = true end
 end
 
 --Create tracking windows
@@ -341,14 +343,9 @@ end
 
 -- Tooltip information
 function pslTooltipInfo()
-    --local match = string.match
-    --local strsplit = strsplit
-
     local function OnTooltipSetItem(tooltip)
-        -- Catch the GetItem() error
-        if not tooltip.GetItem then return end
-
-        local _, link = tooltip:GetItem()
+        -- Get item info from tooltip
+        local _, link = TooltipUtil.GetDisplayedItem(tooltip)
 
         -- Don't do anything if no item link
         if not link then return end
@@ -356,12 +353,14 @@ function pslTooltipInfo()
         -- Get itemID
         local itemID = GetItemInfoFromHyperlink(link)
 
+        -- Add the tooltip info
         if userSettings["showTooltip"] == true and reagentsTracked[itemID] then
             tooltip:AddLine(" ")
             tooltip:AddLine("PSL: "..GetItemCount(reagentsTracked[itemID], true, false, true).."/"..reagentsTracked[itemID].." ("..math.max(0,reagentsTracked[itemID]-GetItemCount(reagentsTracked[itemID], true, false, true)).." more needed)")
         end
     end
 
+    -- No clue what this does, to be honest
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnTooltipSetItem)
 end
 
@@ -396,9 +395,10 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                             pslFrame1:Show()
                             pslFrame2:Show()
                         end
-                        -- Only update numbers if numbers exist, delayed to fix WoWThingSync interference
+                        -- Only update numbers if numbers exist
                         if reagentsTracked then pslReagents() end
                     elseif button == "RightButton" then
+                        -- Open the options
                         InterfaceOptionsFrame_OpenToCategory("Profession Shopping List")
                     end
                 end,
@@ -435,6 +435,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
             local cbMinimapButton = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
             cbMinimapButton.Text:SetText("Minimap button")
+            cbMinimapButton.Text:SetTextColor(1, 1, 1, 1)
             cbMinimapButton:SetPoint("TOPLEFT", 10, -25)
             cbMinimapButton:SetChecked(not userSettings["hide"])
             cbMinimapButton:SetScript("OnClick", function(self)
@@ -448,6 +449,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
             local cbRemoveCraft = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
             cbRemoveCraft.Text:SetText("Untrack on crafting")
+            cbRemoveCraft.Text:SetTextColor(1, 1, 1, 1)
             cbRemoveCraft:SetPoint("TOPLEFT", cbMinimapButton, "BOTTOMLEFT", 0, 0)
             cbRemoveCraft:SetChecked(userSettings["removeCraft"])
             cbRemoveCraft:SetScript("OnClick", function(self)
@@ -456,6 +458,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
             local cbShowRemaining = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
             cbShowRemaining.Text:SetText("Show remaining reagents, not total")
+            cbShowRemaining.Text:SetTextColor(1, 1, 1, 1)
             cbShowRemaining:SetPoint("TOPLEFT", cbRemoveCraft, "BOTTOMLEFT", 0, 0)
             cbShowRemaining:SetChecked(userSettings["showRemaining"])
             cbShowRemaining:SetScript("OnClick", function(self)
@@ -465,16 +468,27 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
             local cbShowTooltip = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
             cbShowTooltip.Text:SetText("Show tooltip information")
+            cbShowTooltip.Text:SetTextColor(1, 1, 1, 1)
             cbShowTooltip:SetPoint("TOPLEFT", cbShowRemaining, "BOTTOMLEFT", 0, 0)
             cbShowTooltip:SetChecked(userSettings["showTooltip"])
             cbShowTooltip:SetScript("OnClick", function(self)
                 userSettings["showTooltip"] = cbShowTooltip:GetChecked()
             end)
 
+            local cbVendorAll = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+            cbVendorAll.Text:SetText("Always set vendor filter to 'All'")
+            cbVendorAll.Text:SetTextColor(1, 1, 1, 1)
+            cbVendorAll:SetPoint("TOPLEFT", cbShowTooltip, "BOTTOMLEFT", 0, 0)
+            cbVendorAll:SetChecked(userSettings["vendorAll"])
+            cbVendorAll:SetScript("OnClick", function(self)
+                userSettings["vendorAll"] = cbVendorAll:GetChecked()
+            end)
+
             local labelRecipeRows = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-            labelRecipeRows:SetPoint("TOPLEFT", cbShowTooltip, "BOTTOMLEFT", 5, 0)
+            labelRecipeRows:SetPoint("CENTER", cbMinimapButton, "CENTER", 300, 0)
             labelRecipeRows:SetJustifyH("LEFT");
             labelRecipeRows:SetText("|cffFFFFFFRecipe rows:")
+            labelRecipeRows:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
 
             local ebRecipeRows = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
             ebRecipeRows:SetSize(20,20)
@@ -499,6 +513,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             labelReagentRows:SetPoint("TOPLEFT", labelRecipeRows, "BOTTOMLEFT", 0, -10)
             labelReagentRows:SetJustifyH("LEFT");
             labelReagentRows:SetText("|cffFFFFFFReagent rows:")
+            labelReagentRows:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
 
             local ebReagentRows = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
             ebReagentRows:SetSize(20,20)
@@ -523,6 +538,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             labelRecipeColumns:SetPoint("TOPLEFT", labelReagentRows, "BOTTOMLEFT", 0, -10)
             labelRecipeColumns:SetJustifyH("LEFT");
             labelRecipeColumns:SetText("|cffFFFFFFRecipe column width:")
+            labelRecipeColumns:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
 
             local ebRecipeWidth = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
             ebRecipeWidth:SetSize(30,20)
@@ -566,6 +582,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             labelReagentColumns:SetPoint("TOPLEFT", labelRecipeColumns, "BOTTOMLEFT", 0, -10)
             labelReagentColumns:SetJustifyH("LEFT");
             labelReagentColumns:SetText("|cffFFFFFFReagent column width:")
+            labelReagentColumns:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
 
             local ebReagentWidth = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
             ebReagentWidth :SetSize(30,20)
@@ -606,7 +623,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             end)
 
             local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-            pslSettingsText1:SetPoint("TOPLEFT", labelReagentColumns, "BOTTOMLEFT", 0, -10)
+            pslSettingsText1:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 3, -10)
             pslSettingsText1:SetJustifyH("LEFT");
             pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.")
 
@@ -653,7 +670,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                     pslFrame1:Show()
                     pslFrame2:Show()
                 end
-                -- Only update numbers if numbers exist, delayed to fix WoWThingSync interference
+                -- Only update numbers if numbers exist
                 if reagentsTracked then pslReagents() end
             end
         end
@@ -1332,4 +1349,11 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
         pslReagents()
     end
 
+    -- Set the Vendor filter to 'All' if the option is enabled
+    if event == "MERCHANT_SHOW" and userSettings["vendorAll"] == true then
+        C_Timer.After(0.1,function()
+            SetMerchantFilter(1)
+            MerchantFrame_Update()
+        end)
+    end
 end)
