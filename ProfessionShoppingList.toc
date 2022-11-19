@@ -1,10 +1,11 @@
 ## Interface: 100002
 ## Title: Profession Shopping List
 ## Author: Sluimerstand
-## Version: v10.0.2-004
+## Version: v10.0.2-005
 
 ## SavedVariables: userSettings, recipesTracked, recipeLinks, reagentsTracked, recipeLibrary
 
 libs\LibDBIcon-1.0\embeds.xml
+libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua
 libs\lib-st\lib-st.xml
 ProfessionShoppingList.lua
