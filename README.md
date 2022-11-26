@@ -8,7 +8,6 @@ This AddOn is still in development and I am not an experienced programmer.
 Feel free to give me advice on how to improve this AddOn and please report any issues to the Github (which I am also still familiarising myself with).
 
 [CurseForge page](https://www.curseforge.com/wow/addons/profession-shopping-list)
-
 [Wago page](https://addons.wago.io/addons/psl)
 
 **Chat commands**
