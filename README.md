@@ -17,7 +17,7 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 
 **Mouse interactions**
 
-- Dag: Move the tracking windows.
+- Drag: Move the tracking windows.
 - Left+click Recipe: Open the selected recipe (if known on current character).
 - Right-click Recipe #: Untrack 1 of the selected recipe.
 - Shift+right-click Recipe #: Untrack all of the selected recipe.
