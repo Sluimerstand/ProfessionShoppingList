@@ -1,4 +1,4 @@
-# ProfessionShoppingList
+# Profession Shopping List
 A World of Warcraft AddOn that adds a shopping list for tracked recipes.
 
 Profession Shopping List is an AddOn that allows you to track recipes, and shows you the materials you need to craft them.
