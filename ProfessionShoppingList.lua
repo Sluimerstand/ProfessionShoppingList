@@ -356,9 +356,18 @@ function pslTooltipInfo()
         -- Add the tooltip info
         if userSettings["showTooltip"] == true and reagentsTracked[itemID] then
             tooltip:AddLine(" ")
-            tooltip:AddLine("PSL: "..GetItemCount(reagentsTracked[itemID], true, false, true).."/"..reagentsTracked[itemID].." ("..math.max(0,reagentsTracked[itemID]-GetItemCount(reagentsTracked[itemID], true, false, true)).." more needed)")
+            tooltip:AddLine("PSL: "..GetItemCount(itemID, true, false, true).."/"..reagentsTracked[itemID].." ("..math.max(0,reagentsTracked[itemID]-GetItemCount(itemID, true, false, true)).." more needed)")
         end
     end
+
+
+    -- if userSettings["showRemaining"] == false then
+    --     table.insert(data, {itemLink, GetItemCount(i, true, false, true).."/"..no})
+    -- else
+    --     table.insert(data, {itemLink, math.max(0,no-GetItemCount(i, true, false, true))})
+    -- end
+
+
 
     -- No clue what this does, to be honest
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnTooltipSetItem)
