@@ -405,8 +405,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                 
                 OnTooltipShow = function(tooltip)
                     if not tooltip or not tooltip.AddLine then return end
-                    tooltip:AddLine("Left-click: Toggle the PSL window.\nRight-click: Open PSL settings.")
-                end,   
+                    tooltip:AddLine("|cffFFFFFFProfession Shopping List|R\n|cff9D9D9DLeft-click:|R Toggle the windows.\n|cff9D9D9DRight-click:|R Show the settings.")
+                end,
             })
                                 
             local icon = LibStub("LibDBIcon-1.0", true)
