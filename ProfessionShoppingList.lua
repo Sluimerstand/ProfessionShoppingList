@@ -268,7 +268,7 @@ function pslCreateButtons()
 
     -- Create the "Track" button
     if not addCraftListButton then
-        addCraftListButton = CreateFrame("Button", nil, ProfessionsFrame, "UIPanelButtonTemplate")
+        addCraftListButton = CreateFrame("Button", nil, ProfessionsFrame.CraftingPage, "UIPanelButtonTemplate")
     end
     addCraftListButton:SetText("Track")
     addCraftListButton:SetWidth(60)
@@ -277,7 +277,7 @@ function pslCreateButtons()
 
     -- Create the "Untrack" button
     if not removeCraftListButton then
-        removeCraftListButton = CreateFrame("Button", nil, ProfessionsFrame, "UIPanelButtonTemplate")
+        removeCraftListButton = CreateFrame("Button", nil, ProfessionsFrame.CraftingPage, "UIPanelButtonTemplate")
     end
     removeCraftListButton:SetText("Untrack")
     removeCraftListButton:SetWidth(70)
@@ -288,13 +288,20 @@ function pslCreateButtons()
     addCraftListButton:SetScript("OnClick", function()
         -- Get selected recipe ID
         local recipeID = pslSelectedRecipeID
+        local recipeType = pslRecipeType
+        print(recipeID)
 
         -- Track recipe
         if not recipesTracked[recipeID] then recipesTracked[recipeID] = 0 end
         recipesTracked[recipeID] = recipesTracked[recipeID] + 1
 
-        -- Add recipe link
-        recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
+        -- Add recipe link for crafted items
+        if recipeType == 1 then
+            recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
+        -- Add recipe link for enchants
+        elseif recipeType == 3 then
+            recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
+        end
 
         -- Show windows
         pslFrame1:Show()
@@ -359,15 +366,6 @@ function pslTooltipInfo()
             tooltip:AddLine("PSL: "..GetItemCount(itemID, true, false, true).."/"..reagentsTracked[itemID].." ("..math.max(0,reagentsTracked[itemID]-GetItemCount(itemID, true, false, true)).." more needed)")
         end
     end
-
-
-    -- if userSettings["showRemaining"] == false then
-    --     table.insert(data, {itemLink, GetItemCount(i, true, false, true).."/"..no})
-    -- else
-    --     table.insert(data, {itemLink, math.max(0,no-GetItemCount(i, true, false, true))})
-    -- end
-
-
 
     -- No clue what this does, to be honest
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnTooltipSetItem)
@@ -1301,6 +1299,45 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             -- Get selected recipe ID
             if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
             pslSelectedRecipeID = arg1
+
+            -- Get recipeType
+            pslRecipeType = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).recipeType
+        
+            -- 1 = Item | Normal behaviour
+            if pslRecipeType == 1 then
+                addCraftListButton:Enable()
+            end
+
+            -- 2 = Salvage | Disable these, cause they shouldn't be tracked
+            if pslRecipeType == 2 then
+                addCraftListButton:Disable()
+                removeCraftListButton:Disable()
+            end
+
+            -- 3 = Enchant
+            if pslRecipeType == 3 then
+                addCraftListButton:Enable()
+            end
+
+            -- 4 = Recraft
+            if pslRecipeType == 4 then
+                addCraftListButton:Disable()
+                removeCraftListButton:Disable()
+            end
+            
+            -- Except that doesn't work, it just returns 1 >,> | Disable these, cause they shouldn't be tracked
+            if pslSelectedRecipeID == 389195 -- Leatherworking 
+            or pslSelectedRecipeID == 389190 -- Alchemy
+            or pslSelectedRecipeID == 389192 -- Engineering
+            or pslSelectedRecipeID == 389196 -- Tailoring
+            or pslSelectedRecipeID == 389194 -- Jewelcrafting
+            or pslSelectedRecipeID == 389193 -- Inscription
+            or pslSelectedRecipeID == 385304 -- Blacksmithing
+            or pslSelectedRecipeID == 389191 -- Enchanting
+            then
+                addCraftListButton:Disable()
+                removeCraftListButton:Disable()
+            end
 
             -- Check if recipe is tracked
             if not recipesTracked[pslSelectedRecipeID] then removeCraftListButton:Disable()
