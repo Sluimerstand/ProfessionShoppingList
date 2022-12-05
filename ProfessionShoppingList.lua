@@ -203,22 +203,22 @@ function pslReagents()
         -- Get numReagents
         local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).reagentSlotSchematics
         local numReagents = 0
-        if reagentsTable[9] then numReagents = 9
-        elseif reagentsTable[8] then numReagents = 8
-        elseif reagentsTable[7] then numReagents = 7
-        elseif reagentsTable[6] then numReagents = 6
-        elseif reagentsTable[5] then numReagents = 5
-        elseif reagentsTable[4] then numReagents = 4
-        elseif reagentsTable[3] then numReagents = 3
-        elseif reagentsTable[2] then numReagents = 2
-        elseif reagentsTable[1] then numReagents = 1
+        if reagentsTable[9] and reagentsTable[9].reagentType == 1 then numReagents = 9
+        elseif reagentsTable[8] and reagentsTable[8].reagentType == 1 then numReagents = 8
+        elseif reagentsTable[7] and reagentsTable[7].reagentType == 1 then numReagents = 7
+        elseif reagentsTable[6] and reagentsTable[6].reagentType == 1 then numReagents = 6
+        elseif reagentsTable[5] and reagentsTable[5].reagentType == 1 then numReagents = 5
+        elseif reagentsTable[4] and reagentsTable[4].reagentType == 1 then numReagents = 4
+        elseif reagentsTable[3] and reagentsTable[3].reagentType == 1 then numReagents = 3
+        elseif reagentsTable[2] and reagentsTable[2].reagentType == 1 then numReagents = 2
+        elseif reagentsTable[1] and reagentsTable[1].reagentType == 1 then numReagents = 1
         end
 
         if numReagents ~= 0 then
             for idx = 1, numReagents do
                 -- Get info
-                local reagentID = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).reagentSlotSchematics[idx].reagents[1].itemID
-                local reagentAmount = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).reagentSlotSchematics[idx].quantityRequired
+                local reagentID = reagentsTable[idx].reagents[1].itemID
+                local reagentAmount = reagentsTable[idx].quantityRequired
 
                 -- Set value to zero if it doesn't exist
                 if reagentsTracked[reagentID] == nil then reagentsTracked[reagentID] = 0 end
