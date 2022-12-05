@@ -289,7 +289,6 @@ function pslCreateButtons()
         -- Get selected recipe ID
         local recipeID = pslSelectedRecipeID
         local recipeType = pslRecipeType
-        print(recipeID)
 
         -- Track recipe
         if not recipesTracked[recipeID] then recipesTracked[recipeID] = 0 end
