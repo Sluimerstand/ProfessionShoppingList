@@ -371,6 +371,11 @@ function pslTooltipInfo()
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnTooltipSetItem)
 end
 
+-- Open settings
+function pslOpenSettings()
+    InterfaceOptionsFrame_OpenToCategory("Profession Shopping List")
+end
+
 f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
     -- When the AddOn is fully loaded, actually run the components
     if event == "ADDON_LOADED" and arg1 == "ProfessionShoppingList" then
@@ -405,8 +410,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                         -- Only update numbers if numbers exist
                         if reagentsTracked then pslReagents() end
                     elseif button == "RightButton" then
-                        -- Open the options
-                        InterfaceOptionsFrame_OpenToCategory("Profession Shopping List")
+                        pslOpenSettings()
                     end
                 end,
                 
@@ -650,8 +654,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
         SLASH_PSL1 = "/psl";
         function SlashCmdList.PSL(msg, editBox)
             if msg == "settings" then
-                InterfaceAddOnsList_Update()
-                InterfaceOptionsFrame_OpenToCategory(settings)
+                pslOpenSettings()
             -- Clear list
             elseif msg == "clear" then
                 -- Clear recipes and reagents
