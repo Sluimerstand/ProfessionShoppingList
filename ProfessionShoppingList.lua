@@ -610,150 +610,144 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             slReagentQuality.Label:SetText("Tier "..slReagentQuality:GetValue())
             slReagentQuality:SetScript("OnValueChanged", function(self, newValue)
                 userSettings["reagentQuality"] = newValue
-                slReagentQuality:SetValue(userSettings["reagentQuality"])
+                self:SetValue(userSettings["reagentQuality"])
                 self.Label:SetText("Tier "..slReagentQuality:GetValue())
                 pslReagents()
             end)
 
             -- Column 2
-            local labelRecipeRows = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-            labelRecipeRows:SetPoint("CENTER", cbMinimapButton, "CENTER", 300, 0)
-            labelRecipeRows:SetJustifyH("LEFT");
-            labelRecipeRows:SetText("|cffFFFFFFRecipe rows:")
-            labelRecipeRows:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
-
-            local ebRecipeRows = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
-            ebRecipeRows:SetSize(20,20)
-            ebRecipeRows:SetPoint("LEFT", labelRecipeRows, "RIGHT", 10, 0)
-            ebRecipeRows:SetAutoFocus(false)
-            ebRecipeRows:SetText(userSettings["recipeRows"])
-            ebRecipeRows:SetCursorPosition(0)
-            ebRecipeRows:SetScript("OnEditFocusLost", function(self, newValue)
-                newValue = math.floor(self:GetNumber())
-                if newValue >= 1 and newValue <= 50 then
-                    userSettings["recipeRows"] = newValue
-                elseif newValue > 50 then
-                    userSettings["recipeRows"] = 50
-                else
-                    userSettings["recipeRows"] = 1
-                end
-                self:SetText(userSettings["recipeRows"])
+            local slRecipeRows = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
+            slRecipeRows:SetPoint("LEFT", cbMinimapButton, "LEFT", 250, 0)
+            slRecipeRows:SetOrientation("HORIZONTAL")
+            slRecipeRows:SetWidth(150)
+            slRecipeRows:SetHeight(17)
+            slRecipeRows:SetMinMaxValues(5,50)
+            slRecipeRows:SetValueStep(1)
+            slRecipeRows:SetObeyStepOnDrag(true)
+            slRecipeRows.Low:SetText("5")
+            slRecipeRows.High:SetText("50")
+            slRecipeRows.Text:SetText("Recipe rows")
+            slRecipeRows:SetValue(userSettings["recipeRows"])
+            slRecipeRows.Label = slRecipeRows:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+            slRecipeRows.Label:SetPoint("TOP", slRecipeRows, "BOTTOM", 0, 0)
+            slRecipeRows.Label:SetText(slRecipeRows:GetValue())
+            slRecipeRows:SetScript("OnValueChanged", function(self, newValue)
+                userSettings["recipeRows"] = newValue
+                self:SetValue(userSettings["recipeRows"])
+                self.Label:SetText(self:GetValue())
                 pslCreateTrackingWindows()
             end)
 
-            local labelReagentRows = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-            labelReagentRows:SetPoint("TOPLEFT", labelRecipeRows, "BOTTOMLEFT", 0, -10)
-            labelReagentRows:SetJustifyH("LEFT");
-            labelReagentRows:SetText("|cffFFFFFFReagent rows:")
-            labelReagentRows:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
-
-            local ebReagentRows = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
-            ebReagentRows:SetSize(20,20)
-            ebReagentRows:SetPoint("LEFT", labelReagentRows, "RIGHT", 10, 0)
-            ebReagentRows:SetAutoFocus(false)
-            ebReagentRows:SetText(userSettings["reagentRows"])
-            ebReagentRows:SetCursorPosition(0)
-            ebReagentRows:SetScript("OnEditFocusLost", function(self, newValue)
-                newValue = math.floor(self:GetNumber())
-                if newValue >= 1 and newValue <= 50 then
-                    userSettings["reagentRows"] = newValue
-                elseif newValue > 50 then
-                    userSettings["reagentRows"] = 50
-                else
-                    userSettings["reagentRows"] = 1
-                end
-                self:SetText(userSettings["reagentRows"])
+            local slRecipeWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
+            slRecipeWidth:SetPoint("TOPLEFT", slRecipeRows, "BOTTOMLEFT", 0, -30)
+            slRecipeWidth:SetOrientation("HORIZONTAL")
+            slRecipeWidth:SetWidth(150)
+            slRecipeWidth:SetHeight(17)
+            slRecipeWidth:SetMinMaxValues(100,300)
+            slRecipeWidth:SetValueStep(5)
+            slRecipeWidth:SetObeyStepOnDrag(true)
+            slRecipeWidth.Low:SetText("100")
+            slRecipeWidth.High:SetText("300")
+            slRecipeWidth.Text:SetText("Recipe width")
+            slRecipeWidth:SetValue(userSettings["recipeWidth"])
+            slRecipeWidth.Label = slRecipeWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+            slRecipeWidth.Label:SetPoint("TOP", slRecipeWidth, "BOTTOM", 0, 0)
+            slRecipeWidth.Label:SetText(slRecipeWidth:GetValue())
+            slRecipeWidth:SetScript("OnValueChanged", function(self, newValue)
+                userSettings["recipeWidth"] = newValue
+                self:SetValue(userSettings["recipeWidth"])
+                self.Label:SetText(self:GetValue())
                 pslCreateTrackingWindows()
             end)
 
-            local labelRecipeColumns = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-            labelRecipeColumns:SetPoint("TOPLEFT", labelReagentRows, "BOTTOMLEFT", 0, -10)
-            labelRecipeColumns:SetJustifyH("LEFT");
-            labelRecipeColumns:SetText("|cffFFFFFFRecipe column width:")
-            labelRecipeColumns:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
-
-            local ebRecipeWidth = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
-            ebRecipeWidth:SetSize(30,20)
-            ebRecipeWidth:SetPoint("LEFT", labelRecipeColumns, "RIGHT", 10, 0)
-            ebRecipeWidth:SetAutoFocus(false)
-            ebRecipeWidth:SetText(userSettings["recipeWidth"])
-            ebRecipeWidth:SetCursorPosition(0)
-            ebRecipeWidth:SetScript("OnEditFocusLost", function(self, newValue)
-                newValue = math.floor(self:GetNumber())
-                if newValue >= 60 and newValue <= 500 then
-                    userSettings["recipeWidth"] = newValue
-                elseif newValue > 500 then
-                    userSettings["recipeWidth"] = 500
-                else
-                    userSettings["recipeWidth"] = 60
-                end
-                self:SetText(userSettings["recipeWidth"])
+            local slRecipeNoWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
+            slRecipeNoWidth:SetPoint("TOPLEFT", slRecipeWidth, "BOTTOMLEFT", 0, -30)
+            slRecipeNoWidth:SetOrientation("HORIZONTAL")
+            slRecipeNoWidth:SetWidth(150)
+            slRecipeNoWidth:SetHeight(17)
+            slRecipeNoWidth:SetMinMaxValues(30,100)
+            slRecipeNoWidth:SetValueStep(5)
+            slRecipeNoWidth:SetObeyStepOnDrag(true)
+            slRecipeNoWidth.Low:SetText("30")
+            slRecipeNoWidth.High:SetText("100")
+            slRecipeNoWidth.Text:SetText("Recipe # width")
+            slRecipeNoWidth:SetValue(userSettings["recipeNoWidth"])
+            slRecipeNoWidth.Label = slRecipeNoWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+            slRecipeNoWidth.Label:SetPoint("TOP", slRecipeNoWidth, "BOTTOM", 0, 0)
+            slRecipeNoWidth.Label:SetText(slRecipeNoWidth:GetValue())
+            slRecipeNoWidth:SetScript("OnValueChanged", function(self, newValue)
+                userSettings["recipeNoWidth"] = newValue
+                self:SetValue(userSettings["recipeNoWidth"])
+                self.Label:SetText(self:GetValue())
                 pslCreateTrackingWindows()
             end)
 
-            local ebRecipeNoWidth = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
-            ebRecipeNoWidth:SetSize(30,20)
-            ebRecipeNoWidth:SetPoint("LEFT", ebRecipeWidth, "RIGHT", 10, 0)
-            ebRecipeNoWidth:SetAutoFocus(false)
-            ebRecipeNoWidth:SetText(userSettings["recipeNoWidth"])
-            ebRecipeNoWidth:SetCursorPosition(0)
-            ebRecipeNoWidth:SetScript("OnEditFocusLost", function(self, newValue)
-                newValue = math.floor(self:GetNumber())
-                if newValue >= 20 and newValue <= 500 then
-                    userSettings["recipeNoWidth"] = newValue
-                elseif newValue > 500 then
-                    userSettings["recipeNoWidth"] = 500
-                else
-                    userSettings["recipeNoWidth"] = 20
-                end
-                self:SetText(userSettings["recipeNoWidth"])
+            local slReagentRows = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
+            slReagentRows:SetPoint("TOPLEFT", slRecipeRows, "TOPRIGHT", 20, 0)
+            slReagentRows:SetOrientation("HORIZONTAL")
+            slReagentRows:SetWidth(150)
+            slReagentRows:SetHeight(17)
+            slReagentRows:SetMinMaxValues(5,50)
+            slReagentRows:SetValueStep(1)
+            slReagentRows:SetObeyStepOnDrag(true)
+            slReagentRows.Low:SetText("5")
+            slReagentRows.High:SetText("50")
+            slReagentRows.Text:SetText("Reagent rows")
+            slReagentRows:SetValue(userSettings["reagentRows"])
+            slReagentRows.Label = slReagentRows:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+            slReagentRows.Label:SetPoint("TOP", slReagentRows, "BOTTOM", 0, 0)
+            slReagentRows.Label:SetText(slReagentRows:GetValue())
+            slReagentRows:SetScript("OnValueChanged", function(self, newValue)
+                userSettings["reagentRows"] = newValue
+                self:SetValue(userSettings["reagentRows"])
+                self.Label:SetText(self:GetValue())
                 pslCreateTrackingWindows()
             end)
 
-            local labelReagentColumns = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-            labelReagentColumns:SetPoint("TOPLEFT", labelRecipeColumns, "BOTTOMLEFT", 0, -10)
-            labelReagentColumns:SetJustifyH("LEFT");
-            labelReagentColumns:SetText("|cffFFFFFFReagent column width:")
-            labelReagentColumns:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
-
-            local ebReagentWidth = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
-            ebReagentWidth :SetSize(30,20)
-            ebReagentWidth :SetPoint("LEFT", labelReagentColumns, "RIGHT", 10, 0)
-            ebReagentWidth :SetAutoFocus(false)
-            ebReagentWidth :SetText(userSettings["reagentWidth"])
-            ebReagentWidth :SetCursorPosition(0)
-            ebReagentWidth :SetScript("OnEditFocusLost", function(self, newValue)
-                newValue = math.floor(self:GetNumber())
-                if newValue >= 60 and newValue <= 500 then
-                    userSettings["reagentWidth"] = newValue
-                elseif newValue > 500 then
-                    userSettings["reagentWidth"] = 500
-                else
-                    userSettings["reagentWidth"] = 60
-                end
-                self:SetText(userSettings["reagentWidth"])
+            local slReagentWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
+            slReagentWidth:SetPoint("TOPLEFT", slReagentRows, "BOTTOMLEFT", 0, -30)
+            slReagentWidth:SetOrientation("HORIZONTAL")
+            slReagentWidth:SetWidth(150)
+            slReagentWidth:SetHeight(17)
+            slReagentWidth:SetMinMaxValues(100,300)
+            slReagentWidth:SetValueStep(5)
+            slReagentWidth:SetObeyStepOnDrag(true)
+            slReagentWidth.Low:SetText("100")
+            slReagentWidth.High:SetText("300")
+            slReagentWidth.Text:SetText("Reagent width")
+            slReagentWidth:SetValue(userSettings["reagentWidth"])
+            slReagentWidth.Label = slReagentWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+            slReagentWidth.Label:SetPoint("TOP", slReagentWidth, "BOTTOM", 0, 0)
+            slReagentWidth.Label:SetText(slReagentWidth:GetValue())
+            slReagentWidth:SetScript("OnValueChanged", function(self, newValue)
+                userSettings["reagentWidth"] = newValue
+                self:SetValue(userSettings["reagentWidth"])
+                self.Label:SetText(self:GetValue())
                 pslCreateTrackingWindows()
             end)
 
-            local ebReagentNoWidth = CreateFrame("EditBox", nil, scrollChild, "InputBoxTemplate")
-            ebReagentNoWidth:SetSize(30,20)
-            ebReagentNoWidth:SetPoint("LEFT", ebReagentWidth, "RIGHT", 10, 0)
-            ebReagentNoWidth:SetAutoFocus(false)
-            ebReagentNoWidth:SetText(userSettings["reagentNoWidth"])
-            ebReagentNoWidth:SetCursorPosition(0)
-            ebReagentNoWidth:SetScript("OnEditFocusLost", function(self, newValue)
-                newValue = math.floor(self:GetNumber())
-                if newValue >= 20 and newValue <= 500 then
-                    userSettings["reagentNoWidth"] = newValue
-                elseif newValue > 500 then
-                    userSettings["reagentNoWidth"] = 500
-                else
-                    userSettings["reagentNoWidth"] = 20
-                end
-                self:SetText(userSettings["reagentNoWidth"])
+            local slReagentNoWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
+            slReagentNoWidth:SetPoint("TOPLEFT", slReagentWidth, "BOTTOMLEFT", 0, -30)
+            slReagentNoWidth:SetOrientation("HORIZONTAL")
+            slReagentNoWidth:SetWidth(150)
+            slReagentNoWidth:SetHeight(17)
+            slReagentNoWidth:SetMinMaxValues(30,100)
+            slReagentNoWidth:SetValueStep(5)
+            slReagentNoWidth:SetObeyStepOnDrag(true)
+            slReagentNoWidth.Low:SetText("30")
+            slReagentNoWidth.High:SetText("100")
+            slReagentNoWidth.Text:SetText("Reagent # width")
+            slReagentNoWidth:SetValue(userSettings["reagentNoWidth"])
+            slReagentNoWidth.Label = slReagentNoWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+            slReagentNoWidth.Label:SetPoint("TOP", slReagentNoWidth, "BOTTOM", 0, 0)
+            slReagentNoWidth.Label:SetText(slReagentNoWidth:GetValue())
+            slReagentNoWidth:SetScript("OnValueChanged", function(self, newValue)
+                userSettings["reagentNoWidth"] = newValue
+                self:SetValue(userSettings["reagentNoWidth"])
+                self.Label:SetText(self:GetValue())
                 pslCreateTrackingWindows()
             end)
-
+   
             -- Extra text
             local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
             pslSettingsText1:SetPoint("TOPLEFT", slReagentQuality, "BOTTOMLEFT", 3, -40)
