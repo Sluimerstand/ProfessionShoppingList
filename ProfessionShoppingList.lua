@@ -294,7 +294,7 @@ function pslReagents()
             if userSettings["showRemaining"] == false then
                 table.insert(data, {itemLink, reagentAmountHave.."/"..reagentAmountNeed})
             else
-                table.insert(data, {itemLink, math.max(0,reagentAmountHave-reagentAmountNeed)})
+                table.insert(data, {itemLink, math.max(0,reagentAmountNeed-reagentAmountHave)})
             end
 
             table1:SetData(data, true)
