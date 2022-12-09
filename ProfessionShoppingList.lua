@@ -37,6 +37,7 @@ function pslInitialise()
     if userSettings["reagentWidth"] == nil then userSettings["reagentWidth"] = 150 end
     if userSettings["reagentNoWidth"] == nil then userSettings["reagentNoWidth"] = 50 end
     if userSettings["vendorAll"] == nil then userSettings["vendorAll"] = true end
+    if userSettings["reagentQuality"] == nil then userSettings["reagentQuality"] = 1 end
 end
 
 --Create tracking windows
@@ -217,34 +218,83 @@ function pslReagents()
         if numReagents ~= 0 then
             for idx = 1, numReagents do
                 -- Get info
-                local reagentID = reagentsTable[idx].reagents[1].itemID
+                local reagentID1 = reagentsTable[idx].reagents[1].itemID
+                local reagentID2 = 0
+                local reagentID3 = 0
                 local reagentAmount = reagentsTable[idx].quantityRequired
 
-                -- Set value to zero if it doesn't exist
-                if reagentsTracked[reagentID] == nil then reagentsTracked[reagentID] = 0 end
+                -- Get quality tier 2 info
+                if reagentsTable[idx].reagents[2] then
+                    reagentID2 = reagentsTable[idx].reagents[2].itemID
+                end
+
+                -- Get quality tier 3 info
+                if reagentsTable[idx].reagents[3] then
+                    reagentID3 = reagentsTable[idx].reagents[3].itemID
+                end
+
+                -- Slap all different quality items in there
+                if reagentsTracked[reagentID1] == nil then reagentsTracked[reagentID1] = {one = 0, two = 0, three = 0, amount = 0} end
+                reagentsTracked[reagentID1].one = reagentID1
+                reagentsTracked[reagentID1].two = reagentID2
+                reagentsTracked[reagentID1].three = reagentID3
 
                 -- Do maths
-                reagentsTracked[reagentID] = reagentsTracked[reagentID] + reagentAmount * no
+                reagentsTracked[reagentID1].amount = reagentsTracked[reagentID1].amount + reagentAmount * no
             end
         end
     end
 
     -- Update reagents tracked
     local data = {}
-    for i, no in pairs(reagentsTracked) do
+    -- i,no
+    for reagentBase, reagentInfo in pairs(reagentsTracked) do
         local function getInfo()
-            local itemName, itemLink = GetItemInfo(i)
+            -- Get info
+            local itemName, itemLink
+            if userSettings["reagentQuality"] == 1 then
+                itemName, itemLink = GetItemInfo(reagentInfo.one)
+            elseif userSettings["reagentQuality"] == 2 then
+                if reagentInfo.two ~= 0 then
+                    itemName, itemLink = GetItemInfo(reagentInfo.two)
+                else
+                    itemName, itemLink = GetItemInfo(reagentInfo.one)
+                end
+            elseif userSettings["reagentQuality"] == 3 then
+                if reagentInfo.three ~= 0 then
+                    itemName, itemLink = GetItemInfo(reagentInfo.three)
+                elseif reagentInfo.two ~= 0 then
+                    itemName, itemLink = GetItemInfo(reagentInfo.two)
+                else
+                    itemName, itemLink = GetItemInfo(reagentInfo.one)
+                end
+            end
 
             -- Try again if error
             if itemName == nil or itemLink == nil then
                 C_Timer.After(.5, getInfo)
                 do return end
             end
+
+            -- Calculate amount based on user setting for reagent quality
+            local reagentAmountNeed = reagentInfo.amount
+            local reagentAmountHave
+            if userSettings["reagentQuality"] == 1 then
+                reagentAmountHave = GetItemCount(reagentInfo.three, true, false, true) + GetItemCount(reagentInfo.two, true, false, true) + GetItemCount(reagentInfo.one, true, false, true)
+            elseif userSettings["reagentQuality"] == 2 and reagentInfo.two ~= 0 then
+                reagentAmountHave = GetItemCount(reagentInfo.three, true, false, true) + GetItemCount(reagentInfo.two, true, false, true)
+            elseif userSettings["reagentQuality"] == 2 and reagentInfo.two == 0 then
+                reagentAmountHave = GetItemCount(reagentInfo.three, true, false, true) + GetItemCount(reagentInfo.two, true, false, true) + GetItemCount(reagentInfo.one, true, false, true)
+            elseif userSettings["reagentQuality"] == 3 and reagentInfo.three ~= 0 then
+                reagentAmountHave = GetItemCount(reagentInfo.three, true, false, true)
+            elseif userSettings["reagentQuality"] == 3 and reagentInfo.three == 0 then
+                reagentAmountHave = GetItemCount(reagentInfo.three, true, false, true) + GetItemCount(reagentInfo.two, true, false, true) + GetItemCount(reagentInfo.one, true, false, true)
+            end
             
             if userSettings["showRemaining"] == false then
-                table.insert(data, {itemLink, GetItemCount(i, true, false, true).."/"..no})
+                table.insert(data, {itemLink, reagentAmountHave.."/"..reagentAmountNeed})
             else
-                table.insert(data, {itemLink, math.max(0,no-GetItemCount(i, true, false, true))})
+                table.insert(data, {itemLink, math.max(0,reagentAmountHave-reagentAmountNeed)})
             end
 
             table1:SetData(data, true)
@@ -443,9 +493,11 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             title:SetPoint("TOPLEFT", 10, -8)
             title:SetText("Profession Shopping List")
 
+            -- Column 1
             local cbMinimapButton = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
             cbMinimapButton.Text:SetText("Minimap button")
             cbMinimapButton.Text:SetTextColor(1, 1, 1, 1)
+            cbMinimapButton.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
             cbMinimapButton:SetPoint("TOPLEFT", 10, -25)
             cbMinimapButton:SetChecked(not userSettings["hide"])
             cbMinimapButton:SetScript("OnClick", function(self)
@@ -460,6 +512,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             local cbRemoveCraft = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
             cbRemoveCraft.Text:SetText("Untrack on crafting")
             cbRemoveCraft.Text:SetTextColor(1, 1, 1, 1)
+            cbRemoveCraft.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
             cbRemoveCraft:SetPoint("TOPLEFT", cbMinimapButton, "BOTTOMLEFT", 0, 0)
             cbRemoveCraft:SetChecked(userSettings["removeCraft"])
             cbRemoveCraft:SetScript("OnClick", function(self)
@@ -469,6 +522,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             local cbShowRemaining = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
             cbShowRemaining.Text:SetText("Show remaining reagents, not total")
             cbShowRemaining.Text:SetTextColor(1, 1, 1, 1)
+            cbShowRemaining.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
             cbShowRemaining:SetPoint("TOPLEFT", cbRemoveCraft, "BOTTOMLEFT", 0, 0)
             cbShowRemaining:SetChecked(userSettings["showRemaining"])
             cbShowRemaining:SetScript("OnClick", function(self)
@@ -479,6 +533,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             local cbShowTooltip = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
             cbShowTooltip.Text:SetText("Show tooltip information")
             cbShowTooltip.Text:SetTextColor(1, 1, 1, 1)
+            cbShowTooltip.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
             cbShowTooltip:SetPoint("TOPLEFT", cbShowRemaining, "BOTTOMLEFT", 0, 0)
             cbShowTooltip:SetChecked(userSettings["showTooltip"])
             cbShowTooltip:SetScript("OnClick", function(self)
@@ -488,12 +543,36 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             local cbVendorAll = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
             cbVendorAll.Text:SetText("Always set vendor filter to 'All'")
             cbVendorAll.Text:SetTextColor(1, 1, 1, 1)
+            cbVendorAll.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
             cbVendorAll:SetPoint("TOPLEFT", cbShowTooltip, "BOTTOMLEFT", 0, 0)
             cbVendorAll:SetChecked(userSettings["vendorAll"])
             cbVendorAll:SetScript("OnClick", function(self)
                 userSettings["vendorAll"] = cbVendorAll:GetChecked()
             end)
 
+            local slReagentQuality = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
+            slReagentQuality:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 5, -15)
+            slReagentQuality:SetOrientation("HORIZONTAL")
+            slReagentQuality:SetWidth(150)
+            slReagentQuality:SetHeight(17)
+            slReagentQuality:SetMinMaxValues(1,3)
+            slReagentQuality:SetValueStep(1)
+            slReagentQuality:SetObeyStepOnDrag(true)
+            slReagentQuality.Low:SetText("Tier 1")
+            slReagentQuality.High:SetText("Tier 3")
+            slReagentQuality.Text:SetText("Minimum reagent quality")
+            slReagentQuality:SetValue(userSettings["reagentQuality"])
+            slReagentQuality.Label = slReagentQuality:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+            slReagentQuality.Label:SetPoint("TOP", slReagentQuality, "BOTTOM", 0, 0)
+            slReagentQuality.Label:SetText("Tier "..slReagentQuality:GetValue())
+            slReagentQuality:SetScript("OnValueChanged", function(self, newValue)
+                userSettings["reagentQuality"] = newValue
+                slReagentQuality:SetValue(userSettings["reagentQuality"])
+                self.Label:SetText("Tier "..slReagentQuality:GetValue())
+                pslReagents()
+            end)
+
+            -- Column 2
             local labelRecipeRows = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
             labelRecipeRows:SetPoint("CENTER", cbMinimapButton, "CENTER", 300, 0)
             labelRecipeRows:SetJustifyH("LEFT");
@@ -632,8 +711,9 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                 pslCreateTrackingWindows()
             end)
 
+            -- Extra text
             local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-            pslSettingsText1:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 3, -10)
+            pslSettingsText1:SetPoint("TOPLEFT", slReagentQuality, "BOTTOMLEFT", 3, -40)
             pslSettingsText1:SetJustifyH("LEFT");
             pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.")
 
