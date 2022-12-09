@@ -409,10 +409,53 @@ function pslTooltipInfo()
         -- Get itemID
         local itemID = GetItemInfoFromHyperlink(link)
 
-        -- Add the tooltip info
-        if userSettings["showTooltip"] == true and reagentsTracked[itemID] then
+        -- Get item amounts
+        local reagentID1
+        local reagentID2
+        local reagentID3
+        local reagentAmountNeed
+
+        for reagentBase, reagentInfo in pairs(reagentsTracked) do
+            if reagentInfo.one == itemID or reagentInfo.two == itemID or reagentInfo.three == itemID then
+                reagentID1 = reagentInfo.one
+                reagentID2 = reagentInfo.two
+                reagentID3 = reagentInfo.three
+                reagentAmountNeed = reagentInfo.amount
+            end
+        end
+
+        local reagentAmountHave
+        if userSettings["reagentQuality"] == 1 then
+            reagentAmountHave = GetItemCount(reagentID3, true, false, true) + GetItemCount(reagentID2, true, false, true) + GetItemCount(reagentID1, true, false, true)
+        elseif userSettings["reagentQuality"] == 2 and reagentID2 ~= 0 then
+            reagentAmountHave = GetItemCount(reagentID3, true, false, true) + GetItemCount(reagentID2, true, false, true)
+        elseif userSettings["reagentQuality"] == 2 and reagentID2 == 0 then
+            reagentAmountHave = GetItemCount(reagentID3, true, false, true) + GetItemCount(reagentID2, true, false, true) + GetItemCount(reagentID1, true, false, true)
+        elseif userSettings["reagentQuality"] == 3 and reagentID3 ~= 0 then
+            reagentAmountHave = GetItemCount(reagentID3, true, false, true)
+        elseif userSettings["reagentQuality"] == 3 and reagentID3 == 0 then
+            reagentAmountHave = GetItemCount(reagentID3, true, false, true) + GetItemCount(reagentID2, true, false, true) + GetItemCount(reagentID1, true, false, true)
+        end
+
+        -- Tooltip info
+        local function pslTooltipLines()
             tooltip:AddLine(" ")
-            tooltip:AddLine("PSL: "..GetItemCount(itemID, true, false, true).."/"..reagentsTracked[itemID].." ("..math.max(0,reagentsTracked[itemID]-GetItemCount(itemID, true, false, true)).." more needed)")
+            tooltip:AddLine("PSL: "..reagentAmountHave.."/"..reagentAmountNeed.." ("..math.max(0,reagentAmountNeed-reagentAmountHave).." more needed)")
+        end
+
+        -- Add the tooltip info
+        if userSettings["showTooltip"] == true then
+            if userSettings["reagentQuality"] == 1 and (reagentID1 == itemID or reagentID2 == itemID or reagentID3 == itemID) then
+                pslTooltipLines()
+            elseif userSettings["reagentQuality"] == 2 and reagentID2 ~= 0 and (reagentID2 == itemID or reagentID3 == itemID) then
+                pslTooltipLines()
+            elseif userSettings["reagentQuality"] == 2 and reagentID2 == 0 and (reagentID1 == itemID) then
+                pslTooltipLines()
+            elseif userSettings["reagentQuality"] == 3 and reagentID3 ~= 0 and (reagentID3 == itemID) then
+                pslTooltipLines()
+            elseif userSettings["reagentQuality"] == 3 and reagentID3 == 0 and (reagentID1 == itemID) then
+                pslTooltipLines()
+            end
         end
     end
 
