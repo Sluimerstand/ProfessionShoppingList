@@ -617,7 +617,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
             -- Column 2
             local slRecipeRows = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-            slRecipeRows:SetPoint("LEFT", cbMinimapButton, "LEFT", 250, 0)
+            slRecipeRows:SetPoint("TOPLEFT", cbMinimapButton, "TOPLEFT", 250, -19)
             slRecipeRows:SetOrientation("HORIZONTAL")
             slRecipeRows:SetWidth(150)
             slRecipeRows:SetHeight(17)
