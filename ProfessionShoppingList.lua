@@ -846,7 +846,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                 ["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
                     -- Activate if shift+clicking on the reagents column
                     if column == 1 and button == "LeftButton" and IsShiftKeyDown() == true and realrow ~= nil then
-                        -- Get recipeID
+                        -- Get itemID
                         local itemID = GetItemInfoFromHyperlink(data[realrow][1])
 
                         -- Get possible recipeIDs
@@ -866,7 +866,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
                             -- Track recipe
                             local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-                            recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+                            recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID].amount / quantityMade) - GetItemCount(itemID))
 
                             -- Add recipe link
                             recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
