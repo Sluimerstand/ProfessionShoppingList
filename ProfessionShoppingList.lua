@@ -1332,37 +1332,25 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                 ["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
                     -- Activate if right-clicking on the tracked column
                     if column == 2 and button == "RightButton" and row ~= nil and realrow ~= nil then
-                        -- Get itemID
-                        local itemID = GetItemInfoFromHyperlink(data[realrow][1])
+                        -- Get the selected recipe ID
+                        local selectedRecipe = data[realrow][1]
+                        local selectedRecipeID
 
-                        -- Get possible recipeIDs
-                        local recipeIDs = {}
-                        local no = 0
-
-                        for r, i in pairs(recipeLibrary) do
-                            if i == itemID then
-                                no = no + 1
-                                recipeIDs[no] = r
-                            end
+                        for recipeID, recipeLink in pairs(recipeLinks) do
+                            if selectedRecipe == recipeLink then selectedRecipeID = recipeID end
                         end
 
-                        -- Untrack one of each possible recipeID if it is tracked (should be exactly one recipeID)
-                        if no ~= 0 then
-                            for idx = 1, no do
-                                if recipesTracked[recipeIDs[idx]] ~= nil then
-                                    if IsShiftKeyDown() == true then
-                                        recipesTracked[recipeIDs[idx]] = nil
-                                    else
-                                        recipesTracked[recipeIDs[idx]] = recipesTracked[recipeIDs[idx]] - 1
-                                    end
+                        -- Untrack the recipe
+                        if IsShiftKeyDown() == true then
+                            recipesTracked[selectedRecipeID] = nil
+                        else
+                            recipesTracked[selectedRecipeID] = recipesTracked[selectedRecipeID] - 1
+                        end
 
-                                    -- Set numbers to nil if it doesn't exist anymore
-                                    if recipesTracked[recipeIDs[idx]] == 0 then
-                                        recipesTracked[recipeIDs[idx]] = nil
-                                        recipeLinks[recipeIDs[idx]] = nil
-                                    end
-                                end
-                            end
+                        -- Set numbers to nil if it doesn't exist anymore
+                        if recipesTracked[selectedRecipeID] == 0 then
+                            recipesTracked[selectedRecipeID] = nil
+                            recipeLinks[selectedRecipeID] = nil
                         end
 
                         -- Show windows
@@ -1373,15 +1361,16 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                         pslReagents()
 
                     elseif column == 1 and button == "LeftButton" and row ~= nil and realrow ~= nil then
-                        -- Find recipeID
-                        local recipeID = 0
-                        local itemName, itemLink = GetItemInfo(data[realrow][1])
-                        for r, i in pairs(recipeLinks) do
-                            if GetItemInfoFromHyperlink(i) == GetItemInfoFromHyperlink(data[realrow][1]) then recipeID = r end
+                        -- Get the selected recipe ID
+                        local selectedRecipe = data[realrow][1]
+                        local selectedRecipeID = 0
+
+                        for recipeID, recipeLink in pairs(recipeLinks) do
+                            if selectedRecipe == recipeLink then selectedRecipeID = recipeID end
                         end
 
-                        -- Open recipe if profession is known
-                        if recipeID ~= 0 and C_TradeSkillUI.IsRecipeProfessionLearned(recipeID) == true then C_TradeSkillUI.OpenRecipe(recipeID) end
+                        -- Open recipe if it is learned
+                        if selectedRecipeID ~= 0 and C_TradeSkillUI.IsRecipeProfessionLearned(selectedRecipeID) == true then C_TradeSkillUI.OpenRecipe(selectedRecipeID) end
                     end
                 end
             })
