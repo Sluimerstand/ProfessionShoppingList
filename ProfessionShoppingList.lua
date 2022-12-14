@@ -201,36 +201,26 @@ function pslReagents()
     reagentsTracked = {}
 
     for recipeID, no in pairs(recipesTracked) do
-        -- Get numReagents
+        -- Get reagent info
         local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).reagentSlotSchematics
-        local numReagents = 0
-        if reagentsTable[9] and reagentsTable[9].reagentType == 1 then numReagents = 9
-        elseif reagentsTable[8] and reagentsTable[8].reagentType == 1 then numReagents = 8
-        elseif reagentsTable[7] and reagentsTable[7].reagentType == 1 then numReagents = 7
-        elseif reagentsTable[6] and reagentsTable[6].reagentType == 1 then numReagents = 6
-        elseif reagentsTable[5] and reagentsTable[5].reagentType == 1 then numReagents = 5
-        elseif reagentsTable[4] and reagentsTable[4].reagentType == 1 then numReagents = 4
-        elseif reagentsTable[3] and reagentsTable[3].reagentType == 1 then numReagents = 3
-        elseif reagentsTable[2] and reagentsTable[2].reagentType == 1 then numReagents = 2
-        elseif reagentsTable[1] and reagentsTable[1].reagentType == 1 then numReagents = 1
-        end
 
-        if numReagents ~= 0 then
-            for idx = 1, numReagents do
+        -- For every reagent, if not optional or finishing, do
+        for numReagent, reagentInfo in pairs(reagentsTable) do
+            if reagentInfo.reagentType == 1 then
                 -- Get info
-                local reagentID1 = reagentsTable[idx].reagents[1].itemID
+                local reagentID1 = reagentInfo.reagents[1].itemID
                 local reagentID2 = 0
                 local reagentID3 = 0
-                local reagentAmount = reagentsTable[idx].quantityRequired
+                local reagentAmount = reagentInfo.quantityRequired
 
                 -- Get quality tier 2 info
-                if reagentsTable[idx].reagents[2] then
-                    reagentID2 = reagentsTable[idx].reagents[2].itemID
+                if reagentInfo.reagents[2] then
+                    reagentID2 = reagentInfo.reagents[2].itemID
                 end
 
                 -- Get quality tier 3 info
-                if reagentsTable[idx].reagents[3] then
-                    reagentID3 = reagentsTable[idx].reagents[3].itemID
+                if reagentInfo.reagents[3] then
+                    reagentID3 = reagentInfo.reagents[3].itemID
                 end
 
                 -- Slap all different quality items in there
