@@ -18,10 +18,12 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 **Mouse interactions**
 
 - Drag: Move the tracking windows.
-- Left+click Recipe: Open the selected recipe (if known on current character).
+- Shift+click Recipe: Link the recipe.
+- Ctrl+click Recipe: Open the selected recipe (if known on current character).
 - Right-click Recipe #: Untrack 1 of the selected recipe.
 - Shift+right-click Recipe #: Untrack all of the selected recipe.
-- Shift+click Reagent: Add recipe for the selected subreagent, if it exists. (This only works for professions that have been opened with PSL active.)
+- Shift+click Reagent: Link the reagent.
+- Ctrl+click Reagent: Add recipe for the selected subreagent, if it exists. (This only works for professions that have been opened with PSL active.)
 
 **Other features**
 
