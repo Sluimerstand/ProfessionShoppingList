@@ -24,6 +24,7 @@ function pslInitialise()
     if not recipeLinks then recipeLinks = {} end
     if not reagentsTracked then reagentsTracked = {} end
     if not recipeLibrary then recipeLibrary = {} end
+    if not reagentTiers then reagentTiers = {} end
 
     -- Enable default user settings
     if userSettings["hide"] == nil then userSettings["hide"] = false end
@@ -228,6 +229,11 @@ function pslReagents()
                 reagentsTracked[reagentID1].one = reagentID1
                 reagentsTracked[reagentID1].two = reagentID2
                 reagentsTracked[reagentID1].three = reagentID3
+
+                -- Add them to reagentTiers because I can't think of a non-clunky way to get the base tier for subreagent calculations
+                -- Might rework the entire tier stuff, but this is what it is for now
+                if reagentID2 ~= 0 then reagentTiers[reagentID2] = reagentID1 end
+                if reagentID3 ~= 0 then reagentTiers[reagentID3] = reagentID1 end
 
                 -- Do maths
                 reagentsTracked[reagentID1].amount = reagentsTracked[reagentID1].amount + reagentAmount * no
@@ -747,7 +753,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             local pslSettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
             pslSettingsText2:SetPoint("TOPLEFT", pslSettingsText1, "BOTTOMLEFT", 0, -15)
             pslSettingsText2:SetJustifyH("LEFT");
-            pslSettingsText2:SetText("Mouse interactions:\nDrag|cffFFFFFF: Move the PSL windows.\n|RLeft-click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click Recipe #|cffFFFFFF: Untrack 1 of the selected recipe.\n|RShift+right-click Recipe #|cffFFFFFF: Untrack all of the selected recipe.\n|RShift+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
+            pslSettingsText2:SetText("Mouse interactions:\nDrag|cffFFFFFF: Move the PSL windows.\n|RShift+click Recipe|cffFFFFFF: Link the recipe.\n|RCtrl+click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click Recipe #|cffFFFFFF: Untrack 1 of the selected recipe.\n|RShift+right-click Recipe #|cffFFFFFF: Untrack all of the selected recipe.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
 
             local pslSettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
             pslSettingsText3:SetPoint("TOPLEFT", pslSettingsText2, "BOTTOMLEFT", 0, -15)
@@ -793,6 +799,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
         -- Window functions
         function pslWindowFunctions()
+            -- Reagents window
             table1:RegisterEvents({
                 ["OnEnter"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
                     if row and realrow ~= nil then
@@ -834,10 +841,11 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             })
             table1:RegisterEvents({
                 ["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
-                    -- Activate if shift+clicking on the reagents column
-                    if column == 1 and button == "LeftButton" and IsShiftKeyDown() == true and realrow ~= nil then
+                    -- Activate if Ctrl+clicking on the reagents column
+                    if column == 1 and button == "LeftButton" and IsControlKeyDown() == true and realrow ~= nil then
                         -- Get itemID
                         local itemID = GetItemInfoFromHyperlink(data[realrow][1])
+                        if reagentTiers[itemID] then itemID = reagentTiers[itemID] end
 
                         -- Get possible recipeIDs
                         local recipeIDs = {}
@@ -1297,10 +1305,14 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                 end)
                             end
                         end
+                    -- Activate if Shift+clicking on the reagents column
+                    elseif column == 1 and button == "LeftButton" and IsShiftKeyDown() == true and realrow ~= nil then
+                        ChatEdit_InsertLink(data[realrow][1])
                     end
                 end
             })
 
+            -- Recipes window
             table2:RegisterEvents({
                 ["OnEnter"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
                     if row and realrow ~= nil then
@@ -1351,16 +1363,22 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                         pslReagents()
 
                     elseif column == 1 and button == "LeftButton" and row ~= nil and realrow ~= nil then
-                        -- Get the selected recipe ID
-                        local selectedRecipe = data[realrow][1]
-                        local selectedRecipeID = 0
+                        -- If Shift is held also
+                        if IsShiftKeyDown() == true then
+                            -- Try write link to chat
+                            ChatEdit_InsertLink(data[realrow][1])
+                        elseif IsControlKeyDown() == true then
+                            -- Get the selected recipe ID
+                            local selectedRecipe = data[realrow][1]
+                            local selectedRecipeID = 0
 
-                        for recipeID, recipeLink in pairs(recipeLinks) do
-                            if selectedRecipe == recipeLink then selectedRecipeID = recipeID end
+                            for recipeID, recipeLink in pairs(recipeLinks) do
+                                if selectedRecipe == recipeLink then selectedRecipeID = recipeID end
+                            end
+
+                            -- Open recipe if it is learned
+                            if selectedRecipeID ~= 0 and C_TradeSkillUI.IsRecipeProfessionLearned(selectedRecipeID) == true then C_TradeSkillUI.OpenRecipe(selectedRecipeID) end
                         end
-
-                        -- Open recipe if it is learned
-                        if selectedRecipeID ~= 0 and C_TradeSkillUI.IsRecipeProfessionLearned(selectedRecipeID) == true then C_TradeSkillUI.OpenRecipe(selectedRecipeID) end
                     end
                 end
             })
