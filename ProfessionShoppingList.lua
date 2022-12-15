@@ -405,6 +405,9 @@ function pslTooltipInfo()
         -- Get itemID
         local itemID = GetItemInfoFromHyperlink(link)
 
+        -- Try again if error
+        if itemID == nil then return end
+
         -- Get item amounts
         local reagentID1
         local reagentID2
