@@ -21,7 +21,7 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 - Shift+click Recipe: Link the recipe.
 - Ctrl+click Recipe: Open the selected recipe.
 - Right-click Recipe #: Untrack 1 of the selected recipe.
-- Shift+right-click Recipe #: Untrack all of the selected recipe.
+- Ctrl+right-click Recipe #: Untrack all of the selected recipe.
 - Shift+click Reagent: Link the reagent.
 - Ctrl+click Reagent: Add recipe for the selected subreagent, if it exists.
 
