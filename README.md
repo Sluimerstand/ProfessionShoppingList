@@ -31,3 +31,4 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 - Can show tooltip information for tracked reagents.
 - Can automatically set vendors' filter to 'All'.
 - Adds a Chef's Hat button to the Cooking window, if the toy is known.
+- Includes a Profession Knowledge tracker, the bar turns green when you've gathered all guaranteed knowledge.
