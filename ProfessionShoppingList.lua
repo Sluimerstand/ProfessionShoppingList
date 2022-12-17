@@ -1816,7 +1816,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             treatiseItem = 194697
             treatiseQuest = 74108
             orderQuest = nil
-            gatherQuests = {66517, 66897, 66941, 72398}
+            gatherQuests = {66517, 66897, 66941, 72398, 72427}
             craftQuests = {70235, 70234, 70233, 70211}
             drops = nil
             hiddenMaster = 70247
