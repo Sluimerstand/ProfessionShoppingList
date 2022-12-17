@@ -243,7 +243,7 @@ function pslReagents()
 
     -- Update reagents tracked
     local data = {}
-    -- i,no
+
     for reagentBase, reagentInfo in pairs(reagentsTracked) do
         local function getInfo()
             -- Get info
@@ -268,7 +268,7 @@ function pslReagents()
 
             -- Try again if error
             if itemName == nil or itemLink == nil then
-                C_Timer.After(.5, getInfo)
+                RunNextFrame(getInfo)
                 do return end
             end
 
@@ -400,6 +400,12 @@ function pslCreateButtons()
         knowledgePointTracker:SetSize(290,25)
         knowledgePointTracker:SetPoint("TOPRIGHT", ProfessionsFrame.SpecPage, "TOPRIGHT", -20, -55)
         knowledgePointTracker:SetFrameStrata("HIGH")
+        knowledgePointTracker:SetScript("OnEnter", function()
+            knowledgePointTooltip:Show()
+        end)
+        knowledgePointTracker:SetScript("OnLeave", function()
+            knowledgePointTooltip:Hide()
+        end)
 
         -- Bar
         knowledgePointTracker.Bar = CreateFrame("StatusBar", nil, knowledgePointTracker)
@@ -414,6 +420,24 @@ function pslCreateButtons()
         knowledgePointTracker.Text:SetPoint("CENTER", knowledgePointTracker, "CENTER", 0, 0)
         knowledgePointTracker.Text:SetTextColor(1, 1, 1, 1)
         knowledgePointTracker.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    end
+
+    -- Create Knowledge Point tracker tooltip
+    if not knowledgePointTooltip then
+        knowledgePointTooltip = CreateFrame("Frame", nil, knowledgePointTracker, "BackdropTemplate")
+        knowledgePointTooltip:SetPoint("CENTER")
+        knowledgePointTooltip:SetPoint("TOP", knowledgePointTracker, "BOTTOM", 0, 0)
+        knowledgePointTooltip:SetFrameStrata("TOOLTIP")
+        knowledgePointTooltip:SetBackdrop({
+            bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+            edgeSize = 16,
+            insets = { left = 4, right = 4, top = 4, bottom = 4 },
+        })
+        knowledgePointTooltip:SetBackdropColor(0, 0, 0, 0.8)
+        knowledgePointTooltip:EnableMouse(false)
+        knowledgePointTooltip:SetMovable(false)
+        knowledgePointTooltip:Hide()
     end
 end
 
@@ -936,20 +960,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                             pslOptionText:SetJustifyH("CENTER")
                             pslOptionText:SetText("|cffFFFFFFThere are multiple recipes which can create\n"..data[realrow][1]..".\n\nPlease select one of the following:")
 
-                            -- Get numReagents #1
-                            local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).reagentSlotSchematics
-                            local numReagents = 0
-                            if reagentsTable[9] then numReagents = 9
-                            elseif reagentsTable[8] then numReagents = 8
-                            elseif reagentsTable[7] then numReagents = 7
-                            elseif reagentsTable[6] then numReagents = 6
-                            elseif reagentsTable[5] then numReagents = 5
-                            elseif reagentsTable[4] then numReagents = 4
-                            elseif reagentsTable[3] then numReagents = 3
-                            elseif reagentsTable[2] then numReagents = 2
-                            elseif reagentsTable[1] then numReagents = 1
-                            end
-
                             -- Text
                             local pslOption1 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
                             pslOption1:SetPoint("LEFT", f, "LEFT", 10, 0)
@@ -959,16 +969,28 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                             pslOption1:SetText("|cffFFFFFF")
 
                             -- Get reagents #1
-                            if numReagents ~= 0 then
-                                for idx = 1, numReagents do
-                                    -- Get info
-                                    local reagentID = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).reagentSlotSchematics[idx].reagents[1].itemID
-                                    local reagentAmount = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).reagentSlotSchematics[idx].quantityRequired
-                                    local itemName, itemLink = GetItemInfo(reagentID)
+                            local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).reagentSlotSchematics
 
-                                    -- Text
-                                    oldText = pslOption1:GetText()
-                                    pslOption1:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                            -- For every reagent, if not optional or finishing, do
+                            for numReagent, reagentInfo in pairs(reagentsTable) do
+                                if reagentInfo.reagentType == 1 then
+                                    -- Get info
+                                    local function getInfo()
+                                        local reagentID = reagentInfo.reagents[1].itemID
+                                        local reagentAmount = reagentInfo.quantityRequired
+                                        local itemName, itemLink = GetItemInfo(reagentID)
+
+                                        -- Try again if error
+                                        if itemName == nil or itemLink == nil then
+                                            RunNextFrame(getInfo)
+                                            do return end
+                                        end
+
+                                        -- Add text
+                                        oldText = pslOption1:GetText()
+                                        pslOption1:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                    end
+                                    getInfo()
                                 end
                             end
 
@@ -984,7 +1006,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                         
                                 -- Track recipe
                                 local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-                                recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+                                recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID].amount / quantityMade) - GetItemCount(itemID))
                         
                                 -- Add recipe link
                                 recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
@@ -1003,20 +1025,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                 -- Adjust popup frame
                                 f:SetSize(430, 205)
 
-                                -- Get numReagents #2
-                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).reagentSlotSchematics
-                                local numReagents = 0
-                                if reagentsTable[9] then numReagents = 9
-                                elseif reagentsTable[8] then numReagents = 8
-                                elseif reagentsTable[7] then numReagents = 7
-                                elseif reagentsTable[6] then numReagents = 6
-                                elseif reagentsTable[5] then numReagents = 5
-                                elseif reagentsTable[4] then numReagents = 4
-                                elseif reagentsTable[3] then numReagents = 3
-                                elseif reagentsTable[2] then numReagents = 2
-                                elseif reagentsTable[1] then numReagents = 1
-                                end
-
                                 -- Text
                                 local pslOption2 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
                                 pslOption2:SetPoint("LEFT", pslOption1, "RIGHT", 10, 0)
@@ -1026,16 +1034,28 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                 pslOption2:SetText("|cffFFFFFF")
 
                                 -- Get reagents #2
-                                if numReagents ~= 0 then
-                                    for idx = 1, numReagents do
-                                        -- Get info
-                                        local reagentID = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).reagentSlotSchematics[idx].reagents[1].itemID
-                                        local reagentAmount = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).reagentSlotSchematics[idx].quantityRequired
-                                        local itemName, itemLink = GetItemInfo(reagentID)
+                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).reagentSlotSchematics
 
-                                        -- Text
-                                        oldText = pslOption2:GetText()
-                                        pslOption2:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                -- For every reagent, if not optional or finishing, do
+                                for numReagent, reagentInfo in pairs(reagentsTable) do
+                                    if reagentInfo.reagentType == 1 then
+                                        -- Get info
+                                        local function getInfo()
+                                            local reagentID = reagentInfo.reagents[1].itemID
+                                            local reagentAmount = reagentInfo.quantityRequired
+                                            local itemName, itemLink = GetItemInfo(reagentID)
+
+                                            -- Try again if error
+                                            if itemName == nil or itemLink == nil then
+                                                RunNextFrame(getInfo)
+                                                do return end
+                                            end
+
+                                            -- Add text
+                                            oldText = pslOption2:GetText()
+                                            pslOption2:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                        end
+                                        getInfo()
                                     end
                                 end
 
@@ -1051,7 +1071,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                             
                                     -- Track recipe
                                     local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID].amount / quantityMade) - GetItemCount(itemID))
                             
                                     -- Add recipe link
                                     recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
@@ -1071,20 +1091,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                 -- Adjust popup frame
                                 f:SetSize(640, 200)
 
-                                -- Get numReagents #3
-                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).reagentSlotSchematics
-                                local numReagents = 0
-                                if reagentsTable[9] then numReagents = 9
-                                elseif reagentsTable[8] then numReagents = 8
-                                elseif reagentsTable[7] then numReagents = 7
-                                elseif reagentsTable[6] then numReagents = 6
-                                elseif reagentsTable[5] then numReagents = 5
-                                elseif reagentsTable[4] then numReagents = 4
-                                elseif reagentsTable[3] then numReagents = 3
-                                elseif reagentsTable[2] then numReagents = 2
-                                elseif reagentsTable[1] then numReagents = 1
-                                end
-
                                 -- Text
                                 local pslOption3 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
                                 pslOption3:SetPoint("LEFT", pslOption1, "RIGHT", 220, 0)
@@ -1094,16 +1100,28 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                 pslOption3:SetText("|cffFFFFFF")
 
                                 -- Get reagents #3
-                                if numReagents ~= 0 then
-                                    for idx = 1, numReagents do
-                                        -- Get info
-                                        local reagentID = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).reagentSlotSchematics[idx].reagents[1].itemID
-                                        local reagentAmount = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).reagentSlotSchematics[idx].quantityRequired
-                                        local itemName, itemLink = GetItemInfo(reagentID)
+                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).reagentSlotSchematics
 
-                                        -- Text
-                                        oldText = pslOption3:GetText()
-                                        pslOption3:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                -- For every reagent, if not optional or finishing, do
+                                for numReagent, reagentInfo in pairs(reagentsTable) do
+                                    if reagentInfo.reagentType == 1 then
+                                        -- Get info
+                                        local function getInfo()
+                                            local reagentID = reagentInfo.reagents[1].itemID
+                                            local reagentAmount = reagentInfo.quantityRequired
+                                            local itemName, itemLink = GetItemInfo(reagentID)
+
+                                            -- Try again if error
+                                            if itemName == nil or itemLink == nil then
+                                                RunNextFrame(getInfo)
+                                                do return end
+                                            end
+
+                                            -- Add text
+                                            oldText = pslOption3:GetText()
+                                            pslOption3:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                        end
+                                        getInfo()
                                     end
                                 end
 
@@ -1119,7 +1137,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                             
                                     -- Track recipe
                                     local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID].amount / quantityMade) - GetItemCount(itemID))
                             
                                     -- Add recipe link
                                     recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
@@ -1139,20 +1157,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                 -- Adjust popup frame
                                 f:SetSize(640, 335)
 
-                                -- Get numReagents #4
-                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).reagentSlotSchematics
-                                local numReagents = 0
-                                if reagentsTable[9] then numReagents = 9
-                                elseif reagentsTable[8] then numReagents = 8
-                                elseif reagentsTable[7] then numReagents = 7
-                                elseif reagentsTable[6] then numReagents = 6
-                                elseif reagentsTable[5] then numReagents = 5
-                                elseif reagentsTable[4] then numReagents = 4
-                                elseif reagentsTable[3] then numReagents = 3
-                                elseif reagentsTable[2] then numReagents = 2
-                                elseif reagentsTable[1] then numReagents = 1
-                                end
-
                                 -- Text
                                 local pslOption4 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
                                 pslOption4:SetPoint("LEFT", pslOption1, "LEFT", 0, 0)
@@ -1162,16 +1166,28 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                 pslOption4:SetText("|cffFFFFFF")
 
                                 -- Get reagents #4
-                                if numReagents ~= 0 then
-                                    for idx = 1, numReagents do
-                                        -- Get info
-                                        local reagentID = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).reagentSlotSchematics[idx].reagents[1].itemID
-                                        local reagentAmount = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).reagentSlotSchematics[idx].quantityRequired
-                                        local itemName, itemLink = GetItemInfo(reagentID)
+                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).reagentSlotSchematics
 
-                                        -- Text
-                                        oldText = pslOption4:GetText()
-                                        pslOption4:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                -- For every reagent, if not optional or finishing, do
+                                for numReagent, reagentInfo in pairs(reagentsTable) do
+                                    if reagentInfo.reagentType == 1 then
+                                        -- Get info
+                                        local function getInfo()
+                                            local reagentID = reagentInfo.reagents[1].itemID
+                                            local reagentAmount = reagentInfo.quantityRequired
+                                            local itemName, itemLink = GetItemInfo(reagentID)
+
+                                            -- Try again if error
+                                            if itemName == nil or itemLink == nil then
+                                                RunNextFrame(getInfo)
+                                                do return end
+                                            end
+
+                                            -- Add text
+                                            oldText = pslOption4:GetText()
+                                            pslOption4:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                        end
+                                        getInfo()
                                     end
                                 end
 
@@ -1187,7 +1203,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                             
                                     -- Track recipe
                                     local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID].amount / quantityMade) - GetItemCount(itemID))
                             
                                     -- Add recipe link
                                     recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
@@ -1204,20 +1220,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
                             -- If five options
                             if no >= 5 then
-                                -- Get numReagents #5
-                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).reagentSlotSchematics
-                                local numReagents = 0
-                                if reagentsTable[9] then numReagents = 9
-                                elseif reagentsTable[8] then numReagents = 8
-                                elseif reagentsTable[7] then numReagents = 7
-                                elseif reagentsTable[6] then numReagents = 6
-                                elseif reagentsTable[5] then numReagents = 5
-                                elseif reagentsTable[4] then numReagents = 4
-                                elseif reagentsTable[3] then numReagents = 3
-                                elseif reagentsTable[2] then numReagents = 2
-                                elseif reagentsTable[1] then numReagents = 1
-                                end
-
                                 -- Text
                                 local pslOption5 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
                                 pslOption5:SetPoint("LEFT", pslOption1, "RIGHT", 10, 0)
@@ -1227,16 +1229,28 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                 pslOption5:SetText("|cffFFFFFF")
 
                                 -- Get reagents #5
-                                if numReagents ~= 0 then
-                                    for idx = 1, numReagents do
-                                        -- Get info
-                                        local reagentID = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).reagentSlotSchematics[idx].reagents[1].itemID
-                                        local reagentAmount = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).reagentSlotSchematics[idx].quantityRequired
-                                        local itemName, itemLink = GetItemInfo(reagentID)
+                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).reagentSlotSchematics
 
-                                        -- Text
-                                        oldText = pslOption5:GetText()
-                                        pslOption5:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                -- For every reagent, if not optional or finishing, do
+                                for numReagent, reagentInfo in pairs(reagentsTable) do
+                                    if reagentInfo.reagentType == 1 then
+                                        -- Get info
+                                        local function getInfo()
+                                            local reagentID = reagentInfo.reagents[1].itemID
+                                            local reagentAmount = reagentInfo.quantityRequired
+                                            local itemName, itemLink = GetItemInfo(reagentID)
+
+                                            -- Try again if error
+                                            if itemName == nil or itemLink == nil then
+                                                RunNextFrame(getInfo)
+                                                do return end
+                                            end
+
+                                            -- Add text
+                                            oldText = pslOption5:GetText()
+                                            pslOption5:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                        end
+                                        getInfo()
                                     end
                                 end
 
@@ -1252,7 +1266,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                             
                                     -- Track recipe
                                     local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID].amount / quantityMade) - GetItemCount(itemID))
                             
                                     -- Add recipe link
                                     recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
@@ -1269,20 +1283,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
                             -- If six options
                             if no >= 6 then
-                                -- Get numReagents #6
-                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).reagentSlotSchematics
-                                local numReagents = 0
-                                if reagentsTable[9] then numReagents = 9
-                                elseif reagentsTable[8] then numReagents = 8
-                                elseif reagentsTable[7] then numReagents = 7
-                                elseif reagentsTable[6] then numReagents = 6
-                                elseif reagentsTable[5] then numReagents = 5
-                                elseif reagentsTable[4] then numReagents = 4
-                                elseif reagentsTable[3] then numReagents = 3
-                                elseif reagentsTable[2] then numReagents = 2
-                                elseif reagentsTable[1] then numReagents = 1
-                                end
-
                                 -- Text
                                 local pslOption6 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
                                 pslOption6:SetPoint("LEFT", pslOption1, "RIGHT", 220, 0)
@@ -1292,16 +1292,28 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                                 pslOption6:SetText("|cffFFFFFF")
 
                                 -- Get reagents #6
-                                if numReagents ~= 0 then
-                                    for idx = 1, numReagents do
-                                        -- Get info
-                                        local reagentID = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).reagentSlotSchematics[idx].reagents[1].itemID
-                                        local reagentAmount = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).reagentSlotSchematics[idx].quantityRequired
-                                        local itemName, itemLink = GetItemInfo(reagentID)
+                                local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).reagentSlotSchematics
 
-                                        -- Text
-                                        oldText = pslOption6:GetText()
-                                        pslOption6:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                -- For every reagent, if not optional or finishing, do
+                                for numReagent, reagentInfo in pairs(reagentsTable) do
+                                    if reagentInfo.reagentType == 1 then
+                                        -- Get info
+                                        local function getInfo()
+                                            local reagentID = reagentInfo.reagents[1].itemID
+                                            local reagentAmount = reagentInfo.quantityRequired
+                                            local itemName, itemLink = GetItemInfo(reagentID)
+
+                                            -- Try again if error
+                                            if itemName == nil or itemLink == nil then
+                                                RunNextFrame(getInfo)
+                                                do return end
+                                            end
+
+                                            -- Add text
+                                            oldText = pslOption6:GetText()
+                                            pslOption6:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+                                        end
+                                        getInfo()
                                     end
                                 end
 
@@ -1317,7 +1329,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
                             
                                     -- Track recipe
                                     local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+                                    recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID].amount / quantityMade) - GetItemCount(itemID))
                             
                                     -- Add recipe link
                                     recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
@@ -1438,7 +1450,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
     -- When a recipe is selected or the profession window is opened
     if event == "SPELL_DATA_LOAD_RESULT" then
         -- Check if the Remove button should be disabled
-        function checkRemoveButton()
+        local function checkRemoveButton()
             -- Get selected recipe ID
             if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
             pslSelectedRecipeID = arg1
@@ -1495,74 +1507,83 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
         local professionID = C_TradeSkillUI.GetProfessionInfoBySkillLineID(skillLineID).profession
 
         -- Knowledge Point Tracker
-        function setKnowledgePointTracker()
-            if professionID == 1
-            or professionID == 2
-            or professionID == 3
-            or professionID == 4
-            or professionID == 6
-            or professionID == 7
-            or professionID == 8
-            or professionID == 9
-            or professionID == 11
-            or professionID == 12
-            or professionID == 13
-            then
-                -- Variables
-                local configID = C_ProfSpecs.GetConfigIDForSkillLine(skillLineID)
-                local specTabIDs = C_ProfSpecs.GetSpecTabIDsForSkillLine(skillLineID)
+        local function setKnowledgePointTracker()
+            -- Variables
+            local configID = C_ProfSpecs.GetConfigIDForSkillLine(skillLineID)
+            local specTabIDs = C_ProfSpecs.GetSpecTabIDsForSkillLine(skillLineID)
 
-                -- Get all paths
-                local pathCount = 0
-                local pathIDs = {}
-                for no, specTabID in pairs(specTabIDs) do
+            -- Get all paths
+            local pathCount = 0
+            local pathIDs = {}
+            for no, specTabID in pairs(specTabIDs) do
+                pathCount = pathCount + 1
+                local rootPathID = C_ProfSpecs.GetRootPathForTab(specTabID)
+                pathIDs[pathCount] = rootPathID
+                
+                local childIDs = C_ProfSpecs.GetChildrenForPath(rootPathID)
+                for no, childID in pairs (childIDs) do
                     pathCount = pathCount + 1
-                    local rootPathID = C_ProfSpecs.GetRootPathForTab(specTabID)
-                    pathIDs[pathCount] = rootPathID
-                    
-                    local childIDs = C_ProfSpecs.GetChildrenForPath(rootPathID)
-                    for no, childID in pairs (childIDs) do
-                        pathCount = pathCount + 1
-                        pathIDs[pathCount] = childID
-                        if C_ProfSpecs.GetChildrenForPath(childID)[1] == nil then else
-                            local childIDs = C_ProfSpecs.GetChildrenForPath(childID)
-                            for no, childID in pairs (childIDs) do
-                                pathCount = pathCount + 1
-                                pathIDs[pathCount] = childID
-                            end
+                    pathIDs[pathCount] = childID
+                    if C_ProfSpecs.GetChildrenForPath(childID)[1] == nil then else
+                        local childIDs = C_ProfSpecs.GetChildrenForPath(childID)
+                        for no, childID in pairs (childIDs) do
+                            pathCount = pathCount + 1
+                            pathIDs[pathCount] = childID
                         end
                     end
                 end
-
-                -- Get all perks
-                local perkCount = 0
-                local perkIDs = {}
-                for no, pathID in pairs (pathIDs) do
-                    local perks = C_ProfSpecs.GetPerksForPath(pathID)
-                    for no, perk in pairs (perks) do
-                        perkCount = perkCount + 1
-                        perkIDs[perkCount] = perk.perkID
-                    end
-                end
-
-                -- Get perk info
-                local perksEarned = 0
-                for no, perk in pairs (perkIDs) do
-                    if C_ProfSpecs.GetStateForPerk(perk, configID) == 2 then
-                        perksEarned = perksEarned + 1
-                    end
-                end
-
-                -- Set text and progress, then show bar
-                knowledgePointTracker.Text:SetText(perksEarned.."/"..perkCount.." perks unlocked")
-                knowledgePointTracker.Bar:SetMinMaxSmoothedValue(0, perkCount)
-                knowledgePointTracker.Bar:SetSmoothedValue(perksEarned)
-                knowledgePointTracker:Show()
-            else
-                knowledgePointTracker:Hide()
             end
+
+            -- Get all perks
+            local perkCount = 0
+            local perkIDs = {}
+            for no, pathID in pairs (pathIDs) do
+                local perks = C_ProfSpecs.GetPerksForPath(pathID)
+                for no, perk in pairs (perks) do
+                    perkCount = perkCount + 1
+                    perkIDs[perkCount] = perk.perkID
+                end
+            end
+
+            -- Get perk info
+            local perksEarned = 0
+            for no, perk in pairs (perkIDs) do
+                if C_ProfSpecs.GetStateForPerk(perk, configID) == 2 then
+                    perksEarned = perksEarned + 1
+                end
+            end
+
+            -- Set text and progress, then show bar
+            knowledgePointTracker.Text:SetText(perksEarned.."/"..perkCount.." perks unlocked")
+            knowledgePointTracker.Bar:SetMinMaxSmoothedValue(0, perkCount)
+            knowledgePointTracker.Bar:SetSmoothedValue(perksEarned)
         end
-        setKnowledgePointTracker()
+
+        -- Professions with Knowledge Points
+        if professionID == 1
+        or professionID == 2
+        or professionID == 3
+        or professionID == 4
+        or professionID == 6
+        or professionID == 7
+        or professionID == 8
+        or professionID == 9
+        or professionID == 11
+        or professionID == 12
+        or professionID == 13 then
+            setKnowledgePointTracker()
+            knowledgePointTracker:Show()
+            knowledgePointTooltip:SetSize(100,100)
+            -- FontString:GetStringWidth()
+            -- local pslOption6 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+            -- pslOption6:SetPoint("LEFT", pslOption1, "RIGHT", 220, 0)
+            -- pslOption6:SetPoint("TOP", pslOption1, "TOP", 0, -130)
+            -- pslOption6:SetWidth(200)
+            -- pslOption6:SetJustifyH("LEFT")
+            -- pslOption6:SetText("|cffFFFFFF")
+        else
+            knowledgePointTracker:Hide()
+        end
 
         -- Blacksmithing
         if professionID == 1 then
@@ -1656,7 +1677,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
     -- Set the Vendor filter to 'All' if the option is enabled
     if event == "MERCHANT_SHOW" and userSettings["vendorAll"] == true then
-        C_Timer.After(0.1,function()
+        RunNextFrame(function()
             SetMerchantFilter(1)
             MerchantFrame_Update()
         end)
