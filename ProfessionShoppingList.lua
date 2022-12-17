@@ -306,7 +306,7 @@ function pslReagents()
     end
 end
 
--- Create buttons
+-- Create buttons... and other UI elements, but I'm not renaming this function
 function pslCreateButtons()
     -- Hide and disable existing tracking button
     ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckBox:SetAlpha(0)
@@ -315,20 +315,20 @@ function pslCreateButtons()
     -- Create the "Track" button
     if not addCraftListButton then
         addCraftListButton = CreateFrame("Button", nil, ProfessionsFrame.CraftingPage, "UIPanelButtonTemplate")
+        addCraftListButton:SetText("Track")
+        addCraftListButton:SetWidth(60)
+        addCraftListButton:SetPoint("TOPRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "TOPRIGHT", -9, -10)
+        addCraftListButton:SetFrameStrata("HIGH")
     end
-    addCraftListButton:SetText("Track")
-    addCraftListButton:SetWidth(60)
-    addCraftListButton:SetPoint("TOPRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "TOPRIGHT", -9, -10)
-    addCraftListButton:SetFrameStrata("HIGH")
 
     -- Create the "Untrack" button
     if not removeCraftListButton then
         removeCraftListButton = CreateFrame("Button", nil, ProfessionsFrame.CraftingPage, "UIPanelButtonTemplate")
+        removeCraftListButton:SetText("Untrack")
+        removeCraftListButton:SetWidth(70)
+        removeCraftListButton:SetPoint("TOPRIGHT", addCraftListButton, "TOPLEFT", -4, 0)
+        removeCraftListButton:SetFrameStrata("HIGH")
     end
-    removeCraftListButton:SetText("Untrack")
-    removeCraftListButton:SetWidth(70)
-    removeCraftListButton:SetPoint("TOPRIGHT", addCraftListButton, "TOPLEFT", -4, 0)
-    removeCraftListButton:SetFrameStrata("HIGH")
 
     -- Make the "Track" button actually do the thing
     addCraftListButton:SetScript("OnClick", function()
@@ -381,16 +381,40 @@ function pslCreateButtons()
     -- Create Chef's Hat button
     if not chefsHatButton then
         chefsHatButton = CreateFrame("Button", "ChefsHatButton", ProfessionsFrame, "UIPanelButtonTemplate")
+    
+        chefsHatButton:SetWidth(40)
+        chefsHatButton:SetHeight(40)
+        chefsHatButton:SetNormalTexture(236571)
+        chefsHatButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
+        chefsHatButton:SetFrameStrata("HIGH")
+        chefsHatButton:SetScript("OnClick", function() 
+            UseToyByName("Chef's Hat")
+        end)
     end
 
-    chefsHatButton:SetWidth(40)
-    chefsHatButton:SetHeight(40)
-    chefsHatButton:SetNormalTexture(236571)
-    chefsHatButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
-    chefsHatButton:SetFrameStrata("HIGH")
-    chefsHatButton:SetScript("OnClick", function()
-        UseToyByName("Chef's Hat")
-    end)
+    -- Create Knowledge Point tracker
+    if not knowledgePointTracker then
+        -- Bar wrapper
+        knowledgePointTracker = CreateFrame("Frame", "KnowledgePointTracker", ProfessionsFrame.SpecPage, "TooltipBackdropTemplate")
+        knowledgePointTracker:SetBackdropBorderColor(0.5, 0.5, 0.5)
+        knowledgePointTracker:SetSize(290,25)
+        knowledgePointTracker:SetPoint("TOPRIGHT", ProfessionsFrame.SpecPage, "TOPRIGHT", -20, -55)
+        knowledgePointTracker:SetFrameStrata("HIGH")
+
+        -- Bar
+        knowledgePointTracker.Bar = CreateFrame("StatusBar", nil, knowledgePointTracker)
+        knowledgePointTracker.Bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+        knowledgePointTracker.Bar:SetStatusBarColor(0, 1, 0)
+        knowledgePointTracker.Bar:SetPoint("TOPLEFT", 5, -5)
+        knowledgePointTracker.Bar:SetPoint("BOTTOMRIGHT", -5, 5)
+        Mixin(knowledgePointTracker.Bar, SmoothStatusBarMixin)
+
+        -- Text
+        knowledgePointTracker.Text = knowledgePointTracker.Bar:CreateFontString("OVERLAY", nil, "GameFontNormal")
+        knowledgePointTracker.Text:SetPoint("CENTER", knowledgePointTracker, "CENTER", 0, 0)
+        knowledgePointTracker.Text:SetTextColor(1, 1, 1, 1)
+        knowledgePointTracker.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    end
 end
 
 -- Tooltip information
@@ -1466,13 +1490,129 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
         end
         checkRemoveButton()
 
-        -- Show the Chef's Hat if the Cooking window is open and the toy is known
-        professionID = C_TradeSkillUI.GetProfessionInfoBySkillLineID(C_TradeSkillUI.GetProfessionChildSkillLineID()).profession
+        -- Show stuff depending on which profession is opened
+        local skillLineID = C_TradeSkillUI.GetProfessionChildSkillLineID()
+        local professionID = C_TradeSkillUI.GetProfessionInfoBySkillLineID(skillLineID).profession
 
+        -- Knowledge Point Tracker
+        function setKnowledgePointTracker()
+            if professionID == 1
+            or professionID == 2
+            or professionID == 3
+            or professionID == 4
+            or professionID == 6
+            or professionID == 7
+            or professionID == 8
+            or professionID == 9
+            or professionID == 11
+            or professionID == 12
+            or professionID == 13
+            then
+                -- Variables
+                local configID = C_ProfSpecs.GetConfigIDForSkillLine(skillLineID)
+                local specTabIDs = C_ProfSpecs.GetSpecTabIDsForSkillLine(skillLineID)
+
+                -- Get all paths
+                local pathCount = 0
+                local pathIDs = {}
+                for no, specTabID in pairs(specTabIDs) do
+                    pathCount = pathCount + 1
+                    local rootPathID = C_ProfSpecs.GetRootPathForTab(specTabID)
+                    pathIDs[pathCount] = rootPathID
+                    
+                    local childIDs = C_ProfSpecs.GetChildrenForPath(rootPathID)
+                    for no, childID in pairs (childIDs) do
+                        pathCount = pathCount + 1
+                        pathIDs[pathCount] = childID
+                        if C_ProfSpecs.GetChildrenForPath(childID)[1] == nil then else
+                            local childIDs = C_ProfSpecs.GetChildrenForPath(childID)
+                            for no, childID in pairs (childIDs) do
+                                pathCount = pathCount + 1
+                                pathIDs[pathCount] = childID
+                            end
+                        end
+                    end
+                end
+
+                -- Get all perks
+                local perkCount = 0
+                local perkIDs = {}
+                for no, pathID in pairs (pathIDs) do
+                    local perks = C_ProfSpecs.GetPerksForPath(pathID)
+                    for no, perk in pairs (perks) do
+                        perkCount = perkCount + 1
+                        perkIDs[perkCount] = perk.perkID
+                    end
+                end
+
+                -- Get perk info
+                local perksEarned = 0
+                for no, perk in pairs (perkIDs) do
+                    if C_ProfSpecs.GetStateForPerk(perk, configID) == 2 then
+                        perksEarned = perksEarned + 1
+                    end
+                end
+
+                -- Set text and progress, then show bar
+                knowledgePointTracker.Text:SetText(perksEarned.."/"..perkCount.." perks unlocked")
+                knowledgePointTracker.Bar:SetMinMaxSmoothedValue(0, perkCount)
+                knowledgePointTracker.Bar:SetSmoothedValue(perksEarned)
+                knowledgePointTracker:Show()
+            else
+                knowledgePointTracker:Hide()
+            end
+        end
+        setKnowledgePointTracker()
+
+        -- Blacksmithing
+        if professionID == 1 then
+        end
+
+        -- Leatherworking
+        if professionID == 2 then
+        end
+
+        -- Alchemy
+        if professionID == 3 then
+        end
+
+        -- Herbalism
+        if professionID == 4 then
+        end
+
+        -- Cooking
         if professionID == 5 and PlayerHasToy(134020) then
             chefsHatButton:Show()
         else
             chefsHatButton:Hide()
+        end
+
+        -- Mining
+        if professionID == 6 then
+        end
+
+        -- Tailoring
+        if professionID == 7 then
+        end
+
+        -- Engineering
+        if professionID == 8 then
+        end
+
+        -- Enchanting
+        if professionID == 9 then
+        end
+
+        -- Skinning
+        if professionID == 11 then
+        end
+
+        -- Jewelcrafting
+        if professionID == 12 then
+        end
+
+        -- Inscription
+        if professionID == 13 then
         end
     end
     
