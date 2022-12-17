@@ -400,9 +400,6 @@ function pslCreateButtons()
         knowledgePointTracker:SetSize(290,25)
         knowledgePointTracker:SetPoint("TOPRIGHT", ProfessionsFrame.SpecPage, "TOPRIGHT", -20, -55)
         knowledgePointTracker:SetFrameStrata("HIGH")
-        knowledgePointTracker:SetScript("OnEnter", function()
-            knowledgePointTooltip:Show()
-        end)
         knowledgePointTracker:SetScript("OnLeave", function()
             knowledgePointTooltip:Hide()
         end)
@@ -410,7 +407,7 @@ function pslCreateButtons()
         -- Bar
         knowledgePointTracker.Bar = CreateFrame("StatusBar", nil, knowledgePointTracker)
         knowledgePointTracker.Bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-        knowledgePointTracker.Bar:SetStatusBarColor(0, 1, 0)
+        knowledgePointTracker.Bar:SetStatusBarColor(1, .5, 0)
         knowledgePointTracker.Bar:SetPoint("TOPLEFT", 5, -5)
         knowledgePointTracker.Bar:SetPoint("BOTTOMRIGHT", -5, 5)
         Mixin(knowledgePointTracker.Bar, SmoothStatusBarMixin)
@@ -438,6 +435,10 @@ function pslCreateButtons()
         knowledgePointTooltip:EnableMouse(false)
         knowledgePointTooltip:SetMovable(false)
         knowledgePointTooltip:Hide()
+
+        knowledgePointTooltipText = knowledgePointTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+        knowledgePointTooltipText:SetPoint("TOPLEFT", knowledgePointTooltip, "TOPLEFT", 10, -10)
+        knowledgePointTooltipText:SetJustifyH("LEFT")
     end
 end
 
@@ -1559,6 +1560,211 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             knowledgePointTracker.Bar:SetSmoothedValue(perksEarned)
         end
 
+        -- Knowledge Point Tooltip
+        local treatiseItem
+        local treatiseQuest
+        local orderQuest
+        local gatherQuests
+        local craftQuests
+        local drops
+        local hiddenMaster
+        local treasures
+        local progress = true
+
+        local function kpTooltip()
+            -- Treatise
+            local treatiseStatus = READY_CHECK_NOT_READY_TEXTURE
+            local treatiseNumber = 0
+            local derp, treatiseItemLink = GetItemInfo(treatiseItem)
+
+            if treatiseQuest ~= nil then
+                if C_QuestLog.IsQuestFlaggedCompleted(treatiseQuest) then
+                    treatiseStatus = READY_CHECK_READY_TEXTURE
+                    treatiseNumber = 1
+                end
+
+                if treatiseStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+            end
+
+            -- Crafting order quest
+            local orderQuestStatus = READY_CHECK_NOT_READY_TEXTURE
+            local orderQuestNumber = 0
+
+            if orderQuest ~= nil then 
+                if C_QuestLog.IsQuestFlaggedCompleted(orderQuest) then
+                    orderQuestStatus = READY_CHECK_READY_TEXTURE
+                    orderQuestNumber = 1
+                end
+
+                if orderQuestStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+            end
+
+            -- Gather quests
+            local gatherQuestStatus = READY_CHECK_NOT_READY_TEXTURE
+            local gatherQuestNumber = 0
+
+            if gatherQuests ~= nil then
+                for no, questID in pairs (gatherQuests) do
+                    if C_QuestLog.IsQuestFlaggedCompleted(questID) then
+                        gatherQuestNumber = 1
+                        gatherQuestStatus = READY_CHECK_READY_TEXTURE
+                    end
+                end
+
+                if gatherQuestStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+            end
+
+            -- Craft quests
+            local craftQuestStatus = READY_CHECK_NOT_READY_TEXTURE
+            local craftQuestNumber = 0
+
+            if craftQuests ~= nil then
+                for no, questID in pairs (craftQuests) do
+                    if C_QuestLog.IsQuestFlaggedCompleted(questID) then
+                        craftQuestNumber = 1
+                        craftQuestStatus = READY_CHECK_READY_TEXTURE
+                    end
+                end
+
+                if craftQuestStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+            end
+
+            -- Drops
+            local dropsStatus = READY_CHECK_WAITING_TEXTURE
+            local dropsNoCurrent = 0
+            local dropsNoTotal = 0
+
+            if drops ~= nil then
+                for no, questID in pairs (drops) do
+                    if C_QuestLog.IsQuestFlaggedCompleted(questID) then
+                        dropsNoCurrent = dropsNoCurrent + 1
+                    end
+                    dropsNoTotal = dropsNoTotal + 1
+                end
+
+                if dropsNoTotal == 6 then
+                    dropsStatus = READY_CHECK_NOT_READY_TEXTURE
+                end
+
+                if dropsNoCurrent == 6 then
+                    dropsStatus = READY_CHECK_READY_TEXTURE
+                end
+
+                if dropsStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+            end
+
+            -- Dragon Shards
+            local shardQuests = {67295, 69946, 69979, 67298}
+            local shardStatus = READY_CHECK_NOT_READY_TEXTURE
+            local shardNo = 0
+
+            for no, questID in pairs (shardQuests) do
+                if C_QuestLog.IsQuestFlaggedCompleted(questID) then
+                    shardNo = shardNo + 1
+                end
+            end
+
+            local derp, shardItemLink = GetItemInfo(191784)
+
+            if shardNo == 4 then shardStatus = READY_CHECK_READY_TEXTURE end
+
+            if shardStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+
+            -- Hidden profession master
+            local hiddenStatus = READY_CHECK_NOT_READY_TEXTURE
+            local hiddenNumber = 0
+
+            if hiddenMaster ~= nil then 
+                if C_QuestLog.IsQuestFlaggedCompleted(hiddenMaster) then
+                    hiddenNumber = 1
+                    hiddenStatus = READY_CHECK_READY_TEXTURE
+                end
+
+                if hiddenStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+            end
+
+            -- Treasures
+            local treasureStatus = READY_CHECK_NOT_READY_TEXTURE
+            local treasureNoCurrent = 0
+            local treasureNoTotal = 0
+
+            if treasures ~= nil then
+                for no, questID in pairs (treasures) do
+                    if C_QuestLog.IsQuestFlaggedCompleted(questID) then
+                        treasureNoCurrent = treasureNoCurrent + 1
+                    end
+                    treasureNoTotal = treasureNoTotal + 1
+                end
+
+                if treasureNoCurrent == treasureNoTotal then treasureStatus = READY_CHECK_READY_TEXTURE end
+
+                if treasureStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+            end
+
+            -- If links missing, try again
+            if shardItemLink == nil or treatiseItemLink == nil then
+                RunNextFrame(kpTooltip)
+                do return end
+            end
+
+            -- Set text
+            local oldText
+            if treatiseQuest ~= nil then
+                knowledgePointTooltipText:SetText("Weekly:\n|cffFFFFFF".."|T"..treatiseStatus..":0|t "..treatiseNumber.."/1 "..treatiseItemLink)
+            end
+
+            if orderQuest ~= nil then
+                oldText = knowledgePointTooltipText:GetText()
+                knowledgePointTooltipText:SetText(oldText.."\n".."|T"..orderQuestStatus..":0|t "..orderQuestNumber.."/1 Crafting Orders quest")
+            end
+
+            if gatherQuests ~= nil then
+                oldText = knowledgePointTooltipText:GetText()
+                knowledgePointTooltipText:SetText(oldText.."\n".."|T"..gatherQuestStatus..":0|t "..gatherQuestNumber.."/1 Gather quest")
+            end
+
+            if craftQuests ~= nil then
+                oldText = knowledgePointTooltipText:GetText()
+                knowledgePointTooltipText:SetText(oldText.."\n".."|T"..craftQuestStatus..":0|t "..craftQuestNumber.."/1 Craft quest")
+            end
+
+            if drops ~= nil and dropsNoTotal >=4 then
+                oldText = knowledgePointTooltipText:GetText()
+                knowledgePointTooltipText:SetText(oldText.."\n".."|T"..dropsStatus..":0|t "..dropsNoCurrent.."/"..dropsNoTotal.." Drops")
+            elseif drops ~= nil and dropsNoTotal < 4 then
+                oldText = knowledgePointTooltipText:GetText()
+                knowledgePointTooltipText:SetText(oldText.."\n".."|T"..dropsStatus..":0|t ".."|cff9D9D9D"..dropsNoCurrent.."/4 Drops (WIP, incomplete)")
+            end
+
+            oldText = knowledgePointTooltipText:GetText()
+            knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000One-time:\n".."|T"..shardStatus..":0|t ".."|cffFFFFFF"..shardNo.."/4 "..shardItemLink)
+
+            oldText = knowledgePointTooltipText:GetText()
+            knowledgePointTooltipText:SetText(oldText.."\n".."|T"..hiddenStatus..":0|t "..hiddenNumber.."/1 Hidden profession master")
+
+            if treasures ~= nil then
+                oldText = knowledgePointTooltipText:GetText()
+                knowledgePointTooltipText:SetText(oldText.."\n".."|T"..treasureStatus..":0|t "..treasureNoCurrent.."/"..treasureNoTotal.." Treasures")
+            end
+
+            -- Make progress bar green if everything is done
+            if progress == true then
+                knowledgePointTracker.Bar:SetStatusBarColor(0, 1, 0)
+            else
+                knowledgePointTracker.Bar:SetStatusBarColor(1, .5, 0)
+            end
+
+            -- Set the tooltip size to fit its contents
+            knowledgePointTooltip:SetHeight(knowledgePointTooltipText:GetStringHeight()+20)
+            knowledgePointTooltip:SetWidth(knowledgePointTooltipText:GetStringWidth()+20)
+        end
+
+        -- Refresh and show the tooltip on mouse-over
+        knowledgePointTracker:SetScript("OnEnter", function()
+            kpTooltip()
+            knowledgePointTooltip:Show()
+        end)
+
         -- Professions with Knowledge Points
         if professionID == 1
         or professionID == 2
@@ -1573,32 +1779,64 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
         or professionID == 13 then
             setKnowledgePointTracker()
             knowledgePointTracker:Show()
-            knowledgePointTooltip:SetSize(100,100)
-            -- FontString:GetStringWidth()
-            -- local pslOption6 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-            -- pslOption6:SetPoint("LEFT", pslOption1, "RIGHT", 220, 0)
-            -- pslOption6:SetPoint("TOP", pslOption1, "TOP", 0, -130)
-            -- pslOption6:SetWidth(200)
-            -- pslOption6:SetJustifyH("LEFT")
-            -- pslOption6:SetText("|cffFFFFFF")
         else
             knowledgePointTracker:Hide()
         end
 
         -- Blacksmithing
         if professionID == 1 then
+            treatiseItem = 198454
+            treatiseQuest = 74109
+            orderQuest = 70589
+            gatherQuests = {66517, 66897, 66941, 72398}
+            craftQuests = {70235, 70234, 70233, 70211}
+            drops = {66381, 66382, 70513}
+            hiddenMaster = 70250
+            treasures = {70246, 70310, 70296, 70230, 70312, 70314, 70353, 70313, 70311}
+
+            kpTooltip()
         end
 
         -- Leatherworking
         if professionID == 2 then
+            treatiseItem = 194700
+            treatiseQuest = 74113
+            orderQuest = 70594
+            gatherQuests = {72427, 66940, 66938, 66937}
+            craftQuests = {70533, 70531, 70532, 70530}
+            drops = {70523}
+            hiddenMaster = 70256
+            treasures = {70308, 70280, 70269, 70266, 70286, 70300, 70294}
+
+            kpTooltip()
         end
 
         -- Alchemy
         if professionID == 3 then
+            treatiseItem = 194697
+            treatiseQuest = 74108
+            orderQuest = nil
+            gatherQuests = {66517, 66897, 66941, 72398}
+            craftQuests = {70235, 70234, 70233, 70211}
+            drops = nil
+            hiddenMaster = 70247
+            treasures = {70289, 70274, 70208, 70309, 70305, 70278, 70301}
+
+            kpTooltip()
         end
 
         -- Herbalism
         if professionID == 4 then
+            treatiseItem = 194704
+            treatiseQuest = 74107
+            orderQuest = nil
+            gatherQuests = {70613, 70614, 70615, 70616}
+            craftQuests = nil
+            drops = {71857, 71858, 71859, 71860, 71861, 71864}
+            hiddenMaster = 70253
+            treasures = nil
+
+            kpTooltip()
         end
 
         -- Cooking
@@ -1610,30 +1848,100 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
         -- Mining
         if professionID == 6 then
+            treatiseItem = 194708
+            treatiseQuest = 74106
+            orderQuest = nil
+            gatherQuests = {72157, 70618, 70617, 72156}
+            craftQuests = nil
+            drops = {72160, 72161, 72162, 72163, 72164, 72165}
+            hiddenMaster = 70258
+            treasures = nil
+
+            kpTooltip()
         end
 
         -- Tailoring
         if professionID == 7 then
+            treatiseItem = 194698
+            treatiseQuest = 74115
+            orderQuest = 70595
+            gatherQuests = {66952, 72410, 66899, 66953}
+            craftQuests = {70587, 70586, 70582, 70572}
+            drops = {66386, 66387, 70524}
+            hiddenMaster = 70260
+            treasures = {70304, 70302, 70284, 70267, 70295, 70303, 70372, 70288}
+
+            kpTooltip()
         end
 
         -- Engineering
         if professionID == 8 then
+            treatiseItem = 198510
+            treatiseQuest = 74111
+            orderQuest = 70591
+            gatherQuests = {66891, 66890, 72396, 66942}
+            craftQuests = {70540, 70557, 70545, 70539}
+            drops = {66379, 66380}
+            hiddenMaster = 70252
+            treasures = {70275, 70270}
+
+            kpTooltip()
         end
 
         -- Enchanting
         if professionID == 9 then
+            treatiseItem = 194702
+            treatiseQuest = 74110
+            orderQuest = nil
+            gatherQuests = {66884, 72423, 66900, 66935}
+            craftQuests = {72175, 72172, 72155}
+            drops = {70515, 66377, 66378}
+            hiddenMaster = 70251
+            treasures = {70272, 70320, 70283, 70298, 70336, 70290, 70291, 70342}
+
+            kpTooltip()
         end
 
         -- Skinning
         if professionID == 11 then
+            treatiseItem = 201023
+            treatiseQuest = 74114
+            orderQuest = nil
+            gatherQuests = {72159, 70620, 70619, 72158}
+            craftQuests = nil
+            drops = {70381, 70382, 70383, 70384, 70385, 70389}
+            hiddenMaster = 70259
+            treasures = nil
+
+            kpTooltip()
         end
 
         -- Jewelcrafting
         if professionID == 12 then
+            treatiseItem = 194703
+            treatiseQuest = 74112
+            orderQuest = 70593
+            gatherQuests = {72428, 66516, 66950, 66949}
+            craftQuests = {70565, 70564, 70563, 70562}
+            drops = {70520}
+            hiddenMaster = 70255
+            treasures = {70273, 70292, 70271, 70277, 70282, 70263, 70261, 70285}
+
+            kpTooltip()
         end
 
         -- Inscription
         if professionID == 13 then
+            treatiseItem = 194699
+            treatiseQuest = 74105
+            orderQuest = 70592
+            gatherQuests = {66943, 66944, 66945}
+            craftQuests = {70560, 70559, 70558, 70561}
+            drops = nil
+            hiddenMaster = 70254
+            treasures = {70306, 70293, 70297, 70307, 70287, 70264, 70248, 70281}
+
+            kpTooltip()
         end
     end
     
