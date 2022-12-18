@@ -1806,7 +1806,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             craftQuests = {70569, 70567, 70571, 70568}
             drops = {70523}
             hiddenMaster = 70256
-            treasures = {70308, 70280, 70269, 70266, 70286, 70300, 70294, 70568}
+            treasures = {70308, 70280, 70269, 70266, 70286, 70300, 70294}
 
             kpTooltip()
         end
