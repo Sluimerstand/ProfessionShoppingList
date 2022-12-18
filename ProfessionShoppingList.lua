@@ -1802,11 +1802,11 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             treatiseItem = 194700
             treatiseQuest = 74113
             orderQuest = 70594
-            gatherQuests = {72427, 66940, 66938, 66937}
-            craftQuests = {70533, 70531, 70532, 70530}
+            gatherQuests = {66363, 66364, 66951}
+            craftQuests = {70569, 70567, 70571, 70568}
             drops = {70523}
             hiddenMaster = 70256
-            treasures = {70308, 70280, 70269, 70266, 70286, 70300, 70294}
+            treasures = {70308, 70280, 70269, 70266, 70286, 70300, 70294, 70568}
 
             kpTooltip()
         end
@@ -1816,8 +1816,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
             treatiseItem = 194697
             treatiseQuest = 74108
             orderQuest = nil
-            gatherQuests = {66517, 66897, 66941, 72398, 72427}
-            craftQuests = {70235, 70234, 70233, 70211}
+            gatherQuests = {66940, 66937, 66938, 72427}
+            craftQuests = {70533, 70532, 70531, 70530}
             drops = nil
             hiddenMaster = 70247
             treasures = {70289, 70274, 70208, 70309, 70305, 70278, 70301}
