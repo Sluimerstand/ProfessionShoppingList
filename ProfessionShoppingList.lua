@@ -1,6 +1,7 @@
--- Windows
+-- Initialise some stuff
 local f = CreateFrame("Frame")
 local ScrollingTable = LibStub("ScrollingTable")
+if not C_TradeSkillUI then UIParentLoadAddOn("C_TradeSkillUI") end -- Load the TradeSkillUI to prevent stuff from being wonky
 
 -- API Events
 f:RegisterEvent("ADDON_LOADED")
@@ -10,11 +11,6 @@ f:RegisterEvent("TRADE_SKILL_SHOW")
 f:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 f:RegisterEvent("SPELL_DATA_LOAD_RESULT")
 f:RegisterEvent("MERCHANT_SHOW")
-
--- Load the TradeSkillUI to prevent stuff from being wonky
-if not C_TradeSkillUI then
-	UIParentLoadAddOn("C_TradeSkillUI")
-end
 
 -- Create SavedVariables
 function pslInitialise()
@@ -43,8 +39,9 @@ end
 
 --Create tracking windows
 function pslCreateTrackingWindows()
-	-- Column formatting, Reagents
 	local cols = {}
+
+	-- Column formatting, Reagents
 	cols[1] = {
 		["name"] = "Reagents",
 		["width"] = userSettings["reagentWidth"],
@@ -102,9 +99,7 @@ function pslCreateTrackingWindows()
 		-- Close button
 		local close = CreateFrame("Button", "pslCloseButtonName1", pslFrame1, "UIPanelCloseButton")
 		close:SetPoint("TOPRIGHT", pslFrame1, "TOPRIGHT", 1, -2)
-		close:SetScript("OnClick", function()
-			pslFrame1:Hide()
-		end)
+		close:SetScript("OnClick", function() pslFrame1:Hide() end)
 
 		-- Create tracking window
 		table1 = ScrollingTable:CreateST(cols, 50, nil, nil, pslFrame1)
@@ -175,9 +170,7 @@ function pslCreateTrackingWindows()
 		-- Close button
 		local close = CreateFrame("Button", "pslCloseButtonName2", pslFrame2, "UIPanelCloseButton")
 		close:SetPoint("TOPRIGHT", pslFrame2, "TOPRIGHT", 1, -2)
-		close:SetScript("OnClick", function()
-			pslFrame2:Hide()
-		end)
+		close:SetScript("OnClick", function() pslFrame2:Hide() end)
 
 		-- Create tracking window
 		table2 = ScrollingTable:CreateST(cols, 50, nil, nil, pslFrame2)
@@ -248,7 +241,7 @@ function pslReagents()
 		local function getInfo()
 			-- Get info
 			local itemName, itemLink
-			if userSettings["reagentQuality"] == 1 then
+			if userSettings["reagentQuality"] == 1 then 
 				itemName, itemLink = GetItemInfo(reagentInfo.one)
 			elseif userSettings["reagentQuality"] == 2 then
 				if reagentInfo.two ~= 0 then
@@ -287,6 +280,7 @@ function pslReagents()
 				reagentAmountHave = GetItemCount(reagentInfo.three, true, false, true) + GetItemCount(reagentInfo.two, true, false, true) + GetItemCount(reagentInfo.one, true, false, true)
 			end
 			
+			-- Push the info to the windows
 			if userSettings["showRemaining"] == false then
 				table.insert(data, {itemLink, reagentAmountHave.."/"..reagentAmountNeed})
 			else
@@ -341,11 +335,9 @@ function pslCreateButtons()
 		recipesTracked[recipeID] = recipesTracked[recipeID] + 1
 
 		-- Add recipe link for crafted items
-		if recipeType == 1 then
-			recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
-		-- Add recipe link for enchants
-		elseif recipeType == 3 then
-			recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
+		if recipeType == 1 then recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
+		-- Add recipe "link" for enchants
+		elseif recipeType == 3 then recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
 		end
 
 		-- Show windows
@@ -387,9 +379,7 @@ function pslCreateButtons()
 		chefsHatButton:SetNormalTexture(236571)
 		chefsHatButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
 		chefsHatButton:SetFrameStrata("HIGH")
-		chefsHatButton:SetScript("OnClick", function() 
-			UseToyByName("Chef's Hat")
-		end)
+		chefsHatButton:SetScript("OnClick", function() UseToyByName("Chef's Hat") end)
 	end
 
 	-- Create Knowledge Point tracker
@@ -400,9 +390,7 @@ function pslCreateButtons()
 		knowledgePointTracker:SetSize(470,25)
 		knowledgePointTracker:SetPoint("TOPRIGHT", ProfessionsFrame.SpecPage, "TOPRIGHT", -5, -24)
 		knowledgePointTracker:SetFrameStrata("HIGH")
-		knowledgePointTracker:SetScript("OnLeave", function()
-			knowledgePointTooltip:Hide()
-		end)
+		knowledgePointTracker:SetScript("OnLeave", function() knowledgePointTooltip:Hide() end)
 
 		-- Bar
 		knowledgePointTracker.Bar = CreateFrame("StatusBar", nil, knowledgePointTracker)
@@ -563,7 +551,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			local icon = LibStub("LibDBIcon-1.0", true)
 			icon:Register("ProfessionShoppingList", miniButton, userSettings)
 
-			if userSettings["hide"] == true then
+			if userSettings["hide"] == true then 
 				icon:Hide("ProfessionShoppingList")
 			else
 				icon:Show("ProfessionShoppingList")
@@ -817,6 +805,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		-- Slash commands
 		SLASH_PSL1 = "/psl";
 		function SlashCmdList.PSL(msg, editBox)
+			-- Open settings
 			if msg == "settings" then
 				pslOpenSettings()
 			-- Clear list
@@ -1643,7 +1632,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					dropsNoTotal = dropsNoTotal + 1
 				end
 
-				if dropsNoTotal == 6 then
+				if dropsNoTotal >= 4 then
 					dropsStatus = READY_CHECK_NOT_READY_TEXTURE
 				end
 
@@ -1802,9 +1791,9 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			treatiseItem = 194700
 			treatiseQuest = 74113
 			orderQuest = 70594
-			gatherQuests = {66363, 66364, 66951}
+			gatherQuests = {66363, 66364, 66951, 72407}
 			craftQuests = {70569, 70567, 70571, 70568}
-			drops = {70523}
+			drops = {70523, 70522, 66384, 66385}
 			hiddenMaster = 70256
 			treasures = {70308, 70280, 70269, 70266, 70286, 70300, 70294}
 
@@ -1818,7 +1807,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			orderQuest = nil
 			gatherQuests = {66940, 66937, 66938, 72427}
 			craftQuests = {70533, 70532, 70531, 70530}
-			drops = nil
+			drops = {66373, 70511, 66374}
 			hiddenMaster = 70247
 			treasures = {70289, 70274, 70208, 70309, 70305, 70278, 70301}
 
@@ -1867,7 +1856,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			orderQuest = 70595
 			gatherQuests = {66952, 72410, 66899, 66953}
 			craftQuests = {70587, 70586, 70582, 70572}
-			drops = {66386, 66387, 70524}
+			drops = {66386, 66387, 70524, 70525}
 			hiddenMaster = 70260
 			treasures = {70304, 70302, 70284, 70267, 70295, 70303, 70372, 70288}
 
@@ -1881,7 +1870,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			orderQuest = 70591
 			gatherQuests = {66891, 66890, 72396, 66942}
 			craftQuests = {70540, 70557, 70545, 70539}
-			drops = {66379, 66380, 70517}
+			drops = {66379, 66380, 70517, 70516}
 			hiddenMaster = 70252
 			treasures = {70275, 70270}
 
@@ -1923,7 +1912,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			orderQuest = 70593
 			gatherQuests = {72428, 66516, 66950, 66949}
 			craftQuests = {70565, 70564, 70563, 70562}
-			drops = {70520}
+			drops = {70520, 70521, 66388, 66389}
 			hiddenMaster = 70255
 			treasures = {70273, 70292, 70271, 70277, 70282, 70263, 70261, 70285}
 
@@ -1937,7 +1926,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			orderQuest = 70592
 			gatherQuests = {66943, 66944, 66945}
 			craftQuests = {70560, 70559, 70558, 70561}
-			drops = nil
+			drops = {70519, 66375, 70518, 66376}
 			hiddenMaster = 70254
 			treasures = {70306, 70293, 70297, 70307, 70287, 70264, 70248, 70281}
 
@@ -1950,9 +1939,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		-- Register all recipes for this profession
 		for _, id in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
 			local itemID = C_TradeSkillUI.GetRecipeOutputItemData(id).itemID
-			if itemID ~= nil then
-				recipeLibrary[id] = itemID
-			end
+			if itemID ~= nil then recipeLibrary[id] = itemID end
 		end
 	end
 
@@ -1966,9 +1953,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			recipesTracked[recipeID] = recipesTracked[recipeID] - 1
 		
 			-- Set numbers to nil if it doesn't exist anymore
-			if recipesTracked[recipeID] == 0 then
-				recipesTracked[recipeID] = nil
-			end
+			if recipesTracked[recipeID] == 0 then recipesTracked[recipeID] = nil end
 		
 			-- Disable the remove button if the recipe isn't tracked anymore
 			if not recipesTracked[recipeID] then removeCraftListButton:Disable() end
