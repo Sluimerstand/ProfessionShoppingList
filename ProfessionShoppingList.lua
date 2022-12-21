@@ -1373,7 +1373,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 						-- Untrack the recipe
 						if IsControlKeyDown() == true then
-							recipesTracked[selectedRecipeID] = nil
+							recipesTracked[selectedRecipeID] = 0
 						else
 							recipesTracked[selectedRecipeID] = recipesTracked[selectedRecipeID] - 1
 						end
