@@ -905,7 +905,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 							-- Track recipe
 							local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-							recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID].amount / quantityMade) - GetItemCount(itemID))
+							recipesTracked[recipeID] = math.max(0, math.ceil((reagentsTracked[itemID].amount - GetItemCount(itemID)) / quantityMade))
 
 							-- Add recipe link
 							recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
@@ -1379,7 +1379,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						end
 
 						-- Set numbers to nil if it doesn't exist anymore
-						if recipesTracked[selectedRecipeID] == 0 then
+						if recipesTracked[selectedRecipeID] <= 0 then
 							recipesTracked[selectedRecipeID] = nil
 							recipeLinks[selectedRecipeID] = nil
 						end
