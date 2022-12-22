@@ -11,24 +11,24 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 
 **Chat commands**
 
-- /psl - Toggle the tracking windows.
-- /psl settings - Open the settings window.
+- /psl - Toggle the tracking windows
+- /psl settings - Open the settings window
 - /psl clear - Clear all tracked recipes
 
 **Mouse interactions**
 
-- Drag: Move the tracking windows.
-- Shift+click Recipe: Link the recipe.
-- Ctrl+click Recipe: Open the selected recipe.
-- Right-click Recipe #: Untrack 1 of the selected recipe.
-- Ctrl+right-click Recipe #: Untrack all of the selected recipe.
-- Shift+click Reagent: Link the reagent.
-- Ctrl+click Reagent: Add recipe for the selected subreagent, if it exists.
+- Drag: Move the tracking windows
+- Shift+click Recipe: Link the recipe
+- Ctrl+click Recipe: Open the selected recipe
+- Right-click Recipe #: Untrack 1 of the selected recipe
+- Ctrl+right-click Recipe #: Untrack all of the selected recipe
+- Shift+click Reagent: Link the reagent
+- Ctrl+click Reagent: Add recipe for the selected subreagent, if it exists
 
 **Other features**
 
-- Can untrack recipes after crafting them.
-- Can show tooltip information for tracked reagents.
-- Can automatically set vendors' filter to 'All'.
-- Adds a Chef's Hat button to the Cooking window, if the toy is known.
-- Includes a Profession Knowledge tracker, the bar turns green when you've gathered all guaranteed knowledge.
+- Can untrack recipes after crafting them
+- Can show tooltip information for tracked reagents
+- Can automatically set vendors' filter to 'All'
+- Adds a Chef's Hat button to the Cooking window, if the toy is known
+- Includes a Profession Knowledge tracker, the bar turns green when you've gathered all guaranteed knowledge
