@@ -1596,8 +1596,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			if gatherQuests ~= nil then
 				for no, questID in pairs (gatherQuests) do
 					if C_QuestLog.IsQuestFlaggedCompleted(questID) then
-						gatherQuestNumber = 1
 						gatherQuestStatus = READY_CHECK_READY_TEXTURE
+						gatherQuestNumber = 1
 					end
 				end
 
@@ -1620,7 +1620,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end
 
 			-- Drops
-			local dropsStatus = READY_CHECK_WAITING_TEXTURE
+			local dropsStatus = READY_CHECK_NOT_READY_TEXTURE
 			local dropsNoCurrent = 0
 			local dropsNoTotal = 0
 
@@ -1632,11 +1632,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					dropsNoTotal = dropsNoTotal + 1
 				end
 
-				if dropsNoTotal >= 4 then
-					dropsStatus = READY_CHECK_NOT_READY_TEXTURE
-				end
-
-				if dropsNoCurrent == 6 then
+				if dropsNoCurrent == dropsNoTotal then
 					dropsStatus = READY_CHECK_READY_TEXTURE
 				end
 
@@ -1718,12 +1714,9 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..craftQuestStatus..":0|t "..craftQuestNumber.."/1 Craft quest")
 			end
 
-			if drops ~= nil and dropsNoTotal >=4 then
+			if drops ~= nil then
 				oldText = knowledgePointTooltipText:GetText()
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..dropsStatus..":0|t "..dropsNoCurrent.."/"..dropsNoTotal.." Drops")
-			elseif drops ~= nil and dropsNoTotal < 4 then
-				oldText = knowledgePointTooltipText:GetText()
-				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..dropsStatus..":0|t ".."|cff9D9D9D"..dropsNoCurrent.."/4 Drops (WIP, incomplete)")
 			end
 
 			oldText = knowledgePointTooltipText:GetText()
@@ -1779,7 +1772,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			orderQuest = 70589
 			gatherQuests = {66517, 66897, 66941, 72398}
 			craftQuests = {70235, 70234, 70233, 70211}
-			drops = {66381, 66382, 70513}
+			drops = {66381, 66382, 70513, 70512}
 			hiddenMaster = 70250
 			treasures = {70246, 70310, 70296, 70230, 70312, 70314, 70353, 70313, 70311}
 
@@ -1807,7 +1800,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			orderQuest = nil
 			gatherQuests = {66940, 66937, 66938, 72427}
 			craftQuests = {70533, 70532, 70531, 70530}
-			drops = {66373, 70511, 66374}
+			drops = {66373, 70511, 66374, 70504}
 			hiddenMaster = 70247
 			treasures = {70289, 70274, 70208, 70309, 70305, 70278, 70301}
 
@@ -1884,7 +1877,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			orderQuest = nil
 			gatherQuests = {66884, 72423, 66900, 66935}
 			craftQuests = {72175, 72172, 72155, 72173}
-			drops = {70515, 66377, 66378}
+			drops = {70515, 66377, 66378, 70514}
 			hiddenMaster = 70251
 			treasures = {70272, 70320, 70283, 70298, 70336, 70290, 70291, 70342}
 
