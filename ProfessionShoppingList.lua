@@ -1748,23 +1748,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			knowledgePointTooltip:Show()
 		end)
 
-		-- Professions with Knowledge Points
-		if professionID == 1
-		or professionID == 2
-		or professionID == 3
-		or professionID == 4
-		or professionID == 6
-		or professionID == 7
-		or professionID == 8
-		or professionID == 9
-		or professionID == 11
-		or professionID == 12
-		or professionID == 13 then
-			setKnowledgePointTracker() 
-		else
-			knowledgePointTracker:Hide()
-		end
-
 		-- Blacksmithing
 		if professionID == 1 then
 			treatiseItem = 198454
@@ -1775,8 +1758,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			drops = {66381, 66382, 70513, 70512}
 			hiddenMaster = 70250
 			treasures = {70246, 70310, 70296, 70230, 70312, 70314, 70353, 70313, 70311}
-
-			kpTooltip()
 		end
 
 		-- Leatherworking
@@ -1789,8 +1770,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			drops = {70523, 70522, 66384, 66385}
 			hiddenMaster = 70256
 			treasures = {70308, 70280, 70269, 70266, 70286, 70300, 70294}
-
-			kpTooltip()
 		end
 
 		-- Alchemy
@@ -1803,8 +1782,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			drops = {66373, 70511, 66374, 70504}
 			hiddenMaster = 70247
 			treasures = {70289, 70274, 70208, 70309, 70305, 70278, 70301}
-
-			kpTooltip()
 		end
 
 		-- Herbalism
@@ -1817,8 +1794,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			drops = {71857, 71858, 71859, 71860, 71861, 71864}
 			hiddenMaster = 70253
 			treasures = nil
-
-			kpTooltip()
 		end
 
 		-- Cooking
@@ -1838,8 +1813,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			drops = {72160, 72161, 72162, 72163, 72164, 72165}
 			hiddenMaster = 70258
 			treasures = nil
-
-			kpTooltip()
 		end
 
 		-- Tailoring
@@ -1852,8 +1825,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			drops = {66386, 66387, 70524, 70525}
 			hiddenMaster = 70260
 			treasures = {70304, 70302, 70284, 70267, 70295, 70303, 70372, 70288}
-
-			kpTooltip()
 		end
 
 		-- Engineering
@@ -1866,8 +1837,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			drops = {66379, 66380, 70517, 70516}
 			hiddenMaster = 70252
 			treasures = {70275, 70270}
-
-			kpTooltip()
 		end
 
 		-- Enchanting
@@ -1880,8 +1849,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			drops = {70515, 66377, 66378, 70514}
 			hiddenMaster = 70251
 			treasures = {70272, 70320, 70283, 70298, 70336, 70290, 70291, 70342}
-
-			kpTooltip()
 		end
 
 		-- Skinning
@@ -1894,8 +1861,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			drops = {70381, 70383, 70384, 70385, 70386, 70389}
 			hiddenMaster = 70259
 			treasures = nil
-
-			kpTooltip()
 		end
 
 		-- Jewelcrafting
@@ -1908,8 +1873,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			drops = {70520, 70521, 66388, 66389}
 			hiddenMaster = 70255
 			treasures = {70273, 70292, 70271, 70277, 70282, 70263, 70261, 70285}
-
-			kpTooltip()
 		end
 
 		-- Inscription
@@ -1922,8 +1885,24 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			drops = {70519, 66375, 70518, 66376}
 			hiddenMaster = 70254
 			treasures = {70306, 70293, 70297, 70307, 70287, 70264, 70248, 70281}
+		end
 
+		-- Professions with Knowledge Points
+		if professionID == 1
+		or professionID == 2
+		or professionID == 3
+		or professionID == 4
+		or professionID == 6
+		or professionID == 7
+		or professionID == 8
+		or professionID == 9
+		or professionID == 11
+		or professionID == 12
+		or professionID == 13 then
+			setKnowledgePointTracker() 
 			kpTooltip()
+		else
+			knowledgePointTracker:Hide()
 		end
 	end
 	
