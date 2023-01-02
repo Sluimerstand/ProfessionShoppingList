@@ -1641,7 +1641,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			-- Treatise
 			local treatiseStatus = READY_CHECK_NOT_READY_TEXTURE
 			local treatiseNumber = 0
-			local derp, treatiseItemLink = GetItemInfo(treatiseItem)
+			local derp, treatiseItemLink = GetItemInfo(treatiseItem)	-- TODO: Check if derp can be replaced with _ or not
 
 			if treatiseQuest ~= nil then
 				if C_QuestLog.IsQuestFlaggedCompleted(treatiseQuest) then
@@ -1701,7 +1701,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			local dropsNoTotal = 0
 
 			if drops ~= nil then
-				for no, questID in pairs (drops) do
+				for questID, itemID in pairs (drops) do
 					if C_QuestLog.IsQuestFlaggedCompleted(questID) then
 						dropsNoCurrent = dropsNoCurrent + 1
 					end
@@ -1720,7 +1720,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			local shardStatus = READY_CHECK_NOT_READY_TEXTURE
 			local shardNo = 0
 
-			for no, questID in pairs (shardQuests) do
+			for no, questID in pairs (shardQuests) do	-- TODO: See if no can be replaced with _
 				if C_QuestLog.IsQuestFlaggedCompleted(questID) then
 					shardNo = shardNo + 1
 				end
@@ -1751,7 +1751,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			local treasureNoTotal = 0
 
 			if treasures ~= nil then
-				for no, questID in pairs (treasures) do
+				for questID, itemID in pairs (treasures) do
 					if C_QuestLog.IsQuestFlaggedCompleted(questID) then
 						treasureNoCurrent = treasureNoCurrent + 1
 					end
@@ -1763,7 +1763,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				if treasureStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
 			end
 
-			-- If links missing, try again
+			-- If links missing, try again -- Hope this goes well with the new links x.x
 			if shardItemLink == nil or treatiseItemLink == nil then
 				RunNextFrame(kpTooltip)
 				do return end
@@ -1795,8 +1795,33 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..dropsStatus..":0|t "..dropsNoCurrent.."/"..dropsNoTotal.." Drops")
 			end
 
+			if IsModifierKeyDown() == true then
+				for questID, itemID in pairs (drops) do
+					if C_QuestLog.IsQuestFlaggedCompleted(questID) then
+						knowledgePointTooltipText:SetText(oldText.."\n   "..READY_CHECK_READY_TEXTURE..":0|t ")
+					else
+						knowledgePointTooltipText:SetText(oldText.."\n   "..READY_CHECK_NOT_READY_TEXTURE..":0|t ")
+					end
+				end
+				local derp, itemLink = GetItemInfo(itemID)
+				oldText = knowledgePointTooltipText:GetText()
+				knowledgePointTooltipText:SetText(oldText..itemLink)
+			end
+
 			oldText = knowledgePointTooltipText:GetText()
 			knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000One-time:\n".."|T"..shardStatus..":0|t ".."|cffFFFFFF"..shardNo.."/4 "..shardItemLink)
+			
+			if IsModifierKeyDown() == true then
+				for no, questID in pairs (shardQuests) do
+					if C_QuestLog.IsQuestFlaggedCompleted(questID) then
+						knowledgePointTooltipText:SetText(oldText.."\n   "..READY_CHECK_READY_TEXTURE..":0|t ")
+					else
+						knowledgePointTooltipText:SetText(oldText.."\n   "..READY_CHECK_NOT_READY_TEXTURE..":0|t ")
+					end
+				end
+				oldText = knowledgePointTooltipText:GetText()
+				knowledgePointTooltipText:SetText(oldText..GetQuestLink(questID))
+			end
 
 			oldText = knowledgePointTooltipText:GetText()
 			knowledgePointTooltipText:SetText(oldText.."\n".."|T"..hiddenStatus..":0|t "..hiddenNumber.."/1 Hidden profession master")
@@ -1805,6 +1830,21 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				oldText = knowledgePointTooltipText:GetText()
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..treasureStatus..":0|t "..treasureNoCurrent.."/"..treasureNoTotal.." Treasures")
 			end
+
+			if IsModifierKeyDown() == true then
+				for questID, itemID in pairs (treasures) do
+					if C_QuestLog.IsQuestFlaggedCompleted(questID) then
+						knowledgePointTooltipText:SetText(oldText.."\n   "..READY_CHECK_READY_TEXTURE..":0|t ")
+					else
+						knowledgePointTooltipText:SetText(oldText.."\n   "..READY_CHECK_NOT_READY_TEXTURE..":0|t ")
+					end
+				end
+				local derp, itemLink = GetItemInfo(itemID)
+				oldText = knowledgePointTooltipText:GetText()
+				knowledgePointTooltipText:SetText(oldText..itemLink)
+			end
+
+			if IsModifierKeyDown() == false then knowledgePointTooltipText:SetText(oldText.."\n\nHold Ctrl, Shift, or Alt to show details.") end
 
 			-- Make progress bar green if everything is done
 			if progress == true then
@@ -1824,15 +1864,40 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			knowledgePointTooltip:Show()
 		end)
 
+		-- Refresh the tooltip on key down (to check for IsModifierKeyDown)
+		knowledgePointTracker:SetScript("OnKeyDown", function()
+			kpTooltip()
+		end)
+
+		-- Refresh the tooltip on key up (to check for IsModifierKeyDown)
+		knowledgePointTracker:SetScript("OnKeyUp", function()
+			kpTooltip()
+		end)
+
 		-- Blacksmithing
 		if professionID == 1 then
 			treatiseItem = 198454
 			treatiseQuest = 74109
 			orderQuest = 70589
 			gatherQuests = {66517, 66897, 66941, 72398}
-			craftQuests = {70235, 70234, 70233, 70211}
-			drops = {66381, 66382, 70513, 70512}
+			craftQuests = {70211, 70233, 70234, 70235 }
 			hiddenMaster = 70250
+			drops = {}
+			drops[66381] = 192131
+			drops[66382] = 192132
+			drops[70512] = 198965
+			drops[70513] = 198966
+			treasures = {}
+			treasure[70230] = 198791
+			treasure[70246] = 201007
+			treasure[70296] = 201008
+			treasure[70310] = 201010
+			treasure[70311] = 201006
+			treasure[70312] = 201005
+			treasure[70313] = 201004
+			treasure[70314] = 201011
+			treasure[70353] = 201009
+
 			treasures = {70246, 70310, 70296, 70230, 70312, 70314, 70353, 70313, 70311}
 		end
 
@@ -1842,10 +1907,21 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			treatiseQuest = 74113
 			orderQuest = 70594
 			gatherQuests = {66363, 66364, 66951, 72407}
-			craftQuests = {70569, 70567, 70571, 70568}
-			drops = {70523, 70522, 66384, 66385}
+			craftQuests = {70567, 70568, 70569, 70571}
 			hiddenMaster = 70256
-			treasures = {70308, 70280, 70269, 70266, 70286, 70300, 70294}
+			drops = {}
+			drops[66384] = 193910
+			drops[66385] = 193913
+			drops[70522] = 198975
+			drops[70523] = 198976
+			treasures = {}
+			treasures[70266] = 198658
+			treasures[70269] = 201018
+			treasures[70280] = 198667
+			treasures[70286] = 198683
+			treasures[70294] = 198690
+			treasures[70300] = 198696
+			treasures[70308] = 198711
 		end
 
 		-- Alchemy
@@ -1853,11 +1929,22 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			treatiseItem = 194697
 			treatiseQuest = 74108
 			orderQuest = nil
-			gatherQuests = {66940, 66937, 66938, 72427}
-			craftQuests = {70533, 70532, 70531, 70530}
-			drops = {66373, 70511, 66374, 70504}
+			gatherQuests = {66937, 66938, 66940, 72427}
+			craftQuests = {70530, 70531, 70532, 70533}
 			hiddenMaster = 70247
-			treasures = {70289, 70274, 70208, 70309, 70305, 70278, 70301}
+			drops = {}
+			drops[66373] = 193891
+			drops[66374] = 193897
+			drops[70504] = 198963
+			drops[70511] = 198964
+			treasures = {}
+			treasures[70208] = 198599
+			treasures[70274] = 198663
+			treasures[70278] = 201003
+			treasures[70289] = 198685
+			treasures[70301] = 198697
+			treasures[70305] = 198710
+			treasures[70309] = 198712
 		end
 
 		-- Herbalism
@@ -1867,8 +1954,14 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			orderQuest = nil
 			gatherQuests = {70613, 70614, 70615, 70616}
 			craftQuests = nil
-			drops = {71857, 71858, 71859, 71860, 71861, 71864}
 			hiddenMaster = 70253
+			drops = {}
+			drops[71857] = 200677
+			drops[71858] = 200677
+			drops[71859] = 200677
+			drops[71860] = 200677
+			drops[71861] = 200677
+			drops[71864] = 200678			
 			treasures = nil
 		end
 
@@ -1884,10 +1977,16 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			treatiseItem = 194708
 			treatiseQuest = 74106
 			orderQuest = nil
-			gatherQuests = {72157, 70618, 70617, 72156}
+			gatherQuests = {70617, 70618, 72156, 72157}
 			craftQuests = nil
-			drops = {72160, 72161, 72162, 72163, 72164, 72165}
 			hiddenMaster = 70258
+			drops = {}
+			drops[72160] = 201300
+			drops[72161] = 201300
+			drops[72162] = 201300
+			drops[72163] = 201300
+			drops[72164] = 201300
+			drops[72165] = 201301
 			treasures = nil
 		end
 
@@ -1896,11 +1995,23 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			treatiseItem = 194698
 			treatiseQuest = 74115
 			orderQuest = 70595
-			gatherQuests = {66952, 72410, 66899, 66953}
-			craftQuests = {70587, 70586, 70582, 70572}
-			drops = {66386, 66387, 70524, 70525}
+			gatherQuests = {66899, 66952, 66953, 72410}
+			craftQuests = {70572, 70582, 70586, 70587}
 			hiddenMaster = 70260
-			treasures = {70304, 70302, 70284, 70267, 70295, 70303, 70372, 70288}
+			drops = {}
+			drops[66386] = 193898
+			drops[66387] = 193899
+			drops[70524] = 198977
+			drops[70525] = 198978
+			treasures = {}
+			treasures[70267] = 198662
+			treasures[70284] = 198680
+			treasures[70288] = 198684
+			treasures[70295] = 198692
+			treasures[70302] = 198699
+			treasures[70303] = 201020
+			treasures[70304] = 198702
+			treasures[70372] = 201019
 		end
 
 		-- Engineering
@@ -1908,11 +2019,17 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			treatiseItem = 198510
 			treatiseQuest = 74111
 			orderQuest = 70591
-			gatherQuests = {66891, 66890, 72396, 66942}
-			craftQuests = {70540, 70557, 70545, 70539}
-			drops = {66379, 66380, 70517, 70516}
+			gatherQuests = {66890, 66891, 66942, 72396}
+			craftQuests = {70539, 70540, 70545, 70557}
 			hiddenMaster = 70252
-			treasures = {70275, 70270}
+			drops = {}
+			drops[66379] = 193902
+			drops[66380] = 193903
+			drops[70516] = 198969
+			drops[70517] = 198970
+			treasures = {}
+			treasures[70270] = 201014
+			treasures[70275] = 198789
 		end
 
 		-- Enchanting
@@ -1920,11 +2037,22 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			treatiseItem = 194702
 			treatiseQuest = 74110
 			orderQuest = nil
-			gatherQuests = {66884, 72423, 66900, 66935}
-			craftQuests = {72175, 72172, 72155, 72173}
-			drops = {70515, 66377, 66378, 70514}
+			gatherQuests = {66884, 66900, 66935, 72423}
+			craftQuests = {72155, 72172, 72173, 72175}
 			hiddenMaster = 70251
-			treasures = {70272, 70320, 70283, 70298, 70336, 70290, 70291, 70342}
+			drops[66377] = 193900
+			drops[66378] = 193901
+			drops[70514] = 198967
+			drops[70515] = 198968
+			treasures = {}
+			treasures[70272] = 201012
+			treasures[70283] = 198675
+			treasures[70290] = 201013
+			treasures[70291] = 198689
+			treasures[70298] = 198694
+			treasures[70320] = 198798
+			treasures[70336] = 198799
+			treasures[70342] = 198800
 		end
 
 		-- Skinning
@@ -1932,10 +2060,16 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			treatiseItem = 201023
 			treatiseQuest = 74114
 			orderQuest = nil
-			gatherQuests = {72159, 70620, 70619, 72158}
+			gatherQuests = {70619, 70620, 72158, 72159}
 			craftQuests = nil
-			drops = {70381, 70383, 70384, 70385, 70386, 70389}
 			hiddenMaster = 70259
+			drops = {}
+			drops[70381] = 198837
+			drops[70383] = 198837
+			drops[70384] = 198837
+			drops[70385] = 198837
+			drops[70386] = 198837
+			drops[70389] = 198841
 			treasures = nil
 		end
 
@@ -1944,11 +2078,23 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			treatiseItem = 194703
 			treatiseQuest = 74112
 			orderQuest = 70593
-			gatherQuests = {72428, 66516, 66950, 66949}
-			craftQuests = {70565, 70564, 70563, 70562}
-			drops = {70520, 70521, 66388, 66389}
+			gatherQuests = {66516, 66949, 66950, 72428}
+			craftQuests = {70562, 70563, 70564, 70565}
 			hiddenMaster = 70255
-			treasures = {70273, 70292, 70271, 70277, 70282, 70263, 70261, 70285}
+			drops = {}
+			drops[66388] = 193909
+			drops[66389] = 193907
+			drops[70520] = 198973
+			drops[70521] = 198974
+			treasures = {}
+			treasures[70273] = 201017
+			treasures[70292] = 198687
+			treasures[70271] = 201016
+			treasures[70277] = 198664
+			treasures[70282] = 198670
+			treasures[70263] = 198660
+			treasures[70261] = 198656
+			treasures[70285] = 198682
 		end
 
 		-- Inscription
@@ -1957,10 +2103,22 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			treatiseQuest = 74105
 			orderQuest = 70592
 			gatherQuests = {66943, 66944, 66945}
-			craftQuests = {70560, 70559, 70558, 70561}
-			drops = {70519, 66375, 70518, 66376}
+			craftQuests = {70558, 70559, 70560, 70561}
 			hiddenMaster = 70254
-			treasures = {70306, 70293, 70297, 70307, 70287, 70264, 70248, 70281}
+			drops = {}
+			drops[66375] = 193904
+			drops[66376] = 193905
+			drops[70518] = 198971
+			drops[70519] = 198972
+			treasures = {}
+			treasures[70248] = 198659
+			treasures[70264] = 198659
+			treasures[70281] = 198669
+			treasures[70287] = 201015
+			treasures[70293] = 198686
+			treasures[70297] = 198693
+			treasures[70306] = 198704
+			treasures[70307] = 198703
 		end
 
 		-- Professions with Knowledge Points
