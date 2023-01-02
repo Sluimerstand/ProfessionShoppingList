@@ -360,7 +360,7 @@ function pslCreateButtons()
 		pslFrame2:Show()
 
 		-- Untrack recipe
-		recipesTracked[recipeID] = recipesTracked[recipeID] - 1
+		if recipesTracked[recipeID] then recipesTracked[recipeID] = recipesTracked[recipeID] - 1 end
 
 		-- Set numbers to nil if it doesn't exist anymore
 		if recipesTracked[recipeID] == 0 then
@@ -421,7 +421,7 @@ function pslCreateButtons()
 			edgeSize = 16,
 			insets = { left = 4, right = 4, top = 4, bottom = 4 },
 		})
-		knowledgePointTooltip:SetBackdropColor(0, 0, 0, 0.8)
+		knowledgePointTooltip:SetBackdropColor(0, 0, 0, 0.9)
 		knowledgePointTooltip:EnableMouse(false)
 		knowledgePointTooltip:SetMovable(false)
 		knowledgePointTooltip:Hide()
@@ -610,7 +610,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			cbCloseWhenDone:SetChecked(userSettings["closeWhenDone"])
 			cbCloseWhenDone:SetScript("OnClick", function(self)
 				userSettings["closeWhenDone"] = cbCloseWhenDone:GetChecked()
-				cbCloseWhenDoneCheck()
 			end)
 
 			-- Disable this option when the dependency option is unchecked
@@ -1600,6 +1599,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				knowledgePointTracker.Bar:SetSmoothedValue(perksEarned)
 			end
 			knowledgePointTracker:Show()
+			knowledgePointTracker:SetPropagateKeyboardInput(true) -- So keyboard presses can be done
 
 			-- TODO: Use this recursive function where-ever it is smart to do it.
 			-- -- Helper functions
@@ -1797,15 +1797,21 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 			if IsModifierKeyDown() == true then
 				for questID, itemID in pairs (drops) do
+					oldText = knowledgePointTooltipText:GetText()
+					local derp, itemLink = GetItemInfo(itemID)
+
+					-- If links missing, try again
+					if itemLink == nil then
+						RunNextFrame(kpTooltip)
+						do return end
+					end
+
 					if C_QuestLog.IsQuestFlaggedCompleted(questID) then
-						knowledgePointTooltipText:SetText(oldText.."\n   "..READY_CHECK_READY_TEXTURE..":0|t ")
+						knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_READY_TEXTURE..":0|t "..itemLink)
 					else
-						knowledgePointTooltipText:SetText(oldText.."\n   "..READY_CHECK_NOT_READY_TEXTURE..":0|t ")
+						knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_NOT_READY_TEXTURE..":0|t "..itemLink)
 					end
 				end
-				local derp, itemLink = GetItemInfo(itemID)
-				oldText = knowledgePointTooltipText:GetText()
-				knowledgePointTooltipText:SetText(oldText..itemLink)
 			end
 
 			oldText = knowledgePointTooltipText:GetText()
@@ -1813,14 +1819,21 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			
 			if IsModifierKeyDown() == true then
 				for no, questID in pairs (shardQuests) do
+					oldText = knowledgePointTooltipText:GetText()
+					local questTitle = C_QuestLog.GetTitleForQuestID(questID)
+
+					-- If links missing, try again
+					if questTitle == nil then
+						RunNextFrame(kpTooltip)
+						do return end
+					end
+
 					if C_QuestLog.IsQuestFlaggedCompleted(questID) then
-						knowledgePointTooltipText:SetText(oldText.."\n   "..READY_CHECK_READY_TEXTURE..":0|t ")
+						knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_READY_TEXTURE..":0|t ".."|cffffff00|Hquest:"..questID.."62|h["..questTitle.."]|h|r")
 					else
-						knowledgePointTooltipText:SetText(oldText.."\n   "..READY_CHECK_NOT_READY_TEXTURE..":0|t ")
+						knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_NOT_READY_TEXTURE..":0|t ".."|cffffff00|Hquest:"..questID.."62|h["..questTitle.."]|h|r")
 					end
 				end
-				oldText = knowledgePointTooltipText:GetText()
-				knowledgePointTooltipText:SetText(oldText..GetQuestLink(questID))
 			end
 
 			oldText = knowledgePointTooltipText:GetText()
@@ -1829,22 +1842,33 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			if treasures ~= nil then
 				oldText = knowledgePointTooltipText:GetText()
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..treasureStatus..":0|t "..treasureNoCurrent.."/"..treasureNoTotal.." Treasures")
-			end
 
-			if IsModifierKeyDown() == true then
-				for questID, itemID in pairs (treasures) do
-					if C_QuestLog.IsQuestFlaggedCompleted(questID) then
-						knowledgePointTooltipText:SetText(oldText.."\n   "..READY_CHECK_READY_TEXTURE..":0|t ")
-					else
-						knowledgePointTooltipText:SetText(oldText.."\n   "..READY_CHECK_NOT_READY_TEXTURE..":0|t ")
+				if IsModifierKeyDown() == true then
+					for questID, itemID in pairs (treasures) do
+						oldText = knowledgePointTooltipText:GetText()
+						local derp, itemLink = GetItemInfo(itemID)
+	
+						-- If links missing, try again
+						if itemLink == nil then
+							RunNextFrame(kpTooltip)
+							do return end
+						end
+	
+						if C_QuestLog.IsQuestFlaggedCompleted(questID) then
+							knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_READY_TEXTURE..":0|t "..itemLink)
+						else
+							knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_NOT_READY_TEXTURE..":0|t "..itemLink)
+						end
 					end
 				end
-				local derp, itemLink = GetItemInfo(itemID)
-				oldText = knowledgePointTooltipText:GetText()
-				knowledgePointTooltipText:SetText(oldText..itemLink)
 			end
 
-			if IsModifierKeyDown() == false then knowledgePointTooltipText:SetText(oldText.."\n\nHold Ctrl, Shift, or Alt to show details.") end
+			oldText = knowledgePointTooltipText:GetText()
+			if IsModifierKeyDown() == false then knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000Press Alt, Ctrl, or Shift to show details.") end
+
+			-- Set the tooltip size to fit its contents
+			knowledgePointTooltip:SetHeight(knowledgePointTooltipText:GetStringHeight()+20)
+			knowledgePointTooltip:SetWidth(knowledgePointTooltipText:GetStringWidth()+20)
 
 			-- Make progress bar green if everything is done
 			if progress == true then
@@ -1852,10 +1876,6 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			else
 				knowledgePointTracker.Bar:SetStatusBarColor(1, .5, 0)
 			end
-
-			-- Set the tooltip size to fit its contents
-			knowledgePointTooltip:SetHeight(knowledgePointTooltipText:GetStringHeight()+20)
-			knowledgePointTooltip:SetWidth(knowledgePointTooltipText:GetStringWidth()+20)
 		end
 
 		-- Refresh and show the tooltip on mouse-over
@@ -1888,17 +1908,15 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			drops[70512] = 198965
 			drops[70513] = 198966
 			treasures = {}
-			treasure[70230] = 198791
-			treasure[70246] = 201007
-			treasure[70296] = 201008
-			treasure[70310] = 201010
-			treasure[70311] = 201006
-			treasure[70312] = 201005
-			treasure[70313] = 201004
-			treasure[70314] = 201011
-			treasure[70353] = 201009
-
-			treasures = {70246, 70310, 70296, 70230, 70312, 70314, 70353, 70313, 70311}
+			treasures[70230] = 198791
+			treasures[70246] = 201007
+			treasures[70296] = 201008
+			treasures[70310] = 201010
+			treasures[70311] = 201006
+			treasures[70312] = 201005
+			treasures[70313] = 201004
+			treasures[70314] = 201011
+			treasures[70353] = 201009
 		end
 
 		-- Leatherworking
@@ -2040,6 +2058,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			gatherQuests = {66884, 66900, 66935, 72423}
 			craftQuests = {72155, 72172, 72173, 72175}
 			hiddenMaster = 70251
+			drops = {}
 			drops[66377] = 193900
 			drops[66378] = 193901
 			drops[70514] = 198967
@@ -2168,7 +2187,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			pslReagents()
 
 			-- Close windows if no recipes are left and the option is enabled
-			if recipesTracked == {} and userSettings["closeWhenDone"] == true then
+			local next = next
+			if next(recipesTracked) == nil and userSettings["closeWhenDone"] == true then
 				pslFrame1:Hide()
 				pslFrame2:Hide()
 			end
