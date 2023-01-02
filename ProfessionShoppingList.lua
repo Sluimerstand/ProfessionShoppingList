@@ -35,6 +35,8 @@ function pslInitialise()
 	if userSettings["reagentNoWidth"] == nil then userSettings["reagentNoWidth"] = 50 end
 	if userSettings["vendorAll"] == nil then userSettings["vendorAll"] = true end
 	if userSettings["reagentQuality"] == nil then userSettings["reagentQuality"] = 1 end
+	if userSettings["closeWhenDone"] == nil then userSettings["closeWhenDone"] = false end
+	if userSettings["showKnowledgeNotPerks"] == nil then userSettings["showKnowledgeNotPerks"] = false end
 end
 
 --Create tracking windows
@@ -588,6 +590,8 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				end
 			end)
 
+			local cbCloseWhenDoneCheck	-- Declare it here, so we can reference it for all the option dependencies
+
 			local cbRemoveCraft = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
 			cbRemoveCraft.Text:SetText("Untrack on crafting")
 			cbRemoveCraft.Text:SetTextColor(1, 1, 1, 1)
@@ -596,13 +600,36 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			cbRemoveCraft:SetChecked(userSettings["removeCraft"])
 			cbRemoveCraft:SetScript("OnClick", function(self)
 				userSettings["removeCraft"] = cbRemoveCraft:GetChecked()
+				cbCloseWhenDoneCheck()
 			end)
+
+			local cbCloseWhenDone = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+			cbCloseWhenDone.Text:SetText("Close windows when done")
+			cbCloseWhenDone.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+			cbCloseWhenDone:SetPoint("TOPLEFT", cbRemoveCraft, "BOTTOMLEFT", 15, 0)
+			cbCloseWhenDone:SetChecked(userSettings["closeWhenDone"])
+			cbCloseWhenDone:SetScript("OnClick", function(self)
+				userSettings["closeWhenDone"] = cbCloseWhenDone:GetChecked()
+				cbCloseWhenDoneCheck()
+			end)
+
+			-- Disable this option when the dependency option is unchecked
+			cbCloseWhenDoneCheck = function()
+				if userSettings["removeCraft"] == true then
+					cbCloseWhenDone:Enable()
+					cbCloseWhenDone.Text:SetTextColor(1, 1, 1, 1)
+				else
+					cbCloseWhenDone:Disable()
+					cbCloseWhenDone.Text:SetTextColor(.62, .62, .62, 1)
+				end
+			end
+			cbCloseWhenDoneCheck()
 
 			local cbShowRemaining = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
 			cbShowRemaining.Text:SetText("Show remaining reagents, not total")
 			cbShowRemaining.Text:SetTextColor(1, 1, 1, 1)
 			cbShowRemaining.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-			cbShowRemaining:SetPoint("TOPLEFT", cbRemoveCraft, "BOTTOMLEFT", 0, 0)
+			cbShowRemaining:SetPoint("TOPLEFT", cbCloseWhenDone, "BOTTOMLEFT", -15, 0)
 			cbShowRemaining:SetChecked(userSettings["showRemaining"])
 			cbShowRemaining:SetScript("OnClick", function(self)
 				userSettings["showRemaining"] = cbShowRemaining:GetChecked()
@@ -619,11 +646,21 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				userSettings["showTooltip"] = cbShowTooltip:GetChecked()
 			end)
 
+			local cbShowKnowledgeNotPerks = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+			cbShowKnowledgeNotPerks.Text:SetText("Show knowledge, not perks")
+			cbShowKnowledgeNotPerks.Text:SetTextColor(1, 1, 1, 1)
+			cbShowKnowledgeNotPerks.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+			cbShowKnowledgeNotPerks:SetPoint("TOPLEFT", cbShowTooltip, "BOTTOMLEFT", 0, 0)
+			cbShowKnowledgeNotPerks:SetChecked(userSettings["showKnowledgeNotPerks"])
+			cbShowKnowledgeNotPerks:SetScript("OnClick", function(self)
+				userSettings["showKnowledgeNotPerks"] = cbShowKnowledgeNotPerks:GetChecked()
+			end)
+
 			local cbVendorAll = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
 			cbVendorAll.Text:SetText("Always set vendor filter to 'All'")
 			cbVendorAll.Text:SetTextColor(1, 1, 1, 1)
 			cbVendorAll.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-			cbVendorAll:SetPoint("TOPLEFT", cbShowTooltip, "BOTTOMLEFT", 0, 0)
+			cbVendorAll:SetPoint("TOPLEFT", cbShowKnowledgeNotPerks, "BOTTOMLEFT", 0, 0)
 			cbVendorAll:SetChecked(userSettings["vendorAll"])
 			cbVendorAll:SetScript("OnClick", function(self)
 				userSettings["vendorAll"] = cbVendorAll:GetChecked()
@@ -1543,11 +1580,50 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				end
 			end
 
+			-- Get knowledge info
+			local knowledgeSpent = 0
+			local knowledgeMax = 0
+			for _, pathID in ipairs(pathIDs) do
+				local pathInfo = C_Traits.GetNodeInfo(C_ProfSpecs.GetConfigIDForSkillLine(skillLineID), pathID)
+				knowledgeSpent = knowledgeSpent + (pathInfo.activeRank - 1)
+				knowledgeMax = knowledgeMax + (pathInfo.maxRanks - 1)
+			end
+
 			-- Set text and progress, then show bar
-			knowledgePointTracker.Text:SetText(perksEarned.."/"..perkCount.." perks unlocked")
-			knowledgePointTracker.Bar:SetMinMaxSmoothedValue(0, perkCount)
-			knowledgePointTracker.Bar:SetSmoothedValue(perksEarned)
+			if userSettings["showKnowledgeNotPerks"] == true then
+				knowledgePointTracker.Text:SetText(knowledgeSpent.."/"..knowledgeMax.." knowledge spent")
+				knowledgePointTracker.Bar:SetMinMaxSmoothedValue(0, knowledgeMax)
+				knowledgePointTracker.Bar:SetSmoothedValue(knowledgeSpent)
+			else
+				knowledgePointTracker.Text:SetText(perksEarned.."/"..perkCount.." perks unlocked")
+				knowledgePointTracker.Bar:SetMinMaxSmoothedValue(0, perkCount)
+				knowledgePointTracker.Bar:SetSmoothedValue(perksEarned)
+			end
 			knowledgePointTracker:Show()
+
+			-- TODO: Use this recursive function where-ever it is smart to do it.
+			-- -- Helper functions
+			-- local appendChildPathIDsForRoot -- Declare this one before the function itself, otherwise it can't find the function to refer to within itself apparently
+			-- appendChildPathIDsForRoot = function(t, pathID)
+			-- 	t[pathID] = 1
+			-- 	for _, childID in ipairs(C_ProfSpecs.GetChildrenForPath(pathID)) do
+			-- 		appendChildPathIDsForRoot(t, childID)
+			-- 	end
+			-- 	print(pathID)
+			-- end
+
+			-- -- Get all profession specialisation paths
+			-- local pathIDs = {}
+			-- for _, specTabID in ipairs(C_ProfSpecs.GetSpecTabIDsForSkillLine(skillLineID)) do
+			-- 	appendChildPathIDsForRoot(pathIDs, C_ProfSpecs.GetRootPathForTab(specTabID))
+			-- end
+
+			-- -- Check if the player has fully learned all profession specialisations
+			-- local isProfSpecMax = true
+			-- for _, pathID in ipairs(pathIDs) do
+			-- 	local pathInfo = C_Traits.GetNodeInfo(C_ProfSpecs.GetConfigIDForSkillLine(skillLineID), pathID)
+			-- 	if pathInfo.maxRanks ~= pathInfo.activeRank then isProfSpecMax = false end
+			-- end
 		end
 
 		-- Knowledge Point Tooltip
@@ -1932,6 +2008,12 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		
 			-- Update numbers
 			pslReagents()
+
+			-- Close windows if no recipes are left and the option is enabled
+			if recipesTracked == {} and userSettings["closeWhenDone"] == true then
+				pslFrame1:Hide()
+				pslFrame2:Hide()
+			end
 		end
 	end
 
