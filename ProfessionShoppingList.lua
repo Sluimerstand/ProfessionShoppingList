@@ -392,7 +392,6 @@ function pslCreateButtons()
 		knowledgePointTracker:SetSize(470,25)
 		knowledgePointTracker:SetPoint("TOPRIGHT", ProfessionsFrame.SpecPage, "TOPRIGHT", -5, -24)
 		knowledgePointTracker:SetFrameStrata("HIGH")
-		knowledgePointTracker:SetScript("OnLeave", function() knowledgePointTooltip:Hide() end)
 
 		-- Bar
 		knowledgePointTracker.Bar = CreateFrame("StatusBar", nil, knowledgePointTracker)
@@ -1864,7 +1863,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end
 
 			oldText = knowledgePointTooltipText:GetText()
-			if IsModifierKeyDown() == false then knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000Press Alt, Ctrl, or Shift to show details.") end
+			if IsModifierKeyDown() == false then knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000Hold Alt, Ctrl, or Shift to show details.") end
 
 			-- Set the tooltip size to fit its contents
 			knowledgePointTooltip:SetHeight(knowledgePointTooltipText:GetStringHeight()+20)
@@ -1878,10 +1877,17 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end
 		end
 
-		-- Refresh and show the tooltip on mouse-over
+		-- Refresh and show the tooltip on mouse-over, and forward keyboard inputs for the modifier
 		knowledgePointTracker:SetScript("OnEnter", function()
 			kpTooltip()
 			knowledgePointTooltip:Show()
+			knowledgePointTracker:SetPropagateKeyboardInput(false)
+		end)
+
+		-- Hide the tooltip when not mouse-over, and no longer forward keyboard inputs
+		knowledgePointTracker:SetScript("OnLeave", function()
+			knowledgePointTooltip:Hide()
+			knowledgePointTracker:SetPropagateKeyboardInput(true)
 		end)
 
 		-- Refresh the tooltip on key down (to check for IsModifierKeyDown)
