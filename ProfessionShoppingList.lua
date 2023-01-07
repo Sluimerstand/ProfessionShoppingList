@@ -2158,8 +2158,11 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		or professionID == 11
 		or professionID == 12
 		or professionID == 13 then
-			setKnowledgePointTracker() 
-			kpTooltip()
+			-- When not viewing another character's
+			if C_TradeSkillUI.IsTradeSkillLinked() == false and C_TradeSkillUI.IsTradeSkillGuild() == false then
+				setKnowledgePointTracker()
+				kpTooltip()
+			end
 		else
 			knowledgePointTracker:Hide()
 		end
