@@ -1480,36 +1480,30 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			local configID = C_ProfSpecs.GetConfigIDForSkillLine(skillLineID)
 			local specTabIDs = C_ProfSpecs.GetSpecTabIDsForSkillLine(skillLineID)
 
-			-- Get all paths
-			local pathCount = 0
-			local pathIDs = {}
-			for no, specTabID in pairs(specTabIDs) do
-				pathCount = pathCount + 1
-				local rootPathID = C_ProfSpecs.GetRootPathForTab(specTabID)
-				pathIDs[pathCount] = rootPathID
-				
-				local childIDs = C_ProfSpecs.GetChildrenForPath(rootPathID)
-				for no, childID in pairs (childIDs) do
-					pathCount = pathCount + 1
-					pathIDs[pathCount] = childID
-					if C_ProfSpecs.GetChildrenForPath(childID)[1] == nil then else
-						local childIDs = C_ProfSpecs.GetChildrenForPath(childID)
-						for no, childID in pairs (childIDs) do
-							pathCount = pathCount + 1
-							pathIDs[pathCount] = childID
-						end
-					end
+			-- Helper functions
+			local appendChildPathIDsForRoot -- Declare this one before the function itself, otherwise it can't find the function to refer to within itself apparently
+			appendChildPathIDsForRoot = function(t, pathID)
+				t[pathID] = 1
+				for _, childID in ipairs(C_ProfSpecs.GetChildrenForPath(pathID)) do
+					appendChildPathIDsForRoot(t, childID)
 				end
+			end
+
+			-- Get all profession specialisation paths
+			local pathIDs = {}
+			for _, specTabID in ipairs(C_ProfSpecs.GetSpecTabIDsForSkillLine(skillLineID)) do
+				appendChildPathIDsForRoot(pathIDs, C_ProfSpecs.GetRootPathForTab(specTabID))
 			end
 
 			-- Get all perks
 			local perkCount = 0
 			local perkIDs = {}
-			for no, pathID in pairs (pathIDs) do
+			for pathID, _ in pairs (pathIDs) do
 				local perks = C_ProfSpecs.GetPerksForPath(pathID)
 				for no, perk in pairs (perks) do
 					perkCount = perkCount + 1
 					perkIDs[perkCount] = perk.perkID
+					print(perkIDs[perkCount])
 				end
 			end
 
@@ -1524,7 +1518,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			-- Get knowledge info
 			local knowledgeSpent = 0
 			local knowledgeMax = 0
-			for _, pathID in ipairs(pathIDs) do
+			for pathID, _ in pairs (pathIDs) do
 				local pathInfo = C_Traits.GetNodeInfo(C_ProfSpecs.GetConfigIDForSkillLine(skillLineID), pathID)
 				knowledgeSpent = knowledgeSpent + (pathInfo.activeRank - 1)
 				knowledgeMax = knowledgeMax + (pathInfo.maxRanks - 1)
@@ -1542,30 +1536,6 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end
 			knowledgePointTracker:Show()
 			knowledgePointTracker:SetPropagateKeyboardInput(true) -- So keyboard presses can be done
-
-			-- TODO: Use this recursive function where-ever it is smart to do it.
-			-- -- Helper functions
-			-- local appendChildPathIDsForRoot -- Declare this one before the function itself, otherwise it can't find the function to refer to within itself apparently
-			-- appendChildPathIDsForRoot = function(t, pathID)
-			-- 	t[pathID] = 1
-			-- 	for _, childID in ipairs(C_ProfSpecs.GetChildrenForPath(pathID)) do
-			-- 		appendChildPathIDsForRoot(t, childID)
-			-- 	end
-			-- 	print(pathID)
-			-- end
-
-			-- -- Get all profession specialisation paths
-			-- local pathIDs = {}
-			-- for _, specTabID in ipairs(C_ProfSpecs.GetSpecTabIDsForSkillLine(skillLineID)) do
-			-- 	appendChildPathIDsForRoot(pathIDs, C_ProfSpecs.GetRootPathForTab(specTabID))
-			-- end
-
-			-- -- Check if the player has fully learned all profession specialisations
-			-- local isProfSpecMax = true
-			-- for _, pathID in ipairs(pathIDs) do
-			-- 	local pathInfo = C_Traits.GetNodeInfo(C_ProfSpecs.GetConfigIDForSkillLine(skillLineID), pathID)
-			-- 	if pathInfo.maxRanks ~= pathInfo.activeRank then isProfSpecMax = false end
-			-- end
 		end
 
 		-- Knowledge Point Tooltip
