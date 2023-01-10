@@ -1,16 +1,16 @@
 -- Initialise some stuff
-local f = CreateFrame("Frame")
-local ScrollingTable = LibStub("ScrollingTable")
+local api = CreateFrame("Frame")	-- To register API events
+local ScrollingTable = LibStub("ScrollingTable")	-- To refer to the ScrollingTable library
 if not C_TradeSkillUI then UIParentLoadAddOn("C_TradeSkillUI") end -- Load the TradeSkillUI to prevent stuff from being wonky
 
 -- API Events
-f:RegisterEvent("ADDON_LOADED")
-f:RegisterEvent("BAG_UPDATE")
-f:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
-f:RegisterEvent("TRADE_SKILL_SHOW")
-f:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-f:RegisterEvent("SPELL_DATA_LOAD_RESULT")
-f:RegisterEvent("MERCHANT_SHOW")
+api:RegisterEvent("ADDON_LOADED")
+api:RegisterEvent("BAG_UPDATE")
+api:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
+api:RegisterEvent("TRADE_SKILL_SHOW")
+api:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+api:RegisterEvent("SPELL_DATA_LOAD_RESULT")
+api:RegisterEvent("MERCHANT_SHOW")
 
 -- Create SavedVariables
 function pslInitialise()
@@ -39,8 +39,8 @@ function pslInitialise()
 	if userSettings["showKnowledgeNotPerks"] == nil then userSettings["showKnowledgeNotPerks"] = false end
 end
 
---Create tracking windows
-function pslCreateTrackingWindows()
+-- Create or update the tracking windows
+function pslTrackingWindows()
 	local cols = {}
 
 	-- Column formatting, Reagents
@@ -106,10 +106,6 @@ function pslCreateTrackingWindows()
 		-- Create tracking window
 		table1 = ScrollingTable:CreateST(cols, 50, nil, nil, pslFrame1)
 	end
-
-	table1:SetDisplayRows(userSettings["reagentRows"], 15)
-	table1:SetDisplayCols(cols)
-	pslFrame1:SetSize(userSettings["reagentWidth"]+userSettings["reagentNoWidth"]+30, userSettings["reagentRows"]*15+45)
 
 	-- Column formatting, Recipes
 	local cols = {}
@@ -178,9 +174,65 @@ function pslCreateTrackingWindows()
 		table2 = ScrollingTable:CreateST(cols, 50, nil, nil, pslFrame2)
 	end
 
+	-- Add the data into the windows and set their size
+	table1:SetDisplayRows(userSettings["reagentRows"], 15)
+	table1:SetDisplayCols(cols)
+	pslFrame1:SetSize(userSettings["reagentWidth"]+userSettings["reagentNoWidth"]+30, userSettings["reagentRows"]*15+45)
+
 	table2:SetDisplayRows(userSettings["recipeRows"], 15)
 	table2:SetDisplayCols(cols)
 	pslFrame2:SetSize(userSettings["recipeWidth"]+userSettings["recipeNoWidth"]+30, userSettings["recipeRows"]*15+45)
+end
+
+-- Helper function: Get reagents for recipe
+function pslGetReagents(reagentVariable, recipeID, qualityTier)
+	-- Grab all the reagent info from the API
+	local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).reagentSlotSchematics
+
+	-- Check which quality to use
+	local reagentQuality = qualityTier or userSettings["reagentQuality"]
+
+	-- For every reagent, do
+	for numReagent, reagentInfo in ipairs(reagentsTable) do
+		-- Only check basic reagents, not optional or finishing reagents
+		if reagentInfo.reagentType == 1 then
+			-- Get (quality tier 1) info
+			local reagentID
+			local reagentID1 = reagentInfo.reagents[1].itemID
+			local reagentID2 = 0
+			local reagentID3 = 0
+			local reagentAmount = reagentInfo.quantityRequired
+
+			-- Get quality tier 2 info
+			if reagentInfo.reagents[2] then
+				reagentID2 = reagentInfo.reagents[2].itemID
+			end
+
+			-- Get quality tier 3 info
+			if reagentInfo.reagents[3] then
+				reagentID3 = reagentInfo.reagents[3].itemID
+			end
+
+			-- Add the different reagent tiers into reagentTiers so they can be queried later
+			-- No need to check if they already exist, we can just overwrite it
+			reagentTiers[reagentID1] = {one = reagentID1, two = reagentID2, three = reagentID3}
+			reagentTiers[reagentID2] = {one = reagentID1, two = reagentID2, three = reagentID3}
+			reagentTiers[reagentID3] = {one = reagentID1, two = reagentID2, three = reagentID3}
+
+			-- Check which quality reagent to use
+			if reagentQuality == 3 and reagentID3 ~= 0 then
+				reagentID = reagentID3
+			elseif reagentQuality == 2 and reagentID2 ~= 0 then
+				reagentID = reagentID2
+			else
+				reagentID = reagentID1
+			end
+
+			-- Add the info to the specified variable
+			if reagentVariable[reagentID] == nil then reagentVariable[reagentID] = 0 end
+			reagentVariable[reagentID] = reagentVariable[reagentID] + amount
+		end
+	end
 end
 
 -- Update numbers
@@ -302,8 +354,8 @@ function pslReagents()
 	end
 end
 
--- Create buttons... and other UI elements, but I'm not renaming this function
-function pslCreateButtons()
+-- Create assets
+function pslCreateAssets()
 	-- Hide and disable existing tracking button
 	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckBox:SetAlpha(0)
 	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckBox:EnableMouse(false)
@@ -505,12 +557,12 @@ function pslOpenSettings()
 	InterfaceOptionsFrame_OpenToCategory("Profession Shopping List")
 end
 
-f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
+api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	-- When the AddOn is fully loaded, actually run the components
 	if event == "ADDON_LOADED" and arg1 == "ProfessionShoppingList" then
 		pslInitialise()
-		pslCreateTrackingWindows()
-		pslCreateButtons()
+		pslTrackingWindows()
+		pslCreateAssets()
 		pslTooltipInfo()
 
 		-- Settings and minimap icon
@@ -706,7 +758,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				userSettings["recipeRows"] = newValue
 				self:SetValue(userSettings["recipeRows"])
 				self.Label:SetText(self:GetValue())
-				pslCreateTrackingWindows()
+				pslTrackingWindows()
 			end)
 
 			local slRecipeWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
@@ -728,7 +780,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				userSettings["recipeWidth"] = newValue
 				self:SetValue(userSettings["recipeWidth"])
 				self.Label:SetText(self:GetValue())
-				pslCreateTrackingWindows()
+				pslTrackingWindows()
 			end)
 
 			local slRecipeNoWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
@@ -750,7 +802,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				userSettings["recipeNoWidth"] = newValue
 				self:SetValue(userSettings["recipeNoWidth"])
 				self.Label:SetText(self:GetValue())
-				pslCreateTrackingWindows()
+				pslTrackingWindows()
 			end)
 
 			local slReagentRows = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
@@ -772,7 +824,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				userSettings["reagentRows"] = newValue
 				self:SetValue(userSettings["reagentRows"])
 				self.Label:SetText(self:GetValue())
-				pslCreateTrackingWindows()
+				pslTrackingWindows()
 			end)
 
 			local slReagentWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
@@ -794,7 +846,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				userSettings["reagentWidth"] = newValue
 				self:SetValue(userSettings["reagentWidth"])
 				self.Label:SetText(self:GetValue())
-				pslCreateTrackingWindows()
+				pslTrackingWindows()
 			end)
 
 			local slReagentNoWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
@@ -816,7 +868,7 @@ f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				userSettings["reagentNoWidth"] = newValue
 				self:SetValue(userSettings["reagentNoWidth"])
 				self.Label:SetText(self:GetValue())
-				pslCreateTrackingWindows()
+				pslTrackingWindows()
 			end)
    
 			-- Extra text
