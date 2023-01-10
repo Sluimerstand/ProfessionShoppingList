@@ -107,6 +107,10 @@ function pslTrackingWindows()
 		table1 = ScrollingTable:CreateST(cols, 50, nil, nil, pslFrame1)
 	end
 
+	table1:SetDisplayRows(userSettings["reagentRows"], 15)
+	table1:SetDisplayCols(cols)
+	pslFrame1:SetSize(userSettings["reagentWidth"]+userSettings["reagentNoWidth"]+30, userSettings["reagentRows"]*15+45)
+
 	-- Column formatting, Recipes
 	local cols = {}
 	cols[1] = {
@@ -174,18 +178,13 @@ function pslTrackingWindows()
 		table2 = ScrollingTable:CreateST(cols, 50, nil, nil, pslFrame2)
 	end
 
-	-- Add the data into the windows and set their size
-	table1:SetDisplayRows(userSettings["reagentRows"], 15)
-	table1:SetDisplayCols(cols)
-	pslFrame1:SetSize(userSettings["reagentWidth"]+userSettings["reagentNoWidth"]+30, userSettings["reagentRows"]*15+45)
-
 	table2:SetDisplayRows(userSettings["recipeRows"], 15)
 	table2:SetDisplayCols(cols)
 	pslFrame2:SetSize(userSettings["recipeWidth"]+userSettings["recipeNoWidth"]+30, userSettings["recipeRows"]*15+45)
 end
 
--- Helper function: Get reagents for recipe
-function pslGetReagents(reagentVariable, recipeID, qualityTier)
+-- Get reagents for recipe
+function pslGetReagents(reagentVariable, recipeID, recipeQuantity, qualityTier)
 	-- Grab all the reagent info from the API
 	local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).reagentSlotSchematics
 
@@ -193,7 +192,7 @@ function pslGetReagents(reagentVariable, recipeID, qualityTier)
 	local reagentQuality = qualityTier or userSettings["reagentQuality"]
 
 	-- For every reagent, do
-	for numReagent, reagentInfo in ipairs(reagentsTable) do
+	for numReagent, reagentInfo in pairs(reagentsTable) do
 		-- Only check basic reagents, not optional or finishing reagents
 		if reagentInfo.reagentType == 1 then
 			-- Get (quality tier 1) info
@@ -219,6 +218,9 @@ function pslGetReagents(reagentVariable, recipeID, qualityTier)
 			reagentTiers[reagentID2] = {one = reagentID1, two = reagentID2, three = reagentID3}
 			reagentTiers[reagentID3] = {one = reagentID1, two = reagentID2, three = reagentID3}
 
+			-- Remove reagentTiers[0]
+			if reagentTiers[0] then reagentTiers[0] = nil end
+
 			-- Check which quality reagent to use
 			if reagentQuality == 3 and reagentID3 ~= 0 then
 				reagentID = reagentID3
@@ -230,7 +232,7 @@ function pslGetReagents(reagentVariable, recipeID, qualityTier)
 
 			-- Add the info to the specified variable
 			if reagentVariable[reagentID] == nil then reagentVariable[reagentID] = 0 end
-			reagentVariable[reagentID] = reagentVariable[reagentID] + amount
+			reagentVariable[reagentID] = reagentVariable[reagentID] + ( reagentAmount * recipeQuantity )
 		end
 	end
 end
@@ -249,69 +251,17 @@ function pslReagents()
 	reagentsTracked = {}
 
 	for recipeID, no in pairs(recipesTracked) do
-		-- Get reagent info
-		local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).reagentSlotSchematics
-
-		-- For every reagent, if not optional or finishing, do
-		for numReagent, reagentInfo in pairs(reagentsTable) do
-			if reagentInfo.reagentType == 1 then
-				-- Get info
-				local reagentID1 = reagentInfo.reagents[1].itemID
-				local reagentID2 = 0
-				local reagentID3 = 0
-				local reagentAmount = reagentInfo.quantityRequired
-
-				-- Get quality tier 2 info
-				if reagentInfo.reagents[2] then
-					reagentID2 = reagentInfo.reagents[2].itemID
-				end
-
-				-- Get quality tier 3 info
-				if reagentInfo.reagents[3] then
-					reagentID3 = reagentInfo.reagents[3].itemID
-				end
-
-				-- Slap all different quality items in there
-				if reagentsTracked[reagentID1] == nil then reagentsTracked[reagentID1] = {one = 0, two = 0, three = 0, amount = 0} end
-				reagentsTracked[reagentID1].one = reagentID1
-				reagentsTracked[reagentID1].two = reagentID2
-				reagentsTracked[reagentID1].three = reagentID3
-
-				-- Add them to reagentTiers because I can't think of a non-clunky way to get the base tier for subreagent calculations
-				-- Might rework the entire tier stuff, but this is what it is for now
-				if reagentID2 ~= 0 then reagentTiers[reagentID2] = reagentID1 end
-				if reagentID3 ~= 0 then reagentTiers[reagentID3] = reagentID1 end
-
-				-- Do maths
-				reagentsTracked[reagentID1].amount = reagentsTracked[reagentID1].amount + reagentAmount * no
-			end
-		end
+		pslGetReagents(reagentsTracked, recipeID, no)
 	end
 
 	-- Update reagents tracked
 	local data = {}
 
-	for reagentBase, reagentInfo in pairs(reagentsTracked) do
+	for reagentID, amount in pairs(reagentsTracked) do
 		local function getInfo()
 			-- Get info
 			local itemName, itemLink
-			if userSettings["reagentQuality"] == 1 then 
-				itemName, itemLink = GetItemInfo(reagentInfo.one)
-			elseif userSettings["reagentQuality"] == 2 then
-				if reagentInfo.two ~= 0 then
-					itemName, itemLink = GetItemInfo(reagentInfo.two)
-				else
-					itemName, itemLink = GetItemInfo(reagentInfo.one)
-				end
-			elseif userSettings["reagentQuality"] == 3 then
-				if reagentInfo.three ~= 0 then
-					itemName, itemLink = GetItemInfo(reagentInfo.three)
-				elseif reagentInfo.two ~= 0 then
-					itemName, itemLink = GetItemInfo(reagentInfo.two)
-				else
-					itemName, itemLink = GetItemInfo(reagentInfo.one)
-				end
-			end
+			itemName, itemLink = GetItemInfo(reagentID)
 
 			-- Try again if error
 			if itemName == nil or itemLink == nil then
@@ -319,26 +269,34 @@ function pslReagents()
 				do return end
 			end
 
-			-- Calculate amount based on user setting for reagent quality
-			local reagentAmountNeed = reagentInfo.amount
-			local reagentAmountHave
+			-- Get needed/owned number of reagents
+			local reagentAmountHave1 = 0
+			local reagentAmountHave2 = 0
+			local reagentAmountHave3 = 0
+
+			reagentAmountHave1 = GetItemCount(reagentTiers[reagentID].one, true, false, true)
+			if reagentTiers[reagentID].two ~= 0 then
+				local reagentAmountHave2 = GetItemCount(reagentTiers[reagentID].two, true, false, true)
+			end
+			if reagentTiers[reagentID].three ~= 0 then
+				local reagentAmountHave3 = GetItemCount(reagentTiers[reagentID].three, true, false, true)
+			end
+
+			-- Calculate owned amount based on user setting for reagent quality
+			local reagentAmountHave = 0
 			if userSettings["reagentQuality"] == 1 then
-				reagentAmountHave = GetItemCount(reagentInfo.three, true, false, true) + GetItemCount(reagentInfo.two, true, false, true) + GetItemCount(reagentInfo.one, true, false, true)
-			elseif userSettings["reagentQuality"] == 2 and reagentInfo.two ~= 0 then
-				reagentAmountHave = GetItemCount(reagentInfo.three, true, false, true) + GetItemCount(reagentInfo.two, true, false, true)
-			elseif userSettings["reagentQuality"] == 2 and reagentInfo.two == 0 then
-				reagentAmountHave = GetItemCount(reagentInfo.three, true, false, true) + GetItemCount(reagentInfo.two, true, false, true) + GetItemCount(reagentInfo.one, true, false, true)
-			elseif userSettings["reagentQuality"] == 3 and reagentInfo.three ~= 0 then
-				reagentAmountHave = GetItemCount(reagentInfo.three, true, false, true)
-			elseif userSettings["reagentQuality"] == 3 and reagentInfo.three == 0 then
-				reagentAmountHave = GetItemCount(reagentInfo.three, true, false, true) + GetItemCount(reagentInfo.two, true, false, true) + GetItemCount(reagentInfo.one, true, false, true)
+				reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
+			elseif userSettings["reagentQuality"] == 2  then
+				reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
+			elseif userSettings["reagentQuality"] == 3 then
+				reagentAmountHave = reagentAmountHave3
 			end
 			
 			-- Push the info to the windows
 			if userSettings["showRemaining"] == false then
-				table.insert(data, {itemLink, reagentAmountHave.."/"..reagentAmountNeed})
+				table.insert(data, {itemLink, reagentAmountHave.."/"..amount})
 			else
-				table.insert(data, {itemLink, math.max(0,reagentAmountNeed-reagentAmountHave)})
+				table.insert(data, {itemLink, math.max(0,amount-reagentAmountHave)})
 			end
 
 			table1:SetData(data, true)
@@ -351,6 +309,49 @@ function pslReagents()
 	if not recipesTracked[pslSelectedRecipeID] then removeCraftListButton:Disable()
 	elseif recipesTracked[pslSelectedRecipeID] == 0 then removeCraftListButton:Disable()
 	else removeCraftListButton:Enable()
+	end
+end
+
+-- Track recipe
+function pslTrackRecipe(recipeID, recipeQuantity)
+	-- Track recipe
+	if not recipesTracked[recipeID] then recipesTracked[recipeID] = 0 end
+	recipesTracked[recipeID] = recipesTracked[recipeID] + recipeQuantity
+
+	local recipeType = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).recipeType
+	-- Add recipe link for crafted items
+	if recipeType == 1 then
+		local link = string.gsub(C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink, " |A:Professions%-ChatIcon%-Quality%-Tier1:17:15::1|a", "") --" |A:Professions-ChatIcon-Quality-Tier1:17:15::1|a"
+		recipeLinks[recipeID] = link
+	-- Add recipe "link" for enchants
+	elseif recipeType == 3 then recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
+	end
+
+	-- Show windows
+	pslFrame1:Show()
+	pslFrame2:Show()
+
+	-- Update numbers
+	pslReagents()
+end
+
+-- Untrack recipe
+function pslUntrackRecipe(recipeID, recipeQuantity)
+	if recipesTracked[recipeID] ~= nil then
+		-- Untrack recipe
+		recipesTracked[recipeID] = recipesTracked[recipeID] - recipeQuantity
+	
+		-- Set numbers to nil if it doesn't exist anymore
+		if recipesTracked[recipeID] <= 0 then
+			recipesTracked[recipeID] = nil
+			recipeLinks[recipeID] = nil
+		end
+	
+		-- Disable the remove button if the recipe isn't tracked anymore
+		if not recipesTracked[recipeID] then removeCraftListButton:Disable() end
+	
+		-- Update numbers
+		pslReagents()
 	end
 end
 
@@ -367,6 +368,9 @@ function pslCreateAssets()
 		addCraftListButton:SetWidth(60)
 		addCraftListButton:SetPoint("TOPRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "TOPRIGHT", -9, -10)
 		addCraftListButton:SetFrameStrata("HIGH")
+		addCraftListButton:SetScript("OnClick", function()
+			pslTrackRecipe(pslSelectedRecipeID, 1)
+		end)
 	end
 
 	-- Create the "Untrack" button
@@ -376,53 +380,14 @@ function pslCreateAssets()
 		removeCraftListButton:SetWidth(70)
 		removeCraftListButton:SetPoint("TOPRIGHT", addCraftListButton, "TOPLEFT", -4, 0)
 		removeCraftListButton:SetFrameStrata("HIGH")
+		removeCraftListButton:SetScript("OnClick", function()
+			pslUntrackRecipe(pslSelectedRecipeID, 1)
+	
+			-- Show windows
+			pslFrame1:Show()
+			pslFrame2:Show()
+		end)
 	end
-
-	-- Make the "Track" button actually do the thing
-	addCraftListButton:SetScript("OnClick", function()
-		-- Get selected recipe ID
-		local recipeID = pslSelectedRecipeID
-		local recipeType = pslRecipeType
-
-		-- Track recipe
-		if not recipesTracked[recipeID] then recipesTracked[recipeID] = 0 end
-		recipesTracked[recipeID] = recipesTracked[recipeID] + 1
-
-		-- Add recipe link for crafted items
-		if recipeType == 1 then recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
-		-- Add recipe "link" for enchants
-		elseif recipeType == 3 then recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
-		end
-
-		-- Show windows
-		pslFrame1:Show()
-		pslFrame2:Show()
-
-		-- Update numbers
-		pslReagents()
-	end)
-
-	-- Make the "Untrack" button actually do the thing
-	removeCraftListButton:SetScript("OnClick", function()
-		-- Get selected recipe ID
-		local recipeID = pslSelectedRecipeID
-
-		-- Show windows
-		pslFrame1:Show()
-		pslFrame2:Show()
-
-		-- Untrack recipe
-		if recipesTracked[recipeID] then recipesTracked[recipeID] = recipesTracked[recipeID] - 1 end
-
-		-- Set numbers to nil if it doesn't exist anymore
-		if recipesTracked[recipeID] == 0 then
-			recipesTracked[recipeID] = nil
-			recipeLinks[recipeID] = nil
-		end
-
-		-- Update numbers
-		pslReagents()
-	end)
 
 	-- Create Chef's Hat button
 	if not chefsHatButton then
@@ -502,28 +467,43 @@ function pslTooltipInfo()
 		local reagentID1
 		local reagentID2
 		local reagentID3
-		local reagentAmountNeed
-
-		for reagentBase, reagentInfo in pairs(reagentsTracked) do
-			if reagentInfo.one == itemID or reagentInfo.two == itemID or reagentInfo.three == itemID then
-				reagentID1 = reagentInfo.one
-				reagentID2 = reagentInfo.two
-				reagentID3 = reagentInfo.three
-				reagentAmountNeed = reagentInfo.amount
-			end
+		local reagentAmountHave1 = 0
+		local reagentAmountHave2 = 0
+		local reagentAmountHave3 = 0
+	
+		-- Get needed/owned number of reagents
+		if reagentTiers[itemID] and reagentTiers[itemID].one ~= 0 then
+			reagentID1 = reagentTiers[itemID].one
+			reagentAmountHave1 = GetItemCount(reagentTiers[itemID].one, true, false, true)
+		end
+		if reagentTiers[itemID] and reagentTiers[itemID].two ~= 0 then
+			reagentID2 = reagentTiers[itemID].two
+			reagentAmountHave2 = GetItemCount(reagentTiers[itemID].two, true, false, true)
+		end
+		if reagentTiers[itemID] and reagentTiers[itemID].three ~= 0 then
+			reagentID3 = reagentTiers[itemID].three
+			reagentAmountHave3 = GetItemCount(reagentTiers[itemID].three, true, false, true)
 		end
 
-		local reagentAmountHave
+		-- Calculate owned amount based on user setting for reagent quality
+		local reagentAmountHave = 0
 		if userSettings["reagentQuality"] == 1 then
-			reagentAmountHave = GetItemCount(reagentID3, true, false, true) + GetItemCount(reagentID2, true, false, true) + GetItemCount(reagentID1, true, false, true)
-		elseif userSettings["reagentQuality"] == 2 and reagentID2 ~= 0 then
-			reagentAmountHave = GetItemCount(reagentID3, true, false, true) + GetItemCount(reagentID2, true, false, true)
-		elseif userSettings["reagentQuality"] == 2 and reagentID2 == 0 then
-			reagentAmountHave = GetItemCount(reagentID3, true, false, true) + GetItemCount(reagentID2, true, false, true) + GetItemCount(reagentID1, true, false, true)
-		elseif userSettings["reagentQuality"] == 3 and reagentID3 ~= 0 then
-			reagentAmountHave = GetItemCount(reagentID3, true, false, true)
-		elseif userSettings["reagentQuality"] == 3 and reagentID3 == 0 then
-			reagentAmountHave = GetItemCount(reagentID3, true, false, true) + GetItemCount(reagentID2, true, false, true) + GetItemCount(reagentID1, true, false, true)
+			reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
+		elseif userSettings["reagentQuality"] == 2  then
+			reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
+		elseif userSettings["reagentQuality"] == 3 then
+			reagentAmountHave = reagentAmountHave3
+		end
+
+		local reagentAmountNeed = 0
+		if userSettings["reagentQuality"] == 1 then
+			reagentAmountNeed = reagentsTracked[reagentID1]
+		end
+		if userSettings["reagentQuality"] == 2 then
+			reagentAmountNeed = reagentsTracked[reagentID2]
+		end
+		if userSettings["reagentQuality"] == 3 then
+			reagentAmountNeed = reagentsTracked[reagentID3]
 		end
 
 		-- Tooltip info
@@ -897,11 +877,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				pslOpenSettings()
 			-- Clear list
 			elseif msg == "clear" then
-				-- Clear recipes and reagents
+				-- Clear everything except the recipe cache
 				recipesTracked = {}
 				reagentsTracked = {}
 				recipeLinks = {}
-				recipeLibrary = {}
+				reagentTiers = {}
 				pslReagents()
 
 				-- Disable remove button
@@ -969,11 +949,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			})
 			table1:RegisterEvents({
 				["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
-					-- Activate if Ctrl+clicking on the reagents column
+					-- Control+click on reagent
 					if column == 1 and button == "LeftButton" and IsControlKeyDown() == true and realrow ~= nil then
-						-- Get itemID
+						-- Get itemIDs
 						local itemID = GetItemInfoFromHyperlink(data[realrow][1])
-						if reagentTiers[itemID] then itemID = reagentTiers[itemID] end
+						if reagentTiers[itemID] then itemID = reagentTiers[itemID].one end
 
 						-- Get possible recipeIDs
 						local recipeIDs = {}
@@ -988,22 +968,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 						-- If there is only one possible recipe, use that
 						if no == 1 then
-							local recipeID = recipeIDs[no]
-
-							-- Track recipe
-							local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-							recipesTracked[recipeID] = math.max(0, math.ceil((reagentsTracked[itemID].amount - GetItemCount(itemID)) / quantityMade))
-
-							-- Add recipe link
-							recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
-
-							-- Show windows
-							pslFrame1:Show()
-							pslFrame2:Show()
-
-							-- Update numbers
-							pslReagents()
-
+							pslTrackRecipe(recipeIDs[no], 1)
 						-- If there is more than one possible recipe, provide options
 						elseif no > 1 then
 							-- Create popup frame
@@ -1046,29 +1011,26 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 							pslOption1:SetText("|cffFFFFFF")
 
 							-- Get reagents #1
-							local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).reagentSlotSchematics
+							local reagentsTable = {}
+							pslGetReagents(reagentsTable, recipeIDs[1], 1)
 
-							-- For every reagent, if not optional or finishing, do
-							for numReagent, reagentInfo in pairs(reagentsTable) do
-								if reagentInfo.reagentType == 1 then
-									-- Get info
-									local function getInfo()
-										local reagentID = reagentInfo.reagents[1].itemID
-										local reagentAmount = reagentInfo.quantityRequired
-										local itemName, itemLink = GetItemInfo(reagentID)
+							-- Create text #1
+							for reagentID, reagentAmount in pairs(reagentsTable) do
+								-- Get info
+								local function getInfo()
+									local itemName, itemLink = GetItemInfo(reagentID)
 
-										-- Try again if error
-										if itemName == nil or itemLink == nil then
-											RunNextFrame(getInfo)
-											do return end
-										end
-
-										-- Add text
-										oldText = pslOption1:GetText()
-										pslOption1:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+									-- Try again if error
+									if itemName == nil or itemLink == nil then
+										RunNextFrame(getInfo)
+										do return end
 									end
-									getInfo()
+
+									-- Add text
+									oldText = pslOption1:GetText()
+									pslOption1:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
 								end
+								getInfo()
 							end
 
 							-- Button #1
@@ -1078,23 +1040,15 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 							pslOptionButton1:SetPoint("BOTTOM", pslOption1, "TOP", 0, 5)
 							pslOptionButton1:SetPoint("CENTER", pslOption1, "CENTER", 0, 0)
 							pslOptionButton1:SetScript("OnClick", function()
-								-- Get selected recipe ID
-								local recipeID = recipeIDs[1]
-						
-								-- Track recipe
-								local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-								recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID].amount / quantityMade) - GetItemCount(itemID))
-						
-								-- Add recipe link
-								recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
-						
-								-- Show windows
-								pslFrame1:Show()
-								pslFrame2:Show()
+								-- Define the amount of recipes to be tracked
+								local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).quantityMin
+								local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+
+								-- Track the recipe(s)
+								pslTrackRecipe(recipeIDs[1], amount)
+
+								-- Hide the subreagents window
 								f:Hide()
-						
-								-- Update numbers
-								pslReagents()
 							end)
 							
 							-- If two options
@@ -1111,29 +1065,26 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 								pslOption2:SetText("|cffFFFFFF")
 
 								-- Get reagents #2
-								local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).reagentSlotSchematics
+								local reagentsTable = {}
+								pslGetReagents(reagentsTable, recipeIDs[2], 1)
 
-								-- For every reagent, if not optional or finishing, do
-								for numReagent, reagentInfo in pairs(reagentsTable) do
-									if reagentInfo.reagentType == 1 then
-										-- Get info
-										local function getInfo()
-											local reagentID = reagentInfo.reagents[1].itemID
-											local reagentAmount = reagentInfo.quantityRequired
-											local itemName, itemLink = GetItemInfo(reagentID)
+								-- Create text #2
+								for reagentID, reagentAmount in pairs(reagentsTable) do
+									-- Get info
+									local function getInfo()
+										local itemName, itemLink = GetItemInfo(reagentID)
 
-											-- Try again if error
-											if itemName == nil or itemLink == nil then
-												RunNextFrame(getInfo)
-												do return end
-											end
-
-											-- Add text
-											oldText = pslOption2:GetText()
-											pslOption2:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+										-- Try again if error
+										if itemName == nil or itemLink == nil then
+											RunNextFrame(getInfo)
+											do return end
 										end
-										getInfo()
+
+										-- Add text
+										oldText = pslOption1:GetText()
+										pslOption2:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
 									end
+									getInfo()
 								end
 
 								-- Button #2
@@ -1143,23 +1094,15 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 								pslOptionButton2:SetPoint("BOTTOM", pslOption2, "TOP", 0, 5)
 								pslOptionButton2:SetPoint("CENTER", pslOption2, "CENTER", 0, 0)
 								pslOptionButton2:SetScript("OnClick", function()
-									-- Get selected recipe ID
-									local recipeID = recipeIDs[2]
-							
-									-- Track recipe
-									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-									recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID].amount / quantityMade) - GetItemCount(itemID))
-							
-									-- Add recipe link
-									recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
-							
-									-- Show windows
-									pslFrame1:Show()
-									pslFrame2:Show()
+									-- Define the amount of recipes to be tracked
+									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).quantityMin
+									local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+
+									-- Track the recipe(s)
+									pslTrackRecipe(recipeIDs[2], amount)
+
+									-- Hide the subreagents window
 									f:Hide()
-							
-									-- Update numbers
-									pslReagents()
 								end)
 							end
 
@@ -1177,29 +1120,26 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 								pslOption3:SetText("|cffFFFFFF")
 
 								-- Get reagents #3
-								local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).reagentSlotSchematics
+								local reagentsTable = {}
+								pslGetReagents(reagentsTable, recipeIDs[3], 1)
 
-								-- For every reagent, if not optional or finishing, do
-								for numReagent, reagentInfo in pairs(reagentsTable) do
-									if reagentInfo.reagentType == 1 then
-										-- Get info
-										local function getInfo()
-											local reagentID = reagentInfo.reagents[1].itemID
-											local reagentAmount = reagentInfo.quantityRequired
-											local itemName, itemLink = GetItemInfo(reagentID)
+								-- Create text #3
+								for reagentID, reagentAmount in pairs(reagentsTable) do
+									-- Get info
+									local function getInfo()
+										local itemName, itemLink = GetItemInfo(reagentID)
 
-											-- Try again if error
-											if itemName == nil or itemLink == nil then
-												RunNextFrame(getInfo)
-												do return end
-											end
-
-											-- Add text
-											oldText = pslOption3:GetText()
-											pslOption3:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+										-- Try again if error
+										if itemName == nil or itemLink == nil then
+											RunNextFrame(getInfo)
+											do return end
 										end
-										getInfo()
+
+										-- Add text
+										oldText = pslOption3:GetText()
+										pslOption3:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
 									end
+									getInfo()
 								end
 
 								-- Button #3
@@ -1209,23 +1149,15 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 								pslOptionButton3:SetPoint("BOTTOM", pslOption3, "TOP", 0, 5)
 								pslOptionButton3:SetPoint("CENTER", pslOption3, "CENTER", 0, 0)
 								pslOptionButton3:SetScript("OnClick", function()
-									-- Get selected recipe ID
-									local recipeID = recipeIDs[3]
-							
-									-- Track recipe
-									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-									recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID].amount / quantityMade) - GetItemCount(itemID))
-							
-									-- Add recipe link
-									recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
-							
-									-- Show windows
-									pslFrame1:Show()
-									pslFrame2:Show()
+									-- Define the amount of recipes to be tracked
+									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).quantityMin
+									local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+
+									-- Track the recipe(s)
+									pslTrackRecipe(recipeIDs[3], amount)
+
+									-- Hide the subreagents window
 									f:Hide()
-							
-									-- Update numbers
-									pslReagents()
 								end)
 							end
 
@@ -1243,29 +1175,26 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 								pslOption4:SetText("|cffFFFFFF")
 
 								-- Get reagents #4
-								local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).reagentSlotSchematics
+								local reagentsTable = {}
+								pslGetReagents(reagentsTable, recipeIDs[4], 1)
 
-								-- For every reagent, if not optional or finishing, do
-								for numReagent, reagentInfo in pairs(reagentsTable) do
-									if reagentInfo.reagentType == 1 then
-										-- Get info
-										local function getInfo()
-											local reagentID = reagentInfo.reagents[1].itemID
-											local reagentAmount = reagentInfo.quantityRequired
-											local itemName, itemLink = GetItemInfo(reagentID)
+								-- Create text #4
+								for reagentID, reagentAmount in pairs(reagentsTable) do
+									-- Get info
+									local function getInfo()
+										local itemName, itemLink = GetItemInfo(reagentID)
 
-											-- Try again if error
-											if itemName == nil or itemLink == nil then
-												RunNextFrame(getInfo)
-												do return end
-											end
-
-											-- Add text
-											oldText = pslOption4:GetText()
-											pslOption4:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+										-- Try again if error
+										if itemName == nil or itemLink == nil then
+											RunNextFrame(getInfo)
+											do return end
 										end
-										getInfo()
+
+										-- Add text
+										oldText = pslOption1:GetText()
+										pslOption4:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
 									end
+									getInfo()
 								end
 
 								-- Button #4
@@ -1275,23 +1204,15 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 								pslOptionButton4:SetPoint("BOTTOM", pslOption4, "TOP", 0, 5)
 								pslOptionButton4:SetPoint("CENTER", pslOption4, "CENTER", 0, 0)
 								pslOptionButton4:SetScript("OnClick", function()
-									-- Get selected recipe ID
-									local recipeID = recipeIDs[4]
-							
-									-- Track recipe
-									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-									recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID].amount / quantityMade) - GetItemCount(itemID))
-							
-									-- Add recipe link
-									recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
-							
-									-- Show windows
-									pslFrame1:Show()
-									pslFrame2:Show()
+									-- Define the amount of recipes to be tracked
+									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).quantityMin
+									local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+
+									-- Track the recipe(s)
+									pslTrackRecipe(recipeIDs[4], amount)
+
+									-- Hide the subreagents window
 									f:Hide()
-							
-									-- Update numbers
-									pslReagents()
 								end)
 							end
 
@@ -1306,29 +1227,26 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 								pslOption5:SetText("|cffFFFFFF")
 
 								-- Get reagents #5
-								local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).reagentSlotSchematics
+								local reagentsTable = {}
+								pslGetReagents(reagentsTable, recipeIDs[5], 1)
 
-								-- For every reagent, if not optional or finishing, do
-								for numReagent, reagentInfo in pairs(reagentsTable) do
-									if reagentInfo.reagentType == 1 then
-										-- Get info
-										local function getInfo()
-											local reagentID = reagentInfo.reagents[1].itemID
-											local reagentAmount = reagentInfo.quantityRequired
-											local itemName, itemLink = GetItemInfo(reagentID)
+								-- Create text #5
+								for reagentID, reagentAmount in pairs(reagentsTable) do
+									-- Get info
+									local function getInfo()
+										local itemName, itemLink = GetItemInfo(reagentID)
 
-											-- Try again if error
-											if itemName == nil or itemLink == nil then
-												RunNextFrame(getInfo)
-												do return end
-											end
-
-											-- Add text
-											oldText = pslOption5:GetText()
-											pslOption5:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+										-- Try again if error
+										if itemName == nil or itemLink == nil then
+											RunNextFrame(getInfo)
+											do return end
 										end
-										getInfo()
+
+										-- Add text
+										oldText = pslOption1:GetText()
+										pslOption5:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
 									end
+									getInfo()
 								end
 
 								-- Button #5
@@ -1338,23 +1256,15 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 								pslOptionButton5:SetPoint("BOTTOM", pslOption5, "TOP", 0, 5)
 								pslOptionButton5:SetPoint("CENTER", pslOption5, "CENTER", 0, 0)
 								pslOptionButton5:SetScript("OnClick", function()
-									-- Get selected recipe ID
-									local recipeID = recipeIDs[5]
-							
-									-- Track recipe
-									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-									recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID].amount / quantityMade) - GetItemCount(itemID))
-							
-									-- Add recipe link
-									recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
-							
-									-- Show windows
-									pslFrame1:Show()
-									pslFrame2:Show()
+									-- Define the amount of recipes to be tracked
+									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).quantityMin
+									local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+
+									-- Track the recipe(s)
+									pslTrackRecipe(recipeIDs[5], amount)
+
+									-- Hide the subreagents window
 									f:Hide()
-							
-									-- Update numbers
-									pslReagents()
 								end)
 							end
 
@@ -1369,29 +1279,26 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 								pslOption6:SetText("|cffFFFFFF")
 
 								-- Get reagents #6
-								local reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).reagentSlotSchematics
+								local reagentsTable = {}
+								pslGetReagents(reagentsTable, recipeIDs[6], 1)
 
-								-- For every reagent, if not optional or finishing, do
-								for numReagent, reagentInfo in pairs(reagentsTable) do
-									if reagentInfo.reagentType == 1 then
-										-- Get info
-										local function getInfo()
-											local reagentID = reagentInfo.reagents[1].itemID
-											local reagentAmount = reagentInfo.quantityRequired
-											local itemName, itemLink = GetItemInfo(reagentID)
+								-- Create text #6
+								for reagentID, reagentAmount in pairs(reagentsTable) do
+									-- Get info
+									local function getInfo()
+										local itemName, itemLink = GetItemInfo(reagentID)
 
-											-- Try again if error
-											if itemName == nil or itemLink == nil then
-												RunNextFrame(getInfo)
-												do return end
-											end
-
-											-- Add text
-											oldText = pslOption6:GetText()
-											pslOption6:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+										-- Try again if error
+										if itemName == nil or itemLink == nil then
+											RunNextFrame(getInfo)
+											do return end
 										end
-										getInfo()
+
+										-- Add text
+										oldText = pslOption1:GetText()
+										pslOption6:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
 									end
+									getInfo()
 								end
 
 								-- Button #6
@@ -1401,23 +1308,15 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 								pslOptionButton6:SetPoint("BOTTOM", pslOption6, "TOP", 0, 5)
 								pslOptionButton6:SetPoint("CENTER", pslOption6, "CENTER", 0, 0)
 								pslOptionButton6:SetScript("OnClick", function()
-									-- Get selected recipe ID
-									local recipeID = recipeIDs[6]
-							
-									-- Track recipe
-									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-									recipesTracked[recipeID] = math.max(0, math.ceil(reagentsTracked[itemID].amount / quantityMade) - GetItemCount(itemID))
-							
-									-- Add recipe link
-									recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink
-							
-									-- Show windows
-									pslFrame1:Show()
-									pslFrame2:Show()
+									-- Define the amount of recipes to be tracked
+									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).quantityMin
+									local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+
+									-- Track the recipe(s)
+									pslTrackRecipe(recipeIDs[6], amount)
+
+									-- Hide the subreagents window
 									f:Hide()
-							
-									-- Update numbers
-									pslReagents()
 								end)
 							end
 						end
@@ -1448,7 +1347,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			})
 			table2:RegisterEvents({
 				["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
-					-- Activate if right-clicking on the tracked column
+					-- Right-click on recipe amount
 					if column == 2 and button == "RightButton" and row ~= nil and realrow ~= nil then
 						-- Get the selected recipe ID
 						local selectedRecipe = data[realrow][1]
@@ -1460,29 +1359,21 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 						-- Untrack the recipe
 						if IsControlKeyDown() == true then
-							recipesTracked[selectedRecipeID] = 0
+							pslUntrackRecipe(selectedRecipeID, data[realrow][2])
 						else
-							recipesTracked[selectedRecipeID] = recipesTracked[selectedRecipeID] - 1
-						end
-
-						-- Set numbers to nil if it doesn't exist anymore
-						if recipesTracked[selectedRecipeID] <= 0 then
-							recipesTracked[selectedRecipeID] = nil
-							recipeLinks[selectedRecipeID] = nil
+							pslUntrackRecipe(selectedRecipeID, 1)
 						end
 
 						-- Show windows
 						pslFrame1:Show()
 						pslFrame2:Show()
-						
-						-- Update numbers
-						pslReagents()
-
+					-- Left-click on recipe
 					elseif column == 1 and button == "LeftButton" and row ~= nil and realrow ~= nil then
 						-- If Shift is held also
 						if IsShiftKeyDown() == true then
 							-- Try write link to chat
 							ChatEdit_InsertLink(data[realrow][1])
+						-- If Control is held also
 						elseif IsControlKeyDown() == true then
 							-- Get the selected recipe ID
 							local selectedRecipe = data[realrow][1]
@@ -2231,29 +2122,15 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 	-- Remove 1 tracked recipe when it has been crafted
 	if event == "UNIT_SPELLCAST_SUCCEEDED" and userSettings["removeCraft"] == true then
-		-- Get selected recipeID
-		local recipeID = ...
+		local recipeID = ...	-- I don't remember how this works, but it works
+		pslUntrackRecipe(recipeID, 1)
 
-		if recipesTracked[recipeID] ~= nil then
-			-- Untrack recipe
-			recipesTracked[recipeID] = recipesTracked[recipeID] - 1
-		
-			-- Set numbers to nil if it doesn't exist anymore
-			if recipesTracked[recipeID] == 0 then recipesTracked[recipeID] = nil end
-		
-			-- Disable the remove button if the recipe isn't tracked anymore
-			if not recipesTracked[recipeID] then removeCraftListButton:Disable() end
-		
-			-- Update numbers
-			pslReagents()
-
-			-- Close windows if no recipes are left and the option is enabled
-			local next = next
-			if next(recipesTracked) == nil and userSettings["closeWhenDone"] == true then
-				pslFrame1:Hide()
-				pslFrame2:Hide()
-			end
-		end
+		-- Close windows if no recipes are left and the option is enabled
+		local next = next
+		if next(recipesTracked) == nil and userSettings["closeWhenDone"] == true then
+			pslFrame1:Hide()
+			pslFrame2:Hide()
+		end			
 	end
 
 	-- Update the numbers when bag changes occur
