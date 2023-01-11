@@ -1645,7 +1645,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				local knowledgeMax = 0
 				for pathID, _ in pairs (pathIDs) do
 					local pathInfo = C_Traits.GetNodeInfo(C_ProfSpecs.GetConfigIDForSkillLine(skillLineID), pathID)
-					knowledgeSpent = knowledgeSpent + (pathInfo.activeRank - 1)
+					knowledgeSpent = knowledgeSpent + math.max(0,(pathInfo.activeRank - 1))
 					knowledgeMax = knowledgeMax + (pathInfo.maxRanks - 1)
 				end
 
