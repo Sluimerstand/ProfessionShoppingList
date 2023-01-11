@@ -370,18 +370,21 @@ end
 -- Untrack recipe
 function pslUntrackRecipe(recipeID, recipeQuantity)
 	if recipesTracked[recipeID] ~= nil then
+		-- Clear all recipes if quantity was set to 0
+		if recipeQuantity == 0 then recipesTracked[recipeID] = 0 end
+
 		-- Untrack recipe
 		recipesTracked[recipeID] = recipesTracked[recipeID] - recipeQuantity
-	
+
 		-- Set numbers to nil if it doesn't exist anymore
 		if recipesTracked[recipeID] <= 0 then
 			recipesTracked[recipeID] = nil
 			recipeLinks[recipeID] = nil
 		end
-	
-		-- Update numbers
-		pslReagents()
 	end
+
+	-- Update numbers
+	pslReagents()
 end
 
 -- Create assets
@@ -403,13 +406,47 @@ function pslCreateAssets()
 			pslTrackRecipe(pslSelectedRecipeID, 1)
 		end)
 	end
+	
+	-- Create the profession UI quantity editbox
+	if not ebRecipeQuantityNo then ebRecipeQuantityNo = 0 end
+	local function ebRecipeQuantityUpdate(self, newValue)
+		-- Get the entered number cleanly
+		newValue = math.floor(self:GetNumber())
+		-- If the value is positive, change the number of recipes tracked
+		if newValue >= 0 then
+			pslUntrackRecipe(pslSelectedRecipeID,0)
+			if newValue >0 then
+				pslTrackRecipe(pslSelectedRecipeID,newValue)
+			end
+		end
+		-- Set the textbox to show that number (if it is not nil, otherwise do 0)
+		ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID] or 0
+		self:SetText(ebRecipeQuantityNo)
+	end
+	ebRecipeQuantity = CreateFrame("EditBox", nil, ProfessionsFrame.CraftingPage, "InputBoxTemplate")
+	ebRecipeQuantity:SetSize(25,20)
+	ebRecipeQuantity:SetPoint("CENTER", trackProfessionButton, "CENTER", 0, 0)
+	ebRecipeQuantity:SetPoint("RIGHT", trackProfessionButton, "LEFT", -4, 0)
+	ebRecipeQuantity:SetAutoFocus(false)
+	ebRecipeQuantity:SetText(ebRecipeQuantityNo)
+	ebRecipeQuantity:SetCursorPosition(0)
+	ebRecipeQuantity:SetScript("OnEditFocusLost", function(self, newValue)
+		ebRecipeQuantityUpdate(self, newValue)
+	end)
+	ebRecipeQuantity:SetScript("OnEnterPressed", function(self, newValue)
+		ebRecipeQuantityUpdate(self, newValue)
+		self:ClearFocus()
+	end)
+	ebRecipeQuantity:SetScript("OnEscapePressed", function(self, newValue)
+		self:SetText(ebRecipeQuantityNo)
+	end)
 
 	-- Create the profession UI untrack button
 	if not untrackProfessionButton then
 		untrackProfessionButton = CreateFrame("Button", nil, ProfessionsFrame.CraftingPage, "UIPanelButtonTemplate")
 		untrackProfessionButton:SetText("Untrack")
 		untrackProfessionButton:SetWidth(70)
-		untrackProfessionButton:SetPoint("TOPRIGHT", trackProfessionButton, "TOPLEFT", -4, 0)
+		untrackProfessionButton:SetPoint("TOPRIGHT", trackProfessionButton, "TOPLEFT", -38, 0)
 		untrackProfessionButton:SetFrameStrata("HIGH")
 		untrackProfessionButton:SetScript("OnClick", function()
 			pslUntrackRecipe(pslSelectedRecipeID, 1)
@@ -1463,7 +1500,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 						-- Untrack the recipe
 						if IsControlKeyDown() == true then
-							pslUntrackRecipe(selectedRecipeID, data[realrow][2])
+							pslUntrackRecipe(selectedRecipeID, 0)
 						else
 							pslUntrackRecipe(selectedRecipeID, 1)
 						end
@@ -1535,6 +1572,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				trackProfessionButton:Enable()
 				trackPlaceOrderButton:Enable()
 				trackMakeOrderButton:Enable()
+				ebRecipeQuantity:Enable()
 			end
 
 			-- 2 = Salvage | Disable these, cause they shouldn't be tracked
@@ -1545,6 +1583,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				untrackPlaceOrderButton:Disable()
 				trackMakeOrderButton:Disable()
 				untrackMakeOrderButton:Disable()
+				ebRecipeQuantity:Disable()
 			end
 
 			-- 3 = Enchant
@@ -1552,6 +1591,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				trackProfessionButton:Enable()
 				trackPlaceOrderButton:Enable()
 				trackMakeOrderButton:Enable()
+				ebRecipeQuantity:Enable()
 			end
 
 			-- 4 = Recraft
@@ -1562,6 +1602,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				untrackPlaceOrderButton:Disable()
 				trackMakeOrderButton:Disable()
 				untrackMakeOrderButton:Disable()
+				ebRecipeQuantity:Disable()
 			end
 			
 			-- Except that doesn't work, it just returns 1 >,> | Disable these, cause they shouldn't be tracked
@@ -1580,6 +1621,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				untrackPlaceOrderButton:Disable()
 				trackMakeOrderButton:Disable()
 				untrackMakeOrderButton:Disable()
+				ebRecipeQuantity:Disable()
 			end
 
 			-- Check if recipe is tracked
@@ -1594,6 +1636,12 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end
 		end
 		checkRemoveButton()
+
+		-- Update the quantity textbox
+		if ebRecipeQuantityNo ~= nil then
+			ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID] or 0
+			ebRecipeQuantity:SetText(ebRecipeQuantityNo)
+		end
 
 		local function professionFeatures()
 			-- Show stuff depending on which profession is opened
