@@ -1809,7 +1809,28 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					if treasureStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
 				end
 
-				-- If links missing, try again -- Hope this goes well with the new links x.x
+				-- Artisan books
+				local _, _, artisanReputation = GetFactionInfoByID(2544) or 0	-- 2: Preferred, 4: Valued, 5: Esteemed
+
+				local bookStatus1 = READY_CHECK_WAITING_TEXTURE
+				local bookStatus2 = READY_CHECK_WAITING_TEXTURE
+				local bookStatus3 = READY_CHECK_WAITING_TEXTURE
+
+				if artisanReputation >= 2 then bookStatus1 = READY_CHECK_NOT_READY_TEXTURE end
+				if artisanReputation >= 4 and books[2].questID ~= 0 then bookStatus2 = READY_CHECK_NOT_READY_TEXTURE end	-- Temp if questID
+				if artisanReputation >= 5 and books[3].questID ~= 0 then bookStatus3 = READY_CHECK_NOT_READY_TEXTURE end	-- Temp if questID
+
+				if C_QuestLog.IsQuestFlaggedCompleted(books[1].questID) == true then bookStatus1 = READY_CHECK_READY_TEXTURE end
+				if books[2].questID ~= 0 then	-- Temp if questID
+					if C_QuestLog.IsQuestFlaggedCompleted(books[2].questID) == true then bookStatus2 = READY_CHECK_READY_TEXTURE end
+				end
+				if books[3].questID ~= 0 then	-- Temp if questID
+					if C_QuestLog.IsQuestFlaggedCompleted(books[3].questID) == true then bookStatus3 = READY_CHECK_READY_TEXTURE end
+				end
+
+				if bookStatus1 == READY_CHECK_NOT_READY_TEXTURE or bookStatus2 == READY_CHECK_NOT_READY_TEXTURE or bookStatus3 == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+
+				-- If links missing, try again
 				if shardItemLink == nil or treatiseItemLink == nil then
 					RunNextFrame(kpTooltip)
 					do return end
@@ -1910,6 +1931,13 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				end
 
 				oldText = knowledgePointTooltipText:GetText()
+				local _, itemLink1 = GetItemInfo(books[1].itemID)
+				local _, itemLink2 = GetItemInfo(books[2].itemID)
+				local _, itemLink3 = GetItemInfo(books[3].itemID)
+
+				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..bookStatus1..":0|t "..itemLink1.."\n".."|T"..bookStatus2..":0|t "..itemLink2.."\n".."|T"..bookStatus3..":0|t "..itemLink3)
+				
+				oldText = knowledgePointTooltipText:GetText()
 				if IsModifierKeyDown() == false then knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000Hold Alt, Ctrl, or Shift to show details.") end
 
 				-- Set the tooltip size to fit its contents
@@ -1968,6 +1996,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70313] = 201004
 				treasures[70314] = 201011
 				treasures[70353] = 201009
+				books[1] = {questID = 71894, itemID = 200972}
+				books[2] = {questID = 0, itemID = 201268}
+				books[3] = {questID = 0, itemID = 201279}
 			end
 
 			-- Leatherworking
@@ -1991,6 +2022,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70294] = 198690
 				treasures[70300] = 198696
 				treasures[70308] = 198711
+				books[1] = {questID = 71900, itemID = 200979}
+				books[2] = {questID = 0, itemID = 201275}
+				books[3] = {questID = 0, itemID = 201286}
 			end
 
 			-- Alchemy
@@ -2014,6 +2048,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70301] = 198697
 				treasures[70305] = 198710
 				treasures[70309] = 198712
+				books[1] = {questID = 71893, itemID = 200974}
+				books[2] = {questID = 0, itemID = 201270}
+				books[3] = {questID = 0, itemID = 201281}
 			end
 
 			-- Herbalism
@@ -2032,6 +2069,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[5] = {questID = 71861, itemID = 200677, source = "Herbs"}
 				drops[6] = {questID = 71864, itemID = 200678, source = "Herbs"}
 				treasures = nil
+				books[1] = {questID = 71897, itemID = 200980}
+				books[2] = {questID = 0, itemID = 201276}
+				books[3] = {questID = 0, itemID = 201287}
 			end
 
 			-- Cooking
@@ -2057,6 +2097,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[5] = {questID = 72164, itemID = 201300, source = "Deposits"}
 				drops[6] = {questID = 72165, itemID = 201301, source = "Deposits"}
 				treasures = nil
+				books[1] = {questID = 71901, itemID = 200981}
+				books[2] = {questID = 0, itemID = 201277}
+				books[3] = {questID = 0, itemID = 201288}
 			end
 
 			-- Tailoring
@@ -2081,6 +2124,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70303] = 201020
 				treasures[70304] = 198702
 				treasures[70372] = 201019
+				books[1] = {questID = 71903, itemID = 200975}
+				books[2] = {questID = 0, itemID = 201271}
+				books[3] = {questID = 0, itemID = 201282}
 			end
 
 			-- Engineering
@@ -2099,6 +2145,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures = {}
 				treasures[70270] = 201014
 				treasures[70275] = 198789
+				books[1] = {questID = 71896, itemID = 200977}
+				books[2] = {questID = 0, itemID = 201273}
+				books[3] = {questID = 0, itemID = 201284}
 			end
 
 			-- Enchanting
@@ -2123,6 +2172,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70320] = 198798
 				treasures[70336] = 198799
 				treasures[70342] = 198800
+				books[1] = {questID = 71895, itemID = 200976}
+				books[2] = {questID = 0, itemID = 201272}
+				books[3] = {questID = 0, itemID = 201283}
 			end
 
 			-- Skinning
@@ -2141,6 +2193,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[5] = {questID = 70386, itemID = 198837, source = "Skinning"}
 				drops[6] = {questID = 70389, itemID = 198841, source = "Skinning"}
 				treasures = nil
+				books[1] = {questID = 71902, itemID = 200982}
+				books[2] = {questID = 0, itemID = 201278}
+				books[3] = {questID = 0, itemID = 201289}
 			end
 
 			-- Jewelcrafting
@@ -2165,6 +2220,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70263] = 198660
 				treasures[70261] = 198656
 				treasures[70285] = 198682
+				books[1] = {questID = 71899, itemID = 200978}
+				books[2] = {questID = 0, itemID = 201274}
+				books[3] = {questID = 0, itemID = 201285}
 			end
 
 			-- Inscription
@@ -2189,6 +2247,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70297] = 198693
 				treasures[70306] = 198704
 				treasures[70307] = 198703
+				books[1] = {questID = 71898, itemID = 200973}
+				books[2] = {questID = 0, itemID = 201269}
+				books[3] = {questID = 0, itemID = 201280}
 			end
 
 			-- Professions with Knowledge Points
