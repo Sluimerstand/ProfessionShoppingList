@@ -1035,18 +1035,18 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						GameTooltip:SetHyperlink(celldata)
 						GameTooltip:Show()
 					end
-				end
+				end,
 				["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
 					GameTooltip:ClearLines()
 					GameTooltip:Hide()
-				end
+				end,
 				["OnMouseDown"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
 					if button == "LeftButton" then
 						pslFrame1:StartMoving()
 						GameTooltip:ClearLines()
 						GameTooltip:Hide()
 					end
-				end
+				end,
 				["OnMouseUp"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
 					pslFrame1:StopMovingOrSizing()
 
@@ -1057,7 +1057,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						GameTooltip:SetHyperlink(celldata)
 						GameTooltip:Show()
 					end
-				end
+				end,
 				["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
 					-- Control+click on reagent
 					if column == 1 and button == "LeftButton" and IsControlKeyDown() == true and realrow ~= nil then
@@ -1434,7 +1434,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					elseif column == 1 and button == "LeftButton" and IsShiftKeyDown() == true and realrow ~= nil then
 						ChatEdit_InsertLink(data[realrow][1])
 					end
-				end
+				end,
 			})
 
 			-- Recipes window
@@ -1447,11 +1447,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						GameTooltip:SetHyperlink(celldata)
 						GameTooltip:Show()
 					end
-				end
+				end,
 				["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
 					GameTooltip:ClearLines()
 					GameTooltip:Hide()
-				end
+				end,
 				["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
 					-- Right-click on recipe amount
 					if column == 2 and button == "RightButton" and row ~= nil and realrow ~= nil then
@@ -1493,14 +1493,14 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 							if selectedRecipeID ~= 0 and C_TradeSkillUI.IsRecipeProfessionLearned(selectedRecipeID) == true then C_TradeSkillUI.OpenRecipe(selectedRecipeID) end
 						end
 					end
-				end
+				end,
 				["OnMouseDown"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
 					if button == "LeftButton" then
 						pslFrame2:StartMoving()
 						GameTooltip:ClearLines()
 						GameTooltip:Hide()
 					end
-				end
+				end,
 				["OnMouseUp"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
 					pslFrame2:StopMovingOrSizing()
 
@@ -1511,7 +1511,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						GameTooltip:SetHyperlink(celldata)
 						GameTooltip:Show()
 					end
-				end
+				end,
 			})
 		end
 		pslWindowFunctions()
@@ -1687,7 +1687,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				-- Treatise
 				local treatiseStatus = READY_CHECK_NOT_READY_TEXTURE
 				local treatiseNumber = 0
-				local derp, treatiseItemLink = GetItemInfo(treatiseItem)	-- TODO: Check if derp can be replaced with _ or not
+				local _, treatiseItemLink = GetItemInfo(treatiseItem)
 
 				if treatiseQuest ~= nil then
 					if C_QuestLog.IsQuestFlaggedCompleted(treatiseQuest) then
@@ -1766,13 +1766,13 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				local shardStatus = READY_CHECK_NOT_READY_TEXTURE
 				local shardNo = 0
 
-				for no, questID in pairs (shardQuests) do	-- TODO: See if no can be replaced with _
+				for _, questID in pairs (shardQuests) do
 					if C_QuestLog.IsQuestFlaggedCompleted(questID) then
 						shardNo = shardNo + 1
 					end
 				end
 
-				local derp, shardItemLink = GetItemInfo(191784)
+				local _, shardItemLink = GetItemInfo(191784)
 
 				if shardNo == 4 then shardStatus = READY_CHECK_READY_TEXTURE end
 
@@ -1810,7 +1810,8 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				end
 
 				-- Artisan books
-				local _, _, artisanReputation = GetFactionInfoByID(2544) or 0	-- 2: Preferred, 4: Valued, 5: Esteemed
+				local _, _, artisanReputation = GetFactionInfoByID(2544)	-- 2: Preferred, 4: Valued, 5: Esteemed
+				if not artisanReputation then artisanReputation = 0 end
 
 				local bookStatus1 = READY_CHECK_WAITING_TEXTURE
 				local bookStatus2 = READY_CHECK_WAITING_TEXTURE
@@ -1864,7 +1865,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					if IsModifierKeyDown() == true then
 						for _, dropInfo in ipairs (drops) do
 							oldText = knowledgePointTooltipText:GetText()
-							local derp, itemLink = GetItemInfo(dropInfo.itemID)
+							local _, itemLink = GetItemInfo(dropInfo.itemID)
 		
 							-- If links missing, try again
 							if itemLink == nil then
@@ -1913,7 +1914,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					if IsModifierKeyDown() == true then
 						for questID, itemID in pairs (treasures) do
 							oldText = knowledgePointTooltipText:GetText()
-							local derp, itemLink = GetItemInfo(itemID)
+							local _, itemLink = GetItemInfo(itemID)
 		
 							-- If links missing, try again
 							if itemLink == nil then
@@ -1934,6 +1935,12 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				local _, itemLink1 = GetItemInfo(books[1].itemID)
 				local _, itemLink2 = GetItemInfo(books[2].itemID)
 				local _, itemLink3 = GetItemInfo(books[3].itemID)
+
+				-- If links missing, try again
+				if itemLink1 == nil or itemLink2 == nil or itemLink3 == nil then
+					RunNextFrame(kpTooltip)
+					do return end
+				end
 
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..bookStatus1..":0|t "..itemLink1.."\n".."|T"..bookStatus2..":0|t "..itemLink2.."\n".."|T"..bookStatus3..":0|t "..itemLink3)
 				
@@ -1996,6 +2003,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70313] = 201004
 				treasures[70314] = 201011
 				treasures[70353] = 201009
+				books = {}
 				books[1] = {questID = 71894, itemID = 200972}
 				books[2] = {questID = 0, itemID = 201268}
 				books[3] = {questID = 0, itemID = 201279}
@@ -2022,6 +2030,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70294] = 198690
 				treasures[70300] = 198696
 				treasures[70308] = 198711
+				books = {}
 				books[1] = {questID = 71900, itemID = 200979}
 				books[2] = {questID = 0, itemID = 201275}
 				books[3] = {questID = 0, itemID = 201286}
@@ -2048,6 +2057,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70301] = 198697
 				treasures[70305] = 198710
 				treasures[70309] = 198712
+				books = {}
 				books[1] = {questID = 71893, itemID = 200974}
 				books[2] = {questID = 0, itemID = 201270}
 				books[3] = {questID = 0, itemID = 201281}
@@ -2069,6 +2079,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[5] = {questID = 71861, itemID = 200677, source = "Herbs"}
 				drops[6] = {questID = 71864, itemID = 200678, source = "Herbs"}
 				treasures = nil
+				books = {}
 				books[1] = {questID = 71897, itemID = 200980}
 				books[2] = {questID = 0, itemID = 201276}
 				books[3] = {questID = 0, itemID = 201287}
@@ -2097,6 +2108,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[5] = {questID = 72164, itemID = 201300, source = "Deposits"}
 				drops[6] = {questID = 72165, itemID = 201301, source = "Deposits"}
 				treasures = nil
+				books = {}
 				books[1] = {questID = 71901, itemID = 200981}
 				books[2] = {questID = 0, itemID = 201277}
 				books[3] = {questID = 0, itemID = 201288}
@@ -2124,6 +2136,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70303] = 201020
 				treasures[70304] = 198702
 				treasures[70372] = 201019
+				books = {}
 				books[1] = {questID = 71903, itemID = 200975}
 				books[2] = {questID = 0, itemID = 201271}
 				books[3] = {questID = 0, itemID = 201282}
@@ -2145,6 +2158,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures = {}
 				treasures[70270] = 201014
 				treasures[70275] = 198789
+				books = {}
 				books[1] = {questID = 71896, itemID = 200977}
 				books[2] = {questID = 0, itemID = 201273}
 				books[3] = {questID = 0, itemID = 201284}
@@ -2172,6 +2186,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70320] = 198798
 				treasures[70336] = 198799
 				treasures[70342] = 198800
+				books = {}
 				books[1] = {questID = 71895, itemID = 200976}
 				books[2] = {questID = 0, itemID = 201272}
 				books[3] = {questID = 0, itemID = 201283}
@@ -2193,6 +2208,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[5] = {questID = 70386, itemID = 198837, source = "Skinning"}
 				drops[6] = {questID = 70389, itemID = 198841, source = "Skinning"}
 				treasures = nil
+				books = {}
 				books[1] = {questID = 71902, itemID = 200982}
 				books[2] = {questID = 0, itemID = 201278}
 				books[3] = {questID = 0, itemID = 201289}
@@ -2220,6 +2236,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70263] = 198660
 				treasures[70261] = 198656
 				treasures[70285] = 198682
+				books = {}
 				books[1] = {questID = 71899, itemID = 200978}
 				books[2] = {questID = 0, itemID = 201274}
 				books[3] = {questID = 0, itemID = 201285}
@@ -2247,6 +2264,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70297] = 198693
 				treasures[70306] = 198704
 				treasures[70307] = 198703
+				books = {}
 				books[1] = {questID = 71898, itemID = 200973}
 				books[2] = {questID = 0, itemID = 201269}
 				books[3] = {questID = 0, itemID = 201280}
