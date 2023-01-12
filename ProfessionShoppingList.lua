@@ -1852,9 +1852,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 							end
 		
 							if C_QuestLog.IsQuestFlaggedCompleted(dropInfo.questID) then
-								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_READY_TEXTURE..":0|t "..itemLink)
+								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_READY_TEXTURE..":0|t "..itemLink.." - "..dropInfo.source)
 							else
-								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_NOT_READY_TEXTURE..":0|t "..itemLink)
+								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_NOT_READY_TEXTURE..":0|t "..itemLink.." - "..dropInfo.source)
 							end
 						end
 					end
@@ -1937,12 +1937,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				knowledgePointTracker:SetPropagateKeyboardInput(true)
 			end)
 
-			-- Refresh the tooltip on key down (to check for IsModifierKeyDown)
+			-- Refresh the tooltip on key down/up (to check for IsModifierKeyDown)
 			knowledgePointTracker:SetScript("OnKeyDown", function()
 				kpTooltip()
 			end)
-
-			-- Refresh the tooltip on key up (to check for IsModifierKeyDown)
 			knowledgePointTracker:SetScript("OnKeyUp", function()
 				kpTooltip()
 			end)
@@ -1956,10 +1954,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				craftQuests = {70211, 70233, 70234, 70235}
 				hiddenMaster = 70250
 				drops = {}
-				drops[1] = {questID = 66381, itemID = 192131}
-				drops[2] = {questID = 66382, itemID = 192132}
-				drops[3] = {questID = 70512, itemID = 198965}
-				drops[4] = {questID = 70513, itemID = 198966}
+				drops[1] = {questID = 66381, itemID = 192131, source = "Treasures"}
+				drops[2] = {questID = 66382, itemID = 192132, source = "Treasures"}
+				drops[3] = {questID = 70512, itemID = 198965, source = "Mobs: Earth"}
+				drops[4] = {questID = 70513, itemID = 198966, source = "Mobs: Fire"}
 				treasures = {}
 				treasures[70230] = 198791
 				treasures[70246] = 201007
@@ -1981,10 +1979,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				craftQuests = {70567, 70568, 70569, 70571}
 				hiddenMaster = 70256
 				drops = {}
-				drops[1] = {questID = 66384, itemID = 193910}
-				drops[2] = {questID = 66385, itemID = 193913}
-				drops[3] = {questID = 70522, itemID = 198975}
-				drops[4] = {questID = 70523, itemID = 198976}
+				drops[1] = {questID = 66384, itemID = 193910, source = "Treasures"}
+				drops[2] = {questID = 66385, itemID = 193913, source = "Treasures"}
+				drops[3] = {questID = 70522, itemID = 198975, source = "Mobs"}
+				drops[4] = {questID = 70523, itemID = 198976, source = "Mobs"}
 				treasures = {}
 				treasures[70266] = 198658
 				treasures[70269] = 201018
@@ -2004,10 +2002,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				craftQuests = {70530, 70531, 70532, 70533}
 				hiddenMaster = 70247
 				drops = {}
-				drops[1] = {questID = 66373, itemID = 193891}
-				drops[2] = {questID = 66374, itemID = 193897}
-				drops[3] = {questID = 70504, itemID = 198963}
-				drops[4] = {questID = 70511, itemID = 198964}
+				drops[1] = {questID = 66373, itemID = 193891, source = "Treasures"}
+				drops[2] = {questID = 66374, itemID = 193897, source = "Treasures"}
+				drops[3] = {questID = 70504, itemID = 198963, source = "Mobs: Decay"}
+				drops[4] = {questID = 70511, itemID = 198964, source = "Mobs: Elemental"}
 				treasures = {}
 				treasures[70208] = 198599
 				treasures[70274] = 198663
@@ -2027,12 +2025,12 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				craftQuests = nil
 				hiddenMaster = 70253
 				drops = {}
-				drops[1] = {questID = 71857, itemID = 200677}
-				drops[2] = {questID = 71858, itemID = 200677}
-				drops[3] = {questID = 71859, itemID = 200677}
-				drops[4] = {questID = 71860, itemID = 200677}
-				drops[5] = {questID = 71861, itemID = 200677}
-				drops[6] = {questID = 71864, itemID = 200678}
+				drops[1] = {questID = 71857, itemID = 200677, source = "Herbs"}
+				drops[2] = {questID = 71858, itemID = 200677, source = "Herbs"}
+				drops[3] = {questID = 71859, itemID = 200677, source = "Herbs"}
+				drops[4] = {questID = 71860, itemID = 200677, source = "Herbs"}
+				drops[5] = {questID = 71861, itemID = 200677, source = "Herbs"}
+				drops[6] = {questID = 71864, itemID = 200678, source = "Herbs"}
 				treasures = nil
 			end
 
@@ -2052,12 +2050,12 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				craftQuests = nil
 				hiddenMaster = 70258
 				drops = {}
-				drops[1] = {questID = 72160, itemID = 201300}
-				drops[2] = {questID = 72161, itemID = 201300}
-				drops[3] = {questID = 72162, itemID = 201300}
-				drops[4] = {questID = 72163, itemID = 201300}
-				drops[5] = {questID = 72164, itemID = 201300}
-				drops[6] = {questID = 72165, itemID = 201301}
+				drops[1] = {questID = 72160, itemID = 201300, source = "Deposits"}
+				drops[2] = {questID = 72161, itemID = 201300, source = "Deposits"}
+				drops[3] = {questID = 72162, itemID = 201300, source = "Deposits"}
+				drops[4] = {questID = 72163, itemID = 201300, source = "Deposits"}
+				drops[5] = {questID = 72164, itemID = 201300, source = "Deposits"}
+				drops[6] = {questID = 72165, itemID = 201301, source = "Deposits"}
 				treasures = nil
 			end
 
@@ -2070,10 +2068,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				craftQuests = {70572, 70582, 70586, 70587}
 				hiddenMaster = 70260
 				drops = {}
-				drops[1] = {questID = 66386, itemID = 193898}
-				drops[2] = {questID = 66387, itemID = 193899}
-				drops[3] = {questID = 70524, itemID = 198977}
-				drops[4] = {questID = 70525, itemID = 198978}
+				drops[1] = {questID = 66386, itemID = 193898, source = "Treasures"}
+				drops[2] = {questID = 66387, itemID = 193899, source = "Treasures"}
+				drops[3] = {questID = 70524, itemID = 198977, source = "Mobs: Centaur"}
+				drops[4] = {questID = 70525, itemID = 198978, source = "Mobs: Gnoll"}
 				treasures = {}
 				treasures[70267] = 198662
 				treasures[70284] = 198680
@@ -2094,10 +2092,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				craftQuests = {70539, 70540, 70545, 70557}
 				hiddenMaster = 70252
 				drops = {}
-				drops[1] = {questID = 66379, itemID = 193902}
-				drops[2] = {questID = 66380, itemID = 193903}
-				drops[3] = {questID = 70516, itemID = 198969}
-				drops[4] = {questID = 70517, itemID = 198970}
+				drops[1] = {questID = 66379, itemID = 193902, source = "Treasures"}
+				drops[2] = {questID = 66380, itemID = 193903, source = "Treasures"}
+				drops[3] = {questID = 70516, itemID = 198969, source = "Mobs: Keeper"}
+				drops[4] = {questID = 70517, itemID = 198970, source = "Mobs: Dragonkin"}
 				treasures = {}
 				treasures[70270] = 201014
 				treasures[70275] = 198789
@@ -2112,10 +2110,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				craftQuests = {72155, 72172, 72173, 72175}
 				hiddenMaster = 70251
 				drops = {}
-				drops[1] = {questID = 66377, itemID = 193900}
-				drops[2] = {questID = 66378, itemID = 193901}
-				drops[3] = {questID = 70514, itemID = 198967}
-				drops[4] = {questID = 70515, itemID = 198968}
+				drops[1] = {questID = 66377, itemID = 193900, source = "Treasures"}
+				drops[2] = {questID = 66378, itemID = 193901, source = "Treasures"}
+				drops[3] = {questID = 70514, itemID = 198967, source = "Mobs: Arcane"}
+				drops[4] = {questID = 70515, itemID = 198968, source = "Mobs: Primalist"}
 				treasures = {}
 				treasures[70272] = 201012
 				treasures[70283] = 198675
@@ -2136,12 +2134,12 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				craftQuests = nil
 				hiddenMaster = 70259
 				drops = {}
-				drops[1] = {questID = 70381, itemID = 198837}
-				drops[2] = {questID = 70383, itemID = 198837}
-				drops[3] = {questID = 70384, itemID = 198837}
-				drops[4] = {questID = 70385, itemID = 198837}
-				drops[5] = {questID = 70386, itemID = 198837}
-				drops[6] = {questID = 70389, itemID = 198841}
+				drops[1] = {questID = 70381, itemID = 198837, source = "Skinning"}
+				drops[2] = {questID = 70383, itemID = 198837, source = "Skinning"}
+				drops[3] = {questID = 70384, itemID = 198837, source = "Skinning"}
+				drops[4] = {questID = 70385, itemID = 198837, source = "Skinning"}
+				drops[5] = {questID = 70386, itemID = 198837, source = "Skinning"}
+				drops[6] = {questID = 70389, itemID = 198841, source = "Skinning"}
 				treasures = nil
 			end
 
@@ -2154,10 +2152,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				craftQuests = {70562, 70563, 70564, 70565}
 				hiddenMaster = 70255
 				drops = {}
-				drops[1] = {questID = 66388, itemID = 193909}
-				drops[2] = {questID = 66389, itemID = 193907}
-				drops[3] = {questID = 70520, itemID = 198973}
-				drops[4] = {questID = 70521, itemID = 198974}
+				drops[1] = {questID = 66388, itemID = 193909, source = "Treasures"}
+				drops[2] = {questID = 66389, itemID = 193907, source = "Treasures"}
+				drops[3] = {questID = 70520, itemID = 198973, source = "Mobs: Elemental"}
+				drops[4] = {questID = 70521, itemID = 198974, source = "Mobs: Dragonkin"}
 				treasures = {}
 				treasures[70273] = 201017
 				treasures[70292] = 198687
@@ -2178,10 +2176,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				craftQuests = {70558, 70559, 70560, 70561}
 				hiddenMaster = 70254
 				drops = {}
-				drops[1] = {questID = 66375, itemID = 193904}
-				drops[2] = {questID = 66376, itemID = 193905}
-				drops[3] = {questID = 70518, itemID = 198971}
-				drops[4] = {questID = 70519, itemID = 198972}
+				drops[1] = {questID = 66375, itemID = 193904, source = "Treasures"}
+				drops[2] = {questID = 66376, itemID = 193905, source = "Treasures"}
+				drops[3] = {questID = 70518, itemID = 198971, source = "Mobs: Djaradin"}
+				drops[4] = {questID = 70519, itemID = 198972, source = "Mobs: Dragonkin"}
 				treasures = {}
 				treasures[70248] = 198659
 				treasures[70264] = 198659
