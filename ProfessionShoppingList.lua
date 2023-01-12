@@ -599,10 +599,10 @@ function pslTooltipInfo()
 		-- Get itemID
 		local itemID = GetItemInfoFromHyperlink(link)
 
-		-- Try again if error
+		-- Stop if error, it will try again on its own REAL soon
 		if itemID == nil then return end
 
-		-- Get item amounts
+		-- Get owned number of reagents
 		local reagentID1
 		local reagentID2
 		local reagentID3
@@ -610,7 +610,6 @@ function pslTooltipInfo()
 		local reagentAmountHave2 = 0
 		local reagentAmountHave3 = 0
 	
-		-- Get needed/owned number of reagents
 		if reagentTiers[itemID] and reagentTiers[itemID].one ~= 0 then
 			reagentID1 = reagentTiers[itemID].one
 			reagentAmountHave1 = GetItemCount(reagentTiers[itemID].one, true, false, true)
@@ -624,46 +623,24 @@ function pslTooltipInfo()
 			reagentAmountHave3 = GetItemCount(reagentTiers[itemID].three, true, false, true)
 		end
 
-		-- Calculate owned amount based on user setting for reagent quality
+		-- Calculate owned amount/needed based on item quality
 		local reagentAmountHave = 0
-		if userSettings["reagentQuality"] == 1 then
-			reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
-		elseif userSettings["reagentQuality"] == 2  then
-			reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
-		elseif userSettings["reagentQuality"] == 3 then
-			reagentAmountHave = reagentAmountHave3
-		end
-
 		local reagentAmountNeed = 0
-		if userSettings["reagentQuality"] == 1 then
+		if itemID == reagentID1 then
+			reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
 			reagentAmountNeed = reagentsTracked[reagentID1]
-		end
-		if userSettings["reagentQuality"] == 2 then
+		elseif itemID == reagentID2 then
+			reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
 			reagentAmountNeed = reagentsTracked[reagentID2]
-		end
-		if userSettings["reagentQuality"] == 3 then
+		elseif itemID == reagentID3 then
+			reagentAmountHave = reagentAmountHave3
 			reagentAmountNeed = reagentsTracked[reagentID3]
 		end
 
-		-- Tooltip info
-		local function pslTooltipLines()
+		-- Add the tooltip info
+		if userSettings["showTooltip"] == true and (itemID == reagentID1 or itemID == reagentID2 or itemID == reagentID3) then
 			tooltip:AddLine(" ")
 			tooltip:AddLine("PSL: "..reagentAmountHave.."/"..reagentAmountNeed.." ("..math.max(0,reagentAmountNeed-reagentAmountHave).." more needed)")
-		end
-
-		-- Add the tooltip info
-		if userSettings["showTooltip"] == true then
-			if userSettings["reagentQuality"] == 1 and (reagentID1 == itemID or reagentID2 == itemID or reagentID3 == itemID) then
-				pslTooltipLines()
-			elseif userSettings["reagentQuality"] == 2 and reagentID2 ~= 0 and (reagentID2 == itemID or reagentID3 == itemID) then
-				pslTooltipLines()
-			elseif userSettings["reagentQuality"] == 2 and reagentID2 == 0 and (reagentID1 == itemID) then
-				pslTooltipLines()
-			elseif userSettings["reagentQuality"] == 3 and reagentID3 ~= 0 and (reagentID3 == itemID) then
-				pslTooltipLines()
-			elseif userSettings["reagentQuality"] == 3 and reagentID3 == 0 and (reagentID1 == itemID) then
-				pslTooltipLines()
-			end
 		end
 	end
 
@@ -1059,14 +1036,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						GameTooltip:Show()
 					end
 				end
-			})
-			table1:RegisterEvents({
 				["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
 					GameTooltip:ClearLines()
 					GameTooltip:Hide()
 				end
-			})
-			table1:RegisterEvents({
 				["OnMouseDown"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
 					if button == "LeftButton" then
 						pslFrame1:StartMoving()
@@ -1074,8 +1047,6 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						GameTooltip:Hide()
 					end
 				end
-			})
-			table1:RegisterEvents({
 				["OnMouseUp"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
 					pslFrame1:StopMovingOrSizing()
 
@@ -1087,8 +1058,6 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						GameTooltip:Show()
 					end
 				end
-			})
-			table1:RegisterEvents({
 				["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
 					-- Control+click on reagent
 					if column == 1 and button == "LeftButton" and IsControlKeyDown() == true and realrow ~= nil then
@@ -1479,14 +1448,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						GameTooltip:Show()
 					end
 				end
-			})
-			table2:RegisterEvents({
 				["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
 					GameTooltip:ClearLines()
 					GameTooltip:Hide()
 				end
-			})
-			table2:RegisterEvents({
 				["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
 					-- Right-click on recipe amount
 					if column == 2 and button == "RightButton" and row ~= nil and realrow ~= nil then
@@ -1529,8 +1494,6 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						end
 					end
 				end
-			})
-			table2:RegisterEvents({
 				["OnMouseDown"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
 					if button == "LeftButton" then
 						pslFrame2:StartMoving()
@@ -1538,8 +1501,6 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						GameTooltip:Hide()
 					end
 				end
-			})
-			table2:RegisterEvents({
 				["OnMouseUp"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
 					pslFrame2:StopMovingOrSizing()
 
@@ -1634,14 +1595,14 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				untrackPlaceOrderButton:Enable()
 				untrackMakeOrderButton:Enable()
 			end
+
+			-- Update the quantity textbox
+			if ebRecipeQuantityNo ~= nil then
+				ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID] or 0
+				ebRecipeQuantity:SetText(ebRecipeQuantityNo)
+			end
 		end
 		checkRemoveButton()
-
-		-- Update the quantity textbox
-		if ebRecipeQuantityNo ~= nil then
-			ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID] or 0
-			ebRecipeQuantity:SetText(ebRecipeQuantityNo)
-		end
 
 		local function professionFeatures()
 			-- Show stuff depending on which profession is opened
