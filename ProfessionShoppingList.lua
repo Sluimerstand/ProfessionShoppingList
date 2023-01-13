@@ -15,6 +15,7 @@ api:RegisterEvent("MERCHANT_SHOW")
 api:RegisterEvent("CRAFTINGORDERS_CLAIM_ORDER_RESPONSE")
 api:RegisterEvent("CRAFTINGORDERS_RELEASE_ORDER_RESPONSE")
 api:RegisterEvent("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE")
+api:RegisterEvent("TRACKED_RECIPE_UPDATE")
 
 -- Might as well keep this in here, it's useful
 local function dump(o)
@@ -384,7 +385,8 @@ function pslUntrackRecipe(recipeID, recipeQuantity)
 	end
 
 	-- Clear the cache if no recipes are tracked anymore
-	if #recipesTracked == 0 then pslClear() end
+	local next = next
+	if next(recipesTracked) == nil then pslClear() end
 
 	-- Update numbers
 	pslReagents()
@@ -2320,14 +2322,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			-- Remove 1 tracked recipe when it has been crafted (if the option is enabled)
 			pslUntrackRecipe(spellID, 1)
 			
-			-- Clear the cache if no recipes are tracked anymore
-			if #recipesTracked == 0 then
-				pslClear()
-				-- Close windows if no recipes are left and the option is enabled
-				if userSettings["closeWhenDone"] == true then
-					pslFrame1:Hide()
-					pslFrame2:Hide()
-				end
+			-- Close windows if no recipes are left and the option is enabled
+			local next = next
+			if next(recipesTracked) == nil then
+				pslFrame1:Hide()
+				pslFrame2:Hide()
 			end
 		end
 	end
@@ -2353,5 +2352,12 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	-- Revert the above if the order is cancelled or fulfilled, since then SPELL_LOAD_RESULT fires again for it
 	if event == "CRAFTINGORDERS_RELEASE_ORDER_RESPONSE" or event == "CRAFTINGORDERS_FULFILL_ORDER_RESPONSE" then
 		pslOrderRecipeID = 0
+	end
+
+	if event == "TRACKED_RECIPE_UPDATE" then
+		if arg2 == true then
+			pslTrackRecipe(arg1,1)
+			C_TradeSkillUI.SetRecipeTracked(arg1, false)
+		end
 	end
 end)
