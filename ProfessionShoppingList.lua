@@ -383,6 +383,9 @@ function pslUntrackRecipe(recipeID, recipeQuantity)
 		end
 	end
 
+	-- Clear the cache if no recipes are tracked anymore
+	if #recipesTracked == 0 then pslClear() end
+
 	-- Update numbers
 	pslReagents()
 end
@@ -649,9 +652,842 @@ function pslTooltipInfo()
 	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnTooltipSetItem)
 end
 
+-- Clear everything except the recipe cache
+function pslClear()
+	recipesTracked = {}
+	reagentsTracked = {}
+	recipeLinks = {}
+	reagentTiers = {}
+	pslReagents()
+
+	-- Disable remove button
+	untrackProfessionButton:Disable()
+	untrackPlaceOrderButton:Disable()
+	untrackMakeOrderButton:Disable()
+
+	-- Remove old version variables
+	reagentNumbers = nil
+	reagentLinks = nil
+end
+
 -- Open settings
 function pslOpenSettings()
 	InterfaceOptionsFrame_OpenToCategory("Profession Shopping List")
+end
+
+-- Settings and minimap icon
+function pslSettings()
+	-- Initialise the Settings page so the Minimap button can go there
+	local settings = CreateFrame("Frame")			
+	settings.name = "Profession Shopping List"
+	InterfaceOptions_AddCategory(settings)
+
+	-- Initialise the minimap button before the settings button is made, so it can toggle it
+	local miniButton = LibStub("LibDataBroker-1.1"):NewDataObject("ProfessionShoppingList", {
+		type = "data source",
+		text = "Profession Shopping List",
+		icon = "Interface\\AddOns\\ProfessionShoppingList\\assets\\psl_icon",
+		
+		OnClick = function(self, button)
+			if button == "LeftButton" then
+				-- Toggle tracking windows
+				if pslFrame1:IsShown() then
+					pslFrame1:Hide()
+					pslFrame2:Hide()
+				else
+					pslFrame1:Show()
+					pslFrame2:Show()
+				end
+				-- Only update numbers if numbers exist
+				if reagentsTracked then pslReagents() end
+			elseif button == "RightButton" then
+				pslOpenSettings()
+			end
+		end,
+		
+		OnTooltipShow = function(tooltip)
+			if not tooltip or not tooltip.AddLine then return end
+			tooltip:AddLine("|cffFFFFFFProfession Shopping List|R\n|cff9D9D9DLeft-click:|R Toggle the windows.\n|cff9D9D9DRight-click:|R Show the settings.")
+		end,
+	})
+						
+	local icon = LibStub("LibDBIcon-1.0", true)
+	icon:Register("ProfessionShoppingList", miniButton, userSettings)
+
+	if userSettings["hide"] == true then 
+		icon:Hide("ProfessionShoppingList")
+	else
+		icon:Show("ProfessionShoppingList")
+	end
+
+	-- Settings frame
+	local scrollFrame = CreateFrame("ScrollFrame", nil, settings, "UIPanelScrollFrameTemplate")
+	scrollFrame:SetPoint("TOPLEFT", 3, -4)
+	scrollFrame:SetPoint("BOTTOMRIGHT", -27, 4)
+
+	local scrollChild = CreateFrame("Frame")
+	scrollFrame:SetScrollChild(scrollChild)
+	scrollChild:SetWidth(SettingsPanel.Container.SettingsCanvas:GetWidth()-18)
+	scrollChild:SetHeight(1) 
+
+	-- Settings
+	local title = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormalLarge")
+	title:SetPoint("TOPLEFT", 10, -8)
+	title:SetText("Profession Shopping List")
+
+	-- Column 1
+	local cbMinimapButton = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbMinimapButton.Text:SetText("Minimap button")
+	cbMinimapButton.Text:SetTextColor(1, 1, 1, 1)
+	cbMinimapButton.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbMinimapButton:SetPoint("TOPLEFT", 10, -25)
+	cbMinimapButton:SetChecked(not userSettings["hide"])
+	cbMinimapButton:SetScript("OnClick", function(self)
+		userSettings["hide"] = not self:GetChecked()
+		if userSettings["hide"] == true then
+			icon:Hide("ProfessionShoppingList")
+		else
+			icon:Show("ProfessionShoppingList")
+		end
+	end)
+
+	local cbCloseWhenDoneCheck	-- Declare it here, so we can reference it for all the option dependencies
+
+	local cbRemoveCraft = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbRemoveCraft.Text:SetText("Untrack on crafting")
+	cbRemoveCraft.Text:SetTextColor(1, 1, 1, 1)
+	cbRemoveCraft.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbRemoveCraft:SetPoint("TOPLEFT", cbMinimapButton, "BOTTOMLEFT", 0, 0)
+	cbRemoveCraft:SetChecked(userSettings["removeCraft"])
+	cbRemoveCraft:SetScript("OnClick", function(self)
+		userSettings["removeCraft"] = cbRemoveCraft:GetChecked()
+		cbCloseWhenDoneCheck()
+	end)
+
+	local cbCloseWhenDone = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbCloseWhenDone.Text:SetText("Close windows when done")
+	cbCloseWhenDone.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbCloseWhenDone:SetPoint("TOPLEFT", cbRemoveCraft, "BOTTOMLEFT", 15, 0)
+	cbCloseWhenDone:SetChecked(userSettings["closeWhenDone"])
+	cbCloseWhenDone:SetScript("OnClick", function(self)
+		userSettings["closeWhenDone"] = cbCloseWhenDone:GetChecked()
+	end)
+
+	-- Disable this option when the dependency option is unchecked
+	cbCloseWhenDoneCheck = function()
+		if userSettings["removeCraft"] == true then
+			cbCloseWhenDone:Enable()
+			cbCloseWhenDone.Text:SetTextColor(1, 1, 1, 1)
+		else
+			cbCloseWhenDone:Disable()
+			cbCloseWhenDone.Text:SetTextColor(.62, .62, .62, 1)
+		end
+	end
+	cbCloseWhenDoneCheck()
+
+	local cbShowRemaining = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbShowRemaining.Text:SetText("Show remaining reagents, not total")
+	cbShowRemaining.Text:SetTextColor(1, 1, 1, 1)
+	cbShowRemaining.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbShowRemaining:SetPoint("TOPLEFT", cbCloseWhenDone, "BOTTOMLEFT", -15, 0)
+	cbShowRemaining:SetChecked(userSettings["showRemaining"])
+	cbShowRemaining:SetScript("OnClick", function(self)
+		userSettings["showRemaining"] = cbShowRemaining:GetChecked()
+		pslReagents()
+	end)
+
+	local cbShowTooltip = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbShowTooltip.Text:SetText("Show tooltip information")
+	cbShowTooltip.Text:SetTextColor(1, 1, 1, 1)
+	cbShowTooltip.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbShowTooltip:SetPoint("TOPLEFT", cbShowRemaining, "BOTTOMLEFT", 0, 0)
+	cbShowTooltip:SetChecked(userSettings["showTooltip"])
+	cbShowTooltip:SetScript("OnClick", function(self)
+		userSettings["showTooltip"] = cbShowTooltip:GetChecked()
+	end)
+
+	local cbShowKnowledgeNotPerks = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbShowKnowledgeNotPerks.Text:SetText("Show knowledge, not perks")
+	cbShowKnowledgeNotPerks.Text:SetTextColor(1, 1, 1, 1)
+	cbShowKnowledgeNotPerks.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbShowKnowledgeNotPerks:SetPoint("TOPLEFT", cbShowTooltip, "BOTTOMLEFT", 0, 0)
+	cbShowKnowledgeNotPerks:SetChecked(userSettings["showKnowledgeNotPerks"])
+	cbShowKnowledgeNotPerks:SetScript("OnClick", function(self)
+		userSettings["showKnowledgeNotPerks"] = cbShowKnowledgeNotPerks:GetChecked()
+	end)
+
+	local cbVendorAll = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbVendorAll.Text:SetText("Always set vendor filter to 'All'")
+	cbVendorAll.Text:SetTextColor(1, 1, 1, 1)
+	cbVendorAll.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbVendorAll:SetPoint("TOPLEFT", cbShowKnowledgeNotPerks, "BOTTOMLEFT", 0, 0)
+	cbVendorAll:SetChecked(userSettings["vendorAll"])
+	cbVendorAll:SetScript("OnClick", function(self)
+		userSettings["vendorAll"] = cbVendorAll:GetChecked()
+	end)
+
+	local slReagentQuality = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
+	slReagentQuality:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 5, -15)
+	slReagentQuality:SetOrientation("HORIZONTAL")
+	slReagentQuality:SetWidth(150)
+	slReagentQuality:SetHeight(17)
+	slReagentQuality:SetMinMaxValues(1,3)
+	slReagentQuality:SetValueStep(1)
+	slReagentQuality:SetObeyStepOnDrag(true)
+	slReagentQuality.Low:SetText("|A:Professions-ChatIcon-Quality-Tier1:17:15::1|a")
+	slReagentQuality.High:SetText("|A:Professions-ChatIcon-Quality-Tier3:17:15::1|a")
+	slReagentQuality.Text:SetText("Minimum reagent quality")
+	slReagentQuality:SetValue(userSettings["reagentQuality"])
+	slReagentQuality.Label = slReagentQuality:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	slReagentQuality.Label:SetPoint("TOP", slReagentQuality, "BOTTOM", 0, 0)
+	slReagentQuality.Label:SetText("|A:Professions-ChatIcon-Quality-Tier"..slReagentQuality:GetValue()..":17:15::1|a")
+	slReagentQuality:SetScript("OnValueChanged", function(self, newValue)
+		userSettings["reagentQuality"] = newValue
+		self:SetValue(userSettings["reagentQuality"])
+		self.Label:SetText("|A:Professions-ChatIcon-Quality-Tier"..slReagentQuality:GetValue()..":17:15::1|a")
+		pslReagents()
+	end)
+
+	-- Column 2
+	local slRecipeRows = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
+	slRecipeRows:SetPoint("TOPLEFT", cbMinimapButton, "TOPLEFT", 250, -19)
+	slRecipeRows:SetOrientation("HORIZONTAL")
+	slRecipeRows:SetWidth(150)
+	slRecipeRows:SetHeight(17)
+	slRecipeRows:SetMinMaxValues(5,50)
+	slRecipeRows:SetValueStep(1)
+	slRecipeRows:SetObeyStepOnDrag(true)
+	slRecipeRows.Low:SetText("5")
+	slRecipeRows.High:SetText("50")
+	slRecipeRows.Text:SetText("Recipe rows")
+	slRecipeRows:SetValue(userSettings["recipeRows"])
+	slRecipeRows.Label = slRecipeRows:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	slRecipeRows.Label:SetPoint("TOP", slRecipeRows, "BOTTOM", 0, 0)
+	slRecipeRows.Label:SetText(slRecipeRows:GetValue())
+	slRecipeRows:SetScript("OnValueChanged", function(self, newValue)
+		userSettings["recipeRows"] = newValue
+		self:SetValue(userSettings["recipeRows"])
+		self.Label:SetText(self:GetValue())
+		pslTrackingWindows()
+	end)
+
+	local slRecipeWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
+	slRecipeWidth:SetPoint("TOPLEFT", slRecipeRows, "BOTTOMLEFT", 0, -30)
+	slRecipeWidth:SetOrientation("HORIZONTAL")
+	slRecipeWidth:SetWidth(150)
+	slRecipeWidth:SetHeight(17)
+	slRecipeWidth:SetMinMaxValues(100,300)
+	slRecipeWidth:SetValueStep(5)
+	slRecipeWidth:SetObeyStepOnDrag(true)
+	slRecipeWidth.Low:SetText("100")
+	slRecipeWidth.High:SetText("300")
+	slRecipeWidth.Text:SetText("Recipe width")
+	slRecipeWidth:SetValue(userSettings["recipeWidth"])
+	slRecipeWidth.Label = slRecipeWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	slRecipeWidth.Label:SetPoint("TOP", slRecipeWidth, "BOTTOM", 0, 0)
+	slRecipeWidth.Label:SetText(slRecipeWidth:GetValue())
+	slRecipeWidth:SetScript("OnValueChanged", function(self, newValue)
+		userSettings["recipeWidth"] = newValue
+		self:SetValue(userSettings["recipeWidth"])
+		self.Label:SetText(self:GetValue())
+		pslTrackingWindows()
+	end)
+
+	local slRecipeNoWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
+	slRecipeNoWidth:SetPoint("TOPLEFT", slRecipeWidth, "BOTTOMLEFT", 0, -30)
+	slRecipeNoWidth:SetOrientation("HORIZONTAL")
+	slRecipeNoWidth:SetWidth(150)
+	slRecipeNoWidth:SetHeight(17)
+	slRecipeNoWidth:SetMinMaxValues(30,100)
+	slRecipeNoWidth:SetValueStep(5)
+	slRecipeNoWidth:SetObeyStepOnDrag(true)
+	slRecipeNoWidth.Low:SetText("30")
+	slRecipeNoWidth.High:SetText("100")
+	slRecipeNoWidth.Text:SetText("Recipe # width")
+	slRecipeNoWidth:SetValue(userSettings["recipeNoWidth"])
+	slRecipeNoWidth.Label = slRecipeNoWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	slRecipeNoWidth.Label:SetPoint("TOP", slRecipeNoWidth, "BOTTOM", 0, 0)
+	slRecipeNoWidth.Label:SetText(slRecipeNoWidth:GetValue())
+	slRecipeNoWidth:SetScript("OnValueChanged", function(self, newValue)
+		userSettings["recipeNoWidth"] = newValue
+		self:SetValue(userSettings["recipeNoWidth"])
+		self.Label:SetText(self:GetValue())
+		pslTrackingWindows()
+	end)
+
+	local slReagentRows = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
+	slReagentRows:SetPoint("TOPLEFT", slRecipeRows, "TOPRIGHT", 20, 0)
+	slReagentRows:SetOrientation("HORIZONTAL")
+	slReagentRows:SetWidth(150)
+	slReagentRows:SetHeight(17)
+	slReagentRows:SetMinMaxValues(5,50)
+	slReagentRows:SetValueStep(1)
+	slReagentRows:SetObeyStepOnDrag(true)
+	slReagentRows.Low:SetText("5")
+	slReagentRows.High:SetText("50")
+	slReagentRows.Text:SetText("Reagent rows")
+	slReagentRows:SetValue(userSettings["reagentRows"])
+	slReagentRows.Label = slReagentRows:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	slReagentRows.Label:SetPoint("TOP", slReagentRows, "BOTTOM", 0, 0)
+	slReagentRows.Label:SetText(slReagentRows:GetValue())
+	slReagentRows:SetScript("OnValueChanged", function(self, newValue)
+		userSettings["reagentRows"] = newValue
+		self:SetValue(userSettings["reagentRows"])
+		self.Label:SetText(self:GetValue())
+		pslTrackingWindows()
+	end)
+
+	local slReagentWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
+	slReagentWidth:SetPoint("TOPLEFT", slReagentRows, "BOTTOMLEFT", 0, -30)
+	slReagentWidth:SetOrientation("HORIZONTAL")
+	slReagentWidth:SetWidth(150)
+	slReagentWidth:SetHeight(17)
+	slReagentWidth:SetMinMaxValues(100,300)
+	slReagentWidth:SetValueStep(5)
+	slReagentWidth:SetObeyStepOnDrag(true)
+	slReagentWidth.Low:SetText("100")
+	slReagentWidth.High:SetText("300")
+	slReagentWidth.Text:SetText("Reagent width")
+	slReagentWidth:SetValue(userSettings["reagentWidth"])
+	slReagentWidth.Label = slReagentWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	slReagentWidth.Label:SetPoint("TOP", slReagentWidth, "BOTTOM", 0, 0)
+	slReagentWidth.Label:SetText(slReagentWidth:GetValue())
+	slReagentWidth:SetScript("OnValueChanged", function(self, newValue)
+		userSettings["reagentWidth"] = newValue
+		self:SetValue(userSettings["reagentWidth"])
+		self.Label:SetText(self:GetValue())
+		pslTrackingWindows()
+	end)
+
+	local slReagentNoWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
+	slReagentNoWidth:SetPoint("TOPLEFT", slReagentWidth, "BOTTOMLEFT", 0, -30)
+	slReagentNoWidth:SetOrientation("HORIZONTAL")
+	slReagentNoWidth:SetWidth(150)
+	slReagentNoWidth:SetHeight(17)
+	slReagentNoWidth:SetMinMaxValues(30,100)
+	slReagentNoWidth:SetValueStep(5)
+	slReagentNoWidth:SetObeyStepOnDrag(true)
+	slReagentNoWidth.Low:SetText("30")
+	slReagentNoWidth.High:SetText("100")
+	slReagentNoWidth.Text:SetText("Reagent # width")
+	slReagentNoWidth:SetValue(userSettings["reagentNoWidth"])
+	slReagentNoWidth.Label = slReagentNoWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+	slReagentNoWidth.Label:SetPoint("TOP", slReagentNoWidth, "BOTTOM", 0, 0)
+	slReagentNoWidth.Label:SetText(slReagentNoWidth:GetValue())
+	slReagentNoWidth:SetScript("OnValueChanged", function(self, newValue)
+		userSettings["reagentNoWidth"] = newValue
+		self:SetValue(userSettings["reagentNoWidth"])
+		self.Label:SetText(self:GetValue())
+		pslTrackingWindows()
+	end)
+
+	-- Extra text
+	local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	pslSettingsText1:SetPoint("TOPLEFT", slReagentQuality, "BOTTOMLEFT", 3, -40)
+	pslSettingsText1:SetJustifyH("LEFT");
+	pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.")
+
+	local pslSettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	pslSettingsText2:SetPoint("TOPLEFT", pslSettingsText1, "BOTTOMLEFT", 0, -15)
+	pslSettingsText2:SetJustifyH("LEFT");
+	pslSettingsText2:SetText("Mouse interactions:\nDrag|cffFFFFFF: Move the PSL windows.\n|RShift+click Recipe|cffFFFFFF: Link the recipe.\n|RCtrl+click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click Recipe #|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click Recipe #|cffFFFFFF: Untrack all of the selected recipe.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
+
+	local pslSettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	pslSettingsText3:SetPoint("TOPLEFT", pslSettingsText2, "BOTTOMLEFT", 0, -15)
+	pslSettingsText3:SetJustifyH("LEFT");
+	pslSettingsText3:SetText("Other features:\n|cffFFFFFF- Adds a Chef's Hat button to the Cooking window, if the toy is known.")
+end
+
+-- Window functions
+function pslWindowFunctions()
+	-- Reagents window
+	table1:RegisterEvents({
+		["OnEnter"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
+			if row and realrow ~= nil then
+				local celldata = data[realrow][1]
+				GameTooltip:ClearLines()
+				GameTooltip:SetOwner(pslFrame1, "ANCHOR_BOTTOM")
+				GameTooltip:SetHyperlink(celldata)
+				GameTooltip:Show()
+			end
+		end,
+		["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
+			GameTooltip:ClearLines()
+			GameTooltip:Hide()
+		end,
+		["OnMouseDown"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
+			if button == "LeftButton" then
+				pslFrame1:StartMoving()
+				GameTooltip:ClearLines()
+				GameTooltip:Hide()
+			end
+		end,
+		["OnMouseUp"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
+			pslFrame1:StopMovingOrSizing()
+
+			if realrow ~= nil then
+				local celldata = data[realrow][1]
+				GameTooltip:ClearLines()
+				GameTooltip:SetOwner(pslFrame1, "ANCHOR_BOTTOM")
+				GameTooltip:SetHyperlink(celldata)
+				GameTooltip:Show()
+			end
+		end,
+		["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
+			-- Control+click on reagent
+			if column == 1 and button == "LeftButton" and IsControlKeyDown() == true and realrow ~= nil then
+				-- Get itemIDs
+				local itemID = GetItemInfoFromHyperlink(data[realrow][1])
+				if reagentTiers[itemID] then itemID = reagentTiers[itemID].one end
+
+				-- Get possible recipeIDs
+				local recipeIDs = {}
+				local no = 0
+
+				for r, i in pairs(recipeLibrary) do
+					if i == itemID then
+						no = no + 1
+						recipeIDs[no] = r
+					end
+				end
+
+				-- If there is only one possible recipe, use that
+				if no == 1 then
+					pslTrackRecipe(recipeIDs[no], 1)
+				-- If there is more than one possible recipe, provide options
+				elseif no > 1 then
+					-- Create popup frame
+					local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+					f:SetPoint("CENTER")
+					f:SetBackdrop({
+						bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+						edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+						edgeSize = 16,
+						insets = { left = 4, right = 4, top = 4, bottom = 4 },
+					})
+					f:SetBackdropColor(0, 0, 0, 1)
+					f:EnableMouse(true)
+					f:SetMovable(true)
+					f:RegisterForDrag("LeftButton")
+					f:SetScript("OnDragStart", function(self, button) self:StartMoving() end)
+					f:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)	 
+					f:Show()
+
+					-- Close button
+					local close = CreateFrame("Button", "pslOptionCloseButton", f, "UIPanelCloseButton")
+					close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
+					close:SetScript("OnClick", function()
+						f:Hide()
+					end)
+
+					-- Text
+					local pslOptionText = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+					pslOptionText:SetPoint("CENTER", f, "CENTER", 0, 0)
+					pslOptionText:SetPoint("TOP", f, "TOP", 0, -10)
+					pslOptionText:SetJustifyH("CENTER")
+					pslOptionText:SetText("|cffFFFFFFThere are multiple recipes which can create\n"..data[realrow][1]..".\n\nPlease select one of the following:")
+
+					-- Text
+					local pslOption1 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+					pslOption1:SetPoint("LEFT", f, "LEFT", 10, 0)
+					pslOption1:SetPoint("TOP", pslOptionText, "BOTTOM", 0, -40)
+					pslOption1:SetWidth(200)
+					pslOption1:SetJustifyH("LEFT")
+					pslOption1:SetText("|cffFFFFFF")
+
+					-- Get reagents #1
+					local reagentsTable = {}
+					pslGetReagents(reagentsTable, recipeIDs[1], 1)
+
+					-- Create text #1
+					for reagentID, reagentAmount in pairs(reagentsTable) do
+						-- Get info
+						local function getInfo()
+							local itemName, itemLink = GetItemInfo(reagentID)
+
+							-- Try again if error
+							if itemName == nil or itemLink == nil then
+								RunNextFrame(getInfo)
+								do return end
+							end
+
+							-- Add text
+							oldText = pslOption1:GetText()
+							pslOption1:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+						end
+						getInfo()
+					end
+
+					-- Button #1
+					pslOptionButton1 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+					pslOptionButton1:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).name)
+					pslOptionButton1:SetWidth(200)
+					pslOptionButton1:SetPoint("BOTTOM", pslOption1, "TOP", 0, 5)
+					pslOptionButton1:SetPoint("CENTER", pslOption1, "CENTER", 0, 0)
+					pslOptionButton1:SetScript("OnClick", function()
+						-- Define the amount of recipes to be tracked
+						local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).quantityMin
+						local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+
+						-- Track the recipe(s)
+						pslTrackRecipe(recipeIDs[1], amount)
+
+						-- Hide the subreagents window
+						f:Hide()
+					end)
+					
+					-- If two options
+					if no >= 2 then
+						-- Adjust popup frame
+						f:SetSize(430, 205)
+
+						-- Text
+						local pslOption2 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+						pslOption2:SetPoint("LEFT", pslOption1, "RIGHT", 10, 0)
+						pslOption2:SetPoint("TOP", pslOption1, "TOP", 0, 0)
+						pslOption2:SetWidth(200)
+						pslOption2:SetJustifyH("LEFT")
+						pslOption2:SetText("|cffFFFFFF")
+
+						-- Get reagents #2
+						local reagentsTable = {}
+						pslGetReagents(reagentsTable, recipeIDs[2], 1)
+
+						-- Create text #2
+						for reagentID, reagentAmount in pairs(reagentsTable) do
+							-- Get info
+							local function getInfo()
+								local itemName, itemLink = GetItemInfo(reagentID)
+
+								-- Try again if error
+								if itemName == nil or itemLink == nil then
+									RunNextFrame(getInfo)
+									do return end
+								end
+
+								-- Add text
+								oldText = pslOption1:GetText()
+								pslOption2:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+							end
+							getInfo()
+						end
+
+						-- Button #2
+						pslOptionButton2 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+						pslOptionButton2:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).name)
+						pslOptionButton2:SetWidth(200)
+						pslOptionButton2:SetPoint("BOTTOM", pslOption2, "TOP", 0, 5)
+						pslOptionButton2:SetPoint("CENTER", pslOption2, "CENTER", 0, 0)
+						pslOptionButton2:SetScript("OnClick", function()
+							-- Define the amount of recipes to be tracked
+							local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).quantityMin
+							local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+
+							-- Track the recipe(s)
+							pslTrackRecipe(recipeIDs[2], amount)
+
+							-- Hide the subreagents window
+							f:Hide()
+						end)
+					end
+
+					-- If three options
+					if no >= 3 then
+						-- Adjust popup frame
+						f:SetSize(640, 200)
+
+						-- Text
+						local pslOption3 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+						pslOption3:SetPoint("LEFT", pslOption1, "RIGHT", 220, 0)
+						pslOption3:SetPoint("TOP", pslOption1, "TOP", 0, 0)
+						pslOption3:SetWidth(200)
+						pslOption3:SetJustifyH("LEFT")
+						pslOption3:SetText("|cffFFFFFF")
+
+						-- Get reagents #3
+						local reagentsTable = {}
+						pslGetReagents(reagentsTable, recipeIDs[3], 1)
+
+						-- Create text #3
+						for reagentID, reagentAmount in pairs(reagentsTable) do
+							-- Get info
+							local function getInfo()
+								local itemName, itemLink = GetItemInfo(reagentID)
+
+								-- Try again if error
+								if itemName == nil or itemLink == nil then
+									RunNextFrame(getInfo)
+									do return end
+								end
+
+								-- Add text
+								oldText = pslOption3:GetText()
+								pslOption3:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+							end
+							getInfo()
+						end
+
+						-- Button #3
+						pslOptionButton3 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+						pslOptionButton3:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).name)
+						pslOptionButton3:SetWidth(200)
+						pslOptionButton3:SetPoint("BOTTOM", pslOption3, "TOP", 0, 5)
+						pslOptionButton3:SetPoint("CENTER", pslOption3, "CENTER", 0, 0)
+						pslOptionButton3:SetScript("OnClick", function()
+							-- Define the amount of recipes to be tracked
+							local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).quantityMin
+							local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+
+							-- Track the recipe(s)
+							pslTrackRecipe(recipeIDs[3], amount)
+
+							-- Hide the subreagents window
+							f:Hide()
+						end)
+					end
+
+					-- If four options
+					if no >= 4 then
+						-- Adjust popup frame
+						f:SetSize(640, 335)
+
+						-- Text
+						local pslOption4 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+						pslOption4:SetPoint("LEFT", pslOption1, "LEFT", 0, 0)
+						pslOption4:SetPoint("TOP", pslOption1, "TOP", 0, -130)
+						pslOption4:SetWidth(200)
+						pslOption4:SetJustifyH("LEFT")
+						pslOption4:SetText("|cffFFFFFF")
+
+						-- Get reagents #4
+						local reagentsTable = {}
+						pslGetReagents(reagentsTable, recipeIDs[4], 1)
+
+						-- Create text #4
+						for reagentID, reagentAmount in pairs(reagentsTable) do
+							-- Get info
+							local function getInfo()
+								local itemName, itemLink = GetItemInfo(reagentID)
+
+								-- Try again if error
+								if itemName == nil or itemLink == nil then
+									RunNextFrame(getInfo)
+									do return end
+								end
+
+								-- Add text
+								oldText = pslOption1:GetText()
+								pslOption4:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+							end
+							getInfo()
+						end
+
+						-- Button #4
+						pslOptionButton4 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+						pslOptionButton4:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).name)
+						pslOptionButton4:SetWidth(200)
+						pslOptionButton4:SetPoint("BOTTOM", pslOption4, "TOP", 0, 5)
+						pslOptionButton4:SetPoint("CENTER", pslOption4, "CENTER", 0, 0)
+						pslOptionButton4:SetScript("OnClick", function()
+							-- Define the amount of recipes to be tracked
+							local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).quantityMin
+							local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+
+							-- Track the recipe(s)
+							pslTrackRecipe(recipeIDs[4], amount)
+
+							-- Hide the subreagents window
+							f:Hide()
+						end)
+					end
+
+					-- If five options
+					if no >= 5 then
+						-- Text
+						local pslOption5 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+						pslOption5:SetPoint("LEFT", pslOption1, "RIGHT", 10, 0)
+						pslOption5:SetPoint("TOP", pslOption1, "TOP", 0, -130)
+						pslOption5:SetWidth(200)
+						pslOption5:SetJustifyH("LEFT")
+						pslOption5:SetText("|cffFFFFFF")
+
+						-- Get reagents #5
+						local reagentsTable = {}
+						pslGetReagents(reagentsTable, recipeIDs[5], 1)
+
+						-- Create text #5
+						for reagentID, reagentAmount in pairs(reagentsTable) do
+							-- Get info
+							local function getInfo()
+								local itemName, itemLink = GetItemInfo(reagentID)
+
+								-- Try again if error
+								if itemName == nil or itemLink == nil then
+									RunNextFrame(getInfo)
+									do return end
+								end
+
+								-- Add text
+								oldText = pslOption1:GetText()
+								pslOption5:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+							end
+							getInfo()
+						end
+
+						-- Button #5
+						pslOptionButton5 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+						pslOptionButton5:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).name)
+						pslOptionButton5:SetWidth(200)
+						pslOptionButton5:SetPoint("BOTTOM", pslOption5, "TOP", 0, 5)
+						pslOptionButton5:SetPoint("CENTER", pslOption5, "CENTER", 0, 0)
+						pslOptionButton5:SetScript("OnClick", function()
+							-- Define the amount of recipes to be tracked
+							local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).quantityMin
+							local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+
+							-- Track the recipe(s)
+							pslTrackRecipe(recipeIDs[5], amount)
+
+							-- Hide the subreagents window
+							f:Hide()
+						end)
+					end
+
+					-- If six options
+					if no >= 6 then
+						-- Text
+						local pslOption6 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+						pslOption6:SetPoint("LEFT", pslOption1, "RIGHT", 220, 0)
+						pslOption6:SetPoint("TOP", pslOption1, "TOP", 0, -130)
+						pslOption6:SetWidth(200)
+						pslOption6:SetJustifyH("LEFT")
+						pslOption6:SetText("|cffFFFFFF")
+
+						-- Get reagents #6
+						local reagentsTable = {}
+						pslGetReagents(reagentsTable, recipeIDs[6], 1)
+
+						-- Create text #6
+						for reagentID, reagentAmount in pairs(reagentsTable) do
+							-- Get info
+							local function getInfo()
+								local itemName, itemLink = GetItemInfo(reagentID)
+
+								-- Try again if error
+								if itemName == nil or itemLink == nil then
+									RunNextFrame(getInfo)
+									do return end
+								end
+
+								-- Add text
+								oldText = pslOption1:GetText()
+								pslOption6:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+							end
+							getInfo()
+						end
+
+						-- Button #6
+						pslOptionButton6 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+						pslOptionButton6:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).name)
+						pslOptionButton6:SetWidth(200)
+						pslOptionButton6:SetPoint("BOTTOM", pslOption6, "TOP", 0, 5)
+						pslOptionButton6:SetPoint("CENTER", pslOption6, "CENTER", 0, 0)
+						pslOptionButton6:SetScript("OnClick", function()
+							-- Define the amount of recipes to be tracked
+							local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).quantityMin
+							local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+
+							-- Track the recipe(s)
+							pslTrackRecipe(recipeIDs[6], amount)
+
+							-- Hide the subreagents window
+							f:Hide()
+						end)
+					end
+				end
+			-- Activate if Shift+clicking on the reagents column
+			elseif column == 1 and button == "LeftButton" and IsShiftKeyDown() == true and realrow ~= nil then
+				ChatEdit_InsertLink(data[realrow][1])
+			end
+		end,
+	})
+
+	-- Recipes window
+	table2:RegisterEvents({
+		["OnEnter"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
+			if row and realrow ~= nil then
+				local celldata = data[realrow][1]
+				GameTooltip:ClearLines()
+				GameTooltip:SetOwner(pslFrame2, "ANCHOR_BOTTOM")
+				GameTooltip:SetHyperlink(celldata)
+				GameTooltip:Show()
+			end
+		end,
+		["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
+			GameTooltip:ClearLines()
+			GameTooltip:Hide()
+		end,
+		["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
+			-- Right-click on recipe amount
+			if column == 2 and button == "RightButton" and row ~= nil and realrow ~= nil then
+				-- Get the selected recipe ID
+				local selectedRecipe = data[realrow][1]
+				local selectedRecipeID
+
+				for recipeID, recipeLink in pairs(recipeLinks) do
+					if selectedRecipe == recipeLink then selectedRecipeID = recipeID end
+				end
+
+				-- Untrack the recipe
+				if IsControlKeyDown() == true then
+					pslUntrackRecipe(selectedRecipeID, 0)
+				else
+					pslUntrackRecipe(selectedRecipeID, 1)
+				end
+
+				-- Show windows
+				pslFrame1:Show()
+				pslFrame2:Show()
+			-- Left-click on recipe
+			elseif column == 1 and button == "LeftButton" and row ~= nil and realrow ~= nil then
+				-- If Shift is held also
+				if IsShiftKeyDown() == true then
+					-- Try write link to chat
+					ChatEdit_InsertLink(data[realrow][1])
+				-- If Control is held also
+				elseif IsControlKeyDown() == true then
+					-- Get the selected recipe ID
+					local selectedRecipe = data[realrow][1]
+					local selectedRecipeID = 0
+
+					for recipeID, recipeLink in pairs(recipeLinks) do
+						if selectedRecipe == recipeLink then selectedRecipeID = recipeID end
+					end
+
+					-- Open recipe if it is learned
+					if selectedRecipeID ~= 0 and C_TradeSkillUI.IsRecipeProfessionLearned(selectedRecipeID) == true then C_TradeSkillUI.OpenRecipe(selectedRecipeID) end
+				end
+			end
+		end,
+		["OnMouseDown"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
+			if button == "LeftButton" then
+				pslFrame2:StartMoving()
+				GameTooltip:ClearLines()
+				GameTooltip:Hide()
+			end
+		end,
+		["OnMouseUp"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
+			pslFrame2:StopMovingOrSizing()
+
+			if realrow ~= nil then
+				local celldata = data[realrow][1]
+				GameTooltip:ClearLines()
+				GameTooltip:SetOwner(pslFrame2, "ANCHOR_BOTTOM")
+				GameTooltip:SetHyperlink(celldata)
+				GameTooltip:Show()
+			end
+		end,
+	})
 end
 
 api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
@@ -660,331 +1496,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		pslInitialise()
 		pslTrackingWindows()
 		pslCreateAssets()
-		pslTooltipInfo()
-
-		-- Settings and minimap icon
-		function pslSettings()
-			-- Initialise the Settings page so the Minimap button can go there
-			local settings = CreateFrame("Frame")			
-			settings.name = "Profession Shopping List"
-			InterfaceOptions_AddCategory(settings)
-
-			-- Initialise the minimap button before the settings button is made, so it can toggle it
-			local miniButton = LibStub("LibDataBroker-1.1"):NewDataObject("ProfessionShoppingList", {
-				type = "data source",
-				text = "Profession Shopping List",
-				icon = "Interface\\AddOns\\ProfessionShoppingList\\assets\\psl_icon",
-				
-				OnClick = function(self, button)
-					if button == "LeftButton" then
-						-- Toggle tracking windows
-						if pslFrame1:IsShown() then
-							pslFrame1:Hide()
-							pslFrame2:Hide()
-						else
-							pslFrame1:Show()
-							pslFrame2:Show()
-						end
-						-- Only update numbers if numbers exist
-						if reagentsTracked then pslReagents() end
-					elseif button == "RightButton" then
-						pslOpenSettings()
-					end
-				end,
-				
-				OnTooltipShow = function(tooltip)
-					if not tooltip or not tooltip.AddLine then return end
-					tooltip:AddLine("|cffFFFFFFProfession Shopping List|R\n|cff9D9D9DLeft-click:|R Toggle the windows.\n|cff9D9D9DRight-click:|R Show the settings.")
-				end,
-			})
-								
-			local icon = LibStub("LibDBIcon-1.0", true)
-			icon:Register("ProfessionShoppingList", miniButton, userSettings)
-
-			if userSettings["hide"] == true then 
-				icon:Hide("ProfessionShoppingList")
-			else
-				icon:Show("ProfessionShoppingList")
-			end
-
-			-- Settings frame
-			local scrollFrame = CreateFrame("ScrollFrame", nil, settings, "UIPanelScrollFrameTemplate")
-			scrollFrame:SetPoint("TOPLEFT", 3, -4)
-			scrollFrame:SetPoint("BOTTOMRIGHT", -27, 4)
-
-			local scrollChild = CreateFrame("Frame")
-			scrollFrame:SetScrollChild(scrollChild)
-			scrollChild:SetWidth(SettingsPanel.Container.SettingsCanvas:GetWidth()-18)
-			scrollChild:SetHeight(1) 
-
-			-- Settings
-			local title = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormalLarge")
-			title:SetPoint("TOPLEFT", 10, -8)
-			title:SetText("Profession Shopping List")
-
-			-- Column 1
-			local cbMinimapButton = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-			cbMinimapButton.Text:SetText("Minimap button")
-			cbMinimapButton.Text:SetTextColor(1, 1, 1, 1)
-			cbMinimapButton.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-			cbMinimapButton:SetPoint("TOPLEFT", 10, -25)
-			cbMinimapButton:SetChecked(not userSettings["hide"])
-			cbMinimapButton:SetScript("OnClick", function(self)
-				userSettings["hide"] = not self:GetChecked()
-				if userSettings["hide"] == true then
-					icon:Hide("ProfessionShoppingList")
-				else
-					icon:Show("ProfessionShoppingList")
-				end
-			end)
-
-			local cbCloseWhenDoneCheck	-- Declare it here, so we can reference it for all the option dependencies
-
-			local cbRemoveCraft = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-			cbRemoveCraft.Text:SetText("Untrack on crafting")
-			cbRemoveCraft.Text:SetTextColor(1, 1, 1, 1)
-			cbRemoveCraft.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-			cbRemoveCraft:SetPoint("TOPLEFT", cbMinimapButton, "BOTTOMLEFT", 0, 0)
-			cbRemoveCraft:SetChecked(userSettings["removeCraft"])
-			cbRemoveCraft:SetScript("OnClick", function(self)
-				userSettings["removeCraft"] = cbRemoveCraft:GetChecked()
-				cbCloseWhenDoneCheck()
-			end)
-
-			local cbCloseWhenDone = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-			cbCloseWhenDone.Text:SetText("Close windows when done")
-			cbCloseWhenDone.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-			cbCloseWhenDone:SetPoint("TOPLEFT", cbRemoveCraft, "BOTTOMLEFT", 15, 0)
-			cbCloseWhenDone:SetChecked(userSettings["closeWhenDone"])
-			cbCloseWhenDone:SetScript("OnClick", function(self)
-				userSettings["closeWhenDone"] = cbCloseWhenDone:GetChecked()
-			end)
-
-			-- Disable this option when the dependency option is unchecked
-			cbCloseWhenDoneCheck = function()
-				if userSettings["removeCraft"] == true then
-					cbCloseWhenDone:Enable()
-					cbCloseWhenDone.Text:SetTextColor(1, 1, 1, 1)
-				else
-					cbCloseWhenDone:Disable()
-					cbCloseWhenDone.Text:SetTextColor(.62, .62, .62, 1)
-				end
-			end
-			cbCloseWhenDoneCheck()
-
-			local cbShowRemaining = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-			cbShowRemaining.Text:SetText("Show remaining reagents, not total")
-			cbShowRemaining.Text:SetTextColor(1, 1, 1, 1)
-			cbShowRemaining.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-			cbShowRemaining:SetPoint("TOPLEFT", cbCloseWhenDone, "BOTTOMLEFT", -15, 0)
-			cbShowRemaining:SetChecked(userSettings["showRemaining"])
-			cbShowRemaining:SetScript("OnClick", function(self)
-				userSettings["showRemaining"] = cbShowRemaining:GetChecked()
-				pslReagents()
-			end)
-
-			local cbShowTooltip = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-			cbShowTooltip.Text:SetText("Show tooltip information")
-			cbShowTooltip.Text:SetTextColor(1, 1, 1, 1)
-			cbShowTooltip.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-			cbShowTooltip:SetPoint("TOPLEFT", cbShowRemaining, "BOTTOMLEFT", 0, 0)
-			cbShowTooltip:SetChecked(userSettings["showTooltip"])
-			cbShowTooltip:SetScript("OnClick", function(self)
-				userSettings["showTooltip"] = cbShowTooltip:GetChecked()
-			end)
-
-			local cbShowKnowledgeNotPerks = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-			cbShowKnowledgeNotPerks.Text:SetText("Show knowledge, not perks")
-			cbShowKnowledgeNotPerks.Text:SetTextColor(1, 1, 1, 1)
-			cbShowKnowledgeNotPerks.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-			cbShowKnowledgeNotPerks:SetPoint("TOPLEFT", cbShowTooltip, "BOTTOMLEFT", 0, 0)
-			cbShowKnowledgeNotPerks:SetChecked(userSettings["showKnowledgeNotPerks"])
-			cbShowKnowledgeNotPerks:SetScript("OnClick", function(self)
-				userSettings["showKnowledgeNotPerks"] = cbShowKnowledgeNotPerks:GetChecked()
-			end)
-
-			local cbVendorAll = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-			cbVendorAll.Text:SetText("Always set vendor filter to 'All'")
-			cbVendorAll.Text:SetTextColor(1, 1, 1, 1)
-			cbVendorAll.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-			cbVendorAll:SetPoint("TOPLEFT", cbShowKnowledgeNotPerks, "BOTTOMLEFT", 0, 0)
-			cbVendorAll:SetChecked(userSettings["vendorAll"])
-			cbVendorAll:SetScript("OnClick", function(self)
-				userSettings["vendorAll"] = cbVendorAll:GetChecked()
-			end)
-
-			local slReagentQuality = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-			slReagentQuality:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 5, -15)
-			slReagentQuality:SetOrientation("HORIZONTAL")
-			slReagentQuality:SetWidth(150)
-			slReagentQuality:SetHeight(17)
-			slReagentQuality:SetMinMaxValues(1,3)
-			slReagentQuality:SetValueStep(1)
-			slReagentQuality:SetObeyStepOnDrag(true)
-			slReagentQuality.Low:SetText("|A:Professions-ChatIcon-Quality-Tier1:17:15::1|a")
-			slReagentQuality.High:SetText("|A:Professions-ChatIcon-Quality-Tier3:17:15::1|a")
-			slReagentQuality.Text:SetText("Minimum reagent quality")
-			slReagentQuality:SetValue(userSettings["reagentQuality"])
-			slReagentQuality.Label = slReagentQuality:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-			slReagentQuality.Label:SetPoint("TOP", slReagentQuality, "BOTTOM", 0, 0)
-			slReagentQuality.Label:SetText("|A:Professions-ChatIcon-Quality-Tier"..slReagentQuality:GetValue()..":17:15::1|a")
-			slReagentQuality:SetScript("OnValueChanged", function(self, newValue)
-				userSettings["reagentQuality"] = newValue
-				self:SetValue(userSettings["reagentQuality"])
-				self.Label:SetText("|A:Professions-ChatIcon-Quality-Tier"..slReagentQuality:GetValue()..":17:15::1|a")
-				pslReagents()
-			end)
-
-			-- Column 2
-			local slRecipeRows = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-			slRecipeRows:SetPoint("TOPLEFT", cbMinimapButton, "TOPLEFT", 250, -19)
-			slRecipeRows:SetOrientation("HORIZONTAL")
-			slRecipeRows:SetWidth(150)
-			slRecipeRows:SetHeight(17)
-			slRecipeRows:SetMinMaxValues(5,50)
-			slRecipeRows:SetValueStep(1)
-			slRecipeRows:SetObeyStepOnDrag(true)
-			slRecipeRows.Low:SetText("5")
-			slRecipeRows.High:SetText("50")
-			slRecipeRows.Text:SetText("Recipe rows")
-			slRecipeRows:SetValue(userSettings["recipeRows"])
-			slRecipeRows.Label = slRecipeRows:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-			slRecipeRows.Label:SetPoint("TOP", slRecipeRows, "BOTTOM", 0, 0)
-			slRecipeRows.Label:SetText(slRecipeRows:GetValue())
-			slRecipeRows:SetScript("OnValueChanged", function(self, newValue)
-				userSettings["recipeRows"] = newValue
-				self:SetValue(userSettings["recipeRows"])
-				self.Label:SetText(self:GetValue())
-				pslTrackingWindows()
-			end)
-
-			local slRecipeWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-			slRecipeWidth:SetPoint("TOPLEFT", slRecipeRows, "BOTTOMLEFT", 0, -30)
-			slRecipeWidth:SetOrientation("HORIZONTAL")
-			slRecipeWidth:SetWidth(150)
-			slRecipeWidth:SetHeight(17)
-			slRecipeWidth:SetMinMaxValues(100,300)
-			slRecipeWidth:SetValueStep(5)
-			slRecipeWidth:SetObeyStepOnDrag(true)
-			slRecipeWidth.Low:SetText("100")
-			slRecipeWidth.High:SetText("300")
-			slRecipeWidth.Text:SetText("Recipe width")
-			slRecipeWidth:SetValue(userSettings["recipeWidth"])
-			slRecipeWidth.Label = slRecipeWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-			slRecipeWidth.Label:SetPoint("TOP", slRecipeWidth, "BOTTOM", 0, 0)
-			slRecipeWidth.Label:SetText(slRecipeWidth:GetValue())
-			slRecipeWidth:SetScript("OnValueChanged", function(self, newValue)
-				userSettings["recipeWidth"] = newValue
-				self:SetValue(userSettings["recipeWidth"])
-				self.Label:SetText(self:GetValue())
-				pslTrackingWindows()
-			end)
-
-			local slRecipeNoWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-			slRecipeNoWidth:SetPoint("TOPLEFT", slRecipeWidth, "BOTTOMLEFT", 0, -30)
-			slRecipeNoWidth:SetOrientation("HORIZONTAL")
-			slRecipeNoWidth:SetWidth(150)
-			slRecipeNoWidth:SetHeight(17)
-			slRecipeNoWidth:SetMinMaxValues(30,100)
-			slRecipeNoWidth:SetValueStep(5)
-			slRecipeNoWidth:SetObeyStepOnDrag(true)
-			slRecipeNoWidth.Low:SetText("30")
-			slRecipeNoWidth.High:SetText("100")
-			slRecipeNoWidth.Text:SetText("Recipe # width")
-			slRecipeNoWidth:SetValue(userSettings["recipeNoWidth"])
-			slRecipeNoWidth.Label = slRecipeNoWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-			slRecipeNoWidth.Label:SetPoint("TOP", slRecipeNoWidth, "BOTTOM", 0, 0)
-			slRecipeNoWidth.Label:SetText(slRecipeNoWidth:GetValue())
-			slRecipeNoWidth:SetScript("OnValueChanged", function(self, newValue)
-				userSettings["recipeNoWidth"] = newValue
-				self:SetValue(userSettings["recipeNoWidth"])
-				self.Label:SetText(self:GetValue())
-				pslTrackingWindows()
-			end)
-
-			local slReagentRows = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-			slReagentRows:SetPoint("TOPLEFT", slRecipeRows, "TOPRIGHT", 20, 0)
-			slReagentRows:SetOrientation("HORIZONTAL")
-			slReagentRows:SetWidth(150)
-			slReagentRows:SetHeight(17)
-			slReagentRows:SetMinMaxValues(5,50)
-			slReagentRows:SetValueStep(1)
-			slReagentRows:SetObeyStepOnDrag(true)
-			slReagentRows.Low:SetText("5")
-			slReagentRows.High:SetText("50")
-			slReagentRows.Text:SetText("Reagent rows")
-			slReagentRows:SetValue(userSettings["reagentRows"])
-			slReagentRows.Label = slReagentRows:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-			slReagentRows.Label:SetPoint("TOP", slReagentRows, "BOTTOM", 0, 0)
-			slReagentRows.Label:SetText(slReagentRows:GetValue())
-			slReagentRows:SetScript("OnValueChanged", function(self, newValue)
-				userSettings["reagentRows"] = newValue
-				self:SetValue(userSettings["reagentRows"])
-				self.Label:SetText(self:GetValue())
-				pslTrackingWindows()
-			end)
-
-			local slReagentWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-			slReagentWidth:SetPoint("TOPLEFT", slReagentRows, "BOTTOMLEFT", 0, -30)
-			slReagentWidth:SetOrientation("HORIZONTAL")
-			slReagentWidth:SetWidth(150)
-			slReagentWidth:SetHeight(17)
-			slReagentWidth:SetMinMaxValues(100,300)
-			slReagentWidth:SetValueStep(5)
-			slReagentWidth:SetObeyStepOnDrag(true)
-			slReagentWidth.Low:SetText("100")
-			slReagentWidth.High:SetText("300")
-			slReagentWidth.Text:SetText("Reagent width")
-			slReagentWidth:SetValue(userSettings["reagentWidth"])
-			slReagentWidth.Label = slReagentWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-			slReagentWidth.Label:SetPoint("TOP", slReagentWidth, "BOTTOM", 0, 0)
-			slReagentWidth.Label:SetText(slReagentWidth:GetValue())
-			slReagentWidth:SetScript("OnValueChanged", function(self, newValue)
-				userSettings["reagentWidth"] = newValue
-				self:SetValue(userSettings["reagentWidth"])
-				self.Label:SetText(self:GetValue())
-				pslTrackingWindows()
-			end)
-
-			local slReagentNoWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-			slReagentNoWidth:SetPoint("TOPLEFT", slReagentWidth, "BOTTOMLEFT", 0, -30)
-			slReagentNoWidth:SetOrientation("HORIZONTAL")
-			slReagentNoWidth:SetWidth(150)
-			slReagentNoWidth:SetHeight(17)
-			slReagentNoWidth:SetMinMaxValues(30,100)
-			slReagentNoWidth:SetValueStep(5)
-			slReagentNoWidth:SetObeyStepOnDrag(true)
-			slReagentNoWidth.Low:SetText("30")
-			slReagentNoWidth.High:SetText("100")
-			slReagentNoWidth.Text:SetText("Reagent # width")
-			slReagentNoWidth:SetValue(userSettings["reagentNoWidth"])
-			slReagentNoWidth.Label = slReagentNoWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-			slReagentNoWidth.Label:SetPoint("TOP", slReagentNoWidth, "BOTTOM", 0, 0)
-			slReagentNoWidth.Label:SetText(slReagentNoWidth:GetValue())
-			slReagentNoWidth:SetScript("OnValueChanged", function(self, newValue)
-				userSettings["reagentNoWidth"] = newValue
-				self:SetValue(userSettings["reagentNoWidth"])
-				self.Label:SetText(self:GetValue())
-				pslTrackingWindows()
-			end)
-   
-			-- Extra text
-			local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-			pslSettingsText1:SetPoint("TOPLEFT", slReagentQuality, "BOTTOMLEFT", 3, -40)
-			pslSettingsText1:SetJustifyH("LEFT");
-			pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.")
-
-			local pslSettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-			pslSettingsText2:SetPoint("TOPLEFT", pslSettingsText1, "BOTTOMLEFT", 0, -15)
-			pslSettingsText2:SetJustifyH("LEFT");
-			pslSettingsText2:SetText("Mouse interactions:\nDrag|cffFFFFFF: Move the PSL windows.\n|RShift+click Recipe|cffFFFFFF: Link the recipe.\n|RCtrl+click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click Recipe #|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click Recipe #|cffFFFFFF: Untrack all of the selected recipe.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
-
-			local pslSettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-			pslSettingsText3:SetPoint("TOPLEFT", pslSettingsText2, "BOTTOMLEFT", 0, -15)
-			pslSettingsText3:SetJustifyH("LEFT");
-			pslSettingsText3:SetText("Other features:\n|cffFFFFFF- Adds a Chef's Hat button to the Cooking window, if the toy is known.")
-		end
+		pslTooltipInfo()		
 		pslSettings()
+		pslWindowFunctions()
 
 		-- Slash commands
 		SLASH_PSL1 = "/psl";
@@ -994,21 +1508,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				pslOpenSettings()
 			-- Clear list
 			elseif msg == "clear" then
-				-- Clear everything except the recipe cache
-				recipesTracked = {}
-				reagentsTracked = {}
-				recipeLinks = {}
-				reagentTiers = {}
-				pslReagents()
-
-				-- Disable remove button
-				untrackProfessionButton:Disable()
-				untrackPlaceOrderButton:Disable()
-				untrackMakeOrderButton:Disable()
-
-				-- Remove old version variables
-				reagentNumbers = nil
-				reagentLinks = nil
+				pslClear()
 			-- No arguments
 			else
 				-- Toggle tracking windows
@@ -1023,499 +1523,6 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				if reagentsTracked then pslReagents() end
 			end
 		end
-
-		-- Window functions
-		function pslWindowFunctions()
-			-- Reagents window
-			table1:RegisterEvents({
-				["OnEnter"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-					if row and realrow ~= nil then
-						local celldata = data[realrow][1]
-						GameTooltip:ClearLines()
-						GameTooltip:SetOwner(pslFrame1, "ANCHOR_BOTTOM")
-						GameTooltip:SetHyperlink(celldata)
-						GameTooltip:Show()
-					end
-				end,
-				["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-					GameTooltip:ClearLines()
-					GameTooltip:Hide()
-				end,
-				["OnMouseDown"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
-					if button == "LeftButton" then
-						pslFrame1:StartMoving()
-						GameTooltip:ClearLines()
-						GameTooltip:Hide()
-					end
-				end,
-				["OnMouseUp"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-					pslFrame1:StopMovingOrSizing()
-
-					if realrow ~= nil then
-						local celldata = data[realrow][1]
-						GameTooltip:ClearLines()
-						GameTooltip:SetOwner(pslFrame1, "ANCHOR_BOTTOM")
-						GameTooltip:SetHyperlink(celldata)
-						GameTooltip:Show()
-					end
-				end,
-				["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
-					-- Control+click on reagent
-					if column == 1 and button == "LeftButton" and IsControlKeyDown() == true and realrow ~= nil then
-						-- Get itemIDs
-						local itemID = GetItemInfoFromHyperlink(data[realrow][1])
-						if reagentTiers[itemID] then itemID = reagentTiers[itemID].one end
-
-						-- Get possible recipeIDs
-						local recipeIDs = {}
-						local no = 0
-
-						for r, i in pairs(recipeLibrary) do
-							if i == itemID then
-								no = no + 1
-								recipeIDs[no] = r
-							end
-						end
-
-						-- If there is only one possible recipe, use that
-						if no == 1 then
-							pslTrackRecipe(recipeIDs[no], 1)
-						-- If there is more than one possible recipe, provide options
-						elseif no > 1 then
-							-- Create popup frame
-							local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-							f:SetPoint("CENTER")
-							f:SetBackdrop({
-								bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-								edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-								edgeSize = 16,
-								insets = { left = 4, right = 4, top = 4, bottom = 4 },
-							})
-							f:SetBackdropColor(0, 0, 0, 1)
-							f:EnableMouse(true)
-							f:SetMovable(true)
-							f:RegisterForDrag("LeftButton")
-							f:SetScript("OnDragStart", function(self, button) self:StartMoving() end)
-							f:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)	 
-							f:Show()
-
-							-- Close button
-							local close = CreateFrame("Button", "pslOptionCloseButton", f, "UIPanelCloseButton")
-							close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
-							close:SetScript("OnClick", function()
-								f:Hide()
-							end)
-
-							-- Text
-							local pslOptionText = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-							pslOptionText:SetPoint("CENTER", f, "CENTER", 0, 0)
-							pslOptionText:SetPoint("TOP", f, "TOP", 0, -10)
-							pslOptionText:SetJustifyH("CENTER")
-							pslOptionText:SetText("|cffFFFFFFThere are multiple recipes which can create\n"..data[realrow][1]..".\n\nPlease select one of the following:")
-
-							-- Text
-							local pslOption1 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-							pslOption1:SetPoint("LEFT", f, "LEFT", 10, 0)
-							pslOption1:SetPoint("TOP", pslOptionText, "BOTTOM", 0, -40)
-							pslOption1:SetWidth(200)
-							pslOption1:SetJustifyH("LEFT")
-							pslOption1:SetText("|cffFFFFFF")
-
-							-- Get reagents #1
-							local reagentsTable = {}
-							pslGetReagents(reagentsTable, recipeIDs[1], 1)
-
-							-- Create text #1
-							for reagentID, reagentAmount in pairs(reagentsTable) do
-								-- Get info
-								local function getInfo()
-									local itemName, itemLink = GetItemInfo(reagentID)
-
-									-- Try again if error
-									if itemName == nil or itemLink == nil then
-										RunNextFrame(getInfo)
-										do return end
-									end
-
-									-- Add text
-									oldText = pslOption1:GetText()
-									pslOption1:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
-								end
-								getInfo()
-							end
-
-							-- Button #1
-							pslOptionButton1 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-							pslOptionButton1:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).name)
-							pslOptionButton1:SetWidth(200)
-							pslOptionButton1:SetPoint("BOTTOM", pslOption1, "TOP", 0, 5)
-							pslOptionButton1:SetPoint("CENTER", pslOption1, "CENTER", 0, 0)
-							pslOptionButton1:SetScript("OnClick", function()
-								-- Define the amount of recipes to be tracked
-								local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).quantityMin
-								local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
-
-								-- Track the recipe(s)
-								pslTrackRecipe(recipeIDs[1], amount)
-
-								-- Hide the subreagents window
-								f:Hide()
-							end)
-							
-							-- If two options
-							if no >= 2 then
-								-- Adjust popup frame
-								f:SetSize(430, 205)
-
-								-- Text
-								local pslOption2 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-								pslOption2:SetPoint("LEFT", pslOption1, "RIGHT", 10, 0)
-								pslOption2:SetPoint("TOP", pslOption1, "TOP", 0, 0)
-								pslOption2:SetWidth(200)
-								pslOption2:SetJustifyH("LEFT")
-								pslOption2:SetText("|cffFFFFFF")
-
-								-- Get reagents #2
-								local reagentsTable = {}
-								pslGetReagents(reagentsTable, recipeIDs[2], 1)
-
-								-- Create text #2
-								for reagentID, reagentAmount in pairs(reagentsTable) do
-									-- Get info
-									local function getInfo()
-										local itemName, itemLink = GetItemInfo(reagentID)
-
-										-- Try again if error
-										if itemName == nil or itemLink == nil then
-											RunNextFrame(getInfo)
-											do return end
-										end
-
-										-- Add text
-										oldText = pslOption1:GetText()
-										pslOption2:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
-									end
-									getInfo()
-								end
-
-								-- Button #2
-								pslOptionButton2 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-								pslOptionButton2:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).name)
-								pslOptionButton2:SetWidth(200)
-								pslOptionButton2:SetPoint("BOTTOM", pslOption2, "TOP", 0, 5)
-								pslOptionButton2:SetPoint("CENTER", pslOption2, "CENTER", 0, 0)
-								pslOptionButton2:SetScript("OnClick", function()
-									-- Define the amount of recipes to be tracked
-									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).quantityMin
-									local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
-
-									-- Track the recipe(s)
-									pslTrackRecipe(recipeIDs[2], amount)
-
-									-- Hide the subreagents window
-									f:Hide()
-								end)
-							end
-
-							-- If three options
-							if no >= 3 then
-								-- Adjust popup frame
-								f:SetSize(640, 200)
-
-								-- Text
-								local pslOption3 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-								pslOption3:SetPoint("LEFT", pslOption1, "RIGHT", 220, 0)
-								pslOption3:SetPoint("TOP", pslOption1, "TOP", 0, 0)
-								pslOption3:SetWidth(200)
-								pslOption3:SetJustifyH("LEFT")
-								pslOption3:SetText("|cffFFFFFF")
-
-								-- Get reagents #3
-								local reagentsTable = {}
-								pslGetReagents(reagentsTable, recipeIDs[3], 1)
-
-								-- Create text #3
-								for reagentID, reagentAmount in pairs(reagentsTable) do
-									-- Get info
-									local function getInfo()
-										local itemName, itemLink = GetItemInfo(reagentID)
-
-										-- Try again if error
-										if itemName == nil or itemLink == nil then
-											RunNextFrame(getInfo)
-											do return end
-										end
-
-										-- Add text
-										oldText = pslOption3:GetText()
-										pslOption3:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
-									end
-									getInfo()
-								end
-
-								-- Button #3
-								pslOptionButton3 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-								pslOptionButton3:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).name)
-								pslOptionButton3:SetWidth(200)
-								pslOptionButton3:SetPoint("BOTTOM", pslOption3, "TOP", 0, 5)
-								pslOptionButton3:SetPoint("CENTER", pslOption3, "CENTER", 0, 0)
-								pslOptionButton3:SetScript("OnClick", function()
-									-- Define the amount of recipes to be tracked
-									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).quantityMin
-									local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
-
-									-- Track the recipe(s)
-									pslTrackRecipe(recipeIDs[3], amount)
-
-									-- Hide the subreagents window
-									f:Hide()
-								end)
-							end
-
-							-- If four options
-							if no >= 4 then
-								-- Adjust popup frame
-								f:SetSize(640, 335)
-
-								-- Text
-								local pslOption4 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-								pslOption4:SetPoint("LEFT", pslOption1, "LEFT", 0, 0)
-								pslOption4:SetPoint("TOP", pslOption1, "TOP", 0, -130)
-								pslOption4:SetWidth(200)
-								pslOption4:SetJustifyH("LEFT")
-								pslOption4:SetText("|cffFFFFFF")
-
-								-- Get reagents #4
-								local reagentsTable = {}
-								pslGetReagents(reagentsTable, recipeIDs[4], 1)
-
-								-- Create text #4
-								for reagentID, reagentAmount in pairs(reagentsTable) do
-									-- Get info
-									local function getInfo()
-										local itemName, itemLink = GetItemInfo(reagentID)
-
-										-- Try again if error
-										if itemName == nil or itemLink == nil then
-											RunNextFrame(getInfo)
-											do return end
-										end
-
-										-- Add text
-										oldText = pslOption1:GetText()
-										pslOption4:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
-									end
-									getInfo()
-								end
-
-								-- Button #4
-								pslOptionButton4 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-								pslOptionButton4:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).name)
-								pslOptionButton4:SetWidth(200)
-								pslOptionButton4:SetPoint("BOTTOM", pslOption4, "TOP", 0, 5)
-								pslOptionButton4:SetPoint("CENTER", pslOption4, "CENTER", 0, 0)
-								pslOptionButton4:SetScript("OnClick", function()
-									-- Define the amount of recipes to be tracked
-									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).quantityMin
-									local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
-
-									-- Track the recipe(s)
-									pslTrackRecipe(recipeIDs[4], amount)
-
-									-- Hide the subreagents window
-									f:Hide()
-								end)
-							end
-
-							-- If five options
-							if no >= 5 then
-								-- Text
-								local pslOption5 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-								pslOption5:SetPoint("LEFT", pslOption1, "RIGHT", 10, 0)
-								pslOption5:SetPoint("TOP", pslOption1, "TOP", 0, -130)
-								pslOption5:SetWidth(200)
-								pslOption5:SetJustifyH("LEFT")
-								pslOption5:SetText("|cffFFFFFF")
-
-								-- Get reagents #5
-								local reagentsTable = {}
-								pslGetReagents(reagentsTable, recipeIDs[5], 1)
-
-								-- Create text #5
-								for reagentID, reagentAmount in pairs(reagentsTable) do
-									-- Get info
-									local function getInfo()
-										local itemName, itemLink = GetItemInfo(reagentID)
-
-										-- Try again if error
-										if itemName == nil or itemLink == nil then
-											RunNextFrame(getInfo)
-											do return end
-										end
-
-										-- Add text
-										oldText = pslOption1:GetText()
-										pslOption5:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
-									end
-									getInfo()
-								end
-
-								-- Button #5
-								pslOptionButton5 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-								pslOptionButton5:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).name)
-								pslOptionButton5:SetWidth(200)
-								pslOptionButton5:SetPoint("BOTTOM", pslOption5, "TOP", 0, 5)
-								pslOptionButton5:SetPoint("CENTER", pslOption5, "CENTER", 0, 0)
-								pslOptionButton5:SetScript("OnClick", function()
-									-- Define the amount of recipes to be tracked
-									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).quantityMin
-									local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
-
-									-- Track the recipe(s)
-									pslTrackRecipe(recipeIDs[5], amount)
-
-									-- Hide the subreagents window
-									f:Hide()
-								end)
-							end
-
-							-- If six options
-							if no >= 6 then
-								-- Text
-								local pslOption6 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-								pslOption6:SetPoint("LEFT", pslOption1, "RIGHT", 220, 0)
-								pslOption6:SetPoint("TOP", pslOption1, "TOP", 0, -130)
-								pslOption6:SetWidth(200)
-								pslOption6:SetJustifyH("LEFT")
-								pslOption6:SetText("|cffFFFFFF")
-
-								-- Get reagents #6
-								local reagentsTable = {}
-								pslGetReagents(reagentsTable, recipeIDs[6], 1)
-
-								-- Create text #6
-								for reagentID, reagentAmount in pairs(reagentsTable) do
-									-- Get info
-									local function getInfo()
-										local itemName, itemLink = GetItemInfo(reagentID)
-
-										-- Try again if error
-										if itemName == nil or itemLink == nil then
-											RunNextFrame(getInfo)
-											do return end
-										end
-
-										-- Add text
-										oldText = pslOption1:GetText()
-										pslOption6:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
-									end
-									getInfo()
-								end
-
-								-- Button #6
-								pslOptionButton6 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-								pslOptionButton6:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).name)
-								pslOptionButton6:SetWidth(200)
-								pslOptionButton6:SetPoint("BOTTOM", pslOption6, "TOP", 0, 5)
-								pslOptionButton6:SetPoint("CENTER", pslOption6, "CENTER", 0, 0)
-								pslOptionButton6:SetScript("OnClick", function()
-									-- Define the amount of recipes to be tracked
-									local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).quantityMin
-									local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
-
-									-- Track the recipe(s)
-									pslTrackRecipe(recipeIDs[6], amount)
-
-									-- Hide the subreagents window
-									f:Hide()
-								end)
-							end
-						end
-					-- Activate if Shift+clicking on the reagents column
-					elseif column == 1 and button == "LeftButton" and IsShiftKeyDown() == true and realrow ~= nil then
-						ChatEdit_InsertLink(data[realrow][1])
-					end
-				end,
-			})
-
-			-- Recipes window
-			table2:RegisterEvents({
-				["OnEnter"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-					if row and realrow ~= nil then
-						local celldata = data[realrow][1]
-						GameTooltip:ClearLines()
-						GameTooltip:SetOwner(pslFrame2, "ANCHOR_BOTTOM")
-						GameTooltip:SetHyperlink(celldata)
-						GameTooltip:Show()
-					end
-				end,
-				["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-					GameTooltip:ClearLines()
-					GameTooltip:Hide()
-				end,
-				["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
-					-- Right-click on recipe amount
-					if column == 2 and button == "RightButton" and row ~= nil and realrow ~= nil then
-						-- Get the selected recipe ID
-						local selectedRecipe = data[realrow][1]
-						local selectedRecipeID
-
-						for recipeID, recipeLink in pairs(recipeLinks) do
-							if selectedRecipe == recipeLink then selectedRecipeID = recipeID end
-						end
-
-						-- Untrack the recipe
-						if IsControlKeyDown() == true then
-							pslUntrackRecipe(selectedRecipeID, 0)
-						else
-							pslUntrackRecipe(selectedRecipeID, 1)
-						end
-
-						-- Show windows
-						pslFrame1:Show()
-						pslFrame2:Show()
-					-- Left-click on recipe
-					elseif column == 1 and button == "LeftButton" and row ~= nil and realrow ~= nil then
-						-- If Shift is held also
-						if IsShiftKeyDown() == true then
-							-- Try write link to chat
-							ChatEdit_InsertLink(data[realrow][1])
-						-- If Control is held also
-						elseif IsControlKeyDown() == true then
-							-- Get the selected recipe ID
-							local selectedRecipe = data[realrow][1]
-							local selectedRecipeID = 0
-
-							for recipeID, recipeLink in pairs(recipeLinks) do
-								if selectedRecipe == recipeLink then selectedRecipeID = recipeID end
-							end
-
-							-- Open recipe if it is learned
-							if selectedRecipeID ~= 0 and C_TradeSkillUI.IsRecipeProfessionLearned(selectedRecipeID) == true then C_TradeSkillUI.OpenRecipe(selectedRecipeID) end
-						end
-					end
-				end,
-				["OnMouseDown"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
-					if button == "LeftButton" then
-						pslFrame2:StartMoving()
-						GameTooltip:ClearLines()
-						GameTooltip:Hide()
-					end
-				end,
-				["OnMouseUp"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-					pslFrame2:StopMovingOrSizing()
-
-					if realrow ~= nil then
-						local celldata = data[realrow][1]
-						GameTooltip:ClearLines()
-						GameTooltip:SetOwner(pslFrame2, "ANCHOR_BOTTOM")
-						GameTooltip:SetHyperlink(celldata)
-						GameTooltip:Show()
-					end
-				end,
-			})
-		end
-		pslWindowFunctions()
 	end
 
 	-- When a recipe is selected or the profession window is opened
