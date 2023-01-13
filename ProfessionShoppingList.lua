@@ -590,61 +590,62 @@ end
 -- Tooltip information
 function pslTooltipInfo()
 	local function OnTooltipSetItem(tooltip)
-		-- Get item info from tooltip
-		local _, link = TooltipUtil.GetDisplayedItem(tooltip)
+		-- Only run this if the setting is enabled
+		if userSettings["showTooltip"] == true then
+			-- Get item info from tooltip
+			local _, link = TooltipUtil.GetDisplayedItem(tooltip)
 
-		-- Don't do anything if no item link
-		if not link then return end
+			-- Don't do anything if no item link
+			if not link then return end
 
-		-- Get itemID
-		local itemID = GetItemInfoFromHyperlink(link)
+			-- Get itemID
+			local itemID = GetItemInfoFromHyperlink(link)
 
-		-- Stop if error, it will try again on its own REAL soon
-		if itemID == nil then return end
+			-- Stop if error, it will try again on its own REAL soon
+			if itemID == nil then return end
 
-		-- Get owned number of reagents
-		local reagentID1
-		local reagentID2
-		local reagentID3
-		local reagentAmountHave1 = 0
-		local reagentAmountHave2 = 0
-		local reagentAmountHave3 = 0
-	
-		if reagentTiers[itemID] and reagentTiers[itemID].one ~= 0 then
-			reagentID1 = reagentTiers[itemID].one
-			reagentAmountHave1 = GetItemCount(reagentTiers[itemID].one, true, false, true)
-		end
-		if reagentTiers[itemID] and reagentTiers[itemID].two ~= 0 then
-			reagentID2 = reagentTiers[itemID].two
-			reagentAmountHave2 = GetItemCount(reagentTiers[itemID].two, true, false, true)
-		end
-		if reagentTiers[itemID] and reagentTiers[itemID].three ~= 0 then
-			reagentID3 = reagentTiers[itemID].three
-			reagentAmountHave3 = GetItemCount(reagentTiers[itemID].three, true, false, true)
-		end
+			-- Get owned number of reagents
+			local reagentID1
+			local reagentID2
+			local reagentID3
+			local reagentAmountHave1 = 0
+			local reagentAmountHave2 = 0
+			local reagentAmountHave3 = 0
 
-		-- Calculate owned amount/needed based on item quality
-		local reagentAmountHave = 0
-		local reagentAmountNeed = 0
-		if itemID == reagentID1 then
-			reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
-			reagentAmountNeed = reagentsTracked[reagentID1]
-		elseif itemID == reagentID2 then
-			reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
-			reagentAmountNeed = reagentsTracked[reagentID2]
-		elseif itemID == reagentID3 then
-			reagentAmountHave = reagentAmountHave3
-			reagentAmountNeed = reagentsTracked[reagentID3]
-		end
+			if reagentTiers[itemID] and reagentTiers[itemID].one ~= 0 then
+				reagentID1 = reagentTiers[itemID].one
+				reagentAmountHave1 = GetItemCount(reagentTiers[itemID].one, true, false, true)
+			end
+			if reagentTiers[itemID] and reagentTiers[itemID].two ~= 0 then
+				reagentID2 = reagentTiers[itemID].two
+				reagentAmountHave2 = GetItemCount(reagentTiers[itemID].two, true, false, true)
+			end
+			if reagentTiers[itemID] and reagentTiers[itemID].three ~= 0 then
+				reagentID3 = reagentTiers[itemID].three
+				reagentAmountHave3 = GetItemCount(reagentTiers[itemID].three, true, false, true)
+			end
 
-		-- Add the tooltip info
-		if userSettings["showTooltip"] == true and (itemID == reagentID1 or itemID == reagentID2 or itemID == reagentID3) then
-			tooltip:AddLine(" ")
-			tooltip:AddLine("PSL: "..reagentAmountHave.."/"..reagentAmountNeed.." ("..math.max(0,reagentAmountNeed-reagentAmountHave).." more needed)")
+			-- Calculate owned amount/needed based on item quality
+			local reagentAmountHave = 0
+			local reagentAmountNeed = 0
+			if itemID == reagentID1 then
+				reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
+				reagentAmountNeed = reagentsTracked[reagentID1]
+			elseif itemID == reagentID2 then
+				reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
+				reagentAmountNeed = reagentsTracked[reagentID2]
+			elseif itemID == reagentID3 then
+				reagentAmountHave = reagentAmountHave3
+				reagentAmountNeed = reagentsTracked[reagentID3]
+			end
+
+			-- Add the tooltip info
+			if (itemID == reagentID1 or itemID == reagentID2 or itemID == reagentID3) and reagentAmountNeed ~= 0 and reagentAmountNeed ~= nil then
+				tooltip:AddLine(" ")
+				tooltip:AddLine("PSL: "..reagentAmountHave.."/"..reagentAmountNeed.." ("..math.max(0,reagentAmountNeed-reagentAmountHave).." more needed)")
+			end
 		end
 	end
-
-	-- No clue what this does, to be honest
 	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnTooltipSetItem)
 end
 
