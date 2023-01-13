@@ -545,6 +545,15 @@ function pslCreateAssets()
 		chefsHatButton:SetScript("OnClick", function() UseToyByName("Chef's Hat") end)
 	end
 
+	-- Create Dragonflight Milling info
+	if not millingDragonflight then
+		millingDragonflight = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		millingDragonflight:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 230, 305)
+		millingDragonflight:SetJustifyH("LEFT")
+		millingDragonflight:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+		millingDragonflight:SetText("|cffFFFFFFFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nBlazing Pigment: Saxifrage\nShimmering Pigment: Hochenblume")
+	end
+
 	-- Create Knowledge Point tracker
 	if not knowledgePointTracker then
 		-- Bar wrapper
@@ -1535,9 +1544,8 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
 			pslSelectedRecipeID = arg1
 
-			-- Get recipeType and if the recipe has reagents
+			-- Get recipeType
 			pslRecipeType = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).recipeType
-			pslReagents = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).reagentSlotSchematics[1]
 		
 			-- 1 = Item, 3 = Enchant | Normal behaviour
 			if pslRecipeType == 1 or pslRecipeType == 3 then
@@ -1548,7 +1556,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end
 
 			-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
-			if pslRecipeType == 2 or pslReagents == nil then
+			if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).reagentSlotSchematics[1] == nil then
 				trackProfessionButton:Disable()
 				untrackProfessionButton:Disable()
 				trackPlaceOrderButton:Disable()
@@ -1576,6 +1584,13 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end
 		end
 		checkRemoveButton()
+
+		-- Check if/what Milling info should be displayed
+		if arg1 == 382981 then
+			millingDragonflight:Show()
+		else
+			millingDragonflight:Hide()
+		end
 
 		local function professionFeatures()
 			-- Show stuff depending on which profession is opened
