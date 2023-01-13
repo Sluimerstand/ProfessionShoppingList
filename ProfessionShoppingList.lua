@@ -986,17 +986,17 @@ function pslSettings()
 	-- Extra text
 	local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText1:SetPoint("TOPLEFT", slReagentQuality, "BOTTOMLEFT", 3, -40)
-	pslSettingsText1:SetJustifyH("LEFT");
+	pslSettingsText1:SetJustifyH("LEFT")
 	pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.")
 
 	local pslSettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText2:SetPoint("TOPLEFT", pslSettingsText1, "BOTTOMLEFT", 0, -15)
-	pslSettingsText2:SetJustifyH("LEFT");
+	pslSettingsText2:SetJustifyH("LEFT")
 	pslSettingsText2:SetText("Mouse interactions:\nDrag|cffFFFFFF: Move the PSL windows.\n|RShift+click Recipe|cffFFFFFF: Link the recipe.\n|RCtrl+click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click Recipe #|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click Recipe #|cffFFFFFF: Untrack all of the selected recipe.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
 
 	local pslSettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText3:SetPoint("TOPLEFT", pslSettingsText2, "BOTTOMLEFT", 0, -15)
-	pslSettingsText3:SetJustifyH("LEFT");
+	pslSettingsText3:SetJustifyH("LEFT")
 	pslSettingsText3:SetText("Other features:\n|cffFFFFFF- Adds a Chef's Hat button to the Cooking window, if the toy is known.")
 end
 
@@ -1535,57 +1535,20 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
 			pslSelectedRecipeID = arg1
 
-			-- Get recipeType
+			-- Get recipeType and if the recipe has reagents
 			pslRecipeType = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).recipeType
+			pslReagents = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).reagentSlotSchematics[1]
 		
-			-- 1 = Item | Normal behaviour
-			if pslRecipeType == 1 then
+			-- 1 = Item, 3 = Enchant | Normal behaviour
+			if pslRecipeType == 1 or pslRecipeType == 3 then
 				trackProfessionButton:Enable()
 				trackPlaceOrderButton:Enable()
 				trackMakeOrderButton:Enable()
 				ebRecipeQuantity:Enable()
 			end
 
-			-- 2 = Salvage | Disable these, cause they shouldn't be tracked
-			if pslRecipeType == 2 then
-				trackProfessionButton:Disable()
-				untrackProfessionButton:Disable()
-				trackPlaceOrderButton:Disable()
-				untrackPlaceOrderButton:Disable()
-				trackMakeOrderButton:Disable()
-				untrackMakeOrderButton:Disable()
-				ebRecipeQuantity:Disable()
-			end
-
-			-- 3 = Enchant
-			if pslRecipeType == 3 then
-				trackProfessionButton:Enable()
-				trackPlaceOrderButton:Enable()
-				trackMakeOrderButton:Enable()
-				ebRecipeQuantity:Enable()
-			end
-
-			-- 4 = Recraft
-			if pslRecipeType == 4 then
-				trackProfessionButton:Disable()
-				untrackProfessionButton:Disable()
-				trackPlaceOrderButton:Disable()
-				untrackPlaceOrderButton:Disable()
-				trackMakeOrderButton:Disable()
-				untrackMakeOrderButton:Disable()
-				ebRecipeQuantity:Disable()
-			end
-			
-			-- Except that doesn't work, it just returns 1 >,> | Disable these, cause they shouldn't be tracked
-			if pslSelectedRecipeID == 389195 -- Leatherworking 
-			or pslSelectedRecipeID == 389190 -- Alchemy
-			or pslSelectedRecipeID == 389192 -- Engineering
-			or pslSelectedRecipeID == 389196 -- Tailoring
-			or pslSelectedRecipeID == 389194 -- Jewelcrafting
-			or pslSelectedRecipeID == 389193 -- Inscription
-			or pslSelectedRecipeID == 385304 -- Blacksmithing
-			or pslSelectedRecipeID == 389191 -- Enchanting
-			then
+			-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
+			if pslRecipeType == 2 or pslReagents == nil then
 				trackProfessionButton:Disable()
 				untrackProfessionButton:Disable()
 				trackPlaceOrderButton:Disable()
@@ -2354,6 +2317,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		pslOrderRecipeID = 0
 	end
 
+	-- Replace the in-game tracking of shift+clicking a recipe with PSL's
 	if event == "TRACKED_RECIPE_UPDATE" then
 		if arg2 == true then
 			pslTrackRecipe(arg1,1)
