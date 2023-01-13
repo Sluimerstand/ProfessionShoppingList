@@ -2311,17 +2311,25 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		end
 	end
 
-	-- Remove 1 tracked recipe when it has been crafted (if the option is enabled)
+	-- Do stuff when a spell is succesfully cast
 	if event == "UNIT_SPELLCAST_SUCCEEDED" and userSettings["removeCraft"] == true then
-		local recipeID = ...
-		pslUntrackRecipe(recipeID, 1)
-
-		-- Close windows if no recipes are left and the option is enabled
-		local next = next
-		if next(recipesTracked) == nil and userSettings["closeWhenDone"] == true then
-			pslFrame1:Hide()
-			pslFrame2:Hide()
-		end			
+		local spellID = ...
+	
+		-- Run only when crafting a tracked recipe
+		if recipesTracked[spellID] then
+			-- Remove 1 tracked recipe when it has been crafted (if the option is enabled)
+			pslUntrackRecipe(spellID, 1)
+			
+			-- Clear the cache if no recipes are tracked anymore
+			if #recipesTracked == 0 then
+				pslClear()
+				-- Close windows if no recipes are left and the option is enabled
+				if userSettings["closeWhenDone"] == true then
+					pslFrame1:Hide()
+					pslFrame2:Hide()
+				end
+			end
+		end
 	end
 
 	-- Update the numbers when bag changes occur
