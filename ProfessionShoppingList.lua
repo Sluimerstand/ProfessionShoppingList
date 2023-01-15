@@ -295,19 +295,19 @@ function pslReagents()
 
 			reagentAmountHave1 = GetItemCount(reagentTiers[reagentID].one, true, false, true)
 			if reagentTiers[reagentID].two ~= 0 then
-				local reagentAmountHave2 = GetItemCount(reagentTiers[reagentID].two, true, false, true)
+				reagentAmountHave2 = GetItemCount(reagentTiers[reagentID].two, true, false, true)
 			end
 			if reagentTiers[reagentID].three ~= 0 then
-				local reagentAmountHave3 = GetItemCount(reagentTiers[reagentID].three, true, false, true)
+				reagentAmountHave3 = GetItemCount(reagentTiers[reagentID].three, true, false, true)
 			end
 
-			-- Calculate owned amount based on user setting for reagent quality
+			-- Calculate owned amount based on the quality of the item
 			local reagentAmountHave = 0
-			if userSettings["reagentQuality"] == 1 then
+			if reagentID == reagentTiers[reagentID].one then
 				reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
-			elseif userSettings["reagentQuality"] == 2  then
+			elseif reagentID == reagentTiers[reagentID].two then
 				reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
-			elseif userSettings["reagentQuality"] == 3 then
+			elseif reagentID == reagentTiers[reagentID].three then
 				reagentAmountHave = reagentAmountHave3
 			end
 			
