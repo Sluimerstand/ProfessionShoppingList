@@ -1998,7 +1998,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70353] = 201009
 				books = {}
 				books[1] = {questID = 71894, itemID = 200972}
-				books[2] = {questID = 0, itemID = 201268}
+				books[2] = {questID = 71905, itemID = 201268}
 				books[3] = {questID = 0, itemID = 201279}
 			end
 
@@ -2025,7 +2025,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70308] = 198711
 				books = {}
 				books[1] = {questID = 71900, itemID = 200979}
-				books[2] = {questID = 0, itemID = 201275}
+				books[2] = {questID = 71911, itemID = 201275}
 				books[3] = {questID = 0, itemID = 201286}
 			end
 
@@ -2052,7 +2052,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70309] = 198712
 				books = {}
 				books[1] = {questID = 71893, itemID = 200974}
-				books[2] = {questID = 0, itemID = 201270}
+				books[2] = {questID = 71904, itemID = 201270}
 				books[3] = {questID = 0, itemID = 201281}
 			end
 
@@ -2074,7 +2074,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures = nil
 				books = {}
 				books[1] = {questID = 71897, itemID = 200980}
-				books[2] = {questID = 0, itemID = 201276}
+				books[2] = {questID = 71908, itemID = 201276}
 				books[3] = {questID = 0, itemID = 201287}
 			end
 
@@ -2103,7 +2103,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures = nil
 				books = {}
 				books[1] = {questID = 71901, itemID = 200981}
-				books[2] = {questID = 0, itemID = 201277}
+				books[2] = {questID = 71912, itemID = 201277}
 				books[3] = {questID = 0, itemID = 201288}
 			end
 
@@ -2131,7 +2131,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70372] = 201019
 				books = {}
 				books[1] = {questID = 71903, itemID = 200975}
-				books[2] = {questID = 0, itemID = 201271}
+				books[2] = {questID = 71914, itemID = 201271}
 				books[3] = {questID = 0, itemID = 201282}
 			end
 
@@ -2153,7 +2153,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70275] = 198789
 				books = {}
 				books[1] = {questID = 71896, itemID = 200977}
-				books[2] = {questID = 0, itemID = 201273}
+				books[2] = {questID = 71907, itemID = 201273}
 				books[3] = {questID = 0, itemID = 201284}
 			end
 
@@ -2181,7 +2181,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70342] = 198800
 				books = {}
 				books[1] = {questID = 71895, itemID = 200976}
-				books[2] = {questID = 0, itemID = 201272}
+				books[2] = {questID = 71906, itemID = 201272}
 				books[3] = {questID = 0, itemID = 201283}
 			end
 
@@ -2203,7 +2203,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures = nil
 				books = {}
 				books[1] = {questID = 71902, itemID = 200982}
-				books[2] = {questID = 0, itemID = 201278}
+				books[2] = {questID = 71913, itemID = 201278}
 				books[3] = {questID = 0, itemID = 201289}
 			end
 
@@ -2231,7 +2231,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70285] = 198682
 				books = {}
 				books[1] = {questID = 71899, itemID = 200978}
-				books[2] = {questID = 0, itemID = 201274}
+				books[2] = {questID = 71910, itemID = 201274}
 				books[3] = {questID = 0, itemID = 201285}
 			end
 
@@ -2259,7 +2259,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70307] = 198703
 				books = {}
 				books[1] = {questID = 71898, itemID = 200973}
-				books[2] = {questID = 0, itemID = 201269}
+				books[2] = {questID = 201269, itemID = 201269}
 				books[3] = {questID = 0, itemID = 201280}
 			end
 
