@@ -366,6 +366,10 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 
 	-- Update numbers
 	pslReagents()
+
+	-- Update the editbox
+	ebRecipeQuantityNo = recipesTracked[recipeID] or 0
+	ebRecipeQuantity:SetText(ebRecipeQuantityNo)
 end
 
 -- Untrack recipe
@@ -390,6 +394,10 @@ function pslUntrackRecipe(recipeID, recipeQuantity)
 
 	-- Update numbers
 	pslReagents()
+
+	-- Update the editbox
+	ebRecipeQuantityNo = recipesTracked[recipeID] or 0
+	ebRecipeQuantity:SetText(ebRecipeQuantityNo)
 end
 
 -- Create assets
@@ -424,9 +432,6 @@ function pslCreateAssets()
 				pslTrackRecipe(pslSelectedRecipeID,newValue)
 			end
 		end
-		-- Set the textbox to show that number (if it is not nil, otherwise do 0)
-		ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID] or 0
-		self:SetText(ebRecipeQuantityNo)
 	end
 	ebRecipeQuantity = CreateFrame("EditBox", nil, ProfessionsFrame.CraftingPage, "InputBoxTemplate")
 	ebRecipeQuantity:SetSize(25,20)
