@@ -1803,16 +1803,19 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				end
 
 				-- Artisan books
-				local _, _, artisanReputation = GetFactionInfoByID(2544)
+				
+
+
+				local artisanReputation = C_GossipInfo.GetFriendshipReputation(2544).standing
 				if not artisanReputation then artisanReputation = 0 end
 
 				local bookStatus1 = READY_CHECK_WAITING_TEXTURE
 				local bookStatus2 = READY_CHECK_WAITING_TEXTURE
 				local bookStatus3 = READY_CHECK_WAITING_TEXTURE
 
-				if artisanReputation >= 3 then bookStatus1 = READY_CHECK_NOT_READY_TEXTURE end
-				if artisanReputation >= 5 then bookStatus2 = READY_CHECK_NOT_READY_TEXTURE end
-				if artisanReputation >= 6 and books[3].questID ~= 0 then bookStatus3 = READY_CHECK_NOT_READY_TEXTURE end	-- Temp if questID
+				if artisanReputation >= 500 then bookStatus1 = READY_CHECK_NOT_READY_TEXTURE end
+				if artisanReputation >= 5500 then bookStatus2 = READY_CHECK_NOT_READY_TEXTURE end
+				if artisanReputation >= 12500 and books[3].questID ~= 0 then bookStatus3 = READY_CHECK_NOT_READY_TEXTURE end	-- Temp if questID
 
 				if C_QuestLog.IsQuestFlaggedCompleted(books[1].questID) == true then bookStatus1 = READY_CHECK_READY_TEXTURE end
 				if C_QuestLog.IsQuestFlaggedCompleted(books[2].questID) == true then bookStatus2 = READY_CHECK_READY_TEXTURE end
