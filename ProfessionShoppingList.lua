@@ -2260,7 +2260,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70307] = 198703
 				books = {}
 				books[1] = {questID = 71898, itemID = 200973}
-				books[2] = {questID = 201269, itemID = 201269}
+				books[2] = {questID = 71909, itemID = 201269}
 				books[3] = {questID = 0, itemID = 201280}
 			end
 
