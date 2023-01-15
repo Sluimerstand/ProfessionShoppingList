@@ -1811,13 +1811,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				local bookStatus3 = READY_CHECK_WAITING_TEXTURE
 
 				if artisanReputation >= 2 then bookStatus1 = READY_CHECK_NOT_READY_TEXTURE end
-				if artisanReputation >= 4 and books[2].questID ~= 0 then bookStatus2 = READY_CHECK_NOT_READY_TEXTURE end	-- Temp if questID
+				if artisanReputation >= 4 then bookStatus2 = READY_CHECK_NOT_READY_TEXTURE end
 				if artisanReputation >= 5 and books[3].questID ~= 0 then bookStatus3 = READY_CHECK_NOT_READY_TEXTURE end	-- Temp if questID
 
 				if C_QuestLog.IsQuestFlaggedCompleted(books[1].questID) == true then bookStatus1 = READY_CHECK_READY_TEXTURE end
-				if books[2].questID ~= 0 then	-- Temp if questID
-					if C_QuestLog.IsQuestFlaggedCompleted(books[2].questID) == true then bookStatus2 = READY_CHECK_READY_TEXTURE end
-				end
+				if C_QuestLog.IsQuestFlaggedCompleted(books[2].questID) == true then bookStatus2 = READY_CHECK_READY_TEXTURE end
 				if books[3].questID ~= 0 then	-- Temp if questID
 					if C_QuestLog.IsQuestFlaggedCompleted(books[3].questID) == true then bookStatus3 = READY_CHECK_READY_TEXTURE end
 				end
