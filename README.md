@@ -11,7 +11,7 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 
 **If you are experiencing issues**
 - Use `/psl clear`. Some new versions come with logic changes, and then it is necessary to clear the tracked recipes once.
-- If the issues remain, or you have other feedback, feel free to join the [All The Things Discord](https://discord.gg/allthethings) and ask in the #profession-shopping-list Retail channel, or create a [ticket on Github](https://github.com/Sluimerstand/ProfessionShoppingList/issues). :)
+- If the issues remain, or you have other feedback, feel free to join the [All The Things Discord](https://discord.gg/allthethings) and ask in the #profession-shopping-list Retail channel, or create a [ticket on GitHub](https://github.com/Sluimerstand/ProfessionShoppingList/issues). :)
 
 **Chat commands**
 
