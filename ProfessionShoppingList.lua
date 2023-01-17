@@ -2014,8 +2014,8 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops = {}
 				drops[1] = {questID = 66384, itemID = 193910, source = "Treasures"}
 				drops[2] = {questID = 66385, itemID = 193913, source = "Treasures"}
-				drops[3] = {questID = 70522, itemID = 198975, source = "Mobs"}
-				drops[4] = {questID = 70523, itemID = 198976, source = "Mobs"}
+				drops[3] = {questID = 70522, itemID = 198975, source = "Mobs: Proto-Drakes"}
+				drops[4] = {questID = 70523, itemID = 198976, source = "Mobs: Slyvern & Vorquin"}
 				treasures = {}
 				treasures[70266] = 198658
 				treasures[70269] = 201018
