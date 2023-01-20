@@ -352,9 +352,17 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 	recipesTracked[recipeID] = recipesTracked[recipeID] + recipeQuantity
 
 	local recipeType = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).recipeType
+	local _, outputItemLink = GetItemInfo(C_TradeSkillUI.GetRecipeSchematic(recipeID,false).outputItemID)
+
+	-- Try again if error
+	if outputItemLink == nil then
+		RunNextFrame()
+		do return end
+	end
+
 	-- Add recipe link for crafted items
 	if recipeType == 1 then
-		local link = string.gsub(C_TradeSkillUI.GetRecipeOutputItemData(recipeID).hyperlink, " |A:Professions%-ChatIcon%-Quality%-Tier1:17:15::1|a", "") --" |A:Professions-ChatIcon-Quality-Tier1:17:15::1|a"
+		local link = string.gsub(outputItemLink, " |A:Professions%-ChatIcon%-Quality%-Tier1:17:15::1|a", "") -- Remove the quality from the item string
 		recipeLinks[recipeID] = link
 	-- Add recipe "link" for enchants
 	elseif recipeType == 3 then recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
