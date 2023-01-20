@@ -356,7 +356,7 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 
 	-- Try again if error
 	if outputItemLink == nil then
-		RunNextFrame()
+		RunNextFrame(pslTrackRecipe(recipeID, recipeQuantity))
 		do return end
 	end
 
