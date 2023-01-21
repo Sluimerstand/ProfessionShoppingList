@@ -462,8 +462,11 @@ function pslUpdate()
 				reagentAmountHave = reagentAmountHave3
 			end
 
-			-- Make itemLinks grey and add a checkmark if 0 are needed
+			-- Make stuff grey and add a checkmark if 0 are needed
+			local itemAmount = ""
 			if math.max(0,amount-reagentAmountHave) == 0 then
+				itemAmount = "|cff9d9d9d"
+				itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Poor
 				itemLink = string.gsub(itemLink, "|cffffffff|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Common
 				itemLink = string.gsub(itemLink, "|cff1eff00|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Uncommon
 				itemLink = string.gsub(itemLink, "|cff0070dd|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Rare
@@ -473,11 +476,10 @@ function pslUpdate()
 			end
 
 			-- Set the displayed amount based on settings
-			local itemAmount
 			if userSettings["showRemaining"] == false then
-				itemAmount = reagentAmountHave.."/"..amount
+				itemAmount = itemAmount..reagentAmountHave.."/"..amount
 			else
-				itemAmount = math.max(0,amount-reagentAmountHave)
+				itemAmount = itemAmount..math.max(0,amount-reagentAmountHave)
 			end
 
 			-- Push the info to the windows
