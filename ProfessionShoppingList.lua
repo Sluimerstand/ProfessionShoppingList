@@ -58,7 +58,7 @@ function pslInitialise()
 	if userSettings["showKnowledgeNotPerks"] == nil then userSettings["showKnowledgeNotPerks"] = false end
 
 	-- Shadowlands Legendary craft SpellIDs, because they don't work like the rest, thanks Blizz
-	-- See if I can put these in another file, idk how to do that D:
+	-- TODO: See if I can put these in another file, idk how to do that D:
 	slLegendaryRecipeIDs = {}
 	slLegendaryRecipeIDs[307705] = { rank = 1, one = 307705, two = 332006, three = 332041, four = 338976 }
 	slLegendaryRecipeIDs[307712] = { rank = 1, one = 307712, two = 332013, three = 332048, four = 338968 }
@@ -408,7 +408,7 @@ function pslGetReagents(reagentVariable, recipeID, recipeQuantity, qualityTier)
 end
 
 -- Update numbers
-function pslReagents()
+function pslUpdate()
 	-- Update recipes tracked
 	local data = {};
 	for recipeID, no in pairs(recipesTracked) do
@@ -461,14 +461,27 @@ function pslReagents()
 			elseif reagentID == reagentTiers[reagentID].three then
 				reagentAmountHave = reagentAmountHave3
 			end
-			
-			-- Push the info to the windows
-			if userSettings["showRemaining"] == false then
-				table.insert(data, {itemLink, reagentAmountHave.."/"..amount})
-			else
-				table.insert(data, {itemLink, math.max(0,amount-reagentAmountHave)})
+
+			-- Make itemLinks grey and add a checkmark if 0 are needed
+			if math.max(0,amount-reagentAmountHave) == 0 then
+				itemLink = string.gsub(itemLink, "|cffffffff|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Common
+				itemLink = string.gsub(itemLink, "|cff1eff00|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Uncommon
+				itemLink = string.gsub(itemLink, "|cff0070dd|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Rare
+				itemLink = string.gsub(itemLink, "|cffa335ee|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Epic
+				itemLink = string.gsub(itemLink, "|cffff8000|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Legendary
+				itemLink = string.gsub(itemLink, "|cffe6cc80|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Artifact
 			end
 
+			-- Set the displayed amount based on settings
+			local itemAmount
+			if userSettings["showRemaining"] == false then
+				itemAmount = reagentAmountHave.."/"..amount
+			else
+				itemAmount = math.max(0,amount-reagentAmountHave)
+			end
+
+			-- Push the info to the windows
+			table.insert(data, {itemLink, itemAmount})
 			table1:SetData(data, true)
 		end
 		getInfo()
@@ -543,7 +556,7 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 	pslFrame2:Show()
 
 	-- Update numbers
-	pslReagents()
+	pslUpdate()
 
 	-- Update the editbox
 	ebRecipeQuantityNo = recipesTracked[recipeID] or 0
@@ -571,7 +584,7 @@ function pslUntrackRecipe(recipeID, recipeQuantity)
 	if next(recipesTracked) == nil then pslClear() end
 
 	-- Update numbers
-	pslReagents()
+	pslUpdate()
 
 	-- Update the editbox
 	ebRecipeQuantityNo = recipesTracked[recipeID] or 0
@@ -873,7 +886,7 @@ function pslClear()
 	reagentsTracked = {}
 	recipeLinks = {}
 	reagentTiers = {}
-	pslReagents()
+	pslUpdate()
 
 	-- Disable remove button
 	untrackProfessionButton:Disable()
@@ -914,7 +927,7 @@ function pslSettings()
 					pslFrame2:Show()
 				end
 				-- Only update numbers if numbers exist
-				if reagentsTracked then pslReagents() end
+				if reagentsTracked then pslUpdate() end
 			elseif button == "RightButton" then
 				pslOpenSettings()
 			end
@@ -1008,7 +1021,7 @@ function pslSettings()
 	cbShowRemaining:SetChecked(userSettings["showRemaining"])
 	cbShowRemaining:SetScript("OnClick", function(self)
 		userSettings["showRemaining"] = cbShowRemaining:GetChecked()
-		pslReagents()
+		pslUpdate()
 	end)
 
 	local cbShowTooltip = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
@@ -1060,7 +1073,7 @@ function pslSettings()
 		userSettings["reagentQuality"] = newValue
 		self:SetValue(userSettings["reagentQuality"])
 		self.Label:SetText("|A:Professions-ChatIcon-Quality-Tier"..slReagentQuality:GetValue()..":17:15::1|a")
-		pslReagents()
+		pslUpdate()
 	end)
 
 	-- Column 2
@@ -1735,7 +1748,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					pslFrame2:Show()
 				end
 				-- Only update numbers if numbers exist
-				if reagentsTracked then pslReagents() end
+				if reagentsTracked then pslUpdate() end
 			end
 		end
 	end
@@ -2039,7 +2052,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					RunNextFrame(kpTooltip)
 					do return end
 				end
-
+				
 				-- Set text
 				local oldText
 				if treatiseQuest ~= nil then
@@ -2526,7 +2539,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 	-- Update the numbers when bag changes occur
 	if event == "BAG_UPDATE" then
-		pslReagents()
+		pslUpdate()
 	end
 
 	-- Set the Vendor filter to 'All' if the option is enabled
