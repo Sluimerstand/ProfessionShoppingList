@@ -2025,9 +2025,6 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				end
 
 				-- Artisan books
-				
-
-
 				local artisanReputation = C_GossipInfo.GetFriendshipReputation(2544).standing
 				if not artisanReputation then artisanReputation = 0 end
 
