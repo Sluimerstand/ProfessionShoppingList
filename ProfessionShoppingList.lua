@@ -532,16 +532,17 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 	recipesTracked[recipeID] = recipesTracked[recipeID] + recipeQuantity
 
 	local recipeType = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).recipeType
-	local _, itemLink = GetItemInfo(C_TradeSkillUI.GetRecipeSchematic(recipeID,false).outputItemID)
-
-	-- Try again if error
-	if itemLink == nil then
-		RunNextFrame(pslTrackRecipe(recipeID, recipeQuantity))
-		do return end
-	end
 
 	-- Add recipe link for crafted items
 	if recipeType == 1 then
+		local _, itemLink = GetItemInfo(C_TradeSkillUI.GetRecipeSchematic(recipeID,false).outputItemID)
+
+		-- Try again if error
+		if itemLink == nil then
+			RunNextFrame(pslTrackRecipe(recipeID, recipeQuantity))
+			do return end
+		end
+		
 		-- Exceptions for SL legendary crafts
 		if slLegendaryRecipeIDs[recipeID] then
 			itemLink = itemLink.." (Rank "..slLegendaryRecipeIDs[recipeID].rank..")" -- Append the rank
