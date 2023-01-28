@@ -542,7 +542,7 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 			RunNextFrame(pslTrackRecipe(recipeID, recipeQuantity))
 			do return end
 		end
-		
+
 		-- Exceptions for SL legendary crafts
 		if slLegendaryRecipeIDs[recipeID] then
 			itemLink = itemLink.." (Rank "..slLegendaryRecipeIDs[recipeID].rank..")" -- Append the rank
@@ -963,15 +963,20 @@ function pslSettings()
 
 	-- Settings
 	local title = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormalLarge")
-	title:SetPoint("TOPLEFT", 10, -8)
+	title:SetPoint("TOPLEFT", 0, 0)
 	title:SetText("Profession Shopping List")
+
+	local addonversion = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormalLarge")
+	addonversion:SetPoint("CENTER", title, "CENTER", 0, 0)
+	addonversion:SetPoint("RIGHT", -20, 0)
+	addonversion:SetText(GetAddOnMetadata("ProfessionShoppingList", "Version"))
 
 	-- Column 1
 	local cbMinimapButton = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
 	cbMinimapButton.Text:SetText("Minimap button")
 	cbMinimapButton.Text:SetTextColor(1, 1, 1, 1)
 	cbMinimapButton.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-	cbMinimapButton:SetPoint("TOPLEFT", 10, -25)
+	cbMinimapButton:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -10)
 	cbMinimapButton:SetChecked(not userSettings["hide"])
 	cbMinimapButton:SetScript("OnClick", function(self)
 		userSettings["hide"] = not self:GetChecked()
