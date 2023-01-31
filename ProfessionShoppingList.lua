@@ -1270,6 +1270,16 @@ function pslWindowFunctions()
 			end
 		end,
 		["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
+			local function trackSubreagent(recipeID, itemID)
+				-- Define the amount of recipes to be tracked
+				local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
+				local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+				if recipesTracked[recipeID] then amount = math.max(0, (amount - recipesTracked[recipeID])) end
+
+				-- Track the recipe (don't track if 0)
+				if amount > 0 then pslTrackRecipe(recipeID, amount) end
+			end
+
 			-- Control+click on reagent
 			if column == 1 and button == "LeftButton" and IsControlKeyDown() == true and realrow ~= nil then
 				-- Get itemIDs
@@ -1289,7 +1299,7 @@ function pslWindowFunctions()
 
 				-- If there is only one possible recipe, use that
 				if no == 1 then
-					pslTrackRecipe(recipeIDs[no], 1)
+					trackSubreagent(recipeIDs[1], itemID)
 				-- If there is more than one possible recipe, provide options
 				elseif no > 1 then
 					-- Create popup frame
@@ -1361,12 +1371,7 @@ function pslWindowFunctions()
 					pslOptionButton1:SetPoint("BOTTOM", pslOption1, "TOP", 0, 5)
 					pslOptionButton1:SetPoint("CENTER", pslOption1, "CENTER", 0, 0)
 					pslOptionButton1:SetScript("OnClick", function()
-						-- Define the amount of recipes to be tracked
-						local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).quantityMin
-						local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
-
-						-- Track the recipe(s)
-						pslTrackRecipe(recipeIDs[1], amount)
+						trackSubreagent(recipeIDs[1], itemID)
 
 						-- Hide the subreagents window
 						f:Hide()
@@ -1415,12 +1420,7 @@ function pslWindowFunctions()
 						pslOptionButton2:SetPoint("BOTTOM", pslOption2, "TOP", 0, 5)
 						pslOptionButton2:SetPoint("CENTER", pslOption2, "CENTER", 0, 0)
 						pslOptionButton2:SetScript("OnClick", function()
-							-- Define the amount of recipes to be tracked
-							local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).quantityMin
-							local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
-
-							-- Track the recipe(s)
-							pslTrackRecipe(recipeIDs[2], amount)
+							trackSubreagent(recipeIDs[2], itemID)
 
 							-- Hide the subreagents window
 							f:Hide()
@@ -1470,12 +1470,7 @@ function pslWindowFunctions()
 						pslOptionButton3:SetPoint("BOTTOM", pslOption3, "TOP", 0, 5)
 						pslOptionButton3:SetPoint("CENTER", pslOption3, "CENTER", 0, 0)
 						pslOptionButton3:SetScript("OnClick", function()
-							-- Define the amount of recipes to be tracked
-							local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).quantityMin
-							local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
-
-							-- Track the recipe(s)
-							pslTrackRecipe(recipeIDs[3], amount)
+							trackSubreagent(recipeIDs[3], itemID)
 
 							-- Hide the subreagents window
 							f:Hide()
@@ -1525,12 +1520,7 @@ function pslWindowFunctions()
 						pslOptionButton4:SetPoint("BOTTOM", pslOption4, "TOP", 0, 5)
 						pslOptionButton4:SetPoint("CENTER", pslOption4, "CENTER", 0, 0)
 						pslOptionButton4:SetScript("OnClick", function()
-							-- Define the amount of recipes to be tracked
-							local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).quantityMin
-							local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
-
-							-- Track the recipe(s)
-							pslTrackRecipe(recipeIDs[4], amount)
+							trackSubreagent(recipeIDs[4], itemID)
 
 							-- Hide the subreagents window
 							f:Hide()
@@ -1577,12 +1567,7 @@ function pslWindowFunctions()
 						pslOptionButton5:SetPoint("BOTTOM", pslOption5, "TOP", 0, 5)
 						pslOptionButton5:SetPoint("CENTER", pslOption5, "CENTER", 0, 0)
 						pslOptionButton5:SetScript("OnClick", function()
-							-- Define the amount of recipes to be tracked
-							local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).quantityMin
-							local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
-
-							-- Track the recipe(s)
-							pslTrackRecipe(recipeIDs[5], amount)
+							trackSubreagent(recipeIDs[5], itemID)
 
 							-- Hide the subreagents window
 							f:Hide()
@@ -1629,12 +1614,7 @@ function pslWindowFunctions()
 						pslOptionButton6:SetPoint("BOTTOM", pslOption6, "TOP", 0, 5)
 						pslOptionButton6:SetPoint("CENTER", pslOption6, "CENTER", 0, 0)
 						pslOptionButton6:SetScript("OnClick", function()
-							-- Define the amount of recipes to be tracked
-							local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).quantityMin
-							local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
-
-							-- Track the recipe(s)
-							pslTrackRecipe(recipeIDs[6], amount)
+							trackSubreagent(recipeIDs[6], itemID)
 
 							-- Hide the subreagents window
 							f:Hide()
