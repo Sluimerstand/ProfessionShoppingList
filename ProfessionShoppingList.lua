@@ -6,7 +6,7 @@ if not Blizzard_ProfessionsCustomerOrders then UIParentLoadAddOn("Blizzard_Profe
 
 -- API Events
 api:RegisterEvent("ADDON_LOADED")
-api:RegisterEvent("BAG_UPDATE")
+api:RegisterEvent("BAG_UPDATE_DELAYED")
 api:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
 api:RegisterEvent("TRADE_SKILL_SHOW")
 api:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
@@ -407,88 +407,92 @@ function pslGetReagents(reagentVariable, recipeID, recipeQuantity, qualityTier)
 	end
 end
 
--- Update numbers
-function pslUpdate()
+-- Update numbers tracked
+function pslUpdateNumbers()
+	-- Update reagents tracked
+	local data = {}
+
+	for reagentID, amount in pairs(reagentsTracked) do
+		-- Get info
+		local itemName, itemLink
+		itemName, itemLink = GetItemInfo(reagentID)
+
+		-- Try again if error
+		if itemName == nil or itemLink == nil then
+			RunNextFrame(pslUpdateNumbers)
+			do return end
+		end
+
+		-- Get needed/owned number of reagents
+		local reagentAmountHave1 = 0
+		local reagentAmountHave2 = 0
+		local reagentAmountHave3 = 0
+
+		reagentAmountHave1 = GetItemCount(reagentTiers[reagentID].one, true, false, true)
+		if reagentTiers[reagentID].two ~= 0 then
+			reagentAmountHave2 = GetItemCount(reagentTiers[reagentID].two, true, false, true)
+		end
+		if reagentTiers[reagentID].three ~= 0 then
+			reagentAmountHave3 = GetItemCount(reagentTiers[reagentID].three, true, false, true)
+		end
+
+		-- Calculate owned amount based on the quality of the item
+		local reagentAmountHave = 0
+		if reagentID == reagentTiers[reagentID].one then
+			reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
+		elseif reagentID == reagentTiers[reagentID].two then
+			reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
+		elseif reagentID == reagentTiers[reagentID].three then
+			reagentAmountHave = reagentAmountHave3
+		end
+
+		-- Make stuff grey and add a checkmark if 0 are needed
+		local itemAmount = ""
+		if math.max(0,amount-reagentAmountHave) == 0 then
+			itemAmount = "|cff9d9d9d"
+			itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Poor
+			itemLink = string.gsub(itemLink, "|cffffffff|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Common
+			itemLink = string.gsub(itemLink, "|cff1eff00|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Uncommon
+			itemLink = string.gsub(itemLink, "|cff0070dd|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Rare
+			itemLink = string.gsub(itemLink, "|cffa335ee|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Epic
+			itemLink = string.gsub(itemLink, "|cffff8000|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Legendary
+			itemLink = string.gsub(itemLink, "|cffe6cc80|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Artifact
+		end
+
+		-- Set the displayed amount based on settings
+		if userSettings["showRemaining"] == false then
+			itemAmount = itemAmount..reagentAmountHave.."/"..amount
+		else
+			itemAmount = itemAmount..math.max(0,amount-reagentAmountHave)
+		end
+
+		-- Push the info to the windows
+		table.insert(data, {itemLink, itemAmount})
+		table1:SetData(data, true)
+	end
+	table1:SetData(data, true)
+end
+
+-- Update recipes and reagents tracked
+function pslUpdateRecipes()
 	-- Update recipes tracked
-	local data = {};
+	local data = {}
+
 	for recipeID, no in pairs(recipesTracked) do
 		table.insert(data, {recipeLinks[recipeID], no})
 		table2:SetData(data, true)
 	end
 	table2:SetData(data, true)
 	
-	-- Recalculate reagents
+	-- Recalculate reagents tracked
 	reagentsTracked = {}
 
 	for recipeID, no in pairs(recipesTracked) do
 		pslGetReagents(reagentsTracked, recipeID, no)
 	end
 
-	-- Update reagents tracked
-	local data = {}
-
-	for reagentID, amount in pairs(reagentsTracked) do
-		local function getInfo()
-			-- Get info
-			local itemName, itemLink
-			itemName, itemLink = GetItemInfo(reagentID)
-
-			-- Try again if error
-			if itemName == nil or itemLink == nil then
-				RunNextFrame(getInfo)
-				do return end
-			end
-
-			-- Get needed/owned number of reagents
-			local reagentAmountHave1 = 0
-			local reagentAmountHave2 = 0
-			local reagentAmountHave3 = 0
-
-			reagentAmountHave1 = GetItemCount(reagentTiers[reagentID].one, true, false, true)
-			if reagentTiers[reagentID].two ~= 0 then
-				reagentAmountHave2 = GetItemCount(reagentTiers[reagentID].two, true, false, true)
-			end
-			if reagentTiers[reagentID].three ~= 0 then
-				reagentAmountHave3 = GetItemCount(reagentTiers[reagentID].three, true, false, true)
-			end
-
-			-- Calculate owned amount based on the quality of the item
-			local reagentAmountHave = 0
-			if reagentID == reagentTiers[reagentID].one then
-				reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
-			elseif reagentID == reagentTiers[reagentID].two then
-				reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
-			elseif reagentID == reagentTiers[reagentID].three then
-				reagentAmountHave = reagentAmountHave3
-			end
-
-			-- Make stuff grey and add a checkmark if 0 are needed
-			local itemAmount = ""
-			if math.max(0,amount-reagentAmountHave) == 0 then
-				itemAmount = "|cff9d9d9d"
-				itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Poor
-				itemLink = string.gsub(itemLink, "|cffffffff|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Common
-				itemLink = string.gsub(itemLink, "|cff1eff00|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Uncommon
-				itemLink = string.gsub(itemLink, "|cff0070dd|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Rare
-				itemLink = string.gsub(itemLink, "|cffa335ee|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Epic
-				itemLink = string.gsub(itemLink, "|cffff8000|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Legendary
-				itemLink = string.gsub(itemLink, "|cffe6cc80|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Artifact
-			end
-
-			-- Set the displayed amount based on settings
-			if userSettings["showRemaining"] == false then
-				itemAmount = itemAmount..reagentAmountHave.."/"..amount
-			else
-				itemAmount = itemAmount..math.max(0,amount-reagentAmountHave)
-			end
-
-			-- Push the info to the windows
-			table.insert(data, {itemLink, itemAmount})
-			table1:SetData(data, true)
-		end
-		getInfo()
-	end
-	table1:SetData(data, true)
+	-- Update numbers tracked
+	pslUpdateNumbers()
 
 	-- Check if the Untrack button should be enabled
 	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID] == 0 then
@@ -559,7 +563,7 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 	pslFrame2:Show()
 
 	-- Update numbers
-	pslUpdate()
+	pslUpdateRecipes()
 
 	-- Update the editbox
 	ebRecipeQuantityNo = recipesTracked[recipeID] or 0
@@ -587,7 +591,7 @@ function pslUntrackRecipe(recipeID, recipeQuantity)
 	if next(recipesTracked) == nil then pslClear() end
 
 	-- Update numbers
-	pslUpdate()
+	pslUpdateRecipes()
 
 	-- Update the editbox
 	ebRecipeQuantityNo = recipesTracked[recipeID] or 0
@@ -889,7 +893,7 @@ function pslClear()
 	reagentsTracked = {}
 	recipeLinks = {}
 	reagentTiers = {}
-	pslUpdate()
+	pslUpdateRecipes()
 
 	-- Disable remove button
 	untrackProfessionButton:Disable()
@@ -899,6 +903,21 @@ function pslClear()
 	-- Remove old version variables
 	reagentNumbers = nil
 	reagentLinks = nil
+end
+
+-- Toggle windows
+function pslToggle()
+	-- Toggle tracking windows
+	if pslFrame1:IsShown() then
+		pslFrame1:Hide()
+		pslFrame2:Hide()
+	else
+		pslFrame1:Show()
+		pslFrame2:Show()
+	end
+
+	-- Update numbers
+	pslUpdateRecipes()
 end
 
 -- Open settings
@@ -921,16 +940,7 @@ function pslSettings()
 		
 		OnClick = function(self, button)
 			if button == "LeftButton" then
-				-- Toggle tracking windows
-				if pslFrame1:IsShown() then
-					pslFrame1:Hide()
-					pslFrame2:Hide()
-				else
-					pslFrame1:Show()
-					pslFrame2:Show()
-				end
-				-- Only update numbers if numbers exist
-				if reagentsTracked then pslUpdate() end
+				pslToggle()
 			elseif button == "RightButton" then
 				pslOpenSettings()
 			end
@@ -1029,7 +1039,7 @@ function pslSettings()
 	cbShowRemaining:SetChecked(userSettings["showRemaining"])
 	cbShowRemaining:SetScript("OnClick", function(self)
 		userSettings["showRemaining"] = cbShowRemaining:GetChecked()
-		pslUpdate()
+		pslUpdateNumbers()
 	end)
 
 	local cbShowTooltip = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
@@ -1081,7 +1091,7 @@ function pslSettings()
 		userSettings["reagentQuality"] = newValue
 		self:SetValue(userSettings["reagentQuality"])
 		self.Label:SetText("|A:Professions-ChatIcon-Quality-Tier"..slReagentQuality:GetValue()..":17:15::1|a")
-		pslUpdate()
+		pslUpdateNumbers()
 	end)
 
 	-- Column 2
@@ -1727,16 +1737,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				pslClear()
 			-- No arguments
 			else
-				-- Toggle tracking windows
-				if pslFrame1:IsShown() then
-					pslFrame1:Hide()
-					pslFrame2:Hide()
-				else
-					pslFrame1:Show()
-					pslFrame2:Show()
-				end
-				-- Only update numbers if numbers exist
-				if reagentsTracked then pslUpdate() end
+				pslToggle()
 			end
 		end
 	end
@@ -2523,8 +2524,8 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	end
 
 	-- Update the numbers when bag changes occur
-	if event == "BAG_UPDATE" then
-		pslUpdate()
+	if event == "BAG_UPDATE_DELAYED" then
+		pslUpdateNumbers()
 	end
 
 	-- Set the Vendor filter to 'All' if the option is enabled
