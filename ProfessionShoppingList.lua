@@ -2550,7 +2550,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	if event == "TRACKED_RECIPE_UPDATE" then
 		if arg2 == true then
 			pslTrackRecipe(arg1,1)
-			C_TradeSkillUI.SetRecipeTracked(arg1, false)
+			C_TradeSkillUI.SetRecipeTracked(arg1, false, false)
 		end
 	end
 end)
