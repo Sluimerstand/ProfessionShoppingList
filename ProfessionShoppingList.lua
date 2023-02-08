@@ -517,6 +517,11 @@ end
 
 -- Track recipe
 function pslTrackRecipe(recipeID, recipeQuantity)
+	-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
+	if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).reagentSlotSchematics[1] == nil then
+		do return end
+	end
+	
 	-- Adjust the recipeID for SL legendary crafts, if a custom rank is entered
 	if slLegendaryRecipeIDs[recipeID] then
 		local rank = math.floor(ebSLrank:GetNumber())
