@@ -729,13 +729,15 @@ function pslCreateAssets()
 		personalCharname:SetCursorPosition(0)
 		personalCharname:SetScript("OnEditFocusLost", function(self)
 			personalOrders[pslSelectedRecipeID] = tostring(personalCharname:GetText())
+			pslUpdateAssets()
 		end)
 		personalCharname:SetScript("OnEnterPressed", function(self)
 			personalOrders[pslSelectedRecipeID] = tostring(personalCharname:GetText())
 			self:ClearFocus()
+			pslUpdateAssets()
 		end)
 		personalCharname:SetScript("OnEscapePressed", function(self)
-			self:SetText(personalOrders[pslSelectedRecipeID])
+			pslUpdateAssets()
 		end)
 		personalCharname:SetScript("OnEnter", function()
 			personalOrderTooltip:Show()
@@ -778,7 +780,7 @@ function pslCreateAssets()
 		personalOrderTooltipText = personalOrderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		personalOrderTooltipText:SetPoint("TOPLEFT", personalOrderTooltip, "TOPLEFT", 10, -10)
 		personalOrderTooltipText:SetJustifyH("LEFT")
-		personalOrderTooltipText:SetText("|cffFF0000Instantly|r create a personal crafting order\n(12 hours, 1 silver) for the specified character.\n\nCharacter names are saved per recipe.\n\nIf the button is |cff9D9D9Dgreyed|r out, you need to open\nthe profession the recipe is for once to cache it.")
+		personalOrderTooltipText:SetText("|cffFF0000Instantly|r create a personal crafting order\n(12 hours, 1 silver) for the specified character.\n\nCharacter names are saved per recipe.\n\nIf the button is |cff9D9D9Dgreyed|r out, you need to open\nthe profession the recipe is for once to cache it\nand/or enter a character to send the order to.")
 
 		-- Set the tooltip size to fit its contents
 		personalOrderTooltip:SetHeight(personalOrderTooltipText:GetStringHeight()+20)
@@ -893,6 +895,65 @@ function pslCreateAssets()
 		knowledgePointTooltipText = knowledgePointTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		knowledgePointTooltipText:SetPoint("TOPLEFT", knowledgePointTooltip, "TOPLEFT", 10, -10)
 		knowledgePointTooltipText:SetJustifyH("LEFT")
+	end
+end
+
+function pslUpdateAssets()
+	-- Enable tracking button for 1 = Item, 3 = Enchant
+	if pslRecipeType == 1 or pslRecipeType == 3 then
+		trackProfessionButton:Enable()
+		trackPlaceOrderButton:Enable()
+		trackMakeOrderButton:Enable()
+		ebRecipeQuantity:Enable()
+	end
+
+	-- Disable tracking button for 2 = Salvage, recipes without reagents
+	if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).reagentSlotSchematics[1] == nil then
+		trackProfessionButton:Disable()
+		untrackProfessionButton:Disable()
+		trackPlaceOrderButton:Disable()
+		untrackPlaceOrderButton:Disable()
+		trackMakeOrderButton:Disable()
+		untrackMakeOrderButton:Disable()
+		ebRecipeQuantity:Disable()
+	end
+
+	-- Enable tracking button for tracked recipes
+	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID] == 0 then
+		untrackProfessionButton:Disable()
+		untrackPlaceOrderButton:Disable()
+		untrackMakeOrderButton:Disable()
+	else
+		untrackProfessionButton:Enable()
+		untrackPlaceOrderButton:Enable()
+		untrackMakeOrderButton:Enable()
+	end
+
+	-- Update the quantity textbox
+	if ebRecipeQuantityNo ~= nil then
+		ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID] or 0
+		ebRecipeQuantity:SetText(ebRecipeQuantityNo)
+	end
+
+	-- Remove the personal order entry if the value is ""
+	if personalOrders[pslSelectedRecipeID] == "" then personalOrders[pslSelectedRecipeID] = nil end
+
+	-- Enable the quick order button if abilityID and target are known
+	if recipeLibrary[pslSelectedRecipeID] and type(recipeLibrary[pslSelectedRecipeID]) ~= "number" then
+		if recipeLibrary[pslSelectedRecipeID].abilityID ~= nil and personalOrders[pslSelectedRecipeID] ~= nil then
+			personalOrderButton:Enable()
+		else
+			personalOrderButton:Disable()
+		end
+	else
+		personalOrderButton:Disable()
+	end
+
+	-- Update the personal order name textbox
+	if personalOrders[pslSelectedRecipeID] then
+		personalCharname:SetText(personalOrders[pslSelectedRecipeID])
+	else
+		personalCharname:SetText("")
 	end
 end
 
@@ -1815,89 +1876,34 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		end
 	end
 
-	-- When a recipe is selected or the profession window is opened
+	-- When a recipe is selected
 	if event == "SPELL_DATA_LOAD_RESULT" then
-		-- Check if the Remove button should be disabled
-		local function checkRemoveButton()
-			-- Get selected recipe ID
-			if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
-			pslSelectedRecipeID = arg1
+		-- Get selected recipe ID and type (global variables)
+		if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
+		pslSelectedRecipeID = arg1
+		pslRecipeType = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).recipeType
 
-			-- Get recipeType
-			pslRecipeType = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).recipeType
-		
-			-- 1 = Item, 3 = Enchant | Normal behaviour
-			if pslRecipeType == 1 or pslRecipeType == 3 then
-				trackProfessionButton:Enable()
-				trackPlaceOrderButton:Enable()
-				trackMakeOrderButton:Enable()
-				ebRecipeQuantity:Enable()
-			end
+		pslUpdateAssets()
 
-			-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
-			if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).reagentSlotSchematics[1] == nil then
-				trackProfessionButton:Disable()
-				untrackProfessionButton:Disable()
-				trackPlaceOrderButton:Disable()
-				untrackPlaceOrderButton:Disable()
-				trackMakeOrderButton:Disable()
-				untrackMakeOrderButton:Disable()
-				ebRecipeQuantity:Disable()
-			end
-
-			-- Check if recipe is tracked
-			if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID] == 0 then
-				untrackProfessionButton:Disable()
-				untrackPlaceOrderButton:Disable()
-				untrackMakeOrderButton:Disable()
+		local function professionExtra()
+			-- Check if/what Milling info should be displayed
+			if arg1 == 382981 then
+				millingDragonflight:Show()
 			else
-				untrackProfessionButton:Enable()
-				untrackPlaceOrderButton:Enable()
-				untrackMakeOrderButton:Enable()
+				millingDragonflight:Hide()
 			end
 
-			-- Update the quantity textbox
-			if ebRecipeQuantityNo ~= nil then
-				ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID] or 0
-				ebRecipeQuantity:SetText(ebRecipeQuantityNo)
-			end
-
-			-- Check if the personal order button should be enabled
-			if recipeLibrary[pslSelectedRecipeID] and type(recipeLibrary[pslSelectedRecipeID]) ~= "number" then
-				if recipeLibrary[pslSelectedRecipeID].abilityID ~= nil then
-					personalOrderButton:Enable()
-				else
-					personalOrderButton:Disable()
-				end
+			-- Check if the SL rank editbox should be displayed
+			if slLegendaryRecipeIDs[pslSelectedRecipeID] then
+				ebSLrankText:Show()
+				ebSLrank:Show()
+				ebSLrank:SetText(slLegendaryRecipeIDs[pslSelectedRecipeID].rank)
 			else
-				personalOrderButton:Disable()
+				ebSLrankText:Hide()
+				ebSLrank:Hide()
 			end
 		end
-		checkRemoveButton()
-
-		-- Set the personal order name
-		if personalOrders[pslSelectedRecipeID] then
-			personalCharname:SetText(personalOrders[pslSelectedRecipeID])
-		else
-			personalCharname:SetText("")
-		end
-
-		-- Check if/what Milling info should be displayed
-		if arg1 == 382981 then
-			millingDragonflight:Show()
-		else
-			millingDragonflight:Hide()
-		end
-
-		-- Check if the SL rank editbox should be displayed
-		if slLegendaryRecipeIDs[pslSelectedRecipeID] then
-			ebSLrankText:Show()
-			ebSLrank:Show()
-			ebSLrank:SetText(slLegendaryRecipeIDs[pslSelectedRecipeID].rank)
-		else
-			ebSLrankText:Hide()
-			ebSLrank:Hide()
-		end
+		professionExtra()
 
 		local function professionFeatures()
 			-- Show stuff depending on which profession is opened
@@ -2587,7 +2593,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		professionFeatures()
 	end
 	
-	-- Do stuff when a profession window is loaded
+	-- When a profession window is loaded
 	if event == "TRADE_SKILL_LIST_UPDATE" then
 		-- Register all recipes for this profession
 		for _, id in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
@@ -2598,7 +2604,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		end
 	end
 
-	-- Do stuff when a spell is succesfully cast
+	-- When a spell is succesfully cast
 	if event == "UNIT_SPELLCAST_SUCCEEDED" and userSettings["removeCraft"] == true then
 		local spellID = ...
 	
@@ -2616,7 +2622,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		end
 	end
 
-	-- Update the numbers when bag changes occur
+	-- When bag changes occur
 	if event == "BAG_UPDATE_DELAYED" then
 		pslUpdateNumbers()
 	end
