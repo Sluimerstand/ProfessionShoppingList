@@ -8,7 +8,6 @@ if not Blizzard_ProfessionsCustomerOrders then UIParentLoadAddOn("Blizzard_Profe
 api:RegisterEvent("ADDON_LOADED")
 api:RegisterEvent("BAG_UPDATE_DELAYED")
 api:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
-api:RegisterEvent("TRADE_SKILL_SHOW")
 api:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 api:RegisterEvent("SPELL_DATA_LOAD_RESULT")
 api:RegisterEvent("MERCHANT_SHOW")
@@ -40,6 +39,7 @@ function pslInitialise()
 	if not reagentsTracked then reagentsTracked = {} end
 	if not recipeLibrary then recipeLibrary = {} end
 	if not reagentTiers then reagentTiers = {} end
+	if not personalOrders then personalOrders = {} end
 
 	-- Enable default user settings
 	if userSettings["hide"] == nil then userSettings["hide"] = false end
@@ -719,6 +719,72 @@ function pslCreateAssets()
 		end)
 	end
 
+	-- Create the place crafting orders UI personal order name field
+	if not personalCharname then
+		personalCharname = CreateFrame("EditBox", nil, ProfessionsCustomerOrdersFrame.Form, "InputBoxTemplate")
+		personalCharname:SetSize(80,20)
+		personalCharname:SetPoint("CENTER", trackPlaceOrderButton, "CENTER", 0, 0)
+		personalCharname:SetPoint("LEFT", trackPlaceOrderButton, "LEFT", 415, 0)
+		personalCharname:SetAutoFocus(false)
+		personalCharname:SetCursorPosition(0)
+		personalCharname:SetScript("OnEditFocusLost", function(self)
+			personalOrders[pslSelectedRecipeID] = tostring(personalCharname:GetText())
+		end)
+		personalCharname:SetScript("OnEnterPressed", function(self)
+			personalOrders[pslSelectedRecipeID] = tostring(personalCharname:GetText())
+			self:ClearFocus()
+		end)
+		personalCharname:SetScript("OnEscapePressed", function(self)
+			self:SetText(personalOrders[pslSelectedRecipeID])
+		end)
+		personalCharname:SetScript("OnEnter", function()
+			personalOrderTooltip:Show()
+		end)
+		personalCharname:SetScript("OnLeave", function()
+			personalOrderTooltip:Hide()
+		end)
+	end
+
+	-- Create the place crafting orders personal order button
+	if not personalOrderButton then
+		personalOrderButton = CreateFrame("Button", nil, ProfessionsCustomerOrdersFrame.Form, "UIPanelButtonTemplate")
+		personalOrderButton:SetText("Quick Order")
+		personalOrderButton:SetWidth(90)
+		personalOrderButton:SetPoint("CENTER", personalCharname, "CENTER", 0, 0)
+		personalOrderButton:SetPoint("RIGHT", personalCharname, "LEFT", -8, 0)
+		personalOrderButton:SetFrameStrata("HIGH")
+		personalOrderButton:SetScript("OnClick", function()
+			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems={}, craftingReagentItems={} })
+		end)
+	end
+
+	-- Create the place crafting orders personal order button tooltip
+	if not personalOrderTooltip then
+		personalOrderTooltip = CreateFrame("Frame", nil, personalOrderButton, "BackdropTemplate")
+		personalOrderTooltip:SetPoint("CENTER")
+		personalOrderTooltip:SetPoint("TOP", personalOrderButton, "BOTTOM", 0, 0)
+		personalOrderTooltip:SetFrameStrata("TOOLTIP")
+		personalOrderTooltip:SetBackdrop({
+			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+			edgeSize = 16,
+			insets = { left = 4, right = 4, top = 4, bottom = 4 },
+		})
+		personalOrderTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		personalOrderTooltip:EnableMouse(false)
+		personalOrderTooltip:SetMovable(false)
+		personalOrderTooltip:Hide()
+
+		personalOrderTooltipText = personalOrderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		personalOrderTooltipText:SetPoint("TOPLEFT", personalOrderTooltip, "TOPLEFT", 10, -10)
+		personalOrderTooltipText:SetJustifyH("LEFT")
+		personalOrderTooltipText:SetText("|cffFF0000Instantly|r create a personal crafting order\n(12 hours, 1 silver) for the specified character.\n\nCharacter names are saved per recipe.\n\nIf the button is |cff9D9D9Dgreyed|r out, you need to open\nthe profession the recipe is for once to cache it.")
+
+		-- Set the tooltip size to fit its contents
+		personalOrderTooltip:SetHeight(personalOrderTooltipText:GetStringHeight()+20)
+		personalOrderTooltip:SetWidth(personalOrderTooltipText:GetStringWidth()+20)
+	end
+
 	-- Create the fulfil crafting orders UI Track button
 	if not trackMakeOrderButton then
 		trackMakeOrderButton = CreateFrame("Button", nil, ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "UIPanelButtonTemplate")
@@ -1305,10 +1371,12 @@ function pslWindowFunctions()
 				local recipeIDs = {}
 				local no = 0
 
-				for r, i in pairs(recipeLibrary) do
-					if i == itemID then
-						no = no + 1
-						recipeIDs[no] = r
+				for recipe, recipeInfo in pairs(recipeLibrary) do
+					if type(recipeInfo) ~= "number" then	-- Because of old recipeLibrary
+						if recipeInfo.itemID == itemID then
+							no = no + 1
+							recipeIDs[no] = recipe
+						end
 					end
 				end
 
@@ -1793,8 +1861,26 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID] or 0
 				ebRecipeQuantity:SetText(ebRecipeQuantityNo)
 			end
+
+			-- Check if the personal order button should be enabled
+			if recipeLibrary[pslSelectedRecipeID] and type(recipeLibrary[pslSelectedRecipeID]) ~= "number" then
+				if recipeLibrary[pslSelectedRecipeID].abilityID ~= nil then
+					personalOrderButton:Enable()
+				else
+					personalOrderButton:Disable()
+				end
+			else
+				personalOrderButton:Disable()
+			end
 		end
 		checkRemoveButton()
+
+		-- Set the personal order name
+		if personalOrders[pslSelectedRecipeID] then
+			personalCharname:SetText(personalOrders[pslSelectedRecipeID])
+		else
+			personalCharname:SetText("")
+		end
 
 		-- Check if/what Milling info should be displayed
 		if arg1 == 382981 then
@@ -2505,8 +2591,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	if event == "TRADE_SKILL_LIST_UPDATE" then
 		-- Register all recipes for this profession
 		for _, id in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
-			local itemID = C_TradeSkillUI.GetRecipeOutputItemData(id).itemID
-			if itemID ~= nil then recipeLibrary[id] = itemID end
+			local item = C_TradeSkillUI.GetRecipeOutputItemData(id).itemID
+			if item ~= nil then
+				local ability = C_TradeSkillUI.GetRecipeInfo(id).skillLineAbilityID
+				recipeLibrary[id] = {itemID = item, abilityID = ability} end
 		end
 	end
 
