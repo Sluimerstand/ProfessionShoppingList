@@ -2120,13 +2120,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 				if artisanReputation >= 500 then bookStatus1 = READY_CHECK_NOT_READY_TEXTURE end
 				if artisanReputation >= 5500 then bookStatus2 = READY_CHECK_NOT_READY_TEXTURE end
-				if artisanReputation >= 12500 and books[3].questID ~= 0 then bookStatus3 = READY_CHECK_NOT_READY_TEXTURE end	-- Temp if questID
+				if artisanReputation >= 12500 then bookStatus3 = READY_CHECK_NOT_READY_TEXTURE end
 
 				if C_QuestLog.IsQuestFlaggedCompleted(books[1].questID) == true then bookStatus1 = READY_CHECK_READY_TEXTURE end
 				if C_QuestLog.IsQuestFlaggedCompleted(books[2].questID) == true then bookStatus2 = READY_CHECK_READY_TEXTURE end
-				if books[3].questID ~= 0 then	-- Temp if questID
-					if C_QuestLog.IsQuestFlaggedCompleted(books[3].questID) == true then bookStatus3 = READY_CHECK_READY_TEXTURE end
-				end
+				if C_QuestLog.IsQuestFlaggedCompleted(books[3].questID) == true then bookStatus3 = READY_CHECK_READY_TEXTURE end
 
 				if bookStatus1 == READY_CHECK_NOT_READY_TEXTURE or bookStatus2 == READY_CHECK_NOT_READY_TEXTURE or bookStatus3 == READY_CHECK_NOT_READY_TEXTURE then progress = false end
 
@@ -2305,7 +2303,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books = {}
 				books[1] = {questID = 71894, itemID = 200972}
 				books[2] = {questID = 71905, itemID = 201268}
-				books[3] = {questID = 0, itemID = 201279}
+				books[3] = {questID = 71916, itemID = 201279}
 			end
 
 			-- Leatherworking
@@ -2332,7 +2330,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books = {}
 				books[1] = {questID = 71900, itemID = 200979}
 				books[2] = {questID = 71911, itemID = 201275}
-				books[3] = {questID = 0, itemID = 201286}
+				books[3] = {questID = 71922, itemID = 201286}
 			end
 
 			-- Alchemy
@@ -2359,7 +2357,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books = {}
 				books[1] = {questID = 71893, itemID = 200974}
 				books[2] = {questID = 71904, itemID = 201270}
-				books[3] = {questID = 0, itemID = 201281}
+				books[3] = {questID = 71915, itemID = 201281}
 			end
 
 			-- Herbalism
@@ -2381,7 +2379,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books = {}
 				books[1] = {questID = 71897, itemID = 200980}
 				books[2] = {questID = 71908, itemID = 201276}
-				books[3] = {questID = 0, itemID = 201287}
+				books[3] = {questID = 71919, itemID = 201287}
 			end
 
 			-- Cooking
@@ -2410,7 +2408,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books = {}
 				books[1] = {questID = 71901, itemID = 200981}
 				books[2] = {questID = 71912, itemID = 201277}
-				books[3] = {questID = 0, itemID = 201288}
+				books[3] = {questID = 71923, itemID = 201288}
 			end
 
 			-- Tailoring
@@ -2438,7 +2436,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books = {}
 				books[1] = {questID = 71903, itemID = 200975}
 				books[2] = {questID = 71914, itemID = 201271}
-				books[3] = {questID = 0, itemID = 201282}
+				books[3] = {questID = 71925, itemID = 201282}
 			end
 
 			-- Engineering
@@ -2460,7 +2458,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books = {}
 				books[1] = {questID = 71896, itemID = 200977}
 				books[2] = {questID = 71907, itemID = 201273}
-				books[3] = {questID = 0, itemID = 201284}
+				books[3] = {questID = 71918, itemID = 201284}
 			end
 
 			-- Enchanting
@@ -2488,7 +2486,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books = {}
 				books[1] = {questID = 71895, itemID = 200976}
 				books[2] = {questID = 71906, itemID = 201272}
-				books[3] = {questID = 0, itemID = 201283}
+				books[3] = {questID = 71917, itemID = 201283}
 			end
 
 			-- Skinning
@@ -2510,7 +2508,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books = {}
 				books[1] = {questID = 71902, itemID = 200982}
 				books[2] = {questID = 71913, itemID = 201278}
-				books[3] = {questID = 0, itemID = 201289}
+				books[3] = {questID = 71924, itemID = 201289}
 			end
 
 			-- Jewelcrafting
@@ -2538,7 +2536,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books = {}
 				books[1] = {questID = 71899, itemID = 200978}
 				books[2] = {questID = 71910, itemID = 201274}
-				books[3] = {questID = 0, itemID = 201285}
+				books[3] = {questID = 71921, itemID = 201285}
 			end
 
 			-- Inscription
@@ -2566,7 +2564,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books = {}
 				books[1] = {questID = 71898, itemID = 200973}
 				books[2] = {questID = 71909, itemID = 201269}
-				books[3] = {questID = 0, itemID = 201280}
+				books[3] = {questID = 71920, itemID = 201280}
 			end
 
 			-- Professions with Knowledge Points
