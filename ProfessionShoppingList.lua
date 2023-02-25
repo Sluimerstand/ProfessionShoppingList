@@ -803,20 +803,6 @@ function pslCreateAssets()
 			-- Place the order
 			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 		end)
-
-		-- Create the local reagents checkbox
-		if not cbUseLocalReagents then
-			cbUseLocalReagents = CreateFrame("CheckButton", nil, ProfessionsCustomerOrdersFrame.Form, "InterfaceOptionsCheckButtonTemplate")
-			cbUseLocalReagents.Text:SetText("Use local reagents")
-			cbUseLocalReagents.Text:SetTextColor(1, 1, 1, 1)
-			cbUseLocalReagents.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-			cbUseLocalReagents:SetPoint("BOTTOMLEFT", personalOrderButton, "TOPLEFT", 0, 0)
-			cbUseLocalReagents:SetFrameStrata("HIGH")
-			cbUseLocalReagents:SetChecked(userSettings["useLocalReagents"])
-			cbUseLocalReagents:SetScript("OnClick", function(self)
-				userSettings["useLocalReagents"] = self:GetChecked()
-			end)
-		end
 	end
 
 	-- Create the place crafting orders personal order button tooltip
@@ -844,6 +830,53 @@ function pslCreateAssets()
 		-- Set the tooltip size to fit its contents
 		personalOrderTooltip:SetHeight(personalOrderTooltipText:GetStringHeight()+20)
 		personalOrderTooltip:SetWidth(personalOrderTooltipText:GetStringWidth()+20)
+	end
+
+	-- Create the local reagents checkbox
+	if not cbUseLocalReagents then
+		cbUseLocalReagents = CreateFrame("CheckButton", nil, ProfessionsCustomerOrdersFrame.Form, "InterfaceOptionsCheckButtonTemplate")
+		cbUseLocalReagents.Text:SetText("Use local reagents")
+		cbUseLocalReagents.Text:SetTextColor(1, 1, 1, 1)
+		cbUseLocalReagents.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+		cbUseLocalReagents:SetPoint("BOTTOMLEFT", personalOrderButton, "TOPLEFT", 0, 0)
+		cbUseLocalReagents:SetFrameStrata("HIGH")
+		cbUseLocalReagents:SetChecked(userSettings["useLocalReagents"])
+		cbUseLocalReagents:SetScript("OnClick", function(self)
+			userSettings["useLocalReagents"] = self:GetChecked()
+		end)
+		cbUseLocalReagents:SetScript("OnEnter", function()
+			useLocalReagentsTooltip:Show()
+		end)
+		cbUseLocalReagents:SetScript("OnLeave", function()
+			useLocalReagentsTooltip:Hide()
+		end)
+	end
+
+	-- Create the local reagents tooltip
+	if not useLocalReagentsTooltip then
+		useLocalReagentsTooltip = CreateFrame("Frame", nil, cbUseLocalReagents, "BackdropTemplate")
+		useLocalReagentsTooltip:SetPoint("CENTER")
+		useLocalReagentsTooltip:SetPoint("TOP", cbUseLocalReagents, "BOTTOM", 0, 0)
+		useLocalReagentsTooltip:SetFrameStrata("TOOLTIP")
+		useLocalReagentsTooltip:SetBackdrop({
+			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+			edgeSize = 16,
+			insets = { left = 4, right = 4, top = 4, bottom = 4 },
+		})
+		useLocalReagentsTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		useLocalReagentsTooltip:EnableMouse(false)
+		useLocalReagentsTooltip:SetMovable(false)
+		useLocalReagentsTooltip:Hide()
+
+		useLocalReagentsTooltipText = useLocalReagentsTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		useLocalReagentsTooltipText:SetPoint("TOPLEFT", useLocalReagentsTooltip, "TOPLEFT", 10, -10)
+		useLocalReagentsTooltipText:SetJustifyH("LEFT")
+		useLocalReagentsTooltipText:SetText("Use (the lowest quality) available local reagents.\nWhich reagents are used |cffFF0000cannot|r be customised.")
+
+		-- Set the tooltip size to fit its contents
+		useLocalReagentsTooltip:SetHeight(useLocalReagentsTooltipText:GetStringHeight()+20)
+		useLocalReagentsTooltip:SetWidth(useLocalReagentsTooltipText:GetStringWidth()+20)
 	end
 
 	-- Create the fulfil crafting orders UI Track button
