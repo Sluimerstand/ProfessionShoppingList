@@ -56,6 +56,7 @@ function pslInitialise()
 	if userSettings["reagentQuality"] == nil then userSettings["reagentQuality"] = 1 end
 	if userSettings["closeWhenDone"] == nil then userSettings["closeWhenDone"] = false end
 	if userSettings["showKnowledgeNotPerks"] == nil then userSettings["showKnowledgeNotPerks"] = false end
+	if userSettings["useLocalReagents"] == nil then userSettings["useLocalReagents"] = false end
 
 	-- Shadowlands Legendary craft SpellIDs, because they don't work like the rest, thanks Blizz
 	-- TODO: See if I can put these in another file, idk how to do that D:
@@ -756,8 +757,66 @@ function pslCreateAssets()
 		personalOrderButton:SetPoint("RIGHT", personalCharname, "LEFT", -8, 0)
 		personalOrderButton:SetFrameStrata("HIGH")
 		personalOrderButton:SetScript("OnClick", function()
-			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems={}, craftingReagentItems={} })
+			local reagentInfo = {}
+			local craftingReagentInfo = {}
+
+			local function localReagentsOrder()
+				-- Get recipe info
+				local recipeInfo = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID, false).reagentSlotSchematics
+				
+				-- Go through all the reagents for this recipe
+				local no1 = 1
+				local no2 = 1
+				for i, _ in ipairs (recipeInfo) do
+					-- Get the required quantity
+					local quantityNo = recipeInfo[i].quantityRequired
+
+					-- Get the primary reagent itemID
+					local reagentID = recipeInfo[i].reagents[1].itemID
+
+					-- Add the info for tiered reagents to craftingReagentItems
+					if reagentTiers[reagentID].three ~= 0 then
+						-- Set it to the lowest quality we have enough of for this order
+						if GetItemCount(reagentTiers[reagentID].one, true, false, true) >= quantityNo then
+							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].one, dataSlotIndex = 1, quantity = quantityNo}
+							no1 = no1 + 1
+						elseif GetItemCount(reagentTiers[reagentID].two, true, false, true) >= quantityNo then
+							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].two, dataSlotIndex = 1, quantity = quantityNo}
+							no1 = no1 + 1
+						elseif GetItemCount(reagentTiers[reagentID].three, true, false, true) >= quantityNo then
+							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].three, dataSlotIndex = 1, quantity = quantityNo}
+							no1 = no1 + 1
+						end
+					-- Add the info for non-tiered reagents to reagentItems
+					else
+						if GetItemCount(reagentID, true, false, true) >= quantityNo then
+							reagentInfo[no2] = {itemID = reagentTiers[reagentID].one, quantity = quantityNo}
+							no2 = no2 + 1
+						end
+					end
+				end
+			end
+
+			-- Only add the reagentInfo if the option is enabled
+			if userSettings["useLocalReagents"] == true then localReagentsOrder() end
+
+			-- Place the order
+			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 		end)
+
+		-- Create the local reagents checkbox
+		if not cbUseLocalReagents then
+			cbUseLocalReagents = CreateFrame("CheckButton", nil, ProfessionsCustomerOrdersFrame.Form, "InterfaceOptionsCheckButtonTemplate")
+			cbUseLocalReagents.Text:SetText("Use local reagents")
+			cbUseLocalReagents.Text:SetTextColor(1, 1, 1, 1)
+			cbUseLocalReagents.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+			cbUseLocalReagents:SetPoint("BOTTOMLEFT", personalOrderButton, "TOPLEFT", 0, 0)
+			cbUseLocalReagents:SetFrameStrata("HIGH")
+			cbUseLocalReagents:SetChecked(userSettings["useLocalReagents"])
+			cbUseLocalReagents:SetScript("OnClick", function(self)
+				userSettings["useLocalReagents"] = self:GetChecked()
+			end)
+		end
 	end
 
 	-- Create the place crafting orders personal order button tooltip
@@ -1920,14 +1979,14 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				local appendChildPathIDsForRoot -- Declare this one before the function itself, otherwise it can't find the function to refer to within itself apparently
 				appendChildPathIDsForRoot = function(t, pathID)
 					t[pathID] = 1
-					for _, childID in ipairs(C_ProfSpecs.GetChildrenForPath(pathID)) do
+					for _, childID in ipairs (C_ProfSpecs.GetChildrenForPath(pathID)) do
 						appendChildPathIDsForRoot(t, childID)
 					end
 				end
 
 				-- Get all profession specialisation paths
 				local pathIDs = {}
-				for _, specTabID in ipairs(C_ProfSpecs.GetSpecTabIDsForSkillLine(skillLineID)) do
+				for _, specTabID in ipairs (C_ProfSpecs.GetSpecTabIDsForSkillLine(skillLineID)) do
 					appendChildPathIDsForRoot(pathIDs, C_ProfSpecs.GetRootPathForTab(specTabID))
 				end
 
