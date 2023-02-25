@@ -768,30 +768,32 @@ function pslCreateAssets()
 				local no1 = 1
 				local no2 = 1
 				for i, _ in ipairs (recipeInfo) do
-					-- Get the required quantity
-					local quantityNo = recipeInfo[i].quantityRequired
+					if recipeInfo[i].reagentType == 1 then
+						-- Get the required quantity
+						local quantityNo = recipeInfo[i].quantityRequired
 
-					-- Get the primary reagent itemID
-					local reagentID = recipeInfo[i].reagents[1].itemID
+						-- Get the primary reagent itemID
+						local reagentID = recipeInfo[i].reagents[1].itemID
 
-					-- Add the info for tiered reagents to craftingReagentItems
-					if reagentTiers[reagentID].three ~= 0 then
-						-- Set it to the lowest quality we have enough of for this order
-						if GetItemCount(reagentTiers[reagentID].one, true, false, true) >= quantityNo then
-							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].one, dataSlotIndex = 1, quantity = quantityNo}
-							no1 = no1 + 1
-						elseif GetItemCount(reagentTiers[reagentID].two, true, false, true) >= quantityNo then
-							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].two, dataSlotIndex = 1, quantity = quantityNo}
-							no1 = no1 + 1
-						elseif GetItemCount(reagentTiers[reagentID].three, true, false, true) >= quantityNo then
-							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].three, dataSlotIndex = 1, quantity = quantityNo}
-							no1 = no1 + 1
-						end
-					-- Add the info for non-tiered reagents to reagentItems
-					else
-						if GetItemCount(reagentID, true, false, true) >= quantityNo then
-							reagentInfo[no2] = {itemID = reagentTiers[reagentID].one, quantity = quantityNo}
-							no2 = no2 + 1
+						-- Add the info for tiered reagents to craftingReagentItems
+						if reagentTiers[reagentID].three ~= 0 then
+							-- Set it to the lowest quality we have enough of for this order
+							if GetItemCount(reagentTiers[reagentID].one, true, false, true) >= quantityNo then
+								craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].one, dataSlotIndex = no1, quantity = quantityNo}
+								no1 = no1 + 1
+							elseif GetItemCount(reagentTiers[reagentID].two, true, false, true) >= quantityNo then
+								craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].two, dataSlotIndex = no1, quantity = quantityNo}
+								no1 = no1 + 1
+							elseif GetItemCount(reagentTiers[reagentID].three, true, false, true) >= quantityNo then
+								craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].three, dataSlotIndex = no1, quantity = quantityNo}
+								no1 = no1 + 1
+							end
+						-- Add the info for non-tiered reagents to reagentItems
+						else
+							if GetItemCount(reagentID, true, false, true) >= quantityNo then
+								reagentInfo[no2] = {itemID = reagentTiers[reagentID].one, quantity = quantityNo}
+								no2 = no2 + 1
+							end
 						end
 					end
 				end
