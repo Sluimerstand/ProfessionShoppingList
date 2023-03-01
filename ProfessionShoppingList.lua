@@ -761,6 +761,10 @@ function pslCreateAssets()
 			local craftingReagentInfo = {}
 
 			local function localReagentsOrder()
+				-- Run pslGetReagents to cache reagent tier info
+				local _ = {}
+				pslGetReagents(_, pslSelectedRecipeID, 1)
+
 				-- Get recipe info
 				local recipeInfo = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID, false).reagentSlotSchematics
 				
