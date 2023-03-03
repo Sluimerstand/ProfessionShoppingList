@@ -783,13 +783,13 @@ function pslCreateAssets()
 						if reagentTiers[reagentID].three ~= 0 then
 							-- Set it to the lowest quality we have enough of for this order
 							if GetItemCount(reagentTiers[reagentID].one, true, false, true) >= quantityNo then
-								craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].one, dataSlotIndex = no1, quantity = quantityNo}
+								craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].one, dataSlotIndex = i, quantity = quantityNo}
 								no1 = no1 + 1
 							elseif GetItemCount(reagentTiers[reagentID].two, true, false, true) >= quantityNo then
-								craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].two, dataSlotIndex = no1, quantity = quantityNo}
+								craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].two, dataSlotIndex = i, quantity = quantityNo}
 								no1 = no1 + 1
 							elseif GetItemCount(reagentTiers[reagentID].three, true, false, true) >= quantityNo then
-								craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].three, dataSlotIndex = no1, quantity = quantityNo}
+								craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].three, dataSlotIndex = i, quantity = quantityNo}
 								no1 = no1 + 1
 							end
 						-- Add the info for non-tiered reagents to reagentItems
