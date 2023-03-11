@@ -808,6 +808,18 @@ function pslCreateAssets()
 
 			-- Place the order
 			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+
+			-- If there are tiered reagents and the user wants to use local reagents, adjust the dataSlotIndex and try again in case the first one failed
+			local next = next
+			if next(craftingReagentInfo) ~= nil and userSettings["useLocalReagents"] == true then
+				for i, _ in ipairs (craftingReagentInfo) do
+					craftingReagentInfo[i].dataSlotIndex = craftingReagentInfo[i].dataSlotIndex - 1
+				end
+
+				-- Place the alternative order (only one can succeed, worst case scenario it'll fail twice)
+				C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+			end
+
 		end)
 	end
 
@@ -878,7 +890,7 @@ function pslCreateAssets()
 		useLocalReagentsTooltipText = useLocalReagentsTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		useLocalReagentsTooltipText:SetPoint("TOPLEFT", useLocalReagentsTooltip, "TOPLEFT", 10, -10)
 		useLocalReagentsTooltipText:SetJustifyH("LEFT")
-		useLocalReagentsTooltipText:SetText("Use (the lowest quality) available local reagents.\nWhich reagents are used |cffFF0000cannot|r be customised.")
+		useLocalReagentsTooltipText:SetText("Use (the lowest quality) available local reagents.\nWhich reagents are used |cffFF0000cannot|r be customised.\n\nThis may sometimes fail, or show an error message\ndespite succeeding. Blizz code is wack.")
 
 		-- Set the tooltip size to fit its contents
 		useLocalReagentsTooltip:SetHeight(useLocalReagentsTooltipText:GetStringHeight()+20)
