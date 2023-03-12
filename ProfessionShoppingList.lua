@@ -2750,7 +2750,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	end
 
 	-- When the Catalyst is opened (which one?)
-	if event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" then
+	if event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" and arg1 == 44 then
 		-- Create Catalyst Charges info
 		if not catalystCharges then
 			catalystCharges = ItemInteractionFrame.ButtonFrame.Currency:CreateFontString("ARTWORK", nil, "GameFontNormal")
