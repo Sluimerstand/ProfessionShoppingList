@@ -115,7 +115,6 @@ function pslTrackingWindows()
 	if not pslFrame1 then
 		-- Frame
 		pslFrame1 = CreateFrame("Frame", "pslTrackingWindow1", UIParent, "BackdropTemplateMixin" and "BackdropTemplate")
-		pslFrame1:SetSize(255, 270)
 		pslFrame1:SetPoint("CENTER")
 		pslFrame1:EnableMouse(true)
 		pslFrame1:SetMovable(true)
@@ -133,6 +132,12 @@ function pslTrackingWindows()
 	table1:SetDisplayRows(userSettings["reagentRows"], 15)
 	table1:SetDisplayCols(cols)
 	pslFrame1:SetSize(userSettings["reagentWidth"]+userSettings["reagentNoWidth"]+30, userSettings["reagentRows"]*15+45)
+	pslFrame1:SetScript("OnMouseDown", function()
+		pslFrame1:StartMoving()
+	end)
+	pslFrame1:SetScript("OnMouseUp", function()
+		pslFrame1:StopMovingOrSizing()
+	end)
 
 	-- Column formatting, Recipes
 	local cols = {}
@@ -184,7 +189,6 @@ function pslTrackingWindows()
 	if not pslFrame2 then
 		-- Frame
 		pslFrame2 = CreateFrame("Frame", "pslTrackingWindow2", UIParent, "BackdropTemplateMixin" and "BackdropTemplate")
-		pslFrame2:SetSize(230, 270)
 		pslFrame2:SetPoint("CENTER")
 		pslFrame2:EnableMouse(true)
 		pslFrame2:SetMovable(true)
@@ -204,6 +208,12 @@ function pslTrackingWindows()
 	table2:SetDisplayRows(userSettings["recipeRows"], 15)
 	table2:SetDisplayCols(cols)
 	pslFrame2:SetSize(userSettings["recipeWidth"]+userSettings["recipeNoWidth"]+30, userSettings["recipeRows"]*15+45)
+	pslFrame2:SetScript("OnMouseDown", function()
+		pslFrame2:StartMoving()
+	end)
+	pslFrame2:SetScript("OnMouseUp", function()
+		pslFrame2:StopMovingOrSizing()
+	end)
 end
 
 -- Get reagents for recipe
