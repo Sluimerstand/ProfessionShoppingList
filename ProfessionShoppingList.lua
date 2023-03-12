@@ -41,6 +41,21 @@ function pslInitialise()
 	if not recipeLibrary then recipeLibrary = {} end
 	if not reagentTiers then reagentTiers = {} end
 	if not personalOrders then personalOrders = {} end
+	
+	-- Set default window position
+	if not windowPosition then
+		windowPosition = {
+			["pslFrame1"] = {
+				["left"] = 1168,
+				["bottom"] = 529,
+			},
+			["pslFrame2"] = {
+				["left"] = 1168,
+				["bottom"] = 782,
+			},
+		}
+	end
+	if not pcWindowPosition then pcWindowPosition = windowPosition end
 
 	-- Enable default user settings
 	if userSettings["hide"] == nil then userSettings["hide"] = false end
@@ -60,6 +75,23 @@ function pslInitialise()
 	if userSettings["useLocalReagents"] == nil then userSettings["useLocalReagents"] = false end
 	if userSettings["knowledgeHideDone"] == nil then userSettings["knowledgeHideDone"] = false end
 	if userSettings["knowledgeAlwaysShowDetails"] == nil then userSettings["knowledgeAlwaysShowDetails"] = false end
+	if userSettings["pcWindowPosition"] == nil then userSettings["pcWindowPosition"] = false end
+end
+
+-- Save the window position
+function pslSaveWindowPosition()
+	-- Stop moving the windows
+	pslFrame1:StopMovingOrSizing()
+	pslFrame2:StopMovingOrSizing()
+
+	-- Save the window positions globally
+	windowPosition["pslFrame1"].left = pslFrame1:GetLeft()
+	windowPosition["pslFrame1"].bottom = pslFrame1:GetBottom()
+	windowPosition["pslFrame2"].left = pslFrame2:GetLeft()
+	windowPosition["pslFrame2"].bottom = pslFrame2:GetBottom()
+
+	-- Save the window positions per character
+	pcWindowPosition = windowPosition
 end
 
 -- Create or update the tracking windows
@@ -115,7 +147,6 @@ function pslTrackingWindows()
 	if not pslFrame1 then
 		-- Frame
 		pslFrame1 = CreateFrame("Frame", "pslTrackingWindow1", UIParent, "BackdropTemplateMixin" and "BackdropTemplate")
-		pslFrame1:SetPoint("CENTER")
 		pslFrame1:EnableMouse(true)
 		pslFrame1:SetMovable(true)
 		pslFrame1:Hide()
@@ -136,8 +167,14 @@ function pslTrackingWindows()
 		pslFrame1:StartMoving()
 	end)
 	pslFrame1:SetScript("OnMouseUp", function()
-		pslFrame1:StopMovingOrSizing()
+		pslSaveWindowPosition()
 	end)
+
+	if userSettings["pcWindowPosition"] == true then
+		pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", pcWindowPosition["pslFrame1"].left, pcWindowPosition["pslFrame1"].bottom)
+	else
+		pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame1"].left, windowPosition["pslFrame1"].bottom)
+	end
 
 	-- Column formatting, Recipes
 	local cols = {}
@@ -189,7 +226,6 @@ function pslTrackingWindows()
 	if not pslFrame2 then
 		-- Frame
 		pslFrame2 = CreateFrame("Frame", "pslTrackingWindow2", UIParent, "BackdropTemplateMixin" and "BackdropTemplate")
-		pslFrame2:SetPoint("CENTER")
 		pslFrame2:EnableMouse(true)
 		pslFrame2:SetMovable(true)
 		pslFrame2:Hide()
@@ -208,12 +244,19 @@ function pslTrackingWindows()
 	table2:SetDisplayRows(userSettings["recipeRows"], 15)
 	table2:SetDisplayCols(cols)
 	pslFrame2:SetSize(userSettings["recipeWidth"]+userSettings["recipeNoWidth"]+30, userSettings["recipeRows"]*15+45)
+	
 	pslFrame2:SetScript("OnMouseDown", function()
 		pslFrame2:StartMoving()
 	end)
 	pslFrame2:SetScript("OnMouseUp", function()
-		pslFrame2:StopMovingOrSizing()
+		pslSaveWindowPosition()
 	end)
+
+	if userSettings["pcWindowPosition"] == true then
+		pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", pcWindowPosition["pslFrame2"].left, pcWindowPosition["pslFrame2"].bottom)
+	else
+		pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame2"].left, windowPosition["pslFrame2"].bottom)
+	end
 end
 
 -- Get reagents for recipe
@@ -1092,7 +1135,7 @@ function pslSettings()
 	addonversion:SetPoint("RIGHT", -20, 0)
 	addonversion:SetText(GetAddOnMetadata("ProfessionShoppingList", "Version"))
 
-	-- Column 1
+	-- General
 	local cbMinimapButton = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
 	cbMinimapButton.Text:SetText("Minimap button")
 	cbMinimapButton.Text:SetTextColor(1, 1, 1, 1)
@@ -1106,6 +1149,16 @@ function pslSettings()
 		else
 			icon:Show("ProfessionShoppingList")
 		end
+	end)
+
+	local cbPcWindowPosition = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbPcWindowPosition.Text:SetText("Save window positions per character")
+	cbPcWindowPosition.Text:SetTextColor(1, 1, 1, 1)
+	cbPcWindowPosition.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbPcWindowPosition:SetPoint("TOPLEFT", cbMinimapButton, "TOPLEFT", 240, 0)
+	cbPcWindowPosition:SetChecked(userSettings["pcWindowPosition"])
+	cbPcWindowPosition:SetScript("OnClick", function(self)
+		userSettings["pcWindowPosition"] = self:GetChecked()
 	end)
 
 	-- Category: List and tracking
@@ -1363,7 +1416,7 @@ function pslSettings()
 
 	-- Category: Other features
 	local titleOtherFeatures = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	titleOtherFeatures:SetPoint("TOPLEFT", cbKnowledgeAlwaysShowDetails, "BOTTOMLEFT", 0, -10)
+	titleOtherFeatures:SetPoint("TOPLEFT", titleKnowledgeTracker, "TOPLEFT", 240, -0)
 	titleOtherFeatures:SetJustifyH("LEFT")
 	titleOtherFeatures:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 	titleOtherFeatures:SetText("Other features")
@@ -1380,7 +1433,7 @@ function pslSettings()
 
 	-- Extra text
 	local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	pslSettingsText1:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 3, -40)
+	pslSettingsText1:SetPoint("TOPLEFT", cbKnowledgeAlwaysShowDetails, "BOTTOMLEFT", 3, -20)
 	pslSettingsText1:SetJustifyH("LEFT")
 	pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.")
 
@@ -1420,7 +1473,7 @@ function pslWindowFunctions()
 			end
 		end,
 		["OnMouseUp"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-			pslFrame1:StopMovingOrSizing()
+			pslSaveWindowPosition()
 
 			if realrow ~= nil then
 				local celldata = data[realrow][1]
@@ -1856,7 +1909,7 @@ function pslWindowFunctions()
 			end
 		end,
 		["OnMouseUp"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-			pslFrame2:StopMovingOrSizing()
+			pslSaveWindowPosition()
 
 			if realrow ~= nil then
 				local celldata = data[realrow][1]

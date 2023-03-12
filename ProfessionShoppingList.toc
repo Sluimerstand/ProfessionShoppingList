@@ -5,7 +5,8 @@
 ## X-Curse-Project-ID: 498475
 ## X-Wago-ID: Xb6X71Np
 
-## SavedVariables: userSettings, recipesTracked, recipeLinks, reagentsTracked, personalOrders, reagentTiers, recipeLibrary
+## SavedVariables: userSettings, windowPosition, recipesTracked, recipeLinks, reagentsTracked, personalOrders, reagentTiers, recipeLibrary
+## SavedVariablesPerCharacter: pcWindowPosition
 
 libs\LibDBIcon-1.0\embeds.xml
 libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua
