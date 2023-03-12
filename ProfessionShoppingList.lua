@@ -58,6 +58,8 @@ function pslInitialise()
 	if userSettings["closeWhenDone"] == nil then userSettings["closeWhenDone"] = false end
 	if userSettings["showKnowledgeNotPerks"] == nil then userSettings["showKnowledgeNotPerks"] = false end
 	if userSettings["useLocalReagents"] == nil then userSettings["useLocalReagents"] = false end
+	if userSettings["knowledgeHideDone"] == nil then userSettings["knowledgeHideDone"] = false end
+	if userSettings["knowledgeAlwaysShowDetails"] == nil then userSettings["knowledgeAlwaysShowDetails"] = false end
 
 	-- Shadowlands Legendary craft SpellIDs, because they don't work like the rest, thanks Blizz
 	-- TODO: See if I can put these in another file, idk how to do that D:
@@ -1240,13 +1242,20 @@ function pslSettings()
 		end
 	end)
 
+	-- Category: List and tracking
+	local titleListSettings = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	titleListSettings:SetPoint("TOPLEFT", cbMinimapButton, "BOTTOMLEFT", 0, -10)
+	titleListSettings:SetJustifyH("LEFT")
+	titleListSettings:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+	titleListSettings:SetText("List and tracking")
+
 	local cbCloseWhenDoneCheck	-- Declare it here, so we can reference it for all the option dependencies
 
 	local cbRemoveCraft = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
 	cbRemoveCraft.Text:SetText("Untrack on crafting")
 	cbRemoveCraft.Text:SetTextColor(1, 1, 1, 1)
 	cbRemoveCraft.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-	cbRemoveCraft:SetPoint("TOPLEFT", cbMinimapButton, "BOTTOMLEFT", 0, 0)
+	cbRemoveCraft:SetPoint("TOPLEFT", titleListSettings, "BOTTOMLEFT", 0, 0)
 	cbRemoveCraft:SetChecked(userSettings["removeCraft"])
 	cbRemoveCraft:SetScript("OnClick", function(self)
 		userSettings["removeCraft"] = cbRemoveCraft:GetChecked()
@@ -1295,28 +1304,8 @@ function pslSettings()
 		userSettings["showTooltip"] = cbShowTooltip:GetChecked()
 	end)
 
-	local cbShowKnowledgeNotPerks = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbShowKnowledgeNotPerks.Text:SetText("Show knowledge, not perks")
-	cbShowKnowledgeNotPerks.Text:SetTextColor(1, 1, 1, 1)
-	cbShowKnowledgeNotPerks.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-	cbShowKnowledgeNotPerks:SetPoint("TOPLEFT", cbShowTooltip, "BOTTOMLEFT", 0, 0)
-	cbShowKnowledgeNotPerks:SetChecked(userSettings["showKnowledgeNotPerks"])
-	cbShowKnowledgeNotPerks:SetScript("OnClick", function(self)
-		userSettings["showKnowledgeNotPerks"] = cbShowKnowledgeNotPerks:GetChecked()
-	end)
-
-	local cbVendorAll = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbVendorAll.Text:SetText("Always set vendor filter to 'All'")
-	cbVendorAll.Text:SetTextColor(1, 1, 1, 1)
-	cbVendorAll.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-	cbVendorAll:SetPoint("TOPLEFT", cbShowKnowledgeNotPerks, "BOTTOMLEFT", 0, 0)
-	cbVendorAll:SetChecked(userSettings["vendorAll"])
-	cbVendorAll:SetScript("OnClick", function(self)
-		userSettings["vendorAll"] = cbVendorAll:GetChecked()
-	end)
-
 	local slReagentQuality = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-	slReagentQuality:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 5, -15)
+	slReagentQuality:SetPoint("TOPLEFT", cbShowTooltip, "BOTTOMLEFT", 5, -15)
 	slReagentQuality:SetOrientation("HORIZONTAL")
 	slReagentQuality:SetWidth(150)
 	slReagentQuality:SetHeight(17)
@@ -1329,17 +1318,16 @@ function pslSettings()
 	slReagentQuality:SetValue(userSettings["reagentQuality"])
 	slReagentQuality.Label = slReagentQuality:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 	slReagentQuality.Label:SetPoint("TOP", slReagentQuality, "BOTTOM", 0, 0)
-	slReagentQuality.Label:SetText("|A:Professions-ChatIcon-Quality-Tier"..slReagentQuality:GetValue()..":17:15::1|a")
+	slReagentQuality.Label:SetText("Min: |A:Professions-ChatIcon-Quality-Tier"..slReagentQuality:GetValue()..":17:15::1|a")
 	slReagentQuality:SetScript("OnValueChanged", function(self, newValue)
 		userSettings["reagentQuality"] = newValue
 		self:SetValue(userSettings["reagentQuality"])
-		self.Label:SetText("|A:Professions-ChatIcon-Quality-Tier"..slReagentQuality:GetValue()..":17:15::1|a")
+		self.Label:SetText("Min: |A:Professions-ChatIcon-Quality-Tier"..slReagentQuality:GetValue()..":17:15::1|a")
 		pslUpdateNumbers()
 	end)
 
-	-- Column 2
 	local slRecipeRows = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-	slRecipeRows:SetPoint("TOPLEFT", cbMinimapButton, "TOPLEFT", 250, -19)
+	slRecipeRows:SetPoint("TOPLEFT", cbRemoveCraft, "TOPLEFT", 250, -19)
 	slRecipeRows:SetOrientation("HORIZONTAL")
 	slRecipeRows:SetWidth(150)
 	slRecipeRows:SetHeight(17)
@@ -1470,9 +1458,63 @@ function pslSettings()
 		pslTrackingWindows()
 	end)
 
+	-- Category: Knowledge Tracker
+	local titleKnowledgeTracker = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	titleKnowledgeTracker:SetPoint("TOPLEFT", slReagentQuality, "BOTTOMLEFT", -5, -25)
+	titleKnowledgeTracker:SetJustifyH("LEFT")
+	titleKnowledgeTracker:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+	titleKnowledgeTracker:SetText("Knowledge tracker")
+
+	local cbShowKnowledgeNotPerks = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbShowKnowledgeNotPerks.Text:SetText("Show knowledge, not perks")
+	cbShowKnowledgeNotPerks.Text:SetTextColor(1, 1, 1, 1)
+	cbShowKnowledgeNotPerks.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbShowKnowledgeNotPerks:SetPoint("TOPLEFT", titleKnowledgeTracker, "BOTTOMLEFT", 0, 0)
+	cbShowKnowledgeNotPerks:SetChecked(userSettings["showKnowledgeNotPerks"])
+	cbShowKnowledgeNotPerks:SetScript("OnClick", function(self)
+		userSettings["showKnowledgeNotPerks"] = cbShowKnowledgeNotPerks:GetChecked()
+	end)
+
+	local cbKnowledgeHideDone = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbKnowledgeHideDone.Text:SetText("Hide one-time knowledge if done")
+	cbKnowledgeHideDone.Text:SetTextColor(1, 1, 1, 1)
+	cbKnowledgeHideDone.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbKnowledgeHideDone:SetPoint("TOPLEFT", cbShowKnowledgeNotPerks, "BOTTOMLEFT", 0, 0)
+	cbKnowledgeHideDone:SetChecked(userSettings["knowledgeHideDone"])
+	cbKnowledgeHideDone:SetScript("OnClick", function(self)
+		userSettings["knowledgeHideDone"] = cbKnowledgeHideDone:GetChecked()
+	end)
+
+	local cbKnowledgeAlwaysShowDetails = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbKnowledgeAlwaysShowDetails.Text:SetText("Always show details")
+	cbKnowledgeAlwaysShowDetails.Text:SetTextColor(1, 1, 1, 1)
+	cbKnowledgeAlwaysShowDetails.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbKnowledgeAlwaysShowDetails:SetPoint("TOPLEFT", cbKnowledgeHideDone, "BOTTOMLEFT", 0, 0)
+	cbKnowledgeAlwaysShowDetails:SetChecked(userSettings["knowledgeAlwaysShowDetails"])
+	cbKnowledgeAlwaysShowDetails:SetScript("OnClick", function(self)
+		userSettings["knowledgeAlwaysShowDetails"] = cbKnowledgeAlwaysShowDetails:GetChecked()
+	end)
+
+	-- Category: Other features
+	local titleOtherFeatures = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	titleOtherFeatures:SetPoint("TOPLEFT", cbKnowledgeAlwaysShowDetails, "BOTTOMLEFT", 0, -10)
+	titleOtherFeatures:SetJustifyH("LEFT")
+	titleOtherFeatures:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+	titleOtherFeatures:SetText("Other features")
+
+	local cbVendorAll = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbVendorAll.Text:SetText("Always set vendor filter to 'All'")
+	cbVendorAll.Text:SetTextColor(1, 1, 1, 1)
+	cbVendorAll.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbVendorAll:SetPoint("TOPLEFT", titleOtherFeatures, "BOTTOMLEFT", 0, 0)
+	cbVendorAll:SetChecked(userSettings["vendorAll"])
+	cbVendorAll:SetScript("OnClick", function(self)
+		userSettings["vendorAll"] = cbVendorAll:GetChecked()
+	end)
+
 	-- Extra text
 	local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	pslSettingsText1:SetPoint("TOPLEFT", slReagentQuality, "BOTTOMLEFT", 3, -40)
+	pslSettingsText1:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 3, -40)
 	pslSettingsText1:SetJustifyH("LEFT")
 	pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.")
 
@@ -1484,7 +1526,7 @@ function pslSettings()
 	local pslSettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText3:SetPoint("TOPLEFT", pslSettingsText2, "BOTTOMLEFT", 0, -15)
 	pslSettingsText3:SetJustifyH("LEFT")
-	pslSettingsText3:SetText("Other features:\n|cffFFFFFF- Adds a Chef's Hat button to the Cooking window, if the toy is known.")
+	pslSettingsText3:SetText("Other features:\n|cffFFFFFF- Adds a Chef's Hat button to the Cooking window, if the toy is known.\n- Shows current charges at the Revival Catalyst.")
 end
 
 -- Window functions
@@ -2245,7 +2287,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					do return end
 				end
 				
-				-- Set text
+				-- Weekly knowledge (text)
 				local oldText
 				if treatiseQuest ~= nil then
 					knowledgePointTooltipText:SetText("Weekly:\n|cffFFFFFF".."|T"..treatiseStatus..":0|t "..treatiseNumber.."/1 "..treatiseItemLink)
@@ -2270,7 +2312,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					oldText = knowledgePointTooltipText:GetText()
 					knowledgePointTooltipText:SetText(oldText.."\n".."|T"..dropsStatus..":0|t "..dropsNoCurrent.."/"..dropsNoTotal.." Drops")
 
-					if IsModifierKeyDown() == true then
+					if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
 						for _, dropInfo in ipairs (drops) do
 							oldText = knowledgePointTooltipText:GetText()
 							local _, itemLink = GetItemInfo(dropInfo.itemID)
@@ -2290,70 +2332,98 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					end
 				end
 
-				oldText = knowledgePointTooltipText:GetText()
-				knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000One-time:\n".."|T"..shardStatus..":0|t ".."|cffFFFFFF"..shardNo.."/4 "..shardItemLink)
-				
-				if IsModifierKeyDown() == true then
-					for no, questID in pairs (shardQuests) do
-						oldText = knowledgePointTooltipText:GetText()
-						local questTitle = C_QuestLog.GetTitleForQuestID(questID)
-
-						-- If links missing, try again
-						if questTitle == nil then
-							RunNextFrame(kpTooltip)
-							do return end
-						end
-
-						if C_QuestLog.IsQuestFlaggedCompleted(questID) then
-							knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_READY_TEXTURE..":0|t ".."|cffffff00|Hquest:"..questID.."62|h["..questTitle.."]|h|r")
-						else
-							knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_NOT_READY_TEXTURE..":0|t ".."|cffffff00|Hquest:"..questID.."62|h["..questTitle.."]|h|r")
-						end
-					end
-				end
-
-				oldText = knowledgePointTooltipText:GetText()
-				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..hiddenStatus..":0|t "..hiddenNumber.."/1 Hidden profession master")
-
-				if treasures ~= nil then
+				-- One-time knowledge (text)
+				if userSettings["knowledgeHideDone"] == true and shardNo == 4 and hiddenNumber == 1 and (treasureNoCurrent == treasureNoTotal or treasures == nil) and bookStatus1 == READY_CHECK_READY_TEXTURE and bookStatus2 == READY_CHECK_READY_TEXTURE and bookStatus3 == READY_CHECK_READY_TEXTURE then
+					-- Do not show this
+				else
 					oldText = knowledgePointTooltipText:GetText()
-					knowledgePointTooltipText:SetText(oldText.."\n".."|T"..treasureStatus..":0|t "..treasureNoCurrent.."/"..treasureNoTotal.." Treasures")
+					knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000One-time:")
+				end
+				
+				-- Dragon Shard of Knowledge
+				if userSettings["knowledgeHideDone"] == true and shardNo == 4 then
+					-- Don't show this
+				else
+					oldText = knowledgePointTooltipText:GetText()
+					knowledgePointTooltipText:SetText(oldText.."\n|T"..shardStatus..":0|t ".."|cffFFFFFF"..shardNo.."/4 "..shardItemLink)
 
-					if IsModifierKeyDown() == true then
-						for questID, itemID in pairs (treasures) do
+					if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
+						for no, questID in pairs (shardQuests) do
 							oldText = knowledgePointTooltipText:GetText()
-							local _, itemLink = GetItemInfo(itemID)
-		
+							local questTitle = C_QuestLog.GetTitleForQuestID(questID)
+
 							-- If links missing, try again
-							if itemLink == nil then
+							if questTitle == nil then
 								RunNextFrame(kpTooltip)
 								do return end
 							end
-		
+
 							if C_QuestLog.IsQuestFlaggedCompleted(questID) then
-								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_READY_TEXTURE..":0|t "..itemLink)
+								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_READY_TEXTURE..":0|t ".."|cffffff00|Hquest:"..questID.."62|h["..questTitle.."]|h|r")
 							else
-								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_NOT_READY_TEXTURE..":0|t "..itemLink)
+								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_NOT_READY_TEXTURE..":0|t ".."|cffffff00|Hquest:"..questID.."62|h["..questTitle.."]|h|r")
 							end
 						end
 					end
 				end
 
-				oldText = knowledgePointTooltipText:GetText()
-				local _, itemLink1 = GetItemInfo(books[1].itemID)
-				local _, itemLink2 = GetItemInfo(books[2].itemID)
-				local _, itemLink3 = GetItemInfo(books[3].itemID)
-
-				-- If links missing, try again
-				if itemLink1 == nil or itemLink2 == nil or itemLink3 == nil then
-					RunNextFrame(kpTooltip)
-					do return end
+				-- Hidden profession master
+				if userSettings["knowledgeHideDone"] == true and hiddenNumber == 1 then
+					-- Don't show this
+				else
+					oldText = knowledgePointTooltipText:GetText()
+					knowledgePointTooltipText:SetText(oldText.."\n".."|T"..hiddenStatus..":0|t "..hiddenNumber.."/1 Hidden profession master")
 				end
 
-				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..bookStatus1..":0|t "..itemLink1.."\n".."|T"..bookStatus2..":0|t "..itemLink2.."\n".."|T"..bookStatus3..":0|t "..itemLink3)
-				
+				-- Treasures
+				if treasures ~= nil then
+					if userSettings["knowledgeHideDone"] == true and treasureNoCurrent == treasureNoTotal then
+						-- Don't show this
+					else
+						oldText = knowledgePointTooltipText:GetText()
+						knowledgePointTooltipText:SetText(oldText.."\n".."|T"..treasureStatus..":0|t "..treasureNoCurrent.."/"..treasureNoTotal.." Treasures")
+
+						if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
+							for questID, itemID in pairs (treasures) do
+								oldText = knowledgePointTooltipText:GetText()
+								local _, itemLink = GetItemInfo(itemID)
+			
+								-- If links missing, try again
+								if itemLink == nil then
+									RunNextFrame(kpTooltip)
+									do return end
+								end
+			
+								if C_QuestLog.IsQuestFlaggedCompleted(questID) then
+									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_READY_TEXTURE..":0|t "..itemLink)
+								else
+									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_NOT_READY_TEXTURE..":0|t "..itemLink)
+								end
+							end
+						end
+					end
+				end
+
+				-- Artisan books
+				if userSettings["knowledgeHideDone"] == true and bookStatus1 == READY_CHECK_READY_TEXTURE and bookStatus2 == READY_CHECK_READY_TEXTURE and bookStatus3 == READY_CHECK_READY_TEXTURE then
+					-- Don't show this
+				else
+					oldText = knowledgePointTooltipText:GetText()
+					local _, itemLink1 = GetItemInfo(books[1].itemID)
+					local _, itemLink2 = GetItemInfo(books[2].itemID)
+					local _, itemLink3 = GetItemInfo(books[3].itemID)
+
+					-- If links missing, try again
+					if itemLink1 == nil or itemLink2 == nil or itemLink3 == nil then
+						RunNextFrame(kpTooltip)
+						do return end
+					end
+
+					knowledgePointTooltipText:SetText(oldText.."\n".."|T"..bookStatus1..":0|t "..itemLink1.."\n".."|T"..bookStatus2..":0|t "..itemLink2.."\n".."|T"..bookStatus3..":0|t "..itemLink3)
+				end
+
 				oldText = knowledgePointTooltipText:GetText()
-				if IsModifierKeyDown() == false then knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000Hold Alt, Ctrl, or Shift to show details.") end
+				if IsModifierKeyDown() == false and userSettings["knowledgeAlwaysShowDetails"] == false then knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000Hold Alt, Ctrl, or Shift to show details.") end
 
 				-- Set the tooltip size to fit its contents
 				knowledgePointTooltip:SetHeight(knowledgePointTooltipText:GetStringHeight()+20)
@@ -2367,17 +2437,15 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				end
 			end
 
-			-- Refresh and show the tooltip on mouse-over, and forward keyboard inputs for the modifier
+			-- Refresh and show the tooltip on mouse-over
 			knowledgePointTracker:SetScript("OnEnter", function()
 				kpTooltip()
 				knowledgePointTooltip:Show()
-				knowledgePointTracker:SetPropagateKeyboardInput(false)
 			end)
 
-			-- Hide the tooltip when not mouse-over, and no longer forward keyboard inputs
+			-- Hide the tooltip when not mouse-over
 			knowledgePointTracker:SetScript("OnLeave", function()
 				knowledgePointTooltip:Hide()
-				knowledgePointTracker:SetPropagateKeyboardInput(true)
 			end)
 
 			-- Refresh the tooltip on key down/up (to check for IsModifierKeyDown)
