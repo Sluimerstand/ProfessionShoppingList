@@ -867,7 +867,7 @@ function pslCreateAssets()
 	-- Create Dragonflight Milling info
 	if not millingDragonflight then
 		millingDragonflight = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		millingDragonflight:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 230, 305)
+		millingDragonflight:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 30, 30)
 		millingDragonflight:SetJustifyH("LEFT")
 		millingDragonflight:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 		millingDragonflight:SetText("|cffFFFFFFFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nBlazing Pigment: Saxifrage\nShimmering Pigment: Hochenblume")
