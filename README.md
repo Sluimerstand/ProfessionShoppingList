@@ -37,4 +37,3 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 - Adds a Chef's Hat button to the Cooking window, if the toy is known
 - Includes a quick order button, to instantly create personal crafting orders
 - Includes a Profession Knowledge tracker, the bar turns green when you've gathered all guaranteed knowledge
-- Shows current charges at the Revival Catalyst
