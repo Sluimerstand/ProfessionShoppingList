@@ -2748,17 +2748,4 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			C_TradeSkillUI.SetRecipeTracked(arg1, false, false)
 		end
 	end
-
-	-- When the Catalyst is opened (which one?)
-	if event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" and arg1 == 44 then
-		-- Create Catalyst Charges info
-		if not catalystCharges then
-			catalystCharges = ItemInteractionFrame.ButtonFrame.Currency:CreateFontString("ARTWORK", nil, "GameFontNormal")
-			catalystCharges:SetPoint("LEFT", ItemInteractionFrame.ButtonFrame, "LEFT", 10, -2)
-			catalystCharges:SetJustifyH("LEFT")
-			catalystCharges:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-		end
-		-- Update the charges whenever the catalyst window is opened
-		catalystCharges:SetText("Charges: "..C_CurrencyInfo.GetCurrencyInfo(2167).quantity or 0)
-	end
 end)
