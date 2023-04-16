@@ -454,6 +454,8 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 	recipesTracked[recipeID] = recipesTracked[recipeID] + recipeQuantity
 
 	local recipeType = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).recipeType
+	local recipeMin = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).quantityMin
+	local recipeMax = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).quantityMax
 
 	-- Add recipe link for crafted items
 	if recipeType == 1 then
@@ -471,7 +473,16 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 		else
 			itemLink = string.gsub(itemLink, " |A:Professions%-ChatIcon%-Quality%-Tier1:17:15::1|a", "") -- Remove the quality from the item string
 		end
+
+		-- Add quantity
+		if recipeMin == recipeMax and recipeMin ~= 1 then
+			itemLink = itemLink.." ×"..recipeMin
+		elseif recipeMin ~= 1 then
+			itemLink = itemLink.." ×"..recipeMin.."-"..recipeMax
+		end
+
 		recipeLinks[recipeID] = itemLink
+
 	-- Add recipe "link" for enchants
 	elseif recipeType == 3 then recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
 	end
