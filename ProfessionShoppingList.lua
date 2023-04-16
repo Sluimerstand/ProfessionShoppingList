@@ -2744,7 +2744,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	-- Replace the in-game tracking of shift+clicking a recipe with PSL's
 	if event == "TRACKED_RECIPE_UPDATE" then
 		if arg2 == true then
-			pslTrackRecipe(arg1,1)
+			pslTrackRecipe(pslSelectedRecipeID,1)
 			C_TradeSkillUI.SetRecipeTracked(arg1, false, false)
 		end
 	end
