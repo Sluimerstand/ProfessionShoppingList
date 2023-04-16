@@ -1,7 +1,7 @@
 ## Interface: 100007
 ## Title: Profession Shopping List
 ## Author: Sluimerstand
-## Version: v10.0.7-001
+## Version: v10.0.7-002
 ## X-Curse-Project-ID: 498475
 ## X-Wago-ID: Xb6X71Np
 
