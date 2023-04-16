@@ -1896,7 +1896,7 @@ function pslWindowFunctions()
 				-- If Shift is held also
 				if IsShiftKeyDown() == true then
 					-- Try write link to chat
-					ChatEdit_InsertLink(data[realrow][1])
+					ChatEdit_InsertLink(string.match(data[realrow][1], "(.*)|r")) -- Extract just the item link
 				-- If Control is held also
 				elseif IsControlKeyDown() == true then
 					-- Get the selected recipe ID
