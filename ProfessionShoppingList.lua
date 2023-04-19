@@ -170,6 +170,7 @@ function pslTrackingWindows()
 		pslSaveWindowPosition()
 	end)
 
+	pslFrame1:ClearAllPoints()
 	if userSettings["pcWindowPosition"] == true then
 		pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", pcWindowPosition["pslFrame1"].left, pcWindowPosition["pslFrame1"].bottom)
 	else
@@ -252,6 +253,7 @@ function pslTrackingWindows()
 		pslSaveWindowPosition()
 	end)
 
+	pslFrame2:ClearAllPoints()
 	if userSettings["pcWindowPosition"] == true then
 		pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", pcWindowPosition["pslFrame2"].left, pcWindowPosition["pslFrame2"].bottom)
 	else
