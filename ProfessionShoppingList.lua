@@ -31,9 +31,9 @@ local function dump(o)
 	end
 end
 
--- Create SavedVariables
+-- Create SavedVariables, default window position, and default user settings
 function pslInitialise()
-	-- Declare some variables
+	-- Declare SavedVariables
 	if not userSettings then userSettings = {} end
 	if not recipesTracked then recipesTracked = {} end
 	if not recipeLinks then recipeLinks = {} end
@@ -55,7 +55,11 @@ function pslInitialise()
 			},
 		}
 	end
+
+	-- Declare per-character SavedVariables
 	if not pcWindowPosition then pcWindowPosition = windowPosition end
+	if not pcRecipesTracked then pcRecipesTracked = {} end
+	if not pcRecipeLinks then pcRecipeLinks = {} end
 
 	-- Enable default user settings
 	if userSettings["hide"] == nil then userSettings["hide"] = false end
@@ -76,6 +80,13 @@ function pslInitialise()
 	if userSettings["knowledgeHideDone"] == nil then userSettings["knowledgeHideDone"] = false end
 	if userSettings["knowledgeAlwaysShowDetails"] == nil then userSettings["knowledgeAlwaysShowDetails"] = false end
 	if userSettings["pcWindowPosition"] == nil then userSettings["pcWindowPosition"] = false end
+	if userSettings["pcRecipesTracked"] == nil then userSettings["pcRecipesTracked"] = false end
+
+	-- Load personal recipes, if the setting is enabled
+	if userSettings["pcRecipesTracked"] == true then
+		recipesTracked = pcRecipesTracked
+		recipeLinks = pcRecipeLinks
+	end
 end
 
 -- Save the window position
@@ -390,6 +401,10 @@ end
 
 -- Update recipes and reagents tracked
 function pslUpdateRecipes()
+	-- Set personal recipes to be the same as global recipes
+	pcRecipesTracked = recipesTracked
+	pcRecipeLinks = recipeLinks
+
 	-- Update recipes tracked
 	local data = {}
 
@@ -933,6 +948,7 @@ function pslCreateAssets()
 	end
 end
 
+-- Update assets
 function pslUpdateAssets()
 	-- Enable tracking button for 1 = Item, 3 = Enchant
 	if pslRecipeType == 1 or pslRecipeType == 3 then
@@ -1172,6 +1188,17 @@ function pslSettings()
 	cbPcWindowPosition:SetChecked(userSettings["pcWindowPosition"])
 	cbPcWindowPosition:SetScript("OnClick", function(self)
 		userSettings["pcWindowPosition"] = self:GetChecked()
+	end)
+
+	local cbPcRecipesTracked = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbPcRecipesTracked.Text:SetText("Track recipes per character")
+	cbPcRecipesTracked.Text:SetTextColor(1, 1, 1, 1)
+	cbPcRecipesTracked.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbPcRecipesTracked:SetPoint("TOPLEFT", cbPcWindowPosition, "BOTTOMLEFT", 0, 0)
+	cbPcRecipesTracked:SetChecked(userSettings["pcRecipesTracked"])
+	cbPcRecipesTracked:SetScript("OnClick", function(self)
+		userSettings["pcRecipesTracked"] = cbPcRecipesTracked:GetChecked()
+		pslUpdateRecipes()
 	end)
 
 	-- Category: List and tracking
@@ -2733,7 +2760,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 	-- When bag changes occur
 	if event == "BAG_UPDATE_DELAYED" then
-		pslUpdateNumbers()
+		-- If any recipes are tracked
+		local next = next
+		if next(recipesTracked) ~= nil then
+			pslUpdateNumbers()
+		end
 	end
 
 	-- Set the Vendor filter to 'All' if the option is enabled
