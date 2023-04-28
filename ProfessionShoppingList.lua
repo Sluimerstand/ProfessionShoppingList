@@ -1486,7 +1486,7 @@ function pslSettings()
 	local pslSettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText3:SetPoint("TOPLEFT", pslSettingsText2, "BOTTOMLEFT", 0, -15)
 	pslSettingsText3:SetJustifyH("LEFT")
-	pslSettingsText3:SetText("Other features:\n|cffFFFFFF- Adds a Chef's Hat button to the Cooking window, if the toy is known.\n- Shows current charges at the Revival Catalyst.")
+	pslSettingsText3:SetText("Other features:\n|cffFFFFFF- Adds a Chef's Hat button to the Cooking window, if the toy is known.\n- Copy tracked reagents to the Auctionator import window.")
 end
 
 -- Window functions
