@@ -2741,7 +2741,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	end
 
 	-- When a spell is succesfully cast
-	if event == "UNIT_SPELLCAST_SUCCEEDED" and userSettings["removeCraft"] == true then
+	if event == "UNIT_SPELLCAST_SUCCEEDED" and arg1 == "player" and userSettings["removeCraft"] == true then
 		local spellID = ...
 	
 		-- Run only when crafting a tracked recipe
