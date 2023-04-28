@@ -2522,7 +2522,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end
 
 			-- Cooking
-			if professionID == 5 and PlayerHasToy(134020) then
+			if professionID == 5 and PlayerHasToy(134020) and C_TradeSkillUI.GetProfessionInfoBySkillLineID(2546).skillLevel >= 25 then
 				chefsHatButton:Show()
 			else
 				chefsHatButton:Hide()
