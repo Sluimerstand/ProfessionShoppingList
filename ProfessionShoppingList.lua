@@ -629,7 +629,7 @@ function pslCreateAssets()
 		ebSLrankText:SetPoint("RIGHT", ebSLrank, "LEFT", -10, 0)
 		ebSLrankText:SetJustifyH("LEFT")
 		ebSLrankText:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-		ebSLrankText:SetText("Rank to track:")
+		ebSLrankText:SetText("Rank:")
 		ebSLrankText:Hide()
 	end
 
