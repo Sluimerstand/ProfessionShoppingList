@@ -883,14 +883,15 @@ function pslCreateAssets()
 
 	-- Create Chef's Hat button
 	if not chefsHatButton then
-		chefsHatButton = CreateFrame("Button", "ChefsHatButton", ProfessionsFrame, "UIPanelButtonTemplate")
-	
+		chefsHatButton = CreateFrame("Button", "ChefsHatButton", ProfessionsFrame, "SecureActionButtonTemplate")
 		chefsHatButton:SetWidth(40)
 		chefsHatButton:SetHeight(40)
 		chefsHatButton:SetNormalTexture(236571)
 		chefsHatButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
 		chefsHatButton:SetFrameStrata("HIGH")
-		chefsHatButton:SetScript("OnClick", function() UseToyByName("Chef's Hat") end)
+		chefsHatButton:RegisterForClicks("AnyDown")
+		chefsHatButton:SetAttribute("type1", "toy")
+		chefsHatButton:SetAttribute("toy", 134020)
 	end
 
 	-- Create Dragonflight Milling info
