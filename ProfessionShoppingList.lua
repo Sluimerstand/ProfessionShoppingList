@@ -2440,6 +2440,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70313] = 201004
 				treasures[70314] = 201011
 				treasures[70353] = 201009
+				treasures[76078] = 205986
+				treasures[76079] = 205987
+				treasures[76080] = 205988
 				books = {}
 				books[1] = {questID = 71894, itemID = 200972}
 				books[2] = {questID = 71905, itemID = 201268}
@@ -2467,6 +2470,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70294] = 198690
 				treasures[70300] = 198696
 				treasures[70308] = 198711
+				treasures[75495] = 204987
+				treasures[75496] = 204987
+				treasures[75502] = 204988
 				books = {}
 				books[1] = {questID = 71900, itemID = 200979}
 				books[2] = {questID = 71911, itemID = 201275}
@@ -2494,6 +2500,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70301] = 198697
 				treasures[70305] = 198710
 				treasures[70309] = 198712
+				treasures[75646] = 205211
+				treasures[75649] = 205212
+				treasures[75651] = 205213
 				books = {}
 				books[1] = {questID = 71893, itemID = 200974}
 				books[2] = {questID = 71904, itemID = 201270}
@@ -2573,6 +2582,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70303] = 201020
 				treasures[70304] = 198702
 				treasures[70372] = 201019
+				treasures[76102] = 206019
+				treasures[76110] = 206025
+				treasures[76116] = 206030
 				books = {}
 				books[1] = {questID = 71903, itemID = 200975}
 				books[2] = {questID = 71914, itemID = 201271}
@@ -2595,6 +2607,14 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures = {}
 				treasures[70270] = 201014
 				treasures[70275] = 198789
+				treasures[75180] = 204469
+				--treasures[] = 204470
+				--treasures[] = 204471
+				treasures[75186] = 204475
+				--treasures[] = 204480
+				treasures[75430] = 204850
+				treasures[75431] = 204853
+				treasures[75433] = 204855
 				books = {}
 				books[1] = {questID = 71896, itemID = 200977}
 				books[2] = {questID = 71907, itemID = 201273}
@@ -2623,6 +2643,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70320] = 198798
 				treasures[70336] = 198799
 				treasures[70342] = 198800
+				treasures[75508] = 204990
+				treasures[75509] = 204999
+				treasures[75510] = 205001
 				books = {}
 				books[1] = {questID = 71895, itemID = 200976}
 				books[2] = {questID = 71906, itemID = 201272}
@@ -2673,6 +2696,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70263] = 198660
 				treasures[70261] = 198656
 				treasures[70285] = 198682
+				treasures[75652] = 205214
+				treasures[75653] = 205216
+				treasures[75654] = 205219
 				books = {}
 				books[1] = {questID = 71899, itemID = 200978}
 				books[2] = {questID = 71910, itemID = 201274}
@@ -2701,6 +2727,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70297] = 198693
 				treasures[70306] = 198704
 				treasures[70307] = 198703
+				treasures[76117] = 206031
+				--treasures[] = 206034
+				--treasures[] = 206035
 				books = {}
 				books[1] = {questID = 71898, itemID = 200973}
 				books[2] = {questID = 71909, itemID = 201269}
