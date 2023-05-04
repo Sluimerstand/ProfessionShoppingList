@@ -2834,8 +2834,6 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 	-- When the Auction House is opened
 	if event == "AUCTION_HOUSE_SHOW" then
-		dump(reagentsTracked)
-
 		-- Create a temporary variable
 		if not auctionatorReagents then local auctionatorReagents end
 
