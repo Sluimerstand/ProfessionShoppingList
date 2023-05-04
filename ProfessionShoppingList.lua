@@ -894,6 +894,11 @@ function pslCreateAssets()
 		chefsHatButton:SetAttribute("toy", 134020)
 	end
 
+	-- Make the Chef's Hat button desaturated if it cannot be used
+	if PlayerHasToy(134020) and C_TradeSkillUI.GetProfessionInfoBySkillLineID(2546).skillLevel >= 25 then
+		chefsHatButton:SetDesaturated(true)
+	end
+
 	-- Create Dragonflight Milling info
 	if not millingDragonflight then
 		millingDragonflight = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -2531,11 +2536,14 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[3] = {questID = 71919, itemID = 201287}
 			end
 
-			-- Cooking
-			if professionID == 5 and PlayerHasToy(134020) and C_TradeSkillUI.GetProfessionInfoBySkillLineID(2546).skillLevel >= 25 then
-				chefsHatButton:Show()
-			else
-				chefsHatButton:Hide()
+			-- Only execute this if not in combat
+			if UnitAffectingCombat("player") == false then
+				-- Cooking
+				if professionID == 5 then
+					chefsHatButton:Show()
+				else
+					chefsHatButton:Hide()
+				end
 			end
 
 			-- Mining
