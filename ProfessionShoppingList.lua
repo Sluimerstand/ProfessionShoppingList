@@ -2608,10 +2608,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70270] = 201014
 				treasures[70275] = 198789
 				treasures[75180] = 204469
-				--treasures[] = 204470
-				--treasures[] = 204471
+				treasures[75183] = 204470
+				treasures[75184] = 204471
 				treasures[75186] = 204475
-				--treasures[] = 204480
+				treasures[75188] = 204480
 				treasures[75430] = 204850
 				treasures[75431] = 204853
 				treasures[75433] = 204855
@@ -2728,8 +2728,8 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70306] = 198704
 				treasures[70307] = 198703
 				treasures[76117] = 206031
-				--treasures[] = 206034
-				--treasures[] = 206035
+				treasures[76120] = 206034
+				treasures[76121] = 206035
 				books = {}
 				books[1] = {questID = 71898, itemID = 200973}
 				books[2] = {questID = 71909, itemID = 201269}
