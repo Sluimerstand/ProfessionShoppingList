@@ -449,7 +449,7 @@ end
 -- Track recipe
 function pslTrackRecipe(recipeID, recipeQuantity)
 	-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
-	if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).reagentSlotSchematics[1] == nil then
+	if C_TradeSkillUI.GetRecipeSchematic(recipeID,false).recipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(recipeID,false).reagentSlotSchematics[1] == nil then
 		do return end
 	end
 	
