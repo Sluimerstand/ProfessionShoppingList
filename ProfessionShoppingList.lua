@@ -892,11 +892,11 @@ function pslCreateAssets()
 		chefsHatButton:RegisterForClicks("AnyDown")
 		chefsHatButton:SetAttribute("type1", "toy")
 		chefsHatButton:SetAttribute("toy", 134020)
-	end
 
-	-- Make the Chef's Hat button desaturated if it cannot be used
-	if PlayerHasToy(134020) and C_TradeSkillUI.GetProfessionInfoBySkillLineID(2546).skillLevel >= 25 then
-		chefsHatButton:SetDesaturated(true)
+		-- Make the Chef's Hat button desaturated if it cannot be used
+		if PlayerHasToy(134020) and C_TradeSkillUI.GetProfessionInfoBySkillLineID(2546).skillLevel >= 25 then
+			chefsHatButton:SetDesaturated(true)
+		end
 	end
 
 	-- Create Dragonflight Milling info
@@ -1996,7 +1996,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	end
 
 	-- When a recipe is selected
-	if event == "SPELL_DATA_LOAD_RESULT" then
+	if event == "SPELL_DATA_LOAD_RESULT" and UnitAffectingCombat("player") == false then
 		-- Get selected recipe ID and type (global variables)
 		if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
 		pslSelectedRecipeID = arg1
@@ -2536,14 +2536,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[3] = {questID = 71919, itemID = 201287}
 			end
 
-			-- Only execute this if not in combat
-			if UnitAffectingCombat("player") == false then
-				-- Cooking
-				if professionID == 5 then
-					chefsHatButton:Show()
-				else
-					chefsHatButton:Hide()
-				end
+			-- Cooking
+			if professionID == 5 then
+				chefsHatButton:Show()
+			else
+				chefsHatButton:Hide()
 			end
 
 			-- Mining
@@ -2769,7 +2766,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	end
 	
 	-- When a profession window is loaded
-	if event == "TRADE_SKILL_LIST_UPDATE" then
+	if event == "TRADE_SKILL_LIST_UPDATE" and UnitAffectingCombat("player") == false then
 		-- Register all recipes for this profession
 		for _, id in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
 			local item = C_TradeSkillUI.GetRecipeOutputItemData(id).itemID
@@ -2780,7 +2777,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	end
 
 	-- When a spell is succesfully cast
-	if event == "UNIT_SPELLCAST_SUCCEEDED" and arg1 == "player" and userSettings["removeCraft"] == true then
+	if event == "UNIT_SPELLCAST_SUCCEEDED" and UnitAffectingCombat("player") == false and arg1 == "player" and userSettings["removeCraft"] == true then
 		local spellID = ...
 	
 		-- Run only when crafting a tracked recipe
@@ -2798,7 +2795,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	end
 
 	-- When bag changes occur
-	if event == "BAG_UPDATE_DELAYED" then
+	if event == "BAG_UPDATE_DELAYED" and UnitAffectingCombat("player") == false then
 		-- If any recipes are tracked
 		local next = next
 		if next(recipesTracked) ~= nil then
