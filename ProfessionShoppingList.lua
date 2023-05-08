@@ -895,7 +895,7 @@ function pslCreateAssets()
 
 		-- Make the Chef's Hat button desaturated if it cannot be used
 		if PlayerHasToy(134020) and C_TradeSkillUI.GetProfessionInfoBySkillLineID(2546).skillLevel >= 25 then
-			chefsHatButton:SetDesaturated(true)
+			chefsHatButton:GetNormalTexture():SetDesaturated(true)
 		end
 	end
 
