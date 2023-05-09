@@ -18,14 +18,16 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 - /psl - Toggle the tracking windows
 - /psl settings - Open the settings window
 - /psl clear - Clear all tracked recipes
+- /psl track [spellID] [amount] - Track recipe
+- /psl untrack [spellID] [amount] - Untrack recipe
 
 **Mouse interactions**
 
 - Drag: Move the tracking windows
 - Shift+click Recipe: Link the recipe
 - Ctrl+click Recipe: Open the selected recipe
-- Right-click Recipe #: Untrack 1 of the selected recipe
-- Ctrl+right-click Recipe #: Untrack all of the selected recipe
+- Right-click Recipe (# column): Untrack 1 of the selected recipe
+- Ctrl+right-click Recipe (# column): Untrack all of the selected recipe
 - Shift+click Reagent: Link the reagent
 - Ctrl+click Reagent: Add recipe for the selected subreagent, if it exists
 

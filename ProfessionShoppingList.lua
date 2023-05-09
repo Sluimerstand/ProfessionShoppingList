@@ -1487,7 +1487,7 @@ function pslSettings()
 	local pslSettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText2:SetPoint("TOPLEFT", pslSettingsText1, "BOTTOMLEFT", 0, -15)
 	pslSettingsText2:SetJustifyH("LEFT")
-	pslSettingsText2:SetText("Mouse interactions:\nDrag|cffFFFFFF: Move the PSL windows.\n|RShift+click Recipe|cffFFFFFF: Link the recipe.\n|RCtrl+click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click Recipe #|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click Recipe #|cffFFFFFF: Untrack all of the selected recipe.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
+	pslSettingsText2:SetText("Mouse interactions:\nDrag|cffFFFFFF: Move the PSL windows.\n|RShift+click Recipe|cffFFFFFF: Link the recipe.\n|RCtrl+click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click Recipe (# column)|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click Recipe (# column)|cffFFFFFF: Untrack all of the selected recipe.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
 
 	local pslSettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText3:SetPoint("TOPLEFT", pslSettingsText2, "BOTTOMLEFT", 0, -15)
@@ -1982,12 +1982,35 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		-- Slash commands
 		SLASH_PSL1 = "/psl";
 		function SlashCmdList.PSL(msg, editBox)
+			-- Split message into command and rest
+			local command, rest = msg:match("^(%S*)%s*(.-)$")
+
 			-- Open settings
-			if msg == "settings" then
+			if command == "settings" then
 				pslOpenSettings()
 			-- Clear list
-			elseif msg == "clear" then
+			elseif command == "clear" then
 				pslClear()
+			-- Track recipe
+			elseif command == "track" and rest ~= "" then
+				local recipeID, recipeQuantity = rest:match("^(%S*)%s*(.-)$")
+				recipeID = tonumber(recipeID)
+				recipeQuantity = tonumber(recipeQuantity)
+				if recipeID ~= 0 and recipeQuantity ~= 0 then
+					pslTrackRecipe(recipeID, recipeQuantity)
+				else
+					print("PSL: Invalid parameters. Please enter a valid spellID and recipe quantity.")
+				end
+			-- Untrack recipe
+			elseif command == "untrack" and rest ~= "" then
+				local recipeID, recipeQuantity = rest:match("^(%S*)%s*(.-)$")
+				recipeID = tonumber(recipeID)
+				recipeQuantity = tonumber(recipeQuantity)
+				if recipeID ~= 0 and recipeQuantity ~= 0 then
+					pslUntrackRecipe(recipeID, recipeQuantity)
+				else
+					print("PSL: Invalid parameters. Please enter a valid spellID and recipe quantity.")
+				end
 			-- No arguments
 			else
 				pslToggle()
