@@ -18,8 +18,6 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 - /psl - Toggle the tracking windows
 - /psl settings - Open the settings window
 - /psl clear - Clear all tracked recipes
-- /psl track [spellID] [amount] - Track recipe
-- /psl untrack [spellID] [amount] - Untrack recipe
 
 **Mouse interactions**
 

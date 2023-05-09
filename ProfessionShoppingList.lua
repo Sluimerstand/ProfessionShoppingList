@@ -574,7 +574,7 @@ function pslCreateAssets()
 		if newValue >= 0 then
 			pslUntrackRecipe(pslSelectedRecipeID,0)
 			if newValue >0 then
-				pslTrackRecipe(pslSelectedRecipeID,newValue)
+				pslTrackRecipe(pslSelectedRecipeID, newValue)
 			end
 		end
 	end
@@ -1991,27 +1991,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			-- Clear list
 			elseif command == "clear" then
 				pslClear()
-			-- Track recipe
-			elseif command == "track" and rest ~= "" then
-				local recipeID, recipeQuantity = rest:match("^(%S*)%s*(.-)$")
-				recipeID = tonumber(recipeID)
-				recipeQuantity = tonumber(recipeQuantity)
-				if recipeID ~= 0 and recipeQuantity ~= 0 then
-					pslTrackRecipe(recipeID, recipeQuantity)
-				else
-					print("PSL: Invalid parameters. Please enter a valid spellID and recipe quantity.")
-				end
-			-- Untrack recipe
-			elseif command == "untrack" and rest ~= "" then
-				local recipeID, recipeQuantity = rest:match("^(%S*)%s*(.-)$")
-				recipeID = tonumber(recipeID)
-				recipeQuantity = tonumber(recipeQuantity)
-				if recipeID ~= 0 and recipeQuantity ~= 0 then
-					pslUntrackRecipe(recipeID, recipeQuantity)
-				else
-					print("PSL: Invalid parameters. Please enter a valid spellID and recipe quantity.")
-				end
-			-- No arguments
+			-- No command
 			else
 				pslToggle()
 			end
