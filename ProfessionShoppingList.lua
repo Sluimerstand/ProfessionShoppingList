@@ -887,15 +887,17 @@ function pslCreateAssets()
 		chefsHatButton:SetWidth(40)
 		chefsHatButton:SetHeight(40)
 		chefsHatButton:SetNormalTexture(236571)
+		chefsHatButton:GetNormalTexture():SetDesaturated(true)
+		chefsHatButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
 		chefsHatButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
 		chefsHatButton:SetFrameStrata("HIGH")
 		chefsHatButton:RegisterForClicks("AnyDown")
 		chefsHatButton:SetAttribute("type1", "toy")
 		chefsHatButton:SetAttribute("toy", 134020)
-
+		
 		-- Make the Chef's Hat button desaturated if it cannot be used
 		if PlayerHasToy(134020) and C_TradeSkillUI.GetProfessionInfoBySkillLineID(2546).skillLevel >= 25 then
-			chefsHatButton:GetNormalTexture():SetDesaturated(true)
+			chefsHatButton:GetNormalTexture():SetDesaturated(false)
 		end
 	end
 
