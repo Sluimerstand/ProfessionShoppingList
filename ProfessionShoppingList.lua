@@ -894,11 +894,6 @@ function pslCreateAssets()
 		chefsHatButton:RegisterForClicks("AnyDown")
 		chefsHatButton:SetAttribute("type1", "toy")
 		chefsHatButton:SetAttribute("toy", 134020)
-		
-		-- Make the Chef's Hat button desaturated if it cannot be used
-		if PlayerHasToy(134020) and C_TradeSkillUI.GetProfessionInfoBySkillLineID(2546).skillLevel >= 25 then
-			chefsHatButton:GetNormalTexture():SetDesaturated(false)
-		end
 	end
 
 	-- Create Dragonflight Milling info
@@ -1014,6 +1009,11 @@ function pslUpdateAssets()
 		personalCharname:SetText(personalOrders[pslSelectedRecipeID])
 	else
 		personalCharname:SetText("")
+	end
+
+	-- Make the Chef's Hat button not desaturated if it can be used
+	if PlayerHasToy(134020) and C_TradeSkillUI.GetProfessionInfoBySkillLineID(2546).skillLevel >= 25 then
+		chefsHatButton:GetNormalTexture():SetDesaturated(false)
 	end
 end
 
