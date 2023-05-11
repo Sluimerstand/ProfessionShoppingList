@@ -2076,7 +2076,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		end
 	end
 
-	-- When a recipe is selected
+	-- When a recipe is selected (out of combat)
 	if event == "SPELL_DATA_LOAD_RESULT" and UnitAffectingCombat("player") == false then
 		-- Get selected recipe ID and type (global variables)
 		if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
@@ -2868,7 +2868,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		professionFeatures()
 	end
 	
-	-- When a profession window is loaded
+	-- When a profession window is loaded (out of combat)
 	if event == "TRADE_SKILL_LIST_UPDATE" and UnitAffectingCombat("player") == false then
 		-- Register all recipes for this profession
 		for _, id in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
@@ -2879,7 +2879,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		end
 	end
 
-	-- When a spell is succesfully cast
+	-- When a spell is succesfully cast by the player and the remove on craft setting is enabled (out of combat)
 	if event == "UNIT_SPELLCAST_SUCCEEDED" and UnitAffectingCombat("player") == false and arg1 == "player" and userSettings["removeCraft"] == true then
 		local spellID = ...
 	
@@ -2897,7 +2897,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		end
 	end
 
-	-- When bag changes occur
+	-- When bag changes occur (out of combat)
 	if event == "BAG_UPDATE_DELAYED" and UnitAffectingCombat("player") == false then
 		-- If any recipes are tracked
 		local next = next
