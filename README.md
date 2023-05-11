@@ -18,9 +18,9 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 - /psl - Toggle the tracking windows
 - /psl settings - Open the settings window
 - /psl clear - Clear all tracked recipes
-- /psl track <recipeID> <quantity> - Track a recipe
-- /psl untrack <recipeID> <quantity> - Untrack a recipe
-- /psl untrack <recipeID> all - Untrack all of a recipe
+- /psl track [recipeID] [quantity] - Track a recipe
+- /psl untrack [recipeID] [quantity] - Untrack a recipe
+- /psl untrack [recipeID] all - Untrack all of a recipe
 
 **Mouse interactions**
 
