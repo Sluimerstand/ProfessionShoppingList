@@ -2,7 +2,7 @@
 ## Title: Profession Shopping List
 ## Author: Sluimerstand
 ## IconTexture: Interface\AddOns\ProfessionShoppingList\assets\psl_icon.blp
-## Version: v10.1.0-003
+## Version: v10.1.0-004
 ## X-Curse-Project-ID: 498475
 ## X-Wago-ID: Xb6X71Np
 
