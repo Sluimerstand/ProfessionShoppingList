@@ -37,7 +37,7 @@ Feel free to give me advice on how to improve this AddOn and please report any i
 - Untrack recipes after crafting them
 - Show tooltip information for tracked reagents
 - Automatically set vendors' filter to 'All'
-- Adds a Chef's Hat button to the Cooking window
+- Adds buttons for Cooking Fire, Chef's Hat, and Thermal Anvil
 - Includes a quick order button, to instantly create personal crafting orders
 - Includes a Profession Knowledge tracker
 - Copy tracked reagents to the Auctionator import window

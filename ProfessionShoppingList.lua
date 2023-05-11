@@ -82,6 +82,7 @@ function pslInitialise()
 	if userSettings["knowledgeAlwaysShowDetails"] == nil then userSettings["knowledgeAlwaysShowDetails"] = false end
 	if userSettings["pcWindowPosition"] == nil then userSettings["pcWindowPosition"] = false end
 	if userSettings["pcRecipesTracked"] == nil then userSettings["pcRecipesTracked"] = false end
+	if userSettings["headerTooltip"] == nil then userSettings["headerTooltip"] = true end
 
 	-- Load personal recipes, if the setting is enabled
 	if userSettings["pcRecipesTracked"] == true then
@@ -890,6 +891,24 @@ function pslCreateAssets()
 	-- Initialise this variable for the MakeOrderButtons
 	if not pslOrderRecipeID then pslOrderRecipeID = 0 end
 
+	-- Create Cooking Fire button
+	if not cookingFireButton then
+		cookingFireButton = CreateFrame("Button", "CookingFireButton", ProfessionsFrame, "SecureActionButtonTemplate")
+		cookingFireButton:SetWidth(40)
+		cookingFireButton:SetHeight(40)
+		cookingFireButton:SetNormalTexture(135805)
+		cookingFireButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		cookingFireButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
+		cookingFireButton:SetFrameStrata("HIGH")
+		cookingFireButton:RegisterForClicks("AnyDown")
+		cookingFireButton:SetAttribute("type1", "spell")
+		cookingFireButton:SetAttribute("spell", 818)
+
+		cookingFireCooldown = CreateFrame("Cooldown", "CookingFireCooldown", cookingFireButton, "CooldownFrameTemplate")
+		cookingFireCooldown:SetAllPoints(cookingFireButton)
+		cookingFireCooldown:SetSwipeColor(1, 1, 1)
+	end
+
 	-- Create Chef's Hat button
 	if not chefsHatButton then
 		chefsHatButton = CreateFrame("Button", "ChefsHatButton", ProfessionsFrame, "SecureActionButtonTemplate")
@@ -898,11 +917,41 @@ function pslCreateAssets()
 		chefsHatButton:SetNormalTexture(236571)
 		chefsHatButton:GetNormalTexture():SetDesaturated(true)
 		chefsHatButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-		chefsHatButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
+		chefsHatButton:SetPoint("BOTTOMRIGHT", cookingFireButton, "BOTTOMLEFT", -3, 0)
 		chefsHatButton:SetFrameStrata("HIGH")
 		chefsHatButton:RegisterForClicks("AnyDown")
 		chefsHatButton:SetAttribute("type1", "toy")
 		chefsHatButton:SetAttribute("toy", 134020)
+
+		chefsHatCooldown = CreateFrame("Cooldown", "ChefsHatCooldown", chefsHatButton, "CooldownFrameTemplate")
+		chefsHatCooldown:SetAllPoints(chefsHatButton)
+		chefsHatCooldown:SetSwipeColor(1, 1, 1)
+	end
+
+	-- Create Thermal Anvil button
+	if not thermalAnvilButton then
+		thermalAnvilButton = CreateFrame("Button", "ThermalAnvilButton", ProfessionsFrame, "SecureActionButtonTemplate")
+		thermalAnvilButton:SetWidth(40)
+		thermalAnvilButton:SetHeight(40)
+		thermalAnvilButton:SetNormalTexture(136241)
+		thermalAnvilButton:GetNormalTexture():SetDesaturated(true)
+		thermalAnvilButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		thermalAnvilButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
+		thermalAnvilButton:SetFrameStrata("HIGH")
+		thermalAnvilButton:RegisterForClicks("AnyDown")
+		thermalAnvilButton:SetAttribute("type1", "macro")
+		thermalAnvilButton:SetAttribute("macrotext1", "/use item:87216")
+
+		thermalAnvilCooldown = CreateFrame("Cooldown", "ThermalAnvilCooldown", thermalAnvilButton, "CooldownFrameTemplate")
+		thermalAnvilCooldown:SetAllPoints(thermalAnvilButton)
+		thermalAnvilCooldown:SetSwipeColor(1, 1, 1)
+
+		thermalAnvilCharges = thermalAnvilButton:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		thermalAnvilCharges:SetPoint("BOTTOMRIGHT", thermalAnvilButton, "BOTTOMRIGHT", 0, 0)
+		thermalAnvilCharges:SetJustifyH("RIGHT")
+		if not C_Item.IsItemDataCachedByID(87216) then local item = Item:CreateFromItemID(87216) end
+		local anvilCharges = GetItemCount(87216, false, true, false)
+		thermalAnvilCharges:SetText(anvilCharges)
 	end
 
 	-- Create Dragonflight Milling info
@@ -958,6 +1007,60 @@ function pslCreateAssets()
 		knowledgePointTooltipText = knowledgePointTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		knowledgePointTooltipText:SetPoint("TOPLEFT", knowledgePointTooltip, "TOPLEFT", 10, -10)
 		knowledgePointTooltipText:SetJustifyH("LEFT")
+	end
+
+	-- Create Recipes header tooltip
+	if not recipeHeaderTooltip then
+		recipeHeaderTooltip = CreateFrame("Frame", nil, pslTrackingWindow2, "BackdropTemplate")
+		recipeHeaderTooltip:SetPoint("CENTER")
+		recipeHeaderTooltip:SetPoint("BOTTOM", pslTrackingWindow2, "TOP", 0, 0)
+		recipeHeaderTooltip:SetFrameStrata("TOOLTIP")
+		recipeHeaderTooltip:SetBackdrop({
+			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+			edgeSize = 16,
+			insets = { left = 4, right = 4, top = 4, bottom = 4 },
+		})
+		recipeHeaderTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		recipeHeaderTooltip:EnableMouse(false)
+		recipeHeaderTooltip:SetMovable(false)
+		recipeHeaderTooltip:Hide()
+
+		recipeHeaderTooltipText = recipeHeaderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		recipeHeaderTooltipText:SetPoint("TOPLEFT", recipeHeaderTooltip, "TOPLEFT", 10, -10)
+		recipeHeaderTooltipText:SetJustifyH("LEFT")
+		recipeHeaderTooltipText:SetText("Drag|cffFFFFFF: Move the window.\n|RShift+click Recipe|cffFFFFFF: Link the recipe.\n|RCtrl+click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click #|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click #|cffFFFFFF: Untrack all of the selected recipe.")
+
+		-- Set the tooltip size to fit its contents
+		recipeHeaderTooltip:SetHeight(recipeHeaderTooltipText:GetStringHeight()+20)
+		recipeHeaderTooltip:SetWidth(recipeHeaderTooltipText:GetStringWidth()+20)
+	end
+
+	-- Create Reagents header tooltip
+	if not reagentHeaderTooltip then
+		reagentHeaderTooltip = CreateFrame("Frame", nil, pslTrackingWindow1, "BackdropTemplate")
+		reagentHeaderTooltip:SetPoint("CENTER")
+		reagentHeaderTooltip:SetPoint("BOTTOM", pslTrackingWindow1, "TOP", 0, 0)
+		reagentHeaderTooltip:SetFrameStrata("TOOLTIP")
+		reagentHeaderTooltip:SetBackdrop({
+			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+			edgeSize = 16,
+			insets = { left = 4, right = 4, top = 4, bottom = 4 },
+		})
+		reagentHeaderTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		reagentHeaderTooltip:EnableMouse(false)
+		reagentHeaderTooltip:SetMovable(false)
+		reagentHeaderTooltip:Hide()
+
+		reagentHeaderTooltipText = reagentHeaderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		reagentHeaderTooltipText:SetPoint("TOPLEFT", reagentHeaderTooltip, "TOPLEFT", 10, -10)
+		reagentHeaderTooltipText:SetJustifyH("LEFT")
+		reagentHeaderTooltipText:SetText("Drag|cffFFFFFF: Move the window.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
+
+		-- Set the tooltip size to fit its contents
+		reagentHeaderTooltip:SetHeight(reagentHeaderTooltipText:GetStringHeight()+20)
+		reagentHeaderTooltip:SetWidth(reagentHeaderTooltipText:GetStringWidth()+20)
 	end
 end
 
@@ -1024,6 +1127,31 @@ function pslUpdateAssets()
 	if PlayerHasToy(134020) and C_TradeSkillUI.GetProfessionInfoBySkillLineID(2546).skillLevel >= 25 then
 		chefsHatButton:GetNormalTexture():SetDesaturated(false)
 	end
+
+	-- Check how many thermal anvils the player has
+	if not C_Item.IsItemDataCachedByID(87216) then local item = Item:CreateFromItemID(87216) end
+	local anvilCount = GetItemCount(87216)
+	-- (De)saturate based on that
+	if anvilCount >= 1 then
+		thermalAnvilButton:GetNormalTexture():SetDesaturated(false)
+	else
+		thermalAnvilButton:GetNormalTexture():SetDesaturated(true)
+	end
+	-- Update charges
+	local anvilCharges = GetItemCount(87216, false, true, false)
+	thermalAnvilCharges:SetText(anvilCharges)
+
+	-- Cooking Fire button cooldown
+	local start, duration = GetSpellCooldown(818)
+	CookingFireCooldown:SetCooldown(start, duration)
+
+	-- Chef's Hat button cooldown
+	start, duration = GetItemCooldown(134020)
+	ChefsHatCooldown:SetCooldown(start, duration)
+
+	-- Thermal Anvil button cooldown
+	start, duration = GetItemCooldown(87216)
+	thermalAnvilCooldown:SetCooldown(start, duration)
 end
 
 -- Tooltip information
@@ -1208,6 +1336,16 @@ function pslSettings()
 		userSettings["pcWindowPosition"] = self:GetChecked()
 	end)
 
+	local cbHeaderTooltip = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbHeaderTooltip.Text:SetText("Show header tooltip")
+	cbHeaderTooltip.Text:SetTextColor(1, 1, 1, 1)
+	cbHeaderTooltip.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbHeaderTooltip:SetPoint("TOPLEFT", cbMinimapButton, "BOTTOMLEFT", 0, 0)
+	cbHeaderTooltip:SetChecked(userSettings["headerTooltip"])
+	cbHeaderTooltip:SetScript("OnClick", function(self)
+		userSettings["headerTooltip"] = cbHeaderTooltip:GetChecked()
+	end)
+
 	local cbPcRecipesTracked = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
 	cbPcRecipesTracked.Text:SetText("Track recipes per character")
 	cbPcRecipesTracked.Text:SetTextColor(1, 1, 1, 1)
@@ -1221,7 +1359,7 @@ function pslSettings()
 
 	-- Category: List and tracking
 	local titleListSettings = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	titleListSettings:SetPoint("TOPLEFT", cbMinimapButton, "BOTTOMLEFT", 0, -10)
+	titleListSettings:SetPoint("TOPLEFT", cbHeaderTooltip, "BOTTOMLEFT", 0, -10)
 	titleListSettings:SetJustifyH("LEFT")
 	titleListSettings:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 	titleListSettings:SetText("List and tracking")
@@ -1503,7 +1641,7 @@ function pslSettings()
 	local pslSettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText3:SetPoint("TOPLEFT", pslSettingsText2, "BOTTOMLEFT", 0, -15)
 	pslSettingsText3:SetJustifyH("LEFT")
-	pslSettingsText3:SetText("Other features:\n|cffFFFFFF- Adds a Chef's Hat button to the Cooking window.\n- Copy tracked reagents to the Auctionator import window.")
+	pslSettingsText3:SetText("Other features:\n|cffFFFFFF- Adds buttons for Cooking Fire, Chef's Hat, and Thermal Anvil.\n- Copy tracked reagents to the Auctionator import window.")
 end
 
 -- Window functions
@@ -1511,17 +1649,23 @@ function pslWindowFunctions()
 	-- Reagents window
 	table1:RegisterEvents({
 		["OnEnter"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
+			-- Show item tooltip if hovering over the actual rows
 			if row and realrow ~= nil then
 				local celldata = data[realrow][1]
 				GameTooltip:ClearLines()
 				GameTooltip:SetOwner(pslFrame1, "ANCHOR_BOTTOM")
 				GameTooltip:SetHyperlink(celldata)
 				GameTooltip:Show()
+				reagentHeaderTooltip:Hide()
+			-- Show header tooltip
+			elseif userSettings["headerTooltip"] == true then
+				reagentHeaderTooltip:Show()
 			end
 		end,
 		["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
 			GameTooltip:ClearLines()
 			GameTooltip:Hide()
+			reagentHeaderTooltip:Hide()
 		end,
 		["OnMouseDown"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
 			if button == "LeftButton" then
@@ -1929,17 +2073,23 @@ function pslWindowFunctions()
 	-- Recipes window
 	table2:RegisterEvents({
 		["OnEnter"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
+			-- Show item tooltip if hovering over the actual rows
 			if row and realrow ~= nil then
 				local celldata = data[realrow][1]
 				GameTooltip:ClearLines()
 				GameTooltip:SetOwner(pslFrame2, "ANCHOR_BOTTOM")
 				GameTooltip:SetHyperlink(celldata)
 				GameTooltip:Show()
+				recipeHeaderTooltip:Hide()
+			-- Show header tooltip
+			elseif userSettings["headerTooltip"] == true then
+				recipeHeaderTooltip:Show()
 			end
 		end,
 		["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
 			GameTooltip:ClearLines()
 			GameTooltip:Hide()
+			recipeHeaderTooltip:Hide()
 		end,
 		["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
 			-- Right-click on recipe amount
@@ -2639,13 +2789,6 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[3] = {questID = 71919, itemID = 201287}
 			end
 
-			-- Cooking
-			if professionID == 5 then
-				chefsHatButton:Show()
-			else
-				chefsHatButton:Hide()
-			end
-
 			-- Mining
 			if professionID == 6 then
 				treatiseItem = 194708
@@ -2864,6 +3007,22 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			else
 				knowledgePointTracker:Hide()
 			end
+
+			-- Cooking Fire and Chef's Hat buttons
+			if professionID == 5 then
+				cookingFireButton:Show()
+				chefsHatButton:Show()
+			else
+				cookingFireButton:Hide()
+				chefsHatButton:Hide()
+			end
+
+			-- Thermal Anvil button
+			if professionID == 1 or professionID == 8 then
+				thermalAnvilButton:Show()
+			else
+				thermalAnvilButton:Hide()
+			end
 		end
 		professionFeatures()
 	end
@@ -2879,12 +3038,17 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		end
 	end
 
-	-- When a spell is succesfully cast by the player and the remove on craft setting is enabled (out of combat)
-	if event == "UNIT_SPELLCAST_SUCCEEDED" and UnitAffectingCombat("player") == false and arg1 == "player" and userSettings["removeCraft"] == true then
+	-- When a spell is succesfully cast by the player (out of combat)
+	if event == "UNIT_SPELLCAST_SUCCEEDED" and UnitAffectingCombat("player") == false and arg1 == "player" then
 		local spellID = ...
+
+		-- Profession button stuff
+		if spellID == 818 or spellID == 67556 or spellID == 126462 then
+			C_Timer.After(0.1, function() pslUpdateAssets() end)
+		end
 	
-		-- Run only when crafting a tracked recipe
-		if recipesTracked[spellID] then
+		-- Run only when crafting a tracked recipe, and if the remove craft option is enabled
+		if recipesTracked[spellID] and userSettings["removeCraft"] == true then
 			-- Remove 1 tracked recipe when it has been crafted (if the option is enabled)
 			pslUntrackRecipe(spellID, 1)
 			
