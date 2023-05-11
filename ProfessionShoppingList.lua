@@ -340,7 +340,10 @@ function pslUpdateNumbers()
 	local data = {}
 
 	for reagentID, amount in pairs(reagentsTracked) do
-		-- Get info
+		-- Cache item
+		if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+
+		-- Get item info
 		local itemName, itemLink
 		itemName, itemLink = GetItemInfo(reagentID)
 
@@ -477,14 +480,20 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 
 	-- Add recipe link for crafted items
 	if recipeType == 1 then
-		local _, itemLink = GetItemInfo(C_TradeSkillUI.GetRecipeSchematic(recipeID,false).outputItemID)
+		local itemID = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).outputItemID
+
+		-- Cache item
+		if not C_Item.IsItemDataCachedByID(itemID) then local item = Item:CreateFromItemID(itemID) end
+
+		-- Get item info
+		local _, itemLink = GetItemInfo(itemID)
 
 		-- Try again if error
 		if itemLink == nil then
 			RunNextFrame(pslTrackRecipe(recipeID, recipeQuantity))
 			do return end
 		end
-
+		
 		-- Exceptions for SL legendary crafts
 		if slLegendaryRecipeIDs[recipeID] then
 			itemLink = itemLink.." (Rank "..slLegendaryRecipeIDs[recipeID].rank..")" -- Append the rank
@@ -1484,7 +1493,7 @@ function pslSettings()
 	local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText1:SetPoint("TOPLEFT", cbKnowledgeAlwaysShowDetails, "BOTTOMLEFT", 3, -20)
 	pslSettingsText1:SetJustifyH("LEFT")
-	pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.")
+	pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.\n|R/psl track |cff1B9C85recipeID quantity |R|cffFFFFFF- Track a recipe.\n|R/psl untrack |cff1B9C85recipeID quantity |R|cffFFFFFF- Untrack a recipe.\n|R/psl untrack |cff1B9C85recipeID |Rall |cffFFFFFF- Untrack all of a recipe.")
 
 	local pslSettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText2:SetPoint("TOPLEFT", pslSettingsText1, "BOTTOMLEFT", 0, -15)
@@ -1494,7 +1503,7 @@ function pslSettings()
 	local pslSettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText3:SetPoint("TOPLEFT", pslSettingsText2, "BOTTOMLEFT", 0, -15)
 	pslSettingsText3:SetJustifyH("LEFT")
-	pslSettingsText3:SetText("Other features:\n|cffFFFFFF- Adds a Chef's Hat button to the Cooking window, if the toy is known.\n- Copy tracked reagents to the Auctionator import window.")
+	pslSettingsText3:SetText("Other features:\n|cffFFFFFF- Adds a Chef's Hat button to the Cooking window.\n- Copy tracked reagents to the Auctionator import window.")
 end
 
 -- Window functions
@@ -1614,6 +1623,10 @@ function pslWindowFunctions()
 					for reagentID, reagentAmount in pairs(reagentsTable) do
 						-- Get info
 						local function getInfo()
+							-- Cache item
+							if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+
+							-- Get item info
 							local itemName, itemLink = GetItemInfo(reagentID)
 
 							-- Try again if error
@@ -1663,6 +1676,10 @@ function pslWindowFunctions()
 						for reagentID, reagentAmount in pairs(reagentsTable) do
 							-- Get info
 							local function getInfo()
+								-- Cache item
+								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+
+								-- Get item info
 								local itemName, itemLink = GetItemInfo(reagentID)
 
 								-- Try again if error
@@ -1713,6 +1730,10 @@ function pslWindowFunctions()
 						for reagentID, reagentAmount in pairs(reagentsTable) do
 							-- Get info
 							local function getInfo()
+								-- Cache item
+								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+								
+								-- Get item info
 								local itemName, itemLink = GetItemInfo(reagentID)
 
 								-- Try again if error
@@ -1763,6 +1784,10 @@ function pslWindowFunctions()
 						for reagentID, reagentAmount in pairs(reagentsTable) do
 							-- Get info
 							local function getInfo()
+								-- Cache item
+								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+
+								-- Get item info
 								local itemName, itemLink = GetItemInfo(reagentID)
 
 								-- Try again if error
@@ -1810,6 +1835,10 @@ function pslWindowFunctions()
 						for reagentID, reagentAmount in pairs(reagentsTable) do
 							-- Get info
 							local function getInfo()
+								-- Cache item
+								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+
+								-- Get item info
 								local itemName, itemLink = GetItemInfo(reagentID)
 
 								-- Try again if error
@@ -1857,6 +1886,10 @@ function pslWindowFunctions()
 						for reagentID, reagentAmount in pairs(reagentsTable) do
 							-- Get info
 							local function getInfo()
+								-- Cache item
+								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+
+								-- Get item info
 								local itemName, itemLink = GetItemInfo(reagentID)
 
 								-- Try again if error
@@ -1993,6 +2026,49 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			-- Clear list
 			elseif command == "clear" then
 				pslClear()
+			-- Track recipe
+			elseif command == 'track' then
+				-- Split entered recipeID and recipeQuantity and turn them into real numbers
+				local part1, part2 = rest:match("^(%S*)%s*(.-)$")
+				recipeID = tonumber(part1)
+				recipeQuantity = tonumber(part2)
+
+				-- Only run if the recipeID is cached and the quantity is an actual number
+				if recipeLibrary[recipeID] then
+					if type(recipeQuantity) == "number" and recipeQuantity ~= 0 then
+						pslTrackRecipe(recipeID, recipeQuantity)
+					else
+						print("PSL: Invalid parameters. Please enter a valid recipe quantity.")
+					end
+				else
+					print("PSL: Invalid parameters. Please enter a cached recipe ID.")
+				end
+			elseif command == 'untrack' then
+				-- Split entered recipeID and recipeQuantity and turn them into real numbers
+				local part1, part2 = rest:match("^(%S*)%s*(.-)$")
+				recipeID = tonumber(part1)
+				recipeQuantity = tonumber(part2)
+
+				-- Only run if the recipeID is tracked and the quantity is an actual number (with a maximum of the amount of recipes tracked)
+				if recipesTracked[recipeID] then
+					if part2 == "all" then
+						pslUntrackRecipe(recipeID, 0)
+
+						-- Show windows
+						pslFrame1:Show()
+						pslFrame2:Show()
+					elseif type(recipeQuantity) == "number" and recipeQuantity ~= 0 and recipeQuantity <= recipesTracked[recipeID] then
+						pslUntrackRecipe(recipeID, recipeQuantity)
+
+						-- Show windows
+						pslFrame1:Show()
+						pslFrame2:Show()
+					else
+						print("PSL: Invalid parameters. Please enter a valid recipe quantity.")
+					end
+				else
+					print("PSL: Invalid parameters. Please enter a tracked recipe ID.")
+				end
 			-- No command
 			else
 				pslToggle()
@@ -2109,6 +2185,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			local progress = true
 
 			local function kpTooltip()
+				-- Cache treatise item
+				if not C_Item.IsItemDataCachedByID(treatiseItem) then local item = Item:CreateFromItemID(treatiseItem) end
+
 				-- Treatise
 				local treatiseStatus = READY_CHECK_NOT_READY_TEXTURE
 				local treatiseNumber = 0
@@ -2196,6 +2275,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						shardNo = shardNo + 1
 					end
 				end
+
+				-- Cache item
+				if not C_Item.IsItemDataCachedByID(191784) then local item = Item:CreateFromItemID(191784) end
 
 				local _, shardItemLink = GetItemInfo(191784)
 
@@ -2286,6 +2368,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
 						for _, dropInfo in ipairs (drops) do
 							oldText = knowledgePointTooltipText:GetText()
+
+							-- Cache item
+							if not C_Item.IsItemDataCachedByID(dropInfo.itemID) then local item = Item:CreateFromItemID(dropInfo.itemID) end
+
+							-- Get item info
 							local _, itemLink = GetItemInfo(dropInfo.itemID)
 		
 							-- If links missing, try again
@@ -2357,6 +2444,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
 							for questID, itemID in pairs (treasures) do
 								oldText = knowledgePointTooltipText:GetText()
+
+								-- Cache item
+								if not C_Item.IsItemDataCachedByID(itemID) then local item = Item:CreateFromItemID(itemID) end
+
+								-- Get item info
 								local _, itemLink = GetItemInfo(itemID)
 			
 								-- If links missing, try again
@@ -2380,6 +2472,12 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					-- Don't show this
 				else
 					oldText = knowledgePointTooltipText:GetText()
+
+					-- Cache items
+					if not C_Item.IsItemDataCachedByID(books[1].itemID) then local item = Item:CreateFromItemID(books[1].itemID) end
+					if not C_Item.IsItemDataCachedByID(books[2].itemID) then local item = Item:CreateFromItemID(books[2].itemID) end
+					if not C_Item.IsItemDataCachedByID(books[3].itemID) then local item = Item:CreateFromItemID(books[3].itemID) end
+
 					local _, itemLink1 = GetItemInfo(books[1].itemID)
 					local _, itemLink2 = GetItemInfo(books[2].itemID)
 					local _, itemLink3 = GetItemInfo(books[3].itemID)
@@ -2845,7 +2943,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			auctionatorReagents = "PSL"
 
 			for reagentID, _ in pairs(reagentsTracked) do
-				-- Get info
+				-- Cache item
+				if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+				
+				-- Get item info
 				local itemName = GetItemInfo(reagentID)
 		
 				-- Try again if error
