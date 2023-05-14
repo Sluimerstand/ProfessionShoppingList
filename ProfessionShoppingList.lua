@@ -2332,17 +2332,14 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			local drops
 			local hiddenMaster
 			local treasures
+			local books
 			local progress = true
 
 			local function kpTooltip()
-				-- Cache treatise item
-				if not C_Item.IsItemDataCachedByID(treatiseItem) then local item = Item:CreateFromItemID(treatiseItem) end
-
 				-- Treatise
 				local treatiseStatus = READY_CHECK_NOT_READY_TEXTURE
 				local treatiseNumber = 0
-				local _, treatiseItemLink = GetItemInfo(treatiseItem)
-
+				
 				if treatiseQuest ~= nil then
 					if C_QuestLog.IsQuestFlaggedCompleted(treatiseQuest) then
 						treatiseStatus = READY_CHECK_READY_TEXTURE
@@ -2426,11 +2423,6 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					end
 				end
 
-				-- Cache item
-				if not C_Item.IsItemDataCachedByID(191784) then local item = Item:CreateFromItemID(191784) end
-
-				local _, shardItemLink = GetItemInfo(191784)
-
 				if shardNo == 4 then shardStatus = READY_CHECK_READY_TEXTURE end
 
 				if shardStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
@@ -2466,34 +2458,38 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					if treasureStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
 				end
 
-				-- Artisan books
-				local artisanReputation = C_GossipInfo.GetFriendshipReputation(2544).standing
-				if not artisanReputation then artisanReputation = 0 end
+				-- Books
+				local bookStatus = READY_CHECK_NOT_READY_TEXTURE
+				local bookNoCurrent = 0
+				local bookNoTotal = 0
 
-				local bookStatus1 = READY_CHECK_WAITING_TEXTURE
-				local bookStatus2 = READY_CHECK_WAITING_TEXTURE
-				local bookStatus3 = READY_CHECK_WAITING_TEXTURE
+				if books ~= nil then
+					for _, bookInfo in ipairs (books) do
+						if C_QuestLog.IsQuestFlaggedCompleted(bookInfo.questID) then
+							bookNoCurrent = bookNoCurrent + 1
+						end
+						bookNoTotal = bookNoTotal + 1
+					end
 
-				if artisanReputation >= 500 then bookStatus1 = READY_CHECK_NOT_READY_TEXTURE end
-				if artisanReputation >= 5500 then bookStatus2 = READY_CHECK_NOT_READY_TEXTURE end
-				if artisanReputation >= 12500 then bookStatus3 = READY_CHECK_NOT_READY_TEXTURE end
+					if bookNoCurrent == bookNoTotal then bookStatus = READY_CHECK_READY_TEXTURE end
 
-				if C_QuestLog.IsQuestFlaggedCompleted(books[1].questID) == true then bookStatus1 = READY_CHECK_READY_TEXTURE end
-				if C_QuestLog.IsQuestFlaggedCompleted(books[2].questID) == true then bookStatus2 = READY_CHECK_READY_TEXTURE end
-				if C_QuestLog.IsQuestFlaggedCompleted(books[3].questID) == true then bookStatus3 = READY_CHECK_READY_TEXTURE end
-
-				if bookStatus1 == READY_CHECK_NOT_READY_TEXTURE or bookStatus2 == READY_CHECK_NOT_READY_TEXTURE or bookStatus3 == READY_CHECK_NOT_READY_TEXTURE then progress = false end
-
-				-- If links missing, try again
-				if shardItemLink == nil or treatiseItemLink == nil then
-					RunNextFrame(kpTooltip)
-					do return end
+					if bookStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
 				end
 				
 				-- Weekly knowledge (text)
 				local oldText
 				if treatiseQuest ~= nil then
-					knowledgePointTooltipText:SetText("Weekly:\n|cffFFFFFF".."|T"..treatiseStatus..":0|t "..treatiseNumber.."/1 "..treatiseItemLink)
+					-- Cache treatise item
+					if not C_Item.IsItemDataCachedByID(treatiseItem) then local item = Item:CreateFromItemID(treatiseItem) end
+					-- Get item link
+					local _, itemLink = GetItemInfo(treatiseItem)
+					-- If link missing, try again
+					if itemLink == nil then
+						RunNextFrame(kpTooltip)
+						do return end
+					end
+
+					knowledgePointTooltipText:SetText("Weekly:\n|cffFFFFFF".."|T"..treatiseStatus..":0|t "..treatiseNumber.."/1 "..itemLink)
 				end
 
 				if orderQuest ~= nil then
@@ -2521,10 +2517,8 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 							-- Cache item
 							if not C_Item.IsItemDataCachedByID(dropInfo.itemID) then local item = Item:CreateFromItemID(dropInfo.itemID) end
-
 							-- Get item info
 							local _, itemLink = GetItemInfo(dropInfo.itemID)
-		
 							-- If links missing, try again
 							if itemLink == nil then
 								RunNextFrame(kpTooltip)
@@ -2541,7 +2535,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				end
 
 				-- One-time knowledge (text)
-				if userSettings["knowledgeHideDone"] == true and shardNo == 4 and hiddenNumber == 1 and (treasureNoCurrent == treasureNoTotal or treasures == nil) and bookStatus1 == READY_CHECK_READY_TEXTURE and bookStatus2 == READY_CHECK_READY_TEXTURE and bookStatus3 == READY_CHECK_READY_TEXTURE then
+				if userSettings["knowledgeHideDone"] == true and shardNo == 4 and hiddenNumber == 1 and (treasureNoCurrent == treasureNoTotal or treasures == nil) and (bookNoCurrent == bookNoTotal) then
 					-- Do not show this
 				else
 					oldText = knowledgePointTooltipText:GetText()
@@ -2552,15 +2546,25 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				if userSettings["knowledgeHideDone"] == true and shardNo == 4 then
 					-- Don't show this
 				else
+					-- Cache dragon shard item
+					if not C_Item.IsItemDataCachedByID(191784) then local item = Item:CreateFromItemID(191784) end
+					-- Get item link
+					local _, itemLink = GetItemInfo(191784)
+					-- If link missing, try again
+					if itemLink == nil then
+						RunNextFrame(kpTooltip)
+						do return end
+					end
+
 					oldText = knowledgePointTooltipText:GetText()
-					knowledgePointTooltipText:SetText(oldText.."\n|T"..shardStatus..":0|t ".."|cffFFFFFF"..shardNo.."/4 "..shardItemLink)
+					knowledgePointTooltipText:SetText(oldText.."\n|T"..shardStatus..":0|t ".."|cffFFFFFF"..shardNo.."/4 "..itemLink)
 
 					if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
 						for no, questID in pairs (shardQuests) do
 							oldText = knowledgePointTooltipText:GetText()
 							local questTitle = C_QuestLog.GetTitleForQuestID(questID)
 
-							-- If links missing, try again
+							-- If link missing, try again
 							if questTitle == nil then
 								RunNextFrame(kpTooltip)
 								do return end
@@ -2597,11 +2601,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 								-- Cache item
 								if not C_Item.IsItemDataCachedByID(itemID) then local item = Item:CreateFromItemID(itemID) end
-
-								-- Get item info
+								-- Get item link
 								local _, itemLink = GetItemInfo(itemID)
-			
-								-- If links missing, try again
+								-- If link missing, try again
 								if itemLink == nil then
 									RunNextFrame(kpTooltip)
 									do return end
@@ -2617,28 +2619,36 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					end
 				end
 
-				-- Artisan books
-				if userSettings["knowledgeHideDone"] == true and bookStatus1 == READY_CHECK_READY_TEXTURE and bookStatus2 == READY_CHECK_READY_TEXTURE and bookStatus3 == READY_CHECK_READY_TEXTURE then
-					-- Don't show this
-				else
-					oldText = knowledgePointTooltipText:GetText()
+				-- Books
+				if books ~= nil then
+					if userSettings["knowledgeHideDone"] == true and bookNoCurrent == bookNoTotal then
+						-- Don't show this
+					else
+						oldText = knowledgePointTooltipText:GetText()
+						knowledgePointTooltipText:SetText(oldText.."\n".."|T"..bookStatus..":0|t "..bookNoCurrent.."/"..bookNoTotal.." Books")
 
-					-- Cache items
-					if not C_Item.IsItemDataCachedByID(books[1].itemID) then local item = Item:CreateFromItemID(books[1].itemID) end
-					if not C_Item.IsItemDataCachedByID(books[2].itemID) then local item = Item:CreateFromItemID(books[2].itemID) end
-					if not C_Item.IsItemDataCachedByID(books[3].itemID) then local item = Item:CreateFromItemID(books[3].itemID) end
+						if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
+							for _, bookInfo in ipairs (books) do
+								oldText = knowledgePointTooltipText:GetText()
 
-					local _, itemLink1 = GetItemInfo(books[1].itemID)
-					local _, itemLink2 = GetItemInfo(books[2].itemID)
-					local _, itemLink3 = GetItemInfo(books[3].itemID)
-
-					-- If links missing, try again
-					if itemLink1 == nil or itemLink2 == nil or itemLink3 == nil then
-						RunNextFrame(kpTooltip)
-						do return end
+								-- Cache item
+								if not C_Item.IsItemDataCachedByID(bookInfo.itemID) then local item = Item:CreateFromItemID(bookInfo.itemID) end
+								-- Get item link
+								local _, itemLink = GetItemInfo(bookInfo.itemID)
+								-- If link missing, try again
+								if itemLink == nil then
+									RunNextFrame(kpTooltip)
+									do return end
+								end
+			
+								if C_QuestLog.IsQuestFlaggedCompleted(bookInfo.questID) then
+									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_READY_TEXTURE..":0|t "..itemLink)
+								else
+									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_NOT_READY_TEXTURE..":0|t "..itemLink)
+								end
+							end
+						end
 					end
-
-					knowledgePointTooltipText:SetText(oldText.."\n".."|T"..bookStatus1..":0|t "..itemLink1.."\n".."|T"..bookStatus2..":0|t "..itemLink2.."\n".."|T"..bookStatus3..":0|t "..itemLink3)
 				end
 
 				oldText = knowledgePointTooltipText:GetText()
@@ -2705,6 +2715,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[1] = {questID = 71894, itemID = 200972}
 				books[2] = {questID = 71905, itemID = 201268}
 				books[3] = {questID = 71916, itemID = 201279}
+				books[4] = {questID = 75755, itemID = 205352}
+				books[5] = {questID = 75846, itemID = 205428}
+				books[6] = {questID = 75849, itemID = 205439}
 			end
 
 			-- Leatherworking
@@ -2735,6 +2748,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[1] = {questID = 71900, itemID = 200979}
 				books[2] = {questID = 71911, itemID = 201275}
 				books[3] = {questID = 71922, itemID = 201286}
+				books[4] = {questID = 75751, itemID = 201286}
+				books[5] = {questID = 75840, itemID = 205426}
+				books[6] = {questID = 75855, itemID = 205437}
 			end
 
 			-- Alchemy
@@ -2765,6 +2781,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[1] = {questID = 71893, itemID = 200974}
 				books[2] = {questID = 71904, itemID = 201270}
 				books[3] = {questID = 71915, itemID = 201281}
+				books[4] = {questID = 75756, itemID = 205353}
+				books[5] = {questID = 75847, itemID = 205429}
+				books[6] = {questID = 75848, itemID = 205440}
 			end
 
 			-- Herbalism
@@ -2787,6 +2806,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[1] = {questID = 71897, itemID = 200980}
 				books[2] = {questID = 71908, itemID = 201276}
 				books[3] = {questID = 71919, itemID = 201287}
+				books[4] = {questID = 75753, itemID = 205358}
+				books[5] = {questID = 75843, itemID = 205434}
+				books[6] = {questID = 75852, itemID = 205445}
 			end
 
 			-- Mining
@@ -2809,6 +2831,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[1] = {questID = 71901, itemID = 200981}
 				books[2] = {questID = 71912, itemID = 201277}
 				books[3] = {questID = 71923, itemID = 201288}
+				books[4] = {questID = 75758, itemID = 205356}
+				books[5] = {questID = 75839, itemID = 205432}
+				books[6] = {questID = 75856, itemID = 205443}
 			end
 
 			-- Tailoring
@@ -2840,6 +2865,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[1] = {questID = 71903, itemID = 200975}
 				books[2] = {questID = 71914, itemID = 201271}
 				books[3] = {questID = 71925, itemID = 201282}
+				books[4] = {questID = 75757, itemID = 205355}
+				books[5] = {questID = 75837, itemID = 205431}
+				books[6] = {questID = 75858, itemID = 205442}
 			end
 
 			-- Engineering
@@ -2870,6 +2898,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[1] = {questID = 71896, itemID = 200977}
 				books[2] = {questID = 71907, itemID = 201273}
 				books[3] = {questID = 71918, itemID = 201284}
+				books[4] = {questID = 75759, itemID = 205349}
+				books[5] = {questID = 75844, itemID = 205425}
+				books[6] = {questID = 75851, itemID = 205436}
 			end
 
 			-- Enchanting
@@ -2901,6 +2932,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[1] = {questID = 71895, itemID = 200976}
 				books[2] = {questID = 71906, itemID = 201272}
 				books[3] = {questID = 71917, itemID = 201283}
+				books[4] = {questID = 75752, itemID = 205351}
+				books[5] = {questID = 75845, itemID = 205427}
+				books[6] = {questID = 75850, itemID = 205438}
 			end
 
 			-- Skinning
@@ -2923,6 +2957,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[1] = {questID = 71902, itemID = 200982}
 				books[2] = {questID = 71913, itemID = 201278}
 				books[3] = {questID = 71924, itemID = 201289}
+				books[4] = {questID = 75760, itemID = 205357}
+				books[5] = {questID = 75838, itemID = 205433}
+				books[6] = {questID = 75857, itemID = 205444}
 			end
 
 			-- Jewelcrafting
@@ -2954,6 +2991,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[1] = {questID = 71899, itemID = 200978}
 				books[2] = {questID = 71910, itemID = 201274}
 				books[3] = {questID = 71921, itemID = 201285}
+				books[4] = {questID = 75754, itemID = 205348}
+				books[5] = {questID = 75841, itemID = 205424}
+				books[6] = {questID = 75854, itemID = 205435}
 			end
 
 			-- Inscription
@@ -2985,6 +3025,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[1] = {questID = 71898, itemID = 200973}
 				books[2] = {questID = 71909, itemID = 201269}
 				books[3] = {questID = 71920, itemID = 201280}
+				books[4] = {questID = 75761, itemID = 205354}
+				books[5] = {questID = 75842, itemID = 205430}
+				books[6] = {questID = 75853, itemID = 205441}
 			end
 
 			-- Professions with Knowledge Points
