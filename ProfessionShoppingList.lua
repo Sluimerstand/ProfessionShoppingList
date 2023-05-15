@@ -893,7 +893,7 @@ function pslCreateAssets()
 
 	-- Create Cooking Fire button
 	if not cookingFireButton then
-		cookingFireButton = CreateFrame("Button", "CookingFireButton", ProfessionsFrame, "SecureActionButtonTemplate")
+		cookingFireButton = CreateFrame("Button", "CookingFireButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
 		cookingFireButton:SetWidth(40)
 		cookingFireButton:SetHeight(40)
 		cookingFireButton:SetNormalTexture(135805)
@@ -911,7 +911,7 @@ function pslCreateAssets()
 
 	-- Create Chef's Hat button
 	if not chefsHatButton then
-		chefsHatButton = CreateFrame("Button", "ChefsHatButton", ProfessionsFrame, "SecureActionButtonTemplate")
+		chefsHatButton = CreateFrame("Button", "ChefsHatButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
 		chefsHatButton:SetWidth(40)
 		chefsHatButton:SetHeight(40)
 		chefsHatButton:SetNormalTexture(236571)
@@ -930,7 +930,7 @@ function pslCreateAssets()
 
 	-- Create Thermal Anvil button
 	if not thermalAnvilButton then
-		thermalAnvilButton = CreateFrame("Button", "ThermalAnvilButton", ProfessionsFrame, "SecureActionButtonTemplate")
+		thermalAnvilButton = CreateFrame("Button", "ThermalAnvilButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
 		thermalAnvilButton:SetWidth(40)
 		thermalAnvilButton:SetHeight(40)
 		thermalAnvilButton:SetNormalTexture(136241)
