@@ -2698,6 +2698,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[2] = {questID = 66382, itemID = 192132, source = "Treasures"}
 				drops[3] = {questID = 70512, itemID = 198965, source = "Mobs: Earth"}
 				drops[4] = {questID = 70513, itemID = 198966, source = "Mobs: Fire"}
+				drops[5] = {questID = 74931, itemID = 204230, source = "Tidesmith Zarviss"}
 				treasures = {}
 				treasures[70230] = 198791
 				treasures[70246] = 201007
@@ -2733,6 +2734,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[2] = {questID = 66385, itemID = 193913, source = "Treasures"}
 				drops[3] = {questID = 70522, itemID = 198975, source = "Mobs: Proto-Drakes"}
 				drops[4] = {questID = 70523, itemID = 198976, source = "Mobs: Slyvern & Vorquin"}
+				drops[5] = {questID = 74928, itemID = 204232, source = "Snarfang"}
 				treasures = {}
 				treasures[70266] = 198658
 				treasures[70269] = 201018
@@ -2766,6 +2768,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[2] = {questID = 66374, itemID = 193897, source = "Treasures"}
 				drops[3] = {questID = 70504, itemID = 198963, source = "Mobs: Decay"}
 				drops[4] = {questID = 70511, itemID = 198964, source = "Mobs: Elemental"}
+				drops[5] = {questID = 74935, itemID = 204226, source = "Agni Blazehoof"}
 				treasures = {}
 				treasures[70208] = 198599
 				treasures[70274] = 198663
@@ -2801,6 +2804,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[4] = {questID = 71860, itemID = 200677, source = "Herbs"}
 				drops[5] = {questID = 71861, itemID = 200677, source = "Herbs"}
 				drops[6] = {questID = 71864, itemID = 200678, source = "Herbs"}
+				drops[7] = {questID = 74933, itemID = 204228, source = "Kangalo"}
 				treasures = nil
 				books = {}
 				books[1] = {questID = 71897, itemID = 200980}
@@ -2826,6 +2830,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[4] = {questID = 72163, itemID = 201300, source = "Deposits"}
 				drops[5] = {questID = 72164, itemID = 201300, source = "Deposits"}
 				drops[6] = {questID = 72165, itemID = 201301, source = "Deposits"}
+				drops[7] = {questID = 74926, itemID = 204233, source = "Tectonus"}
 				treasures = nil
 				books = {}
 				books[1] = {questID = 71901, itemID = 200981}
@@ -2849,6 +2854,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[2] = {questID = 66387, itemID = 193899, source = "Treasures"}
 				drops[3] = {questID = 70524, itemID = 198977, source = "Mobs: Centaur"}
 				drops[4] = {questID = 70525, itemID = 198978, source = "Mobs: Gnoll"}
+				drops[5] = {questID = 74929, itemID = 204225, source = "Gareed"}
 				treasures = {}
 				treasures[70267] = 198662
 				treasures[70284] = 198680
@@ -2883,6 +2889,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[2] = {questID = 66380, itemID = 193903, source = "Treasures"}
 				drops[3] = {questID = 70516, itemID = 198969, source = "Mobs: Keeper"}
 				drops[4] = {questID = 70517, itemID = 198970, source = "Mobs: Dragonkin"}
+				drops[5] = {questID = 74934, itemID = 204227, source = "Fimbol"}
 				treasures = {}
 				treasures[70270] = 201014
 				treasures[70275] = 198789
@@ -2916,6 +2923,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[2] = {questID = 66378, itemID = 193901, source = "Treasures"}
 				drops[3] = {questID = 70514, itemID = 198967, source = "Mobs: Arcane"}
 				drops[4] = {questID = 70515, itemID = 198968, source = "Mobs: Primalist"}
+				drops[5] = {questID = 74927, itemID = 204224, source = "Manathema"}
 				treasures = {}
 				treasures[70272] = 201012
 				treasures[70283] = 198675
@@ -2952,6 +2960,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[4] = {questID = 70385, itemID = 198837, source = "Skinning"}
 				drops[5] = {questID = 70386, itemID = 198837, source = "Skinning"}
 				drops[6] = {questID = 70389, itemID = 198841, source = "Skinning"}
+				drops[7] = {questID = 74930, itemID = 204231, source = "Faunos"}
 				treasures = nil
 				books = {}
 				books[1] = {questID = 71902, itemID = 200982}
@@ -2975,6 +2984,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[2] = {questID = 66389, itemID = 193907, source = "Treasures"}
 				drops[3] = {questID = 70520, itemID = 198973, source = "Mobs: Elemental"}
 				drops[4] = {questID = 70521, itemID = 198974, source = "Mobs: Dragonkin"}
+				drops[5] = {questID = 74936, itemID = 204222, source = "Amephyst"}
 				treasures = {}
 				treasures[70273] = 201017
 				treasures[70292] = 198687
@@ -3009,6 +3019,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[2] = {questID = 66376, itemID = 193905, source = "Treasures"}
 				drops[3] = {questID = 70518, itemID = 198971, source = "Mobs: Djaradin"}
 				drops[4] = {questID = 70519, itemID = 198972, source = "Mobs: Dragonkin"}
+				drops[5] = {questID = 74932, itemID = 204229, source = "Arcantrix"}
 				treasures = {}
 				treasures[70248] = 198659
 				treasures[70264] = 198659
