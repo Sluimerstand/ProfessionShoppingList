@@ -12,6 +12,7 @@ api:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 api:RegisterEvent("SPELL_DATA_LOAD_RESULT")
 api:RegisterEvent("MERCHANT_SHOW")
 api:RegisterEvent("CRAFTINGORDERS_CLAIM_ORDER_RESPONSE")
+api:RegisterEvent("CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE")
 api:RegisterEvent("CRAFTINGORDERS_RELEASE_ORDER_RESPONSE")
 api:RegisterEvent("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE")
 api:RegisterEvent("TRACKED_RECIPE_UPDATE")
@@ -708,8 +709,12 @@ function pslCreateAssets()
 		personalOrderButton:SetPoint("RIGHT", personalCharname, "LEFT", -8, 0)
 		personalOrderButton:SetFrameStrata("HIGH")
 		personalOrderButton:SetScript("OnClick", function()
+			-- Create crafting info variables
 			local reagentInfo = {}
 			local craftingReagentInfo = {}
+
+			-- Create a variable to determine if PSL is doing stuff with the crafting orders, and set it to 1
+			pslQuickOrderActive = 1
 
 			local function localReagentsOrder()
 				-- Run pslGetReagents to cache reagent tier info
@@ -767,10 +772,26 @@ function pslCreateAssets()
 					craftingReagentInfo[i].dataSlotIndex = craftingReagentInfo[i].dataSlotIndex - 1
 				end
 
-				-- Place the alternative order (only one can succeed, worst case scenario it'll fail twice)
+				-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
+				C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+			
+				for i, _ in ipairs (craftingReagentInfo) do
+					craftingReagentInfo[i].dataSlotIndex = craftingReagentInfo[i].dataSlotIndex - 1
+				end
+
+				-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
+				C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+			
+				for i, _ in ipairs (craftingReagentInfo) do
+					craftingReagentInfo[i].dataSlotIndex = craftingReagentInfo[i].dataSlotIndex - 1
+				end
+
+				-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
 				C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 			end
 
+			-- PSL is no longer doing stuff with crafting orders, delayed to let the errors run through
+			C_Timer.After(5, function() pslQuickOrderActive = 0 end)
 		end)
 	end
 
@@ -841,7 +862,7 @@ function pslCreateAssets()
 		useLocalReagentsTooltipText = useLocalReagentsTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		useLocalReagentsTooltipText:SetPoint("TOPLEFT", useLocalReagentsTooltip, "TOPLEFT", 10, -10)
 		useLocalReagentsTooltipText:SetJustifyH("LEFT")
-		useLocalReagentsTooltipText:SetText("Use (the lowest quality) available local reagents.\nWhich reagents are used |cffFF0000cannot|r be customised.\n\nThis may sometimes fail, or show an error message\ndespite succeeding. Blizz code is wack.")
+		useLocalReagentsTooltipText:SetText("Use (the lowest quality) available local reagents.\nWhich reagents are used |cffFF0000cannot|r be customised.\n\nThis may sometimes fail. Blizz code is wack.")
 
 		-- Set the tooltip size to fit its contents
 		useLocalReagentsTooltip:SetHeight(useLocalReagentsTooltipText:GetStringHeight()+20)
@@ -3121,6 +3142,22 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		end)
 	end
 
+	-- If placing a crafting order gives an error, initiated by PSL
+	if event == "CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE" and arg1 ~= 0 and pslQuickOrderActive >= 1 then
+		-- Hide the error frame
+		UIErrorsFrame:Hide()
+
+		-- Clear the error frame before showing it again
+		C_Timer.After(1.0, function() UIErrorsFrame:Clear() UIErrorsFrame:Show() end)
+
+		-- If all 4 attempts fail, tell the user this
+		if pslQuickOrderActive >= 4 then
+			print("PSL quick order failed. Sorry. :(")
+		end
+
+		-- Add 1 to the pslQuickOrderActive, so we can use it to count the number of fails
+		pslQuickOrderActive = pslQuickOrderActive + 1
+	end
 	-- Save the order recipeID if the order has been started, because SPELL_LOAD_RESULT does not fire for it anymore
 	if event == "CRAFTINGORDERS_CLAIM_ORDER_RESPONSE" then
 		pslOrderRecipeID = pslSelectedRecipeID
