@@ -166,16 +166,16 @@ function pslTrackingWindows()
 		pslFrame1:Hide()
 
 		-- Close button
-		local close = CreateFrame("Button", "pslCloseButtonName1", pslFrame1, "UIPanelCloseButton")
-		close:SetPoint("TOPRIGHT", pslFrame1, "TOPRIGHT", 1, -2)
-		close:SetScript("OnClick", function() pslFrame1:Hide() end)
+		pslFrame1.closeButton = CreateFrame("Button", "pslCloseButton1", pslFrame1, "UIPanelCloseButton")
+		pslFrame1.closeButton:SetPoint("TOPRIGHT", pslFrame1, 2, 0)
+		pslFrame1.closeButton:SetScript("OnClick", function() pslFrame1:Hide() end)
 
 		-- Create tracking window
-		table1 = ScrollingTable:CreateST(cols, 50, nil, nil, pslFrame1)
+		pslTable1 = ScrollingTable:CreateST(cols, 50, nil, nil, pslFrame1)
 	end
 
-	table1:SetDisplayRows(userSettings["reagentRows"], 15)
-	table1:SetDisplayCols(cols)
+	pslTable1:SetDisplayRows(userSettings["reagentRows"], 15)
+	pslTable1:SetDisplayCols(cols)
 	pslFrame1:SetSize(userSettings["reagentWidth"]+userSettings["reagentNoWidth"]+30, userSettings["reagentRows"]*15+45)
 	pslFrame1:SetScript("OnMouseDown", function()
 		pslFrame1:StartMoving()
@@ -248,16 +248,16 @@ function pslTrackingWindows()
 		pslFrame2:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
 
 		-- Close button
-		local close = CreateFrame("Button", "pslCloseButtonName2", pslFrame2, "UIPanelCloseButton")
-		close:SetPoint("TOPRIGHT", pslFrame2, "TOPRIGHT", 1, -2)
-		close:SetScript("OnClick", function() pslFrame2:Hide() end)
+		pslFrame2.closeButton = CreateFrame("Button", "pslCloseButton2", pslFrame2, "UIPanelCloseButton")
+		pslFrame2.closeButton:SetPoint("TOPRIGHT", pslFrame2, 2, 0)
+		pslFrame2.closeButton:SetScript("OnClick", function() pslFrame2:Hide() end)
 
 		-- Create tracking window
-		table2 = ScrollingTable:CreateST(cols, 50, nil, nil, pslFrame2)
+		pslTable2 = ScrollingTable:CreateST(cols, 50, nil, nil, pslFrame2)
 	end
 
-	table2:SetDisplayRows(userSettings["recipeRows"], 15)
-	table2:SetDisplayCols(cols)
+	pslTable2:SetDisplayRows(userSettings["recipeRows"], 15)
+	pslTable2:SetDisplayCols(cols)
 	pslFrame2:SetSize(userSettings["recipeWidth"]+userSettings["recipeNoWidth"]+30, userSettings["recipeRows"]*15+45)
 	
 	pslFrame2:SetScript("OnMouseDown", function()
@@ -400,9 +400,9 @@ function pslUpdateNumbers()
 
 		-- Push the info to the windows
 		table.insert(data, {itemLink, itemAmount})
-		table1:SetData(data, true)
+		pslTable1:SetData(data, true)
 	end
-	table1:SetData(data, true)
+	pslTable1:SetData(data, true)
 end
 
 -- Update recipes and reagents tracked
@@ -416,9 +416,9 @@ function pslUpdateRecipes()
 
 	for recipeID, no in pairs(recipesTracked) do
 		table.insert(data, {recipeLinks[recipeID], no})
-		table2:SetData(data, true)
+		pslTable2:SetData(data, true)
 	end
-	table2:SetData(data, true)
+	pslTable2:SetData(data, true)
 	
 	-- Recalculate reagents tracked
 	reagentsTracked = {}
@@ -1668,7 +1668,7 @@ end
 -- Window functions
 function pslWindowFunctions()
 	-- Reagents window
-	table1:RegisterEvents({
+	pslTable1:RegisterEvents({
 		["OnEnter"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
 			-- Show item tooltip if hovering over the actual rows
 			if row and realrow ~= nil then
@@ -2092,7 +2092,7 @@ function pslWindowFunctions()
 	})
 
 	-- Recipes window
-	table2:RegisterEvents({
+	pslTable2:RegisterEvents({
 		["OnEnter"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
 			-- Show item tooltip if hovering over the actual rows
 			if row and realrow ~= nil then
