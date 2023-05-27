@@ -3189,49 +3189,53 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 	-- When the Auction House is opened
 	if event == "AUCTION_HOUSE_SHOW" then
-		-- Create a temporary variable
-		if not auctionatorReagents then local auctionatorReagents end
+		-- If Auctionator is loaded
+		local loaded, finished = IsAddOnLoaded("Auctionator")
+		if finished == true then
+			-- Create a temporary variable
+			if not auctionatorReagents then local auctionatorReagents end
 
-		-- Grab all item names for tracked reagents
-		local function getReagentNames()
-			-- Reset the reagents list
-			auctionatorReagents = "PSL"
+			-- Grab all item names for tracked reagents
+			local function getReagentNames()
+				-- Reset the reagents list
+				auctionatorReagents = "PSL"
 
-			for reagentID, _ in pairs(reagentsTracked) do
-				-- Cache item
-				if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
-				
-				-- Get item info
-				local itemName = GetItemInfo(reagentID)
-		
-				-- Try again if error
-				if itemName == nil then
-					RunNextFrame(getReagentNames)
-					do return end
+				for reagentID, _ in pairs(reagentsTracked) do
+					-- Cache item
+					if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+					
+					-- Get item info
+					local itemName = GetItemInfo(reagentID)
+			
+					-- Try again if error
+					if itemName == nil then
+						RunNextFrame(getReagentNames)
+						do return end
+					end
+
+					-- Put the item names in the temporary variable
+					auctionatorReagents = auctionatorReagents .. '^"' .. itemName .. '";;0;0;0;0;0;0;0;0;;#;'
 				end
-
-				-- Put the item names in the temporary variable
-				auctionatorReagents = auctionatorReagents .. '^"' .. itemName .. '";;0;0;0;0;0;0;0;0;;#;'
 			end
-		end
 
-		-- Wait 3 seconds, because Auctionator needs to create its frames
-		C_Timer.After(3, function()
-			-- Create PSL Import button for Auctionator, if the frame exists (and the AddOn is loaded)
-			if AuctionatorImportListFrame and not auctionatorImportButton then
-				auctionatorImportButton = CreateFrame("Button", nil, AuctionatorImportListFrame.Import, "UIPanelButtonTemplate")
-				auctionatorImportButton:SetText("Copy from PSL")
-				auctionatorImportButton:SetWidth(110)
-				auctionatorImportButton:SetPoint("BOTTOMRIGHT", AuctionatorImportListFrame.Import, "BOTTOMLEFT", 0, 0)
-				auctionatorImportButton:SetScript("OnClick", function()
-					pslUpdateRecipes()
-					-- Add another delay because I have no idea how to optimise my AddOn
-					C_Timer.After(0.5, function()
-						getReagentNames()
-						AuctionatorImportListFrame.EditBoxContainer:SetText(auctionatorReagents)
+			-- Wait 3 seconds, because Auctionator needs to create its frames
+			C_Timer.After(3, function()
+				-- Create PSL Import button for Auctionator, if the frame exists (and the AddOn is loaded)
+				if AuctionatorImportListFrame and not auctionatorImportButton then
+					auctionatorImportButton = CreateFrame("Button", nil, AuctionatorImportListFrame.Import, "UIPanelButtonTemplate")
+					auctionatorImportButton:SetText("Copy from PSL")
+					auctionatorImportButton:SetWidth(110)
+					auctionatorImportButton:SetPoint("BOTTOMRIGHT", AuctionatorImportListFrame.Import, "BOTTOMLEFT", 0, 0)
+					auctionatorImportButton:SetScript("OnClick", function()
+						pslUpdateRecipes()
+						-- Add another delay because I have no idea how to optimise my AddOn
+						C_Timer.After(0.5, function()
+							getReagentNames()
+							AuctionatorImportListFrame.EditBoxContainer:SetText(auctionatorReagents)
+						end)
 					end)
-				end)
-			end
-		end)
+				end
+			end)
+		end
 	end
 end)
