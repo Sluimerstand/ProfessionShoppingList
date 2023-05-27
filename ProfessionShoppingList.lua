@@ -16,6 +16,7 @@ api:RegisterEvent("CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE")
 api:RegisterEvent("CRAFTINGORDERS_RELEASE_ORDER_RESPONSE")
 api:RegisterEvent("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE")
 api:RegisterEvent("TRACKED_RECIPE_UPDATE")
+api:RegisterEvent("PLAYER_ENTERING_WORLD")
 api:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
 api:RegisterEvent("AUCTION_HOUSE_SHOW")
 
@@ -43,6 +44,7 @@ function pslInitialise()
 	if not recipeLibrary then recipeLibrary = {} end
 	if not reagentTiers then reagentTiers = {} end
 	if not personalOrders then personalOrders = {} end
+	if not recipeCooldowns then recipeCooldowns = {} end
 	
 	-- Set default window position
 	if not windowPosition then
@@ -84,6 +86,7 @@ function pslInitialise()
 	if userSettings["pcWindowPosition"] == nil then userSettings["pcWindowPosition"] = false end
 	if userSettings["pcRecipesTracked"] == nil then userSettings["pcRecipesTracked"] = false end
 	if userSettings["headerTooltip"] == nil then userSettings["headerTooltip"] = true end
+	if userSettings["showRecipeCooldowns"] == nil then userSettings["showRecipeCooldowns"] = true end
 
 	-- Load personal recipes, if the setting is enabled
 	if userSettings["pcRecipesTracked"] == true then
@@ -1648,6 +1651,16 @@ function pslSettings()
 		userSettings["vendorAll"] = cbVendorAll:GetChecked()
 	end)
 
+	local cbShowRecipeCooldowns = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbShowRecipeCooldowns.Text:SetText("Show recipe cooldown reminders")
+	cbShowRecipeCooldowns.Text:SetTextColor(1, 1, 1, 1)
+	cbShowRecipeCooldowns.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbShowRecipeCooldowns:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 0, 0)
+	cbShowRecipeCooldowns:SetChecked(userSettings["showRecipeCooldowns"])
+	cbShowRecipeCooldowns:SetScript("OnClick", function(self)
+		userSettings["showRecipeCooldowns"] = cbShowRecipeCooldowns:GetChecked()
+	end)
+
 	-- Extra text
 	local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText1:SetPoint("TOPLEFT", cbKnowledgeAlwaysShowDetails, "BOTTOMLEFT", 3, -20)
@@ -3125,6 +3138,18 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			C_Timer.After(0.1, function() pslUpdateAssets() end)
 		end
 	
+		-- Run only when the spell cast is a known recipe
+		if recipeLibrary[spellID] then
+			-- Get spell cooldown info
+			local recipeStart, recipeCooldown = GetSpellCooldown(spellID)
+			local recipeName = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name
+
+			-- If the spell cooldown is 1 minute or more, track it
+			if recipeCooldown >= 60 then
+				recipeCooldowns[spellID] = {name = recipeName, start = recipeStart, cooldown = recipeCooldown}
+			end
+		end
+
 		-- Run only when crafting a tracked recipe, and if the remove craft option is enabled
 		if recipesTracked[spellID] and userSettings["removeCraft"] == true then
 			-- Remove 1 tracked recipe when it has been crafted (if the option is enabled)
@@ -3239,6 +3264,25 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					end)
 				end
 			end)
+		end
+	end
+
+	-- When the user encounters a loading screen
+	if event == "PLAYER_ENTERING_WORLD" then
+		-- Check all tracked recipe cooldowns
+		for recipeID, recipeInfo in pairs (recipeCooldowns) do
+			local cooldownRemaining = recipeInfo.start + recipeInfo.cooldown - GetTime()
+			-- If the recipe is off cooldown
+			if cooldownRemaining <= 0 then
+				-- If the option to show recipe cooldowns is enabled
+				if userSettings["showRecipeCooldowns"] == true then
+					-- Show the reminder
+					print("PSL: " .. recipeInfo.name .. " (ID: " .. recipeID .. ") is off cooldown and can be crafted again.")
+				end
+
+				-- Remove the recipe from recipeCooldowns
+				recipeCooldown[spellID] = nil
+			end
 		end
 	end
 end)
