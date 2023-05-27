@@ -2680,7 +2680,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				knowledgePointTooltip:SetWidth(knowledgePointTooltipText:GetStringWidth()+20)
 
 				-- Make progress bar green if everything is done
-				if progress == true then
+				local minValue, maxValue = knowledgePointTracker.Bar:GetMinMaxValues() 
+				local currentValue = knowledgePointTracker.Bar:GetValue()
+
+				if progress == true or maxValue == currentValue then
 					knowledgePointTracker.Bar:SetStatusBarColor(0, 1, 0)
 				else
 					knowledgePointTracker.Bar:SetStatusBarColor(1, .5, 0)
