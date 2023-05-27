@@ -1077,7 +1077,7 @@ function pslCreateAssets()
 		reagentHeaderTooltipText = reagentHeaderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		reagentHeaderTooltipText:SetPoint("TOPLEFT", reagentHeaderTooltip, "TOPLEFT", 10, -10)
 		reagentHeaderTooltipText:SetJustifyH("LEFT")
-		reagentHeaderTooltipText:SetText("Drag|cffFFFFFF: Move the window.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
+		reagentHeaderTooltipText:SetText("Drag|cffFFFFFF: Move the window.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)\nThe reagents listed here can also be imported to a new Auctionator shopping list.")
 
 		-- Set the tooltip size to fit its contents
 		reagentHeaderTooltip:SetHeight(reagentHeaderTooltipText:GetStringHeight()+20)
@@ -1348,7 +1348,7 @@ function pslSettings()
 	end)
 
 	local cbHeaderTooltip = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbHeaderTooltip.Text:SetText("Show header tooltip")
+	cbHeaderTooltip.Text:SetText("Header tooltip")
 	cbHeaderTooltip.Text:SetTextColor(1, 1, 1, 1)
 	cbHeaderTooltip.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 	cbHeaderTooltip:SetPoint("TOPLEFT", cbMinimapButton, "BOTTOMLEFT", 0, 0)
