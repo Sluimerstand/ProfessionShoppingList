@@ -3140,14 +3140,18 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	
 		-- Run only when the spell cast is a known recipe
 		if recipeLibrary[spellID] then
-			-- Get spell cooldown info
-			local recipeStart, recipeCooldown = GetSpellCooldown(spellID)
-			local recipeName = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name
+			-- With a delay due to how quickly that info is updated after UNIT_SPELLCAST_SUCCEEDED
+			C_Timer.After(0.1, function()
+				-- Get spell cooldown info
+				local recipeName = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name
+				local _, recipeCooldown = GetSpellCooldown(spellID)
+				local recipeStart = C_DateAndTime.GetServerTimeLocal()
 
-			-- If the spell cooldown is 1 minute or more, track it
-			if recipeCooldown >= 60 then
-				recipeCooldowns[spellID] = {name = recipeName, start = recipeStart, cooldown = recipeCooldown}
-			end
+				-- If the spell cooldown is 1 minute or more, track it
+				if recipeCooldown >= 60 then
+					recipeCooldowns[spellID] = {name = recipeName, cooldown = recipeCooldown, start = recipeStart}
+				end
+			end)
 		end
 
 		-- Run only when crafting a tracked recipe, and if the remove craft option is enabled
@@ -3271,7 +3275,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	if event == "PLAYER_ENTERING_WORLD" then
 		-- Check all tracked recipe cooldowns
 		for recipeID, recipeInfo in pairs (recipeCooldowns) do
-			local cooldownRemaining = recipeInfo.start + recipeInfo.cooldown - GetTime()
+			local cooldownRemaining = recipeInfo.start + recipeInfo.cooldown - C_DateAndTime.GetServerTimeLocal()
 			-- If the recipe is off cooldown
 			if cooldownRemaining <= 0 then
 				-- If the option to show recipe cooldowns is enabled
