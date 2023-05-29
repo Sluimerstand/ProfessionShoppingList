@@ -87,6 +87,7 @@ function pslInitialise()
 	if userSettings["pcRecipesTracked"] == nil then userSettings["pcRecipesTracked"] = false end
 	if userSettings["headerTooltip"] == nil then userSettings["headerTooltip"] = true end
 	if userSettings["showRecipeCooldowns"] == nil then userSettings["showRecipeCooldowns"] = true end
+	if userSettings["backpackCount"] == nil then userSettings["backpackCount"] = true end
 
 	-- Load personal recipes, if the setting is enabled
 	if userSettings["pcRecipesTracked"] == true then
@@ -487,18 +488,23 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 	if recipeType == 1 then
 		local itemID = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).outputItemID
 
-		-- Cache item
-		if not C_Item.IsItemDataCachedByID(itemID) then local item = Item:CreateFromItemID(itemID) end
+		if itemID ~= nil then
+			-- Cache item
+			if not C_Item.IsItemDataCachedByID(itemID) then local item = Item:CreateFromItemID(itemID) end
 
-		-- Get item info
-		local _, itemLink = GetItemInfo(itemID)
+			-- Get item info
+			local _, itemLink = GetItemInfo(itemID)
 
-		-- Try again if error
-		if itemLink == nil then
-			RunNextFrame(pslTrackRecipe(recipeID, recipeQuantity))
-			do return end
+			-- Try again if error
+			if itemLink == nil then
+				RunNextFrame(pslTrackRecipe(recipeID, recipeQuantity))
+				do return end
+			end
+		-- Exception for stuff like Abominable Stitching
+		else
+			itemLink = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
 		end
-		
+
 		-- Exceptions for SL legendary crafts
 		if slLegendaryRecipeIDs[recipeID] then
 			itemLink = itemLink.." (Rank "..slLegendaryRecipeIDs[recipeID].rank..")" -- Append the rank
@@ -1651,11 +1657,34 @@ function pslSettings()
 		userSettings["vendorAll"] = cbVendorAll:GetChecked()
 	end)
 
+	local cbBackpackCount = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbBackpackCount.Text:SetText("Split reagent bag count")
+	cbBackpackCount.Text:SetTextColor(1, 1, 1, 1)
+	cbBackpackCount.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbBackpackCount:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 0, 0)
+	cbBackpackCount:SetChecked(userSettings["backpackCount"])
+	cbBackpackCount:SetScript("OnClick", function(self)
+		userSettings["backpackCount"] = cbBackpackCount:GetChecked()
+
+		-- Get number of free bag slots
+		local freeSlots1 = C_Container.GetContainerNumFreeSlots(0) + C_Container.GetContainerNumFreeSlots(1) + C_Container.GetContainerNumFreeSlots(2) + C_Container.GetContainerNumFreeSlots(3) + C_Container.GetContainerNumFreeSlots(4)
+		local freeSlots2 = C_Container.GetContainerNumFreeSlots(5)
+
+		-- If the setting for split reagent bag count is enabled and the player has a reagent bag
+		if userSettings["backpackCount"] == true and C_Container.GetContainerNumSlots(5) ~= 0 then
+			-- Replace the bag count text
+			MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 .. "+" .. freeSlots2 .. ")")
+		else
+			-- Reset the bag count text
+			MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 + freeSlots2 .. ")")
+		end
+	end)
+
 	local cbShowRecipeCooldowns = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbShowRecipeCooldowns.Text:SetText("Show recipe cooldown reminders")
+	cbShowRecipeCooldowns.Text:SetText("Recipe cooldown reminders")
 	cbShowRecipeCooldowns.Text:SetTextColor(1, 1, 1, 1)
 	cbShowRecipeCooldowns.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-	cbShowRecipeCooldowns:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 0, 0)
+	cbShowRecipeCooldowns:SetPoint("TOPLEFT", cbBackpackCount, "BOTTOMLEFT", 0, 0)
 	cbShowRecipeCooldowns:SetChecked(userSettings["showRecipeCooldowns"])
 	cbShowRecipeCooldowns:SetScript("OnClick", function(self)
 		userSettings["showRecipeCooldowns"] = cbShowRecipeCooldowns:GetChecked()
@@ -3178,6 +3207,19 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		local next = next
 		if next(recipesTracked) ~= nil then
 			pslUpdateNumbers()
+		end
+
+		-- If the setting for split reagent bag count is enabled
+		if userSettings["backpackCount"] == true then
+			-- Get number of free bag slots
+			local freeSlots1 = C_Container.GetContainerNumFreeSlots(0) + C_Container.GetContainerNumFreeSlots(1) + C_Container.GetContainerNumFreeSlots(2) + C_Container.GetContainerNumFreeSlots(3) + C_Container.GetContainerNumFreeSlots(4)
+			local freeSlots2 = C_Container.GetContainerNumFreeSlots(5)
+
+			-- If a reagent bag is equipped
+			if C_Container.GetContainerNumSlots(5) ~= 0 then
+				-- Replace the bag count text
+				MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 .. "+" .. freeSlots2 .. ")")
+			end
 		end
 	end
 

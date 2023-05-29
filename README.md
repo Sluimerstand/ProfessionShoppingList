@@ -32,9 +32,11 @@ It does not replace the profession windows, it only adds a few buttons and two t
 **Other features**
 
 - Untrack recipes after crafting them
-- Show tooltip information for tracked reagents
-- Automatically set vendors' filter to 'All'
-- Adds buttons for Cooking Fire, Chef's Hat, and Thermal Anvil
-- Includes a quick order button, to instantly create personal crafting orders
-- Includes a Profession Knowledge tracker
+- Tooltip information for tracked reagents
+- Recipe cooldown reminders
 - Copy tracked reagents to the Auctionator import window
+- Buttons for Cooking Fire, Chef's Hat, and Thermal Anvil
+- Quick order button, to instantly create personal crafting orders
+- Profession Knowledge tracker
+- Automatically set vendors' filter to 'All'
+- Split bag count to accommodate the reagent bag
