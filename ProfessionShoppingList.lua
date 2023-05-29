@@ -3142,6 +3142,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		if recipeLibrary[spellID] then
 			-- With a delay due to how quickly that info is updated after UNIT_SPELLCAST_SUCCEEDED
 			C_Timer.After(0.1, function()
+				-- Get character info
+				local character = UnitName("player")
+				local realm = GetNormalizedRealmName()
+
 				-- Get spell cooldown info
 				local recipeName = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name
 				local _, recipeCooldown = GetSpellCooldown(spellID)
@@ -3149,7 +3153,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 				-- If the spell cooldown is 1 minute or more, track it
 				if recipeCooldown >= 60 then
-					recipeCooldowns[spellID] = {name = recipeName, cooldown = recipeCooldown, start = recipeStart}
+					recipeCooldowns[spellID] = {name = recipeName, cooldown = recipeCooldown, start = recipeStart, user = character .. "-" .. realm}
 				end
 			end)
 		end
@@ -3281,11 +3285,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				-- If the option to show recipe cooldowns is enabled
 				if userSettings["showRecipeCooldowns"] == true then
 					-- Show the reminder
-					print("PSL: " .. recipeInfo.name .. " (ID: " .. recipeID .. ") is off cooldown and can be crafted again.")
+					print("PSL: " .. recipeInfo.name .. " (ID: " .. recipeID .. ") is ready to craft again on " .. recipeInfo.user .. ".")
 				end
 
 				-- Remove the recipe from recipeCooldowns
-				recipeCooldown[spellID] = nil
+				recipeCooldowns[recipeID] = nil
 			end
 		end
 	end
