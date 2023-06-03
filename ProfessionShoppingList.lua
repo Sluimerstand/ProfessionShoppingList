@@ -1321,24 +1321,24 @@ function pslSettings()
 	end
 
 	-- Settings frame
-	local scrollFrame = CreateFrame("ScrollFrame", nil, settings, "UIPanelScrollFrameTemplate")
-	scrollFrame:SetPoint("TOPLEFT", 3, -4)
-	scrollFrame:SetPoint("BOTTOMRIGHT", -27, 4)
+	local scrollFrame = CreateFrame("ScrollFrame", nil, settings, "ScrollFrameTemplate")
+	scrollFrame:SetPoint("TOPLEFT", -5, 0)	-- Move it a little bit, so it's equal distance from the top and the left
+	scrollFrame:SetPoint("BOTTOMRIGHT", -25, 0)	-- Allow space for the scrollbar
 
 	local scrollChild = CreateFrame("Frame")
 	scrollFrame:SetScrollChild(scrollChild)
-	scrollChild:SetWidth(SettingsPanel.Container.SettingsCanvas:GetWidth()-18)
-	scrollChild:SetHeight(1) 
+	scrollChild:SetWidth(SettingsPanel.Container.SettingsCanvas:GetWidth()-25)	-- The settings panel width minus the space we allowed for the scrollbar
+	scrollChild:SetHeight(1)	-- This is automatically defined, so long as the attribute exists at all
 
 	-- Settings
 	local title = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormalLarge")
 	title:SetPoint("TOPLEFT", 0, 0)
 	title:SetText("Profession Shopping List")
 
-	local addonversion = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormalLarge")
-	addonversion:SetPoint("CENTER", title, "CENTER", 0, 0)
-	addonversion:SetPoint("RIGHT", -20, 0)
-	addonversion:SetText(GetAddOnMetadata("ProfessionShoppingList", "Version"))
+	local addonVersion = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormalLarge")
+	addonVersion:SetPoint("CENTER", title, "CENTER", 0, 0)
+	addonVersion:SetPoint("RIGHT", 0, 0)
+	addonVersion:SetText(GetAddOnMetadata("ProfessionShoppingList", "Version"))
 
 	-- General
 	local cbMinimapButton = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
@@ -3179,6 +3179,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				local recipeName = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name
 				local _, recipeCooldown = GetSpellCooldown(spellID)
 				local recipeStart = C_DateAndTime.GetServerTimeLocal()
+
+				-- Set timer to 7 days for the Alchemy sac transmutes
+				if spellID == 213256 or spellID == 251808 then
+					recipeCooldown = 7 * 24 * 60 * 60
+				end
 
 				-- If the spell cooldown is 1 minute or more, track it
 				if recipeCooldown >= 60 then
