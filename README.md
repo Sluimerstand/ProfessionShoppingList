@@ -13,6 +13,7 @@ It does not replace the profession windows, it only adds a few buttons and two t
 **Chat commands**
 
 - /psl - Toggle the tracking windows
+- /psl resetpos - Reset the tracking window positions
 - /psl settings - Open the settings window
 - /psl clear - Clear all tracked recipes
 - /psl track [recipeID] [quantity] - Track a recipe
