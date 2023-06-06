@@ -487,19 +487,13 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 	-- Add recipe link for crafted items
 	if recipeType == 1 then
 		local itemID = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).outputItemID
-
+		local _, itemLink
 		if itemID ~= nil then
 			-- Cache item
 			if not C_Item.IsItemDataCachedByID(itemID) then local item = Item:CreateFromItemID(itemID) end
 
 			-- Get item info
-			local _, itemLink = GetItemInfo(itemID)
-
-			-- Try again if error
-			if itemLink == nil then
-				RunNextFrame(pslTrackRecipe(recipeID, recipeQuantity))
-				do return end
-			end
+			_, itemLink = GetItemInfo(itemID)
 		-- Exception for stuff like Abominable Stitching
 		else
 			itemLink = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
