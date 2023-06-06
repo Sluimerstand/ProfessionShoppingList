@@ -1694,7 +1694,7 @@ function pslSettings()
 	local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText1:SetPoint("TOPLEFT", cbKnowledgeAlwaysShowDetails, "BOTTOMLEFT", 3, -20)
 	pslSettingsText1:SetJustifyH("LEFT")
-	pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.\n|R/psl track |cff1B9C85recipeID quantity |R|cffFFFFFF- Track a recipe.\n|R/psl untrack |cff1B9C85recipeID quantity |R|cffFFFFFF- Untrack a recipe.\n|R/psl untrack |cff1B9C85recipeID |Rall |cffFFFFFF- Untrack all of a recipe.")
+	pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl resetpos |cffFFFFFF- Reset the PSL window positions.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.\n|R/psl track |cff1B9C85recipeID quantity |R|cffFFFFFF- Track a recipe.\n|R/psl untrack |cff1B9C85recipeID quantity |R|cffFFFFFF- Untrack a recipe.\n|R/psl untrack |cff1B9C85recipeID |Rall |cffFFFFFF- Untrack all of a recipe.")
 
 	local pslSettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText2:SetPoint("TOPLEFT", pslSettingsText1, "BOTTOMLEFT", 0, -15)
@@ -2239,6 +2239,28 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			-- Clear list
 			elseif command == "clear" then
 				pslClear()
+			-- Reset window positions
+			elseif command == "resetpos" then
+				-- Set the window positions back to default
+				windowPosition = {
+					["pslFrame1"] = {
+						["left"] = 1168,
+						["bottom"] = 529,
+					},
+					["pslFrame2"] = {
+						["left"] = 1168,
+						["bottom"] = 782,
+					},
+				}
+
+				-- Copy these values from global to personal window position, so if they use that setting that one is also reset
+				pcWindowPosition = windowPosition
+
+				-- Actually move the windows to their new positions
+				pslFrame1:ClearAllPoints()
+				pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame1"].left, windowPosition["pslFrame1"].bottom)
+				pslFrame2:ClearAllPoints()
+				pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame2"].left, windowPosition["pslFrame2"].bottom)
 			-- Track recipe
 			elseif command == 'track' then
 				-- Split entered recipeID and recipeQuantity and turn them into real numbers
