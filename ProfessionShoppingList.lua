@@ -188,13 +188,6 @@ function pslTrackingWindows()
 		pslSaveWindowPosition()
 	end)
 
-	pslFrame1:ClearAllPoints()
-	if userSettings["pcWindowPosition"] == true then
-		pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", pcWindowPosition["pslFrame1"].left, pcWindowPosition["pslFrame1"].bottom)
-	else
-		pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame1"].left, windowPosition["pslFrame1"].bottom)
-	end
-
 	-- Column formatting, Recipes
 	local cols = {}
 	cols[1] = {
@@ -270,13 +263,6 @@ function pslTrackingWindows()
 	pslFrame2:SetScript("OnMouseUp", function()
 		pslSaveWindowPosition()
 	end)
-
-	pslFrame2:ClearAllPoints()
-	if userSettings["pcWindowPosition"] == true then
-		pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", pcWindowPosition["pslFrame2"].left, pcWindowPosition["pslFrame2"].bottom)
-	else
-		pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame2"].left, windowPosition["pslFrame2"].bottom)
-	end
 end
 
 -- Get reagents for recipe
@@ -1265,6 +1251,20 @@ function pslToggle()
 		pslFrame1:Hide()
 		pslFrame2:Hide()
 	else
+		pslFrame1:ClearAllPoints()
+		if userSettings["pcWindowPosition"] == true then
+			pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", pcWindowPosition["pslFrame1"].left, pcWindowPosition["pslFrame1"].bottom)
+		else
+			pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame1"].left, windowPosition["pslFrame1"].bottom)
+		end
+		
+		pslFrame2:ClearAllPoints()
+		if userSettings["pcWindowPosition"] == true then
+			pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", pcWindowPosition["pslFrame2"].left, pcWindowPosition["pslFrame2"].bottom)
+		else
+			pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame2"].left, windowPosition["pslFrame2"].bottom)
+		end
+
 		pslFrame1:Show()
 		pslFrame2:Show()
 	end
@@ -3268,6 +3268,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		-- Add 1 to the pslQuickOrderActive, so we can use it to count the number of fails
 		pslQuickOrderActive = pslQuickOrderActive + 1
 	end
+
 	-- Save the order recipeID if the order has been started, because SPELL_LOAD_RESULT does not fire for it anymore
 	if event == "CRAFTINGORDERS_CLAIM_ORDER_RESPONSE" then
 		pslOrderRecipeID = pslSelectedRecipeID
