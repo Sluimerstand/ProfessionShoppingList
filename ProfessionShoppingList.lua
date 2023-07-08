@@ -19,6 +19,8 @@ api:RegisterEvent("TRACKED_RECIPE_UPDATE")
 api:RegisterEvent("PLAYER_ENTERING_WORLD")
 api:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
 api:RegisterEvent("AUCTION_HOUSE_SHOW")
+api:RegisterEvent("LFG_PROPOSAL_SHOW")
+api:RegisterEvent("PET_BATTLE_QUEUE_PROPOSE_MATCH")
 
 -- Might as well keep this in here, it's useful
 local function dump(o)
@@ -88,6 +90,7 @@ function pslInitialise()
 	if userSettings["headerTooltip"] == nil then userSettings["headerTooltip"] = true end
 	if userSettings["showRecipeCooldowns"] == nil then userSettings["showRecipeCooldowns"] = true end
 	if userSettings["backpackCount"] == nil then userSettings["backpackCount"] = true end
+	if userSettings["queueSound"] == nil then userSettings["queueSound"] = false end
 
 	-- Load personal recipes, if the setting is enabled
 	if userSettings["pcRecipesTracked"] == true then
@@ -1316,21 +1319,22 @@ function pslSettings()
 
 	-- Settings frame
 	local scrollFrame = CreateFrame("ScrollFrame", nil, settings, "ScrollFrameTemplate")
-	scrollFrame:SetPoint("TOPLEFT", -5, 0)	-- Move it a little bit, so it's equal distance from the top and the left
+	scrollFrame:SetPoint("TOPLEFT", 0, 0)
 	scrollFrame:SetPoint("BOTTOMRIGHT", -25, 0)	-- Allow space for the scrollbar
 
 	local scrollChild = CreateFrame("Frame")
 	scrollFrame:SetScrollChild(scrollChild)
-	scrollChild:SetWidth(SettingsPanel.Container.SettingsCanvas:GetWidth()-25)	-- The settings panel width minus the space we allowed for the scrollbar
+	scrollChild:SetWidth(1)	-- This is automatically defined, so long as the attribute exists at all
 	scrollChild:SetHeight(1)	-- This is automatically defined, so long as the attribute exists at all
 
 	-- Settings
+	-- TODO: functions for checkboxes, sliders, header and include cb:SetHitRectInsets(0,0 - cb.Text:GetWidth(),0,0);
 	local title = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormalLarge")
 	title:SetPoint("TOPLEFT", 0, 0)
 	title:SetText("Profession Shopping List")
 
 	local addonVersion = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormalLarge")
-	addonVersion:SetPoint("CENTER", title, "CENTER", 0, 0)
+	addonVersion:SetPoint("CENTER", title, 0, 0)
 	addonVersion:SetPoint("RIGHT", 0, 0)
 	addonVersion:SetText(GetAddOnMetadata("ProfessionShoppingList", "Version"))
 
@@ -1641,21 +1645,11 @@ function pslSettings()
 	titleOtherFeatures:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 	titleOtherFeatures:SetText("Other features")
 
-	local cbVendorAll = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbVendorAll.Text:SetText("Always set vendor filter to 'All'")
-	cbVendorAll.Text:SetTextColor(1, 1, 1, 1)
-	cbVendorAll.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-	cbVendorAll:SetPoint("TOPLEFT", titleOtherFeatures, "BOTTOMLEFT", 0, 0)
-	cbVendorAll:SetChecked(userSettings["vendorAll"])
-	cbVendorAll:SetScript("OnClick", function(self)
-		userSettings["vendorAll"] = cbVendorAll:GetChecked()
-	end)
-
 	local cbBackpackCount = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
 	cbBackpackCount.Text:SetText("Split reagent bag count")
 	cbBackpackCount.Text:SetTextColor(1, 1, 1, 1)
 	cbBackpackCount.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-	cbBackpackCount:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 0, 0)
+	cbBackpackCount:SetPoint("TOPLEFT", titleOtherFeatures, "BOTTOMLEFT", 0, 0)
 	cbBackpackCount:SetChecked(userSettings["backpackCount"])
 	cbBackpackCount:SetScript("OnClick", function(self)
 		userSettings["backpackCount"] = cbBackpackCount:GetChecked()
@@ -1684,9 +1678,29 @@ function pslSettings()
 		userSettings["showRecipeCooldowns"] = cbShowRecipeCooldowns:GetChecked()
 	end)
 
+	local cbVendorAll = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbVendorAll.Text:SetText("Always set vendor filter to 'All'")
+	cbVendorAll.Text:SetTextColor(1, 1, 1, 1)
+	cbVendorAll.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbVendorAll:SetPoint("TOPLEFT", cbShowRecipeCooldowns, "BOTTOMLEFT", 0, 0)
+	cbVendorAll:SetChecked(userSettings["vendorAll"])
+	cbVendorAll:SetScript("OnClick", function(self)
+		userSettings["vendorAll"] = cbVendorAll:GetChecked()
+	end)
+
+	local cbQueueSounds = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbQueueSounds.Text:SetText("Play sound when any queue pops")
+	cbQueueSounds.Text:SetTextColor(1, 1, 1, 1)
+	cbQueueSounds.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbQueueSounds:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 0, 0)
+	cbQueueSounds:SetChecked(userSettings["queueSound"])
+	cbQueueSounds:SetScript("OnClick", function(self)
+		userSettings["queueSound"] = cbQueueSounds:GetChecked()
+	end)
+
 	-- Extra text
 	local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	pslSettingsText1:SetPoint("TOPLEFT", cbKnowledgeAlwaysShowDetails, "BOTTOMLEFT", 3, -20)
+	pslSettingsText1:SetPoint("TOPLEFT", cbKnowledgeAlwaysShowDetails, "BOTTOMLEFT", 3, -30)
 	pslSettingsText1:SetJustifyH("LEFT")
 	pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl resetpos |cffFFFFFF- Reset the PSL window positions.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.\n|R/psl track |cff1B9C85recipeID quantity |R|cffFFFFFF- Track a recipe.\n|R/psl untrack |cff1B9C85recipeID quantity |R|cffFFFFFF- Untrack a recipe.\n|R/psl untrack |cff1B9C85recipeID |Rall |cffFFFFFF- Untrack all of a recipe.")
 
@@ -3356,5 +3370,23 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				recipeCooldowns[recipeID] = nil
 			end
 		end
+	end
+
+	-- When a LFG queue or pet battle queue pops up
+	if event == "LFG_PROPOSAL_SHOW" or event == "PET_BATTLE_QUEUE_PROPOSE_MATCH" then
+		-- If the setting for queue sounds is enabled
+		if userSettings["queueSound"] == true then
+			-- Play the DBM-style sound
+			PlaySoundFile(567478, "Master")
+		end
+	end
+end)
+
+-- When a PvP queue pops up
+hooksecurefunc("PVPReadyDialog_Display", function()
+	-- If the setting for queue sounds is enabled
+	if userSettings["queueSound"] == true then
+		-- Play the DBM-style sound
+		PlaySoundFile(567478, "Master")
 	end
 end)
