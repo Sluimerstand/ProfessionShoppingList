@@ -91,6 +91,8 @@ function pslInitialise()
 	if userSettings["showRecipeCooldowns"] == nil then userSettings["showRecipeCooldowns"] = true end
 	if userSettings["backpackCount"] == nil then userSettings["backpackCount"] = true end
 	if userSettings["queueSound"] == nil then userSettings["queueSound"] = false end
+	if userSettings["backpackCleanup"] == nil then userSettings["backpackCleanup"] = "default" end
+	if userSettings["backpackLoot"] == nil then userSettings["backpackLoot"] = "default" end
 
 	-- Load personal recipes, if the setting is enabled
 	if userSettings["pcRecipesTracked"] == true then
@@ -1653,34 +1655,11 @@ function pslSettings()
 	titleOtherFeatures:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 	titleOtherFeatures:SetText("Other features")
 
-	local cbBackpackCount = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbBackpackCount.Text:SetText("Split reagent bag count")
-	cbBackpackCount.Text:SetTextColor(1, 1, 1, 1)
-	cbBackpackCount.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-	cbBackpackCount:SetPoint("TOPLEFT", titleOtherFeatures, "BOTTOMLEFT", 0, 0)
-	cbBackpackCount:SetChecked(userSettings["backpackCount"])
-	cbBackpackCount:SetScript("OnClick", function(self)
-		userSettings["backpackCount"] = cbBackpackCount:GetChecked()
-
-		-- Get number of free bag slots
-		local freeSlots1 = C_Container.GetContainerNumFreeSlots(0) + C_Container.GetContainerNumFreeSlots(1) + C_Container.GetContainerNumFreeSlots(2) + C_Container.GetContainerNumFreeSlots(3) + C_Container.GetContainerNumFreeSlots(4)
-		local freeSlots2 = C_Container.GetContainerNumFreeSlots(5)
-
-		-- If the setting for split reagent bag count is enabled and the player has a reagent bag
-		if userSettings["backpackCount"] == true and C_Container.GetContainerNumSlots(5) ~= 0 then
-			-- Replace the bag count text
-			MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 .. "+" .. freeSlots2 .. ")")
-		else
-			-- Reset the bag count text
-			MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 + freeSlots2 .. ")")
-		end
-	end)
-
 	local cbShowRecipeCooldowns = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
 	cbShowRecipeCooldowns.Text:SetText("Recipe cooldown reminders")
 	cbShowRecipeCooldowns.Text:SetTextColor(1, 1, 1, 1)
 	cbShowRecipeCooldowns.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-	cbShowRecipeCooldowns:SetPoint("TOPLEFT", cbBackpackCount, "BOTTOMLEFT", 0, 0)
+	cbShowRecipeCooldowns:SetPoint("TOPLEFT", titleOtherFeatures, "BOTTOMLEFT", 0, 0)
 	cbShowRecipeCooldowns:SetChecked(userSettings["showRecipeCooldowns"])
 	cbShowRecipeCooldowns:SetScript("OnClick", function(self)
 		userSettings["showRecipeCooldowns"] = cbShowRecipeCooldowns:GetChecked()
@@ -1706,9 +1685,213 @@ function pslSettings()
 		userSettings["queueSound"] = cbQueueSounds:GetChecked()
 	end)
 
+	-- Category: Backpack
+	local titleBackpack = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	titleBackpack:SetPoint("LEFT", titleKnowledgeTracker, "LEFT", 0, 0)
+	titleBackpack:SetPoint("TOP", cbKnowledgeAlwaysShowDetails, "BOTTOM", 0, -5)
+	titleBackpack:SetJustifyH("LEFT")
+	titleBackpack:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+	titleBackpack:SetText("Backpack")
+
+	local cbBackpackCount = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbBackpackCount.Text:SetText("Split reagent bag count")
+	cbBackpackCount.Text:SetTextColor(1, 1, 1, 1)
+	cbBackpackCount.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbBackpackCount:SetPoint("TOPLEFT", titleBackpack, "BOTTOMLEFT", 0, 0)
+	cbBackpackCount:SetChecked(userSettings["backpackCount"])
+	cbBackpackCount:SetScript("OnClick", function(self)
+		userSettings["backpackCount"] = cbBackpackCount:GetChecked()
+
+		-- Get number of free bag slots
+		local freeSlots1 = C_Container.GetContainerNumFreeSlots(0) + C_Container.GetContainerNumFreeSlots(1) + C_Container.GetContainerNumFreeSlots(2) + C_Container.GetContainerNumFreeSlots(3) + C_Container.GetContainerNumFreeSlots(4)
+		local freeSlots2 = C_Container.GetContainerNumFreeSlots(5)
+
+		-- If the setting for split reagent bag count is enabled and the player has a reagent bag
+		if userSettings["backpackCount"] == true and C_Container.GetContainerNumSlots(5) ~= 0 then
+			-- Replace the bag count text
+			MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 .. "+" .. freeSlots2 .. ")")
+		else
+			-- Reset the bag count text
+			MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 + freeSlots2 .. ")")
+		end
+	end)
+
+		-- Cleanup and Loot order tooltip
+		local orderTooltip = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
+		orderTooltip:SetPoint("TOPLEFT", cbBackpackCount, "BOTTOMLEFT", 0, 0)
+		orderTooltip:SetFrameStrata("TOOLTIP")
+		orderTooltip:SetBackdrop({
+			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+			edgeSize = 16,
+			insets = { left = 4, right = 4, top = 4, bottom = 4 },
+		})
+		orderTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		orderTooltip:EnableMouse(false)
+		orderTooltip:SetMovable(false)
+		orderTooltip:Hide()
+
+		orderTooltipText = orderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		orderTooltipText:SetPoint("TOPLEFT", orderTooltip, "TOPLEFT", 10, -10)
+		orderTooltipText:SetJustifyH("LEFT")
+		orderTooltipText:SetText("Default means PSL will not adjust this hidden game setting.\nThe other options let PSL enforce that particular setting.")
+
+		-- Set the tooltip size to fit its contents
+		orderTooltip:SetHeight(orderTooltipText:GetStringHeight()+20)
+		orderTooltip:SetWidth(orderTooltipText:GetStringWidth()+20)
+
+	local textCleanUpBags = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	textCleanUpBags:SetPoint("TOPLEFT", cbBackpackCount, "BOTTOMLEFT", 3, 0)
+	textCleanUpBags:SetJustifyH("LEFT")
+	textCleanUpBags:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	textCleanUpBags:SetText("|cffFFFFFFClean Up Bags")
+	textCleanUpBags:EnableMouse(true)
+	textCleanUpBags:SetScript("OnEnter", function(self)
+		orderTooltip:Show()
+	end)
+	textCleanUpBags:SetScript("OnLeave", function(self)
+		orderTooltip:Hide()
+	end)
+
+	local cbCleanupDefault = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	local cbCleanupLtoR = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	local cbCleanupRtoL = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+
+		-- Radio button
+		local function cbCleanupToggle(state)
+			-- Grab user setting if we're not toggling but just loading
+			if not state then state = userSettings["backpackCleanup"] end
+
+			-- Set the user setting (either doesn't change, or gets set to what the user clicked)
+			userSettings["backpackCleanup"] = state
+
+			-- Make the checkboxes act like radio buttons
+			if state == "default" then
+				cbCleanupDefault:SetChecked(true)
+				cbCleanupLtoR:SetChecked(false)
+				cbCleanupRtoL:SetChecked(false)
+			elseif state == "ltor" then
+				cbCleanupDefault:SetChecked(false)
+				cbCleanupLtoR:SetChecked(true)
+				cbCleanupRtoL:SetChecked(false)
+
+				-- Enforce the setting
+				C_Container.SetSortBagsRightToLeft(false)
+			elseif state == "rtol" then
+				cbCleanupDefault:SetChecked(false)
+				cbCleanupLtoR:SetChecked(false)
+				cbCleanupRtoL:SetChecked(true)
+
+				-- Enforce the setting
+				C_Container.SetSortBagsRightToLeft(true)
+			end
+		end
+		cbCleanupToggle()
+
+	cbCleanupDefault.Text:SetText("Default")
+	cbCleanupDefault.tooltip = "Test."
+	cbCleanupDefault.Text:SetTextColor(1, 1, 1, 1)
+	cbCleanupDefault.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbCleanupDefault:SetPoint("TOPLEFT", textCleanUpBags, "BOTTOMLEFT", -3, 0)
+	cbCleanupDefault:SetScript("OnClick", function(self)
+		cbCleanupToggle("default")
+	end)
+
+	cbCleanupLtoR.Text:SetText("Left-to-Right")
+	cbCleanupLtoR.Text:SetTextColor(1, 1, 1, 1)
+	cbCleanupLtoR.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbCleanupLtoR:SetPoint("LEFT", cbCleanupDefault.Text, "RIGHT", 3, 0)
+	cbCleanupLtoR:SetPoint("TOP", cbCleanupDefault, "TOP", 0, 0)
+	cbCleanupLtoR:SetScript("OnClick", function(self)
+		cbCleanupToggle("ltor")
+	end)
+
+	cbCleanupRtoL.Text:SetText("Right-to-Left")
+	cbCleanupRtoL.Text:SetTextColor(1, 1, 1, 1)
+	cbCleanupRtoL.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbCleanupRtoL:SetPoint("LEFT", cbCleanupLtoR.Text, "RIGHT", 3, 0)
+	cbCleanupRtoL:SetPoint("TOP", cbCleanupLtoR, "TOP", 0, 0)
+	cbCleanupRtoL:SetScript("OnClick", function(self)
+		cbCleanupToggle("rtol")
+	end)
+
+	local textLootOrder = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	textLootOrder:SetPoint("TOPLEFT", cbCleanupDefault, "BOTTOMLEFT", 3, 0)
+	textLootOrder:SetJustifyH("LEFT")
+	textLootOrder:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	textLootOrder:SetText("|cffFFFFFFLoot Order")
+	textLootOrder:EnableMouse(true)
+	textLootOrder:SetScript("OnEnter", function(self)
+		orderTooltip:Show()
+	end)
+	textLootOrder:SetScript("OnLeave", function(self)
+		orderTooltip:Hide()
+	end)
+
+	local cbLootDefault = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	local cbLootLtoR = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	local cbLootRtoL = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+
+	-- Radio button
+	local function cbLootToggle(state)
+		-- Grab user setting if we're not toggling but just loading
+		if not state then state = userSettings["backpackLoot"] end
+
+		-- Set the user setting (either doesn't change, or gets set to what the user clicked)
+		userSettings["backpackLoot"] = state
+
+		-- Make the checkboxes act like radio buttons
+		if state == "default" then
+			cbLootDefault:SetChecked(true)
+			cbLootLtoR:SetChecked(false)
+			cbLootRtoL:SetChecked(false)
+		elseif state == "ltor" then
+			cbLootDefault:SetChecked(false)
+			cbLootLtoR:SetChecked(true)
+			cbLootRtoL:SetChecked(false)
+
+			-- Enforce the setting
+			C_Container.SetInsertItemsLeftToRight(true)
+		elseif state == "rtol" then
+			cbLootDefault:SetChecked(false)
+			cbLootLtoR:SetChecked(false)
+			cbLootRtoL:SetChecked(true)
+
+			-- Enforce the setting
+			C_Container.SetInsertItemsLeftToRight(false)
+		end
+	end
+	cbLootToggle()
+
+	cbLootDefault.Text:SetText("Default")
+	cbLootDefault.Text:SetTextColor(1, 1, 1, 1)
+	cbLootDefault.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbLootDefault:SetPoint("TOPLEFT", textLootOrder, "BOTTOMLEFT", -3, 0)
+	cbLootDefault:SetScript("OnClick", function(self)
+		cbLootToggle("default")
+	end)
+
+	cbLootLtoR.Text:SetText("Left-to-Right")
+	cbLootLtoR.Text:SetTextColor(1, 1, 1, 1)
+	cbLootLtoR.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbLootLtoR:SetPoint("LEFT", cbLootDefault.Text, "RIGHT", 3, 0)
+	cbLootLtoR:SetPoint("TOP", cbLootDefault, "TOP", 0, 0)
+	cbLootLtoR:SetScript("OnClick", function(self)
+		cbLootToggle("ltor")
+	end)
+
+	cbLootRtoL.Text:SetText("Right-to-Left")
+	cbLootRtoL.Text:SetTextColor(1, 1, 1, 1)
+	cbLootRtoL.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+	cbLootRtoL:SetPoint("LEFT", cbLootLtoR.Text, "RIGHT", 3, 0)
+	cbLootRtoL:SetPoint("TOP", cbLootLtoR, "TOP", 0, 0)
+	cbLootRtoL:SetScript("OnClick", function(self)
+		cbLootToggle("rtol")
+	end)
+
 	-- Extra text
 	local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	pslSettingsText1:SetPoint("TOPLEFT", cbKnowledgeAlwaysShowDetails, "BOTTOMLEFT", 3, -30)
+	pslSettingsText1:SetPoint("TOPLEFT", cbLootDefault, "BOTTOMLEFT", 3, -15)
 	pslSettingsText1:SetJustifyH("LEFT")
 	pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl resetpos |cffFFFFFF- Reset the PSL window positions.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.\n|R/psl track |cff1B9C85recipeID quantity |R|cffFFFFFF- Track a recipe.\n|R/psl untrack |cff1B9C85recipeID quantity |R|cffFFFFFF- Untrack a recipe.\n|R/psl untrack |cff1B9C85recipeID |Rall |cffFFFFFF- Untrack all of a recipe.")
 
