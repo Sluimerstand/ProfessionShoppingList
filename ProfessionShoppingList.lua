@@ -1,7 +1,7 @@
 -- Initialise some stuff
 local api = CreateFrame("Frame")	-- To register API events
 local ScrollingTable = LibStub("ScrollingTable")	-- To refer to the ScrollingTable library
-if not C_TradeSkillUI then UIParentLoadAddOn("C_TradeSkillUI") end	-- To refer to the TradeSkillUI
+if not Blizzard_Professions then UIParentLoadAddOn("Blizzard_Professions") end	-- To refer to the TradeSkillUI
 if not Blizzard_ProfessionsCustomerOrders then UIParentLoadAddOn("Blizzard_ProfessionsCustomerOrders") end	-- To refer to the ProfessionsCustomerOrders
 
 -- API Events
