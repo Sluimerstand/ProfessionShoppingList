@@ -1,3 +1,8 @@
+-- Used textures
+READY_CHECK_WAITING_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Waiting"
+READY_CHECK_READY_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Ready"
+READY_CHECK_NOT_READY_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-NotReady"
+
 -- Shadowlands Legendary craft SpellIDs
 slLegendaryRecipeIDs = {}
 slLegendaryRecipeIDs[307705] = { rank = 1, one = 307705, two = 332006, three = 332041, four = 338976 }
