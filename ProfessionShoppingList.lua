@@ -184,8 +184,12 @@ function pslTrackingWindows()
 	pslTable1:SetDisplayRows(userSettings["reagentRows"], 15)
 	pslTable1:SetDisplayCols(cols)
 	pslFrame1:SetSize(userSettings["reagentWidth"]+userSettings["reagentNoWidth"]+30, userSettings["reagentRows"]*15+45)
-	pslFrame1:SetScript("OnMouseDown", function()
-		pslFrame1:StartMoving()
+	pslFrame1:SetScript("OnMouseDown", function(self, button)
+		if button == "LeftButton" and not IsModifierKeyDown() then
+			pslFrame1:StartMoving()
+			GameTooltip:ClearLines()
+			GameTooltip:Hide()
+		end
 	end)
 	pslFrame1:SetScript("OnMouseUp", function()
 		pslSaveWindowPosition()
@@ -260,8 +264,12 @@ function pslTrackingWindows()
 	pslTable2:SetDisplayCols(cols)
 	pslFrame2:SetSize(userSettings["recipeWidth"]+userSettings["recipeNoWidth"]+30, userSettings["recipeRows"]*15+45)
 	
-	pslFrame2:SetScript("OnMouseDown", function()
-		pslFrame2:StartMoving()
+	pslFrame2:SetScript("OnMouseDown", function(self, button)
+		if button == "LeftButton" and not IsModifierKeyDown() then
+			pslFrame2:StartMoving()
+			GameTooltip:ClearLines()
+			GameTooltip:Hide()
+		end
 	end)
 	pslFrame2:SetScript("OnMouseUp", function()
 		pslSaveWindowPosition()
@@ -1284,7 +1292,7 @@ end
 -- Settings and minimap icon
 function pslSettings()
 	-- Initialise the Settings page so the Minimap button can go there
-	local settings = CreateFrame("Frame")			
+	local settings = CreateFrame("Frame")			ft-
 	settings.name = "Profession Shopping List"
 	InterfaceOptions_AddCategory(settings)
 
@@ -1739,7 +1747,7 @@ function pslWindowFunctions()
 			reagentHeaderTooltip:Hide()
 		end,
 		["OnMouseDown"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
-			if button == "LeftButton" then
+			if button == "LeftButton" and not IsModifierKeyDown() then
 				pslFrame1:StartMoving()
 				GameTooltip:ClearLines()
 				GameTooltip:Hide()
@@ -2205,7 +2213,7 @@ function pslWindowFunctions()
 			end
 		end,
 		["OnMouseDown"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
-			if button == "LeftButton" then
+			if button == "LeftButton" and not IsModifierKeyDown() then
 				pslFrame2:StartMoving()
 				GameTooltip:ClearLines()
 				GameTooltip:Hide()
