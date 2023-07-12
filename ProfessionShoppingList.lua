@@ -1292,7 +1292,7 @@ end
 -- Settings and minimap icon
 function pslSettings()
 	-- Initialise the Settings page so the Minimap button can go there
-	local settings = CreateFrame("Frame")			ft-
+	local settings = CreateFrame("Frame")
 	settings.name = "Profession Shopping List"
 	InterfaceOptions_AddCategory(settings)
 
