@@ -3396,19 +3396,13 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				local character = UnitName("player")
 				local realm = GetNormalizedRealmName()
 
-				-- Get spell cooldown info
+				-- Get recipe cooldown info
 				local recipeName = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name
 				local _, recipeCooldown = GetSpellCooldown(spellID)
-				local recipeStart = C_DateAndTime.GetServerTimeLocal()
-
-				-- Set timer to 7 days for the Alchemy sac transmutes
-				if spellID == 213256 or spellID == 251808 then
-					recipeCooldown = 7 * 24 * 60 * 60
-				end
 
 				-- If the spell cooldown is 1 minute or more, track it
 				if recipeCooldown >= 60 then
-					recipeCooldowns[spellID] = {name = recipeName, cooldown = recipeCooldown, start = recipeStart, user = character .. "-" .. realm}
+					recipeCooldowns[spellID] = {name = recipeName, user = character .. "-" .. realm}
 				end
 			end)
 		end
@@ -3548,10 +3542,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	if event == "PLAYER_ENTERING_WORLD" then
 		-- Check all tracked recipe cooldowns
 		for recipeID, recipeInfo in pairs (recipeCooldowns) do
-			local cooldownRemaining = recipeInfo.start + recipeInfo.cooldown - C_DateAndTime.GetServerTimeLocal()
-			-- If the recipe is off cooldown
-			if cooldownRemaining <= 0 then
-				-- If the option to show recipe cooldowns is enabled
+			local _, cooldownRemaining = GetSpellCooldown(recipeID)
+
+			if cooldownRemaining == 0 then
 				if userSettings["showRecipeCooldowns"] == true then
 					-- Show the reminder
 					print("PSL: " .. recipeInfo.name .. " (ID: " .. recipeID .. ") is ready to craft again on " .. recipeInfo.user .. ".")
