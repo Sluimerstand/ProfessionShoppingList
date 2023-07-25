@@ -385,13 +385,13 @@ function pslUpdateNumbers()
 		local itemAmount = ""
 		if math.max(0,amount-reagentAmountHave) == 0 then
 			itemAmount = "|cff9d9d9d"
-			itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Poor
-			itemLink = string.gsub(itemLink, "|cffffffff|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Common
-			itemLink = string.gsub(itemLink, "|cff1eff00|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Uncommon
-			itemLink = string.gsub(itemLink, "|cff0070dd|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Rare
-			itemLink = string.gsub(itemLink, "|cffa335ee|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Epic
-			itemLink = string.gsub(itemLink, "|cffff8000|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Legendary
-			itemLink = string.gsub(itemLink, "|cffe6cc80|", "|T"..READY_CHECK_READY_TEXTURE..":0|t |cff9d9d9d|") -- Artifact
+			itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|T"..iconReady..":0|t |cff9d9d9d|") -- Poor
+			itemLink = string.gsub(itemLink, "|cffffffff|", "|T"..iconReady..":0|t |cff9d9d9d|") -- Common
+			itemLink = string.gsub(itemLink, "|cff1eff00|", "|T"..iconReady..":0|t |cff9d9d9d|") -- Uncommon
+			itemLink = string.gsub(itemLink, "|cff0070dd|", "|T"..iconReady..":0|t |cff9d9d9d|") -- Rare
+			itemLink = string.gsub(itemLink, "|cffa335ee|", "|T"..iconReady..":0|t |cff9d9d9d|") -- Epic
+			itemLink = string.gsub(itemLink, "|cffff8000|", "|T"..iconReady..":0|t |cff9d9d9d|") -- Legendary
+			itemLink = string.gsub(itemLink, "|cffe6cc80|", "|T"..iconReady..":0|t |cff9d9d9d|") -- Artifact
 		end
 
 		-- Set the displayed amount based on settings
@@ -2621,63 +2621,63 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 			local function kpTooltip()
 				-- Treatise
-				local treatiseStatus = READY_CHECK_NOT_READY_TEXTURE
+				local treatiseStatus = iconNotReady
 				local treatiseNumber = 0
 				
 				if treatiseQuest ~= nil then
 					if C_QuestLog.IsQuestFlaggedCompleted(treatiseQuest) then
-						treatiseStatus = READY_CHECK_READY_TEXTURE
+						treatiseStatus = iconReady
 						treatiseNumber = 1
 					end
 
-					if treatiseStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+					if treatiseStatus == iconNotReady then progress = false end
 				end
 
 				-- Crafting order quest
-				local orderQuestStatus = READY_CHECK_NOT_READY_TEXTURE
+				local orderQuestStatus = iconNotReady
 				local orderQuestNumber = 0
 
 				if orderQuest ~= nil then 
 					if C_QuestLog.IsQuestFlaggedCompleted(orderQuest) then
-						orderQuestStatus = READY_CHECK_READY_TEXTURE
+						orderQuestStatus = iconReady
 						orderQuestNumber = 1
 					end
 
-					if orderQuestStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+					if orderQuestStatus == iconNotReady then progress = false end
 				end
 
 				-- Gather quests
-				local gatherQuestStatus = READY_CHECK_NOT_READY_TEXTURE
+				local gatherQuestStatus = iconNotReady
 				local gatherQuestNumber = 0
 
 				if gatherQuests ~= nil then
 					for no, questID in pairs (gatherQuests) do
 						if C_QuestLog.IsQuestFlaggedCompleted(questID) then
-							gatherQuestStatus = READY_CHECK_READY_TEXTURE
+							gatherQuestStatus = iconReady
 							gatherQuestNumber = 1
 						end
 					end
 
-					if gatherQuestStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+					if gatherQuestStatus == iconNotReady then progress = false end
 				end
 
 				-- Craft quests
-				local craftQuestStatus = READY_CHECK_NOT_READY_TEXTURE
+				local craftQuestStatus = iconNotReady
 				local craftQuestNumber = 0
 
 				if craftQuests ~= nil then
 					for no, questID in pairs (craftQuests) do
 						if C_QuestLog.IsQuestFlaggedCompleted(questID) then
 							craftQuestNumber = 1
-							craftQuestStatus = READY_CHECK_READY_TEXTURE
+							craftQuestStatus = iconReady
 						end
 					end
 
-					if craftQuestStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+					if craftQuestStatus == iconNotReady then progress = false end
 				end
 
 				-- Drops
-				local dropsStatus = READY_CHECK_NOT_READY_TEXTURE
+				local dropsStatus = iconNotReady
 				local dropsNoCurrent = 0
 				local dropsNoTotal = 0
 
@@ -2690,15 +2690,15 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					end
 
 					if dropsNoCurrent == dropsNoTotal then
-						dropsStatus = READY_CHECK_READY_TEXTURE
+						dropsStatus = iconReady
 					end
 
-					if dropsStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+					if dropsStatus == iconNotReady then progress = false end
 				end
 
 				-- Dragon Shards
 				local shardQuests = {67295, 69946, 69979, 67298}
-				local shardStatus = READY_CHECK_NOT_READY_TEXTURE
+				local shardStatus = iconNotReady
 				local shardNo = 0
 
 				for _, questID in pairs (shardQuests) do
@@ -2707,25 +2707,25 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					end
 				end
 
-				if shardNo == 4 then shardStatus = READY_CHECK_READY_TEXTURE end
+				if shardNo == 4 then shardStatus = iconReady end
 
-				if shardStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+				if shardStatus == iconNotReady then progress = false end
 
 				-- Hidden profession master
-				local hiddenStatus = READY_CHECK_NOT_READY_TEXTURE
+				local hiddenStatus = iconNotReady
 				local hiddenNumber = 0
 
 				if hiddenMaster ~= nil then 
 					if C_QuestLog.IsQuestFlaggedCompleted(hiddenMaster) then
 						hiddenNumber = 1
-						hiddenStatus = READY_CHECK_READY_TEXTURE
+						hiddenStatus = iconReady
 					end
 
-					if hiddenStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+					if hiddenStatus == iconNotReady then progress = false end
 				end
 
 				-- Treasures
-				local treasureStatus = READY_CHECK_NOT_READY_TEXTURE
+				local treasureStatus = iconNotReady
 				local treasureNoCurrent = 0
 				local treasureNoTotal = 0
 
@@ -2737,13 +2737,13 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						treasureNoTotal = treasureNoTotal + 1
 					end
 
-					if treasureNoCurrent == treasureNoTotal then treasureStatus = READY_CHECK_READY_TEXTURE end
+					if treasureNoCurrent == treasureNoTotal then treasureStatus = iconReady end
 
-					if treasureStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+					if treasureStatus == iconNotReady then progress = false end
 				end
 
 				-- Books
-				local bookStatus = READY_CHECK_NOT_READY_TEXTURE
+				local bookStatus = iconNotReady
 				local bookNoCurrent = 0
 				local bookNoTotal = 0
 
@@ -2755,9 +2755,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						bookNoTotal = bookNoTotal + 1
 					end
 
-					if bookNoCurrent == bookNoTotal then bookStatus = READY_CHECK_READY_TEXTURE end
+					if bookNoCurrent == bookNoTotal then bookStatus = iconReady end
 
-					if bookStatus == READY_CHECK_NOT_READY_TEXTURE then progress = false end
+					if bookStatus == iconNotReady then progress = false end
 				end
 				
 				-- Weekly knowledge (text)
@@ -2810,9 +2810,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 							end
 		
 							if C_QuestLog.IsQuestFlaggedCompleted(dropInfo.questID) then
-								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_READY_TEXTURE..":0|t "..itemLink.." - "..dropInfo.source)
+								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconReady..":0|t "..itemLink.." - "..dropInfo.source)
 							else
-								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_NOT_READY_TEXTURE..":0|t "..itemLink.." - "..dropInfo.source)
+								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconNotReady..":0|t "..itemLink.." - "..dropInfo.source)
 							end
 						end
 					end
@@ -2855,9 +2855,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 							end
 
 							if C_QuestLog.IsQuestFlaggedCompleted(questID) then
-								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_READY_TEXTURE..":0|t ".."|cffffff00|Hquest:"..questID.."62|h["..questTitle.."]|h|r")
+								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconReady..":0|t ".."|cffffff00|Hquest:"..questID.."62|h["..questTitle.."]|h|r")
 							else
-								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_NOT_READY_TEXTURE..":0|t ".."|cffffff00|Hquest:"..questID.."62|h["..questTitle.."]|h|r")
+								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconNotReady..":0|t ".."|cffffff00|Hquest:"..questID.."62|h["..questTitle.."]|h|r")
 							end
 						end
 					end
@@ -2894,9 +2894,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 								end
 			
 								if C_QuestLog.IsQuestFlaggedCompleted(questID) then
-									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_READY_TEXTURE..":0|t "..itemLink)
+									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconReady..":0|t "..itemLink)
 								else
-									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_NOT_READY_TEXTURE..":0|t "..itemLink)
+									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconNotReady..":0|t "..itemLink)
 								end
 							end
 						end
@@ -2926,9 +2926,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 								end
 			
 								if C_QuestLog.IsQuestFlaggedCompleted(bookInfo.questID) then
-									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_READY_TEXTURE..":0|t "..itemLink)
+									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconReady..":0|t "..itemLink)
 								else
-									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..READY_CHECK_NOT_READY_TEXTURE..":0|t "..itemLink)
+									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconNotReady..":0|t "..itemLink)
 								end
 							end
 						end

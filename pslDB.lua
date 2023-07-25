@@ -1,7 +1,7 @@
 -- Used textures
-READY_CHECK_WAITING_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Waiting"
-READY_CHECK_READY_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Ready"
-READY_CHECK_NOT_READY_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-NotReady"
+iconQuestion = "Interface\\RaidFrame\\ReadyCheck-Waiting"
+iconReady = "Interface\\RaidFrame\\ReadyCheck-Ready"
+iconNotReady = "Interface\\RaidFrame\\ReadyCheck-NotReady"
 
 -- Shadowlands Legendary craft SpellIDs
 slLegendaryRecipeIDs = {}
