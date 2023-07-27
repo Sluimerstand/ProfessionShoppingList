@@ -771,21 +771,21 @@ function pslCreateAssets()
 			local next = next
 			if next(craftingReagentInfo) ~= nil and userSettings["useLocalReagents"] == true then
 				for i, _ in ipairs (craftingReagentInfo) do
-					craftingReagentInfo[i].dataSlotIndex = craftingReagentInfo[i].dataSlotIndex - 1
+					craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
 				end
 
 				-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
 				C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 			
 				for i, _ in ipairs (craftingReagentInfo) do
-					craftingReagentInfo[i].dataSlotIndex = craftingReagentInfo[i].dataSlotIndex - 1
+					craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
 				end
 
 				-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
 				C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 			
 				for i, _ in ipairs (craftingReagentInfo) do
-					craftingReagentInfo[i].dataSlotIndex = craftingReagentInfo[i].dataSlotIndex - 1
+					craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
 				end
 
 				-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
