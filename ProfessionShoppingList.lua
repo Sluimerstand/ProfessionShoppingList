@@ -454,6 +454,45 @@ function pslUpdateRecipes()
 	end
 end
 
+-- Show windows and update numbers
+function pslShow()
+	-- Set the reagents window to its proper coordinates
+	pslFrame1:ClearAllPoints()
+	if userSettings["pcWindowPosition"] == true then
+		pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", pcWindowPosition["pslFrame1"].left, pcWindowPosition["pslFrame1"].bottom)
+	else
+		pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame1"].left, windowPosition["pslFrame1"].bottom)
+	end
+	
+	-- Set the recipes window to its proper coordinates
+	pslFrame2:ClearAllPoints()
+	if userSettings["pcWindowPosition"] == true then
+		pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", pcWindowPosition["pslFrame2"].left, pcWindowPosition["pslFrame2"].bottom)
+	else
+		pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame2"].left, windowPosition["pslFrame2"].bottom)
+	end
+
+	-- Show the windows
+	pslFrame1:Show()
+	pslFrame2:Show()
+
+	-- Update numbers
+	pslUpdateRecipes()
+end
+
+-- Toggle windows
+function pslToggle()
+	-- Toggle tracking windows
+	if pslFrame1:IsShown() then
+		pslFrame1:Hide()
+		pslFrame2:Hide()
+	else
+		pslShow()
+	end
+end
+
+
+
 -- Track recipe
 function pslTrackRecipe(recipeID, recipeQuantity)
 	-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
@@ -519,11 +558,7 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 	end
 
 	-- Show windows
-	pslFrame1:Show()
-	pslFrame2:Show()
-
-	-- Update numbers
-	pslUpdateRecipes()
+	pslShow()
 
 	-- Update the editbox
 	ebRecipeQuantityNo = recipesTracked[recipeID] or 0
@@ -622,8 +657,7 @@ function pslCreateAssets()
 			pslUntrackRecipe(pslSelectedRecipeID, 1)
 	
 			-- Show windows
-			pslFrame1:Show()
-			pslFrame2:Show()
+			pslShow()
 		end)
 	end
 
@@ -669,8 +703,7 @@ function pslCreateAssets()
 			pslUntrackRecipe(pslSelectedRecipeID, 1)
 	
 			-- Show windows
-			pslFrame1:Show()
-			pslFrame2:Show()
+			pslShow()
 		end)
 	end
 
@@ -886,8 +919,7 @@ function pslCreateAssets()
 			end
 
 			-- Show windows
-			pslFrame1:Show()
-			pslFrame2:Show()
+			pslShow()
 		end)
 	end
 
@@ -906,8 +938,7 @@ function pslCreateAssets()
 			end
 
 			-- Show windows
-			pslFrame1:Show()
-			pslFrame2:Show()
+			pslShow()
 		end)
 	end
 
@@ -1255,35 +1286,6 @@ function pslClear()
 	-- Remove old version variables
 	reagentNumbers = nil
 	reagentLinks = nil
-end
-
--- Toggle windows
-function pslToggle()
-	-- Toggle tracking windows
-	if pslFrame1:IsShown() then
-		pslFrame1:Hide()
-		pslFrame2:Hide()
-	else
-		pslFrame1:ClearAllPoints()
-		if userSettings["pcWindowPosition"] == true then
-			pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", pcWindowPosition["pslFrame1"].left, pcWindowPosition["pslFrame1"].bottom)
-		else
-			pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame1"].left, windowPosition["pslFrame1"].bottom)
-		end
-		
-		pslFrame2:ClearAllPoints()
-		if userSettings["pcWindowPosition"] == true then
-			pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", pcWindowPosition["pslFrame2"].left, pcWindowPosition["pslFrame2"].bottom)
-		else
-			pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame2"].left, windowPosition["pslFrame2"].bottom)
-		end
-
-		pslFrame1:Show()
-		pslFrame2:Show()
-	end
-
-	-- Update numbers
-	pslUpdateRecipes()
 end
 
 -- Open settings
@@ -2372,8 +2374,7 @@ function pslWindowFunctions()
 				end
 
 				-- Show windows
-				pslFrame1:Show()
-				pslFrame2:Show()
+				pslShow()
 			-- Left-click on recipe
 			elseif column == 1 and button == "LeftButton" and row ~= nil and realrow ~= nil then
 				-- If Shift is held also
@@ -2489,14 +2490,12 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						pslUntrackRecipe(recipeID, 0)
 
 						-- Show windows
-						pslFrame1:Show()
-						pslFrame2:Show()
+						pslShow()
 					elseif type(recipeQuantity) == "number" and recipeQuantity ~= 0 and recipeQuantity <= recipesTracked[recipeID] then
 						pslUntrackRecipe(recipeID, recipeQuantity)
 
 						-- Show windows
-						pslFrame1:Show()
-						pslFrame2:Show()
+						pslShow()
 					else
 						print("PSL: Invalid parameters. Please enter a valid recipe quantity.")
 					end
