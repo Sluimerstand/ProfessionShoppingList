@@ -491,8 +491,6 @@ function pslToggle()
 	end
 end
 
-
-
 -- Track recipe
 function pslTrackRecipe(recipeID, recipeQuantity)
 	-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
@@ -3029,14 +3027,14 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treasures[70294] = 198690
 				treasures[70300] = 198696
 				treasures[70308] = 198711
-				treasures[75495] = 204987
+				treasures[75495] = 204986
 				treasures[75496] = 204987
 				treasures[75502] = 204988
 				books = {}
 				books[1] = {questID = 71900, itemID = 200979}
 				books[2] = {questID = 71911, itemID = 201275}
 				books[3] = {questID = 71922, itemID = 201286}
-				books[4] = {questID = 75751, itemID = 201286}
+				books[4] = {questID = 75751, itemID = 198613}
 				books[5] = {questID = 75840, itemID = 205426}
 				books[6] = {questID = 75855, itemID = 205437}
 			end
