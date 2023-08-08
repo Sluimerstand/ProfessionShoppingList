@@ -3356,7 +3356,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end
 
 			-- Thermal Anvil button
-			if professionID == 1 or professionID == 8 then
+			if professionID == 1 or professionID == 6 or professionID == 8 then
 				thermalAnvilButton:Show()
 			else
 				thermalAnvilButton:Hide()
