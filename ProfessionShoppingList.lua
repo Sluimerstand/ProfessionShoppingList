@@ -2095,7 +2095,7 @@ function pslWindowFunctions()
 								end
 
 								-- Add text
-								oldText = pslOption1:GetText()
+								oldText = pslOption2:GetText()
 								pslOption2:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
 							end
 							getInfo()
@@ -2203,7 +2203,7 @@ function pslWindowFunctions()
 								end
 
 								-- Add text
-								oldText = pslOption1:GetText()
+								oldText = pslOption4:GetText()
 								pslOption4:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
 							end
 							getInfo()
@@ -2254,7 +2254,7 @@ function pslWindowFunctions()
 								end
 
 								-- Add text
-								oldText = pslOption1:GetText()
+								oldText = pslOption5:GetText()
 								pslOption5:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
 							end
 							getInfo()
@@ -2305,7 +2305,7 @@ function pslWindowFunctions()
 								end
 
 								-- Add text
-								oldText = pslOption1:GetText()
+								oldText = pslOption6:GetText()
 								pslOption6:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
 							end
 							getInfo()
