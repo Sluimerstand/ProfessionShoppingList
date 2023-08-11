@@ -1344,8 +1344,7 @@ function pslSettings()
 	title:SetText("Profession Shopping List")
 
 	local addonVersion = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormalLarge")
-	addonVersion:SetPoint("CENTER", title, 0, 0)
-	addonVersion:SetPoint("RIGHT", 0, 0)
+	addonVersion:SetPoint("TOPRIGHT", scrollChild, "TOPLEFT", 638, 0)
 	addonVersion:SetText(GetAddOnMetadata("ProfessionShoppingList", "Version"))
 
 	-- General
