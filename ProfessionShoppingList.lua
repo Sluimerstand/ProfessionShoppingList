@@ -1958,7 +1958,7 @@ function pslSettings()
 	local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText1:SetPoint("TOPLEFT", cbLootDefault, "BOTTOMLEFT", 3, -15)
 	pslSettingsText1:SetJustifyH("LEFT")
-	pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl resetpos |cffFFFFFF- Reset the PSL window positions.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.\n|R/psl track |cff1B9C85recipeID quantity |R|cffFFFFFF- Track a recipe.\n|R/psl untrack |cff1B9C85recipeID quantity |R|cffFFFFFF- Untrack a recipe.\n|R/psl untrack |cff1B9C85recipeID |Rall |cffFFFFFF- Untrack all of a recipe.")
+	pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl resetpos |cffFFFFFF- Reset the PSL window positions.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.\n|R/psl track |cff1B9C85recipeID quantity |R|cffFFFFFF- Track a recipe.\n|R/psl untrack |cff1B9C85recipeID quantity |R|cffFFFFFF- Untrack a recipe.\n|R/psl untrack |cff1B9C85recipeID |Rall |cffFFFFFF- Untrack all of a recipe.\n|R/psl |cff1B9C85[crafting achievement] |R |cffFFFFFF- Track the recipes needed for the linked achievement.")
 
 	local pslSettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	pslSettingsText2:SetPoint("TOPLEFT", pslSettingsText1, "BOTTOMLEFT", 0, -15)
@@ -2566,8 +2566,30 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					print("PSL: Invalid parameters. Please enter a tracked recipe ID.")
 				end
 			-- No command
-			else
+			elseif command == "" then
 				pslToggle()
+			-- Unlisted command
+			else
+				-- If achievement string
+				local _, check = string.find(command, "\124cffffff00\124Hachievement:")
+				if check ~= nil then
+					-- Get achievementID, number of criteria, and type of the first criterium
+					local achievementID = string.match(string.sub(command, 25), "%d+")
+					local numCriteria = GetAchievementNumCriteria(achievementID)
+					local _, criteriaType = GetAchievementCriteriaInfo(achievementID, 1)
+
+					if criteriaType == 29 then
+						-- For each criteria, track the SpellID
+						for i=1,numCriteria,1 do
+							local _, criteriaType, _, _, _, _, _, assetID = GetAchievementCriteriaInfo(achievementID, i)
+							pslTrackRecipe(assetID, 1)
+						end
+					else
+						print("PSL: This is not a crafting achievement. No recipes were added.")
+					end
+				else
+					print("PSL: Invalid command. See /psl settings for more info.")
+				end
 			end
 		end
 	end
