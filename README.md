@@ -19,6 +19,7 @@ It does not replace the profession windows, it only adds a few buttons and two t
 - /psl track [recipeID] [quantity] - Track a recipe
 - /psl untrack [recipeID] [quantity] - Untrack a recipe
 - /psl untrack [recipeID] all - Untrack all of a recipe
+- /psl [crafting achievement] - Track all recipes needed for the linked achievement
 
 **Mouse interactions**
 
