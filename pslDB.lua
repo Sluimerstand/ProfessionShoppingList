@@ -145,3 +145,63 @@ slLegendaryRecipeIDs[338997] = { rank = 4, one = 310878, two = 332030, three = 3
 slLegendaryRecipeIDs[339002] = { rank = 4, one = 310884, two = 332036, three = 332071, four = 339002 }
 slLegendaryRecipeIDs[338978] = { rank = 4, one = 327920, two = 332039, three = 332074, four = 338978 }
 slLegendaryRecipeIDs[338977] = { rank = 4, one = 327921, two = 332040, three = 332075, four = 338977 }
+
+-- NYI recipes
+nyiRecipes = {}
+
+nyiRecipes[2336] = true	-- Elixir of Tongues
+nyiRecipes[2671] = true	-- Rough Bronze Bracers
+nyiRecipes[7636] = true	-- Green Woolen Robe
+nyiRecipes[8366] = true	-- Ironforge Chain
+nyiRecipes[8368] = true	-- Ironforge Gauntlets
+nyiRecipes[8778] = true	-- Boots of Darkness
+nyiRecipes[9942] = true	-- Mithril Scale Gloves
+nyiRecipes[9957] = true	-- Orcish War Leggings
+nyiRecipes[9972] = true	-- Ornate Mithril Breastplate
+nyiRecipes[9979] = true	-- Ornate Mithril Boots
+nyiRecipes[9980] = true	-- Ornate Mithril Helm
+nyiRecipes[10550] = true	-- Nightscape Cloak
+nyiRecipes[12062] = true	-- Stormcloth Pants
+nyiRecipes[12063] = true	-- Stormcloth Gloves
+nyiRecipes[12068] = true	-- Stormcloth Vest
+nyiRecipes[12083] = true	-- Stormcloth Headband
+nyiRecipes[12087] = true	-- Stormcloth Shoulders
+nyiRecipes[12090] = true	-- Stormcloth Boots
+nyiRecipes[16960] = true	-- Thorium Greatsword
+nyiRecipes[16965] = true	-- Bleakwood Hew
+nyiRecipes[16967] = true	-- Inlaid Thorium Hammer
+nyiRecipes[16980] = true	-- Rune Edge
+nyiRecipes[16986] = true	-- Blood Talon
+nyiRecipes[16987] = true	-- Darkspear
+nyiRecipes[17632] = true	-- Alchemist's Stone
+nyiRecipes[19106] = true	-- Onyxia Scale Breastplate
+nyiRecipes[21924] = true	-- Runecloth Robe
+nyiRecipes[24315] = true	-- Heavy Netherweave Net
+nyiRecipes[28021] = true	-- Arcane Dust
+nyiRecipes[29120] = true	-- Truefaith Vestments
+nyiRecipes[30342] = true	-- Red Smoke Flare
+nyiRecipes[30343] = true	-- Blue Smoke Flare
+nyiRecipes[30549] = true	-- Critter Enlarger
+nyiRecipes[30555] = true	-- Remote Mail Terminal
+nyiRecipes[35518] = true	-- Bracers of Nimble Thought
+nyiRecipes[35522] = true	-- Mantle of Nimble Thought
+nyiRecipes[35525] = true	-- Swiftheal Mantle
+nyiRecipes[35526] = true	-- Swiftheal Wraps
+nyiRecipes[35544] = true	-- Hands of Eternal Light
+nyiRecipes[35548] = true	-- Robe of Eternal Light
+nyiRecipes[35551] = true	-- Sunfire Handwraps
+nyiRecipes[35552] = true	-- Sunfire Robe
+nyiRecipes[36665] = true	-- Netherflame Robe
+nyiRecipes[36667] = true	-- Netherflame Belt
+nyiRecipes[36668] = true	-- Netherflame Boots
+nyiRecipes[36669] = true	-- Lifeblood Leggings
+nyiRecipes[36670] = true	-- Lifeblood Belt
+nyiRecipes[36672] = true	-- Lifeblood Bracers
+nyiRecipes[41133] = true	-- Swiftsteel Shoulders
+nyiRecipes[41135] = true	-- Dawnsteel Shoulders
+nyiRecipes[44438] = true	-- Shoveltusk Soup
+nyiRecipes[45547] = true	-- Succulent Orca Stew
+nyiRecipes[46142] = true	-- Sunblessed Breastplate
+nyiRecipes[168851] = true	-- Miniature Flying Carpet
+nyiRecipes[169669] = true	-- Hexweave Cloth
+nyiRecipes[173415] = true	-- Murloc Chew Toy
