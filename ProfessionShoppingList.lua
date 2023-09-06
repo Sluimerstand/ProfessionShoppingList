@@ -1969,7 +1969,7 @@ function pslWindowFunctions()
 
 				for recipe, recipeInfo in pairs(recipeLibrary) do
 					if type(recipeInfo) ~= "number" then	-- Because of old recipeLibrary
-						if recipeInfo.itemID == itemID then
+						if recipeInfo.itemID == itemID and not nyiRecipes[recipe] then
 							no = no + 1
 							recipeIDs[no] = recipe
 						end
