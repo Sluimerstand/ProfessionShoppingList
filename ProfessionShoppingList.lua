@@ -47,6 +47,7 @@ function pslInitialise()
 	if not reagentTiers then reagentTiers = {} end
 	if not personalOrders then personalOrders = {} end
 	if not recipeCooldowns then recipeCooldowns = {} end
+	if not lastOrder then lastOrder = {} end
 	
 	-- Set default window position
 	if not windowPosition then
@@ -811,9 +812,12 @@ function pslCreateAssets()
 			-- Only add the reagentInfo if the option is enabled
 			if userSettings["useLocalReagents"] == true then localReagentsOrder() end
 
+			-- Save this info as the last order done
+			lastOrder = { one = recipeLibrary[pslSelectedRecipeID].abilityID, two = personalOrders[pslSelectedRecipeID], three = reagentInfo, four = craftingReagentInfo }
+
 			-- Place the order
 			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
-
+			
 			-- If there are tiered reagents and the user wants to use local reagents, adjust the dataSlotIndex and try again in case the first one failed
 			local next = next
 			if next(craftingReagentInfo) ~= nil and userSettings["useLocalReagents"] == true then
@@ -953,6 +957,51 @@ function pslCreateAssets()
 
 			-- Show windows
 			pslShow()
+		end)
+	end
+
+	-- Create the repeat last crafting order button
+	if not repeatOrderButton then
+		repeatOrderButton = CreateFrame("Button", nil, ProfessionsCustomerOrdersFrame, "UIPanelButtonTemplate")
+		repeatOrderButton:SetText("Repeat Last Order")
+		repeatOrderButton:SetWidth(130)
+		repeatOrderButton:SetPoint("BOTTOMRIGHT", ProfessionsCustomerOrdersFrame, -4, 4)
+		repeatOrderButton:SetFrameStrata("HIGH")
+		repeatOrderButton:SetScript("OnClick", function()
+			if lastOrder.one ~= nil then
+				-- Place the order
+				C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=lastOrder.one, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=lastOrder.two, reagentItems=lastOrder.three, craftingReagentItems=lastOrder.four })
+				
+				-- If there are tiered reagents and the user wants to use local reagents, adjust the dataSlotIndex and try again in case the first one failed
+				local next = next
+				if next(lastOrder.four) ~= nil and userSettings["useLocalReagents"] == true then
+					for i, _ in ipairs (lastOrder.four) do
+						lastOrder.four[i].dataSlotIndex = math.max(lastOrder.four[i].dataSlotIndex - 1, 0)
+					end
+
+					-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
+					C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=lastOrder.one, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=lastOrder.two, reagentItems=lastOrder.three, craftingReagentItems=lastOrder.four })
+				
+					for i, _ in ipairs (lastOrder.four) do
+						lastOrder.four[i].dataSlotIndex = math.max(lastOrder.four[i].dataSlotIndex - 1, 0)
+					end
+
+					-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
+					C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=lastOrder.one, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=lastOrder.two, reagentItems=lastOrder.three, craftingReagentItems=lastOrder.four })
+				
+					for i, _ in ipairs (lastOrder.four) do
+						lastOrder.four[i].dataSlotIndex = math.max(lastOrder.four[i].dataSlotIndex - 1, 0)
+					end
+
+					-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
+					C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=lastOrder.one, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=lastOrder.two, reagentItems=lastOrder.three, craftingReagentItems=lastOrder.four })
+				end
+
+				-- PSL is no longer doing stuff with crafting orders, delayed to let the errors run through
+				C_Timer.After(5, function() pslQuickOrderActive = 0 end)
+			else
+				print("PSL: No last order found.")
+			end
 		end)
 	end
 
