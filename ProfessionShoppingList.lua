@@ -493,6 +493,9 @@ end
 
 -- Track recipe
 function pslTrackRecipe(recipeID, recipeQuantity)
+	-- "Only do stuff if item is cached" flag
+	local somethingWrong = false
+
 	-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
 	if C_TradeSkillUI.GetRecipeSchematic(recipeID,false).recipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(recipeID,false).reagentSlotSchematics[1] == nil then
 		do return end
@@ -512,10 +515,7 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 		end
 	end
 
-	-- Track recipe
-	if not recipesTracked[recipeID] then recipesTracked[recipeID] = 0 end
-	recipesTracked[recipeID] = recipesTracked[recipeID] + recipeQuantity
-
+	-- Get some basic info
 	local recipeType = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).recipeType
 	local recipeMin = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).quantityMin
 	local recipeMax = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).quantityMax
@@ -526,41 +526,57 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 		local _, itemLink
 		if itemID ~= nil then
 			-- Cache item
-			if not C_Item.IsItemDataCachedByID(itemID) then local item = Item:CreateFromItemID(itemID) end
-
+			if not C_Item.IsItemDataCachedByID(itemID) then
+				somethingWrong = true
+				local item = Item:CreateFromItemID(itemID)
+				item:ContinueOnItemLoad(function()
+					RunNextFrame(function()
+						pslTrackRecipe(recipeID, recipeQuantity)
+					end)
+				end)
+			end
 			-- Get item info
 			_, itemLink = GetItemInfo(itemID)
+			print("im here now")
 		-- Exception for stuff like Abominable Stitching
 		else
 			itemLink = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
 		end
 
-		-- Exceptions for SL legendary crafts
-		if slLegendaryRecipeIDs[recipeID] then
-			itemLink = itemLink.." (Rank "..slLegendaryRecipeIDs[recipeID].rank..")" -- Append the rank
-		else
-			itemLink = string.gsub(itemLink, " |A:Professions%-ChatIcon%-Quality%-Tier1:17:15::1|a", "") -- Remove the quality from the item string
-		end
+		if somethingWrong == false then
+			-- Exceptions for SL legendary crafts
+			if slLegendaryRecipeIDs[recipeID] then
+				itemLink = itemLink.." (Rank "..slLegendaryRecipeIDs[recipeID].rank..")" -- Append the rank
+			else
+				itemLink = string.gsub(itemLink, " |A:Professions%-ChatIcon%-Quality%-Tier1:17:15::1|a", "") -- Remove the quality from the item string
+			end
 
-		-- Add quantity
-		if recipeMin == recipeMax and recipeMin ~= 1 then
-			itemLink = itemLink.." ×"..recipeMin
-		elseif recipeMin ~= 1 then
-			itemLink = itemLink.." ×"..recipeMin.."-"..recipeMax
-		end
+			-- Add quantity
+			if recipeMin == recipeMax and recipeMin ~= 1 then
+				itemLink = itemLink.." ×"..recipeMin
+			elseif recipeMin ~= 1 then
+				itemLink = itemLink.." ×"..recipeMin.."-"..recipeMax
+			end
 
-		recipeLinks[recipeID] = itemLink
+			recipeLinks[recipeID] = itemLink
+		end
 
 	-- Add recipe "link" for enchants
 	elseif recipeType == 3 then recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
 	end
 
-	-- Show windows
-	pslShow()
+	if somethingWrong == false then
+		-- Track recipe
+		if not recipesTracked[recipeID] then recipesTracked[recipeID] = 0 end
+		recipesTracked[recipeID] = recipesTracked[recipeID] + recipeQuantity
 
-	-- Update the editbox
-	ebRecipeQuantityNo = recipesTracked[recipeID] or 0
-	ebRecipeQuantity:SetText(ebRecipeQuantityNo)
+		-- Show windows
+		pslShow()
+
+		-- Update the editbox
+		ebRecipeQuantityNo = recipesTracked[recipeID] or 0
+		ebRecipeQuantity:SetText(ebRecipeQuantityNo)
+	end
 end
 
 -- Untrack recipe
