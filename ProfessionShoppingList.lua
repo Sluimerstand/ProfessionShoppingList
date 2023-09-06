@@ -538,7 +538,6 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 			end
 			-- Get item info
 			_, itemLink = GetItemInfo(itemID)
-			print("im here now")
 		-- Exception for stuff like Abominable Stitching
 		else
 			itemLink = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
