@@ -42,6 +42,7 @@ function pslInitialise()
 	if not userSettings then userSettings = {} end
 	if not recipesTracked then recipesTracked = {} end
 	if not recipeLinks then recipeLinks = {} end
+	if not reagentLinks then reagentLinks = {} end
 	if not reagentsTracked then reagentsTracked = {} end
 	if not recipeLibrary then recipeLibrary = {} end
 	if not reagentTiers then reagentTiers = {} end
@@ -349,17 +350,27 @@ function pslUpdateNumbers()
 	local data = {}
 
 	for reagentID, amount in pairs(reagentsTracked) do
-		-- Cache item
-		if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
-
-		-- Get item info
 		local itemName, itemLink
-		itemName, itemLink = GetItemInfo(reagentID)
 
-		-- Try again if error
-		if itemName == nil or itemLink == nil then
-			RunNextFrame(pslUpdateNumbers)
-			do return end
+		if not reagentLinks[reagentID] then
+			-- Cache item
+			if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+
+			-- Get item info
+			itemName, itemLink = GetItemInfo(reagentID)
+
+			-- Try again if error
+			if itemName == nil or itemLink == nil then
+				RunNextFrame(pslUpdateNumbers)
+				do return end
+			end
+
+			-- Write the info to the cache
+			reagentLinks[reagentID] = {name = itemName, link = itemLink}
+		else
+			-- Read the info from the cache
+			itemName = reagentLinks[reagentID].name
+			itemLink = reagentLinks[reagentID].link
 		end
 
 		-- Get needed/owned number of reagents
@@ -499,9 +510,6 @@ end
 
 -- Track recipe
 function pslTrackRecipe(recipeID, recipeQuantity)
-	-- "Only do stuff if item is cached" flag
-	local somethingWrong = false
-
 	-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
 	if C_TradeSkillUI.GetRecipeSchematic(recipeID,false).recipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(recipeID,false).reagentSlotSchematics[1] == nil then
 		do return end
@@ -532,56 +540,51 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 		local _, itemLink
 		if itemID ~= nil then
 			-- Cache item
-			if not C_Item.IsItemDataCachedByID(itemID) then
-				somethingWrong = true
-				local item = Item:CreateFromItemID(itemID)
-				item:ContinueOnItemLoad(function()
-					RunNextFrame(function()
-						pslTrackRecipe(recipeID, recipeQuantity)
-					end)
-				end)
-			end
+			if not C_Item.IsItemDataCachedByID(itemID) then local item = Item:CreateFromItemID(itemID) end
+
 			-- Get item info
 			_, itemLink = GetItemInfo(itemID)
+
+			-- Try again if error
+			if itemLink == nil then
+				RunNextFrame(function() pslTrackRecipe(recipeID, recipeQuantity) end)
+				do return end
+			end
 		-- Exception for stuff like Abominable Stitching
 		else
 			itemLink = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
 		end
 
-		if somethingWrong == false then
-			-- Exceptions for SL legendary crafts
-			if slLegendaryRecipeIDs[recipeID] then
-				itemLink = itemLink.." (Rank "..slLegendaryRecipeIDs[recipeID].rank..")" -- Append the rank
-			else
-				itemLink = string.gsub(itemLink, " |A:Professions%-ChatIcon%-Quality%-Tier1:17:15::1|a", "") -- Remove the quality from the item string
-			end
-
-			-- Add quantity
-			if recipeMin == recipeMax and recipeMin ~= 1 then
-				itemLink = itemLink.." ×"..recipeMin
-			elseif recipeMin ~= 1 then
-				itemLink = itemLink.." ×"..recipeMin.."-"..recipeMax
-			end
-
-			recipeLinks[recipeID] = itemLink
+		-- Exceptions for SL legendary crafts
+		if slLegendaryRecipeIDs[recipeID] then
+			itemLink = itemLink.." (Rank "..slLegendaryRecipeIDs[recipeID].rank..")" -- Append the rank
+		else
+			itemLink = string.gsub(itemLink, " |A:Professions%-ChatIcon%-Quality%-Tier1:17:15::1|a", "") -- Remove the quality from the item string
 		end
+
+		-- Add quantity
+		if recipeMin == recipeMax and recipeMin ~= 1 then
+			itemLink = itemLink.." ×"..recipeMin
+		elseif recipeMin ~= 1 then
+			itemLink = itemLink.." ×"..recipeMin.."-"..recipeMax
+		end
+
+		recipeLinks[recipeID] = itemLink
 
 	-- Add recipe "link" for enchants
 	elseif recipeType == 3 then recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
 	end
 
-	if somethingWrong == false then
-		-- Track recipe
-		if not recipesTracked[recipeID] then recipesTracked[recipeID] = 0 end
-		recipesTracked[recipeID] = recipesTracked[recipeID] + recipeQuantity
+	-- Track recipe
+	if not recipesTracked[recipeID] then recipesTracked[recipeID] = 0 end
+	recipesTracked[recipeID] = recipesTracked[recipeID] + recipeQuantity
 
-		-- Show windows
-		pslShow()	-- This also triggers the recipe update
+	-- Show windows
+	pslShow()	-- This also triggers the recipe update
 
-		-- Update the editbox
-		ebRecipeQuantityNo = recipesTracked[recipeID] or 0
-		ebRecipeQuantity:SetText(ebRecipeQuantityNo)
-	end
+	-- Update the editbox
+	ebRecipeQuantityNo = recipesTracked[recipeID] or 0
+	ebRecipeQuantity:SetText(ebRecipeQuantityNo)
 end
 
 -- Untrack recipe
