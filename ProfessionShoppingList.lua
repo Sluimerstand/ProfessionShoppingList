@@ -2574,15 +2574,35 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				local _, check = string.find(command, "\124cffffff00\124Hachievement:")
 				if check ~= nil then
 					-- Get achievementID, number of criteria, and type of the first criterium
-					local achievementID = string.match(string.sub(command, 25), "%d+")
+					local achievementID = tonumber(string.match(string.sub(command, 25), "%d+"))
 					local numCriteria = GetAchievementNumCriteria(achievementID)
 					local _, criteriaType = GetAchievementCriteriaInfo(achievementID, 1)
 
-					if criteriaType == 29 then
+					-- If the asset type is a (crafting) spell
+					if criteriaType == 29 then	
 						-- For each criteria, track the SpellID
 						for i=1,numCriteria,1 do
-							local _, criteriaType, _, _, _, _, _, assetID = GetAchievementCriteriaInfo(achievementID, i)
-							pslTrackRecipe(assetID, 1)
+							local _, criteriaType, completed, _, _, _, _, assetID = GetAchievementCriteriaInfo(achievementID, i)
+							-- If the criteria has not yet been completed, add the recipe
+							if completed == false then pslTrackRecipe(assetID, 1) end
+						end
+					-- Chromatic Calibration: Cranial Cannons
+					elseif achievementID == 18906 then
+						for i=1,numCriteria,1 do
+							local _, criteriaType, completed, _, _, _, _, assetID = GetAchievementCriteriaInfo(achievementID, i)
+
+							-- Manually edit the spellIDs, because multiple ranks are eligible (use rank 1)
+							if i == 1 then assetID = 198991
+							elseif i == 2 then assetID = 198965
+							elseif i == 3 then assetID = 198966
+							elseif i == 4 then assetID = 198967
+							elseif i == 5 then assetID = 198968
+							elseif i == 6 then assetID = 198969
+							elseif i == 7 then assetID = 198970
+							elseif i == 8 then assetID = 198971 end
+							
+							-- If the criteria has not yet been completed, add the recipe
+							if completed == false then pslTrackRecipe(assetID, 1) end
 						end
 					else
 						print("PSL: This is not a crafting achievement. No recipes were added.")
