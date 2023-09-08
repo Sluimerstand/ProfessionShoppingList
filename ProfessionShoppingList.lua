@@ -100,6 +100,9 @@ function pslInitialise()
 		recipesTracked = pcRecipesTracked
 		recipeLinks = pcRecipeLinks
 	end
+
+	-- Initialise the changingMultipleRecipes variable, to prevent the game from freezing when multiple recipes are being added or removed at the same time
+	changingMultipleRecipes = false
 end
 
 -- Save the window position
@@ -425,14 +428,16 @@ function pslUpdateRecipes()
 	pslTable2:SetData(data, true)
 	
 	-- Recalculate reagents tracked
-	reagentsTracked = {}
+	if changingMultipleRecipes == false then
+		reagentsTracked = {}
 
-	for recipeID, no in pairs(recipesTracked) do
-		pslGetReagents(reagentsTracked, recipeID, no)
+		for recipeID, no in pairs(recipesTracked) do
+			pslGetReagents(reagentsTracked, recipeID, no)
+		end
+
+		-- Update numbers tracked
+		pslUpdateNumbers()
 	end
-
-	-- Update numbers tracked
-	pslUpdateNumbers()
 
 	-- Check if the Untrack button should be enabled
 	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID] == 0 then
@@ -571,7 +576,7 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 		recipesTracked[recipeID] = recipesTracked[recipeID] + recipeQuantity
 
 		-- Show windows
-		pslShow()
+		pslShow()	-- This also triggers the recipe update
 
 		-- Update the editbox
 		ebRecipeQuantityNo = recipesTracked[recipeID] or 0
@@ -2635,6 +2640,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					-- Chromatic Calibration: Cranial Cannons
 					elseif achievementID == 18906 then
 						for i=1,numCriteria,1 do
+							-- Set the update handler to active, to prevent multiple list updates from freezing the game
+							changingMultipleRecipes = true
+							-- Until the last one in the series
+							if i == numCriteria then changingMultipleRecipes = false end
+
 							local _, criteriaType, completed, _, _, _, _, assetID = GetAchievementCriteriaInfo(achievementID, i)
 
 							-- Manually edit the spellIDs, because multiple ranks are eligible (use rank 1)
