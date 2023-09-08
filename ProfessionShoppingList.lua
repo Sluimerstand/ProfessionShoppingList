@@ -964,7 +964,7 @@ function pslCreateAssets()
 		repeatOrderButton = CreateFrame("Button", nil, ProfessionsCustomerOrdersFrame, "UIPanelButtonTemplate")
 		repeatOrderButton:SetText("Repeat Last Order")
 		repeatOrderButton:SetWidth(130)
-		repeatOrderButton:SetPoint("BOTTOMRIGHT", ProfessionsCustomerOrdersFrame, -4, 4)
+		repeatOrderButton:SetPoint("BOTTOMLEFT", ProfessionsCustomerOrdersFrame, 170, 4)
 		repeatOrderButton:SetFrameStrata("HIGH")
 		repeatOrderButton:SetScript("OnClick", function()
 			if lastOrder.one ~= nil then
@@ -1002,6 +1002,52 @@ function pslCreateAssets()
 				print("PSL: No last order found.")
 			end
 		end)
+		repeatOrderButton:SetScript("OnEnter", function()
+			repeatOrderTooltip:Show()
+		end)
+		repeatOrderButton:SetScript("OnLeave", function()
+			repeatOrderTooltip:Hide()
+		end)
+	end
+
+	-- Create the local reagents tooltip
+	if not repeatOrderTooltip then
+		repeatOrderTooltip = CreateFrame("Frame", nil, repeatOrderButton, "BackdropTemplate")
+		repeatOrderTooltip:SetPoint("CENTER")
+		repeatOrderTooltip:SetPoint("TOP", repeatOrderButton, "BOTTOM", 0, 0)
+		repeatOrderTooltip:SetFrameStrata("TOOLTIP")
+		repeatOrderTooltip:SetBackdrop({
+			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+			edgeSize = 16,
+			insets = { left = 4, right = 4, top = 4, bottom = 4 },
+		})
+		repeatOrderTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		repeatOrderTooltip:EnableMouse(false)
+		repeatOrderTooltip:SetMovable(false)
+		repeatOrderTooltip:Hide()
+
+		-- Set the last used recipe name
+		local recipeName = "No last order found."
+		-- Check for the name if there has been a last order
+		if lastOrder.one ~= nil then
+			for recipeID, recipeInfo in pairs (recipeLibrary) do
+				if type(recipeInfo) ~= "number" then	-- Because of old recipeLibrary
+					if recipeInfo.abilityID == lastOrder.one then
+						recipeName = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).name
+					end
+				end
+			end
+		end
+
+		repeatOrderTooltipText = repeatOrderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		repeatOrderTooltipText:SetPoint("TOPLEFT", repeatOrderTooltip, "TOPLEFT", 10, -10)
+		repeatOrderTooltipText:SetJustifyH("LEFT")
+		repeatOrderTooltipText:SetText("Repeat the last quick order done on this character:\n"..recipeName)
+
+		-- Set the tooltip size to fit its contents
+		repeatOrderTooltip:SetHeight(repeatOrderTooltipText:GetStringHeight()+20)
+		repeatOrderTooltip:SetWidth(repeatOrderTooltipText:GetStringWidth()+20)
 	end
 
 	-- Initialise this variable for the MakeOrderButtons
@@ -2600,7 +2646,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 							elseif i == 6 then assetID = 198969
 							elseif i == 7 then assetID = 198970
 							elseif i == 8 then assetID = 198971 end
-							
+
 							-- If the criteria has not yet been completed, add the recipe
 							if completed == false then pslTrackRecipe(assetID, 1) end
 						end
@@ -3561,21 +3607,38 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		end)
 	end
 
-	-- If placing a crafting order gives an error, initiated by PSL
-	if event == "CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE" and arg1 ~= 0 and pslQuickOrderActive >= 1 then
-		-- Hide the error frame
-		UIErrorsFrame:Hide()
-
-		-- Clear the error frame before showing it again
-		C_Timer.After(1.0, function() UIErrorsFrame:Clear() UIErrorsFrame:Show() end)
-
-		-- If all 4 attempts fail, tell the user this
-		if pslQuickOrderActive >= 4 then
-			print("PSL quick order failed. Sorry. :(")
+	-- If placing a crafting order through PSL
+	if event == "CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE" and pslQuickOrderActive >= 1 then
+		-- Set the last used recipe name for the repeat order tooltip
+		local recipeName = "No last order found."
+		-- Check for the name if there has been a last order
+		if lastOrder.one ~= nil then
+			for recipeID, recipeInfo in pairs (recipeLibrary) do
+				if type(recipeInfo) ~= "number" then	-- Because of old recipeLibrary
+					if recipeInfo.abilityID == lastOrder.one then
+						recipeName = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).name
+					end
+				end
+			end
 		end
+		repeatOrderTooltipText:SetText("Repeat the last quick order done on this character:\n"..recipeName)
+		
+		-- If this gives an error
+		if arg1 ~= 0 then
+			-- Hide the error frame
+			UIErrorsFrame:Hide()
 
-		-- Add 1 to the pslQuickOrderActive, so we can use it to count the number of fails
-		pslQuickOrderActive = pslQuickOrderActive + 1
+			-- Clear the error frame before showing it again
+			C_Timer.After(1.0, function() UIErrorsFrame:Clear() UIErrorsFrame:Show() end)
+
+			-- If all 4 attempts fail, tell the user this
+			if pslQuickOrderActive >= 4 then
+				print("PSL quick order failed. Sorry. :(")
+			end
+
+			-- Add 1 to the pslQuickOrderActive, so we can use it to count the number of fails
+			pslQuickOrderActive = pslQuickOrderActive + 1
+		end
 	end
 
 	-- Save the order recipeID if the order has been started, because SPELL_LOAD_RESULT does not fire for it anymore
