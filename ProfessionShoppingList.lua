@@ -3561,7 +3561,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 				-- Get spell cooldown info
 				local recipeName = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name
-				local _, recipeCooldown = GetSpellCooldown(spellID)
+				local recipeCooldown = C_TradeSkillUI.GetRecipeCooldown(spellID)
 				local recipeStart = GetServerTime()
 
 				-- Set timer to 7 days for the Alchemy sac transmutes
