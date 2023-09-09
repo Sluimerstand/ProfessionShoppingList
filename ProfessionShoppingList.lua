@@ -1,4 +1,5 @@
 -- Initialise some stuff
+local appName, app = ...	-- Returns the addon name and a unique table
 local api = CreateFrame("Frame")	-- To register API events
 local ScrollingTable = LibStub("ScrollingTable")	-- To refer to the ScrollingTable library
 if not Blizzard_Professions then UIParentLoadAddOn("Blizzard_Professions") end	-- To refer to the TradeSkillUI
@@ -23,7 +24,7 @@ api:RegisterEvent("LFG_PROPOSAL_SHOW")
 api:RegisterEvent("PET_BATTLE_QUEUE_PROPOSE_MATCH")
 
 -- Might as well keep this in here, it's useful
-local function dump(o)
+function app.dump(o)
 	if type(o) == 'table' then
 		local s = '{ '
 		for k,v in pairs(o) do
@@ -36,8 +37,13 @@ local function dump(o)
 	end
 end
 
+-- Print function
+app.print = function(...)
+	print("[|cffFFFF00PSL|R]", ...);
+end
+
 -- Create SavedVariables, default window position, and default user settings
-function pslInitialise()
+function app.Initialise()
 	-- Declare SavedVariables
 	if not userSettings then userSettings = {} end
 	if not recipesTracked then recipesTracked = {} end
@@ -107,7 +113,7 @@ function pslInitialise()
 end
 
 -- Save the window position
-function pslSaveWindowPosition()
+function app.SaveWindowPosition()
 	-- Stop moving the windows
 	pslFrame1:StopMovingOrSizing()
 	pslFrame2:StopMovingOrSizing()
@@ -123,7 +129,7 @@ function pslSaveWindowPosition()
 end
 
 -- Create or update the tracking windows
-function pslTrackingWindows()
+function app.TrackingWindows()
 	local cols = {}
 
 	-- Column formatting, Reagents
@@ -199,7 +205,7 @@ function pslTrackingWindows()
 		end
 	end)
 	pslFrame1:SetScript("OnMouseUp", function()
-		pslSaveWindowPosition()
+		app.SaveWindowPosition()
 	end)
 
 	-- Column formatting, Recipes
@@ -279,18 +285,18 @@ function pslTrackingWindows()
 		end
 	end)
 	pslFrame2:SetScript("OnMouseUp", function()
-		pslSaveWindowPosition()
+		app.SaveWindowPosition()
 	end)
 end
 
 -- Get reagents for recipe
-function pslGetReagents(reagentVariable, recipeID, recipeQuantity, qualityTier)
+function app.GetReagents(reagentVariable, recipeID, recipeQuantity, qualityTier)
 	-- Grab all the reagent info from the API
 	local reagentsTable
 
 	-- Exception for SL legendary crafts
-	if slLegendaryRecipeIDs[recipeID] then
-		reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, false, slLegendaryRecipeIDs[recipeID].rank).reagentSlotSchematics
+	if app.slLegendaryRecipeIDs[recipeID] then
+		reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, false, app.slLegendaryRecipeIDs[recipeID].rank).reagentSlotSchematics
 	else
 		reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).reagentSlotSchematics
 	end
@@ -345,7 +351,7 @@ function pslGetReagents(reagentVariable, recipeID, recipeQuantity, qualityTier)
 end
 
 -- Update numbers tracked
-function pslUpdateNumbers()
+function app.UpdateNumbers()
 	-- Update reagents tracked
 	local data = {}
 
@@ -361,7 +367,7 @@ function pslUpdateNumbers()
 
 			-- Try again if error
 			if itemName == nil or itemLink == nil then
-				RunNextFrame(pslUpdateNumbers)
+				RunNextFrame(app.UpdateNumbers)
 				do return end
 			end
 
@@ -400,13 +406,13 @@ function pslUpdateNumbers()
 		local itemAmount = ""
 		if math.max(0,amount-reagentAmountHave) == 0 then
 			itemAmount = "|cff9d9d9d"
-			itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|T"..iconReady..":0|t |cff9d9d9d|") -- Poor
-			itemLink = string.gsub(itemLink, "|cffffffff|", "|T"..iconReady..":0|t |cff9d9d9d|") -- Common
-			itemLink = string.gsub(itemLink, "|cff1eff00|", "|T"..iconReady..":0|t |cff9d9d9d|") -- Uncommon
-			itemLink = string.gsub(itemLink, "|cff0070dd|", "|T"..iconReady..":0|t |cff9d9d9d|") -- Rare
-			itemLink = string.gsub(itemLink, "|cffa335ee|", "|T"..iconReady..":0|t |cff9d9d9d|") -- Epic
-			itemLink = string.gsub(itemLink, "|cffff8000|", "|T"..iconReady..":0|t |cff9d9d9d|") -- Legendary
-			itemLink = string.gsub(itemLink, "|cffe6cc80|", "|T"..iconReady..":0|t |cff9d9d9d|") -- Artifact
+			itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|T"..app.iconReady..":0|t |cff9d9d9d|") -- Poor
+			itemLink = string.gsub(itemLink, "|cffffffff|", "|T"..app.iconReady..":0|t |cff9d9d9d|") -- Common
+			itemLink = string.gsub(itemLink, "|cff1eff00|", "|T"..app.iconReady..":0|t |cff9d9d9d|") -- Uncommon
+			itemLink = string.gsub(itemLink, "|cff0070dd|", "|T"..app.iconReady..":0|t |cff9d9d9d|") -- Rare
+			itemLink = string.gsub(itemLink, "|cffa335ee|", "|T"..app.iconReady..":0|t |cff9d9d9d|") -- Epic
+			itemLink = string.gsub(itemLink, "|cffff8000|", "|T"..app.iconReady..":0|t |cff9d9d9d|") -- Legendary
+			itemLink = string.gsub(itemLink, "|cffe6cc80|", "|T"..app.iconReady..":0|t |cff9d9d9d|") -- Artifact
 		end
 
 		-- Set the displayed amount based on settings
@@ -424,7 +430,7 @@ function pslUpdateNumbers()
 end
 
 -- Update recipes and reagents tracked
-function pslUpdateRecipes()
+function app.UpdateRecipes()
 	-- Set personal recipes to be the same as global recipes
 	pcRecipesTracked = recipesTracked
 	pcRecipeLinks = recipeLinks
@@ -443,11 +449,11 @@ function pslUpdateRecipes()
 		reagentsTracked = {}
 
 		for recipeID, no in pairs(recipesTracked) do
-			pslGetReagents(reagentsTracked, recipeID, no)
+			app.GetReagents(reagentsTracked, recipeID, no)
 		end
 
 		-- Update numbers tracked
-		pslUpdateNumbers()
+		app.UpdateNumbers()
 	end
 
 	-- Check if the Untrack button should be enabled
@@ -472,7 +478,7 @@ function pslUpdateRecipes()
 end
 
 -- Show windows and update numbers
-function pslShow()
+function app.Show()
 	-- Set the reagents window to its proper coordinates
 	pslFrame1:ClearAllPoints()
 	if userSettings["pcWindowPosition"] == true then
@@ -494,38 +500,38 @@ function pslShow()
 	pslFrame2:Show()
 
 	-- Update numbers
-	pslUpdateRecipes()
+	app.UpdateRecipes()
 end
 
 -- Toggle windows
-function pslToggle()
+function app.Toggle()
 	-- Toggle tracking windows
 	if pslFrame1:IsShown() then
 		pslFrame1:Hide()
 		pslFrame2:Hide()
 	else
-		pslShow()
+		app.Show()
 	end
 end
 
 -- Track recipe
-function pslTrackRecipe(recipeID, recipeQuantity)
+function app.TrackRecipe(recipeID, recipeQuantity)
 	-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
 	if C_TradeSkillUI.GetRecipeSchematic(recipeID,false).recipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(recipeID,false).reagentSlotSchematics[1] == nil then
 		do return end
 	end
 	
 	-- Adjust the recipeID for SL legendary crafts, if a custom rank is entered
-	if slLegendaryRecipeIDs[recipeID] then
+	if app.slLegendaryRecipeIDs[recipeID] then
 		local rank = math.floor(ebSLrank:GetNumber())
 		if rank == 1 then
-			recipeID = slLegendaryRecipeIDs[recipeID].one
+			recipeID = app.slLegendaryRecipeIDs[recipeID].one
 		elseif rank == 2 then
-			recipeID = slLegendaryRecipeIDs[recipeID].two
+			recipeID = app.slLegendaryRecipeIDs[recipeID].two
 		elseif rank == 3 then
-			recipeID = slLegendaryRecipeIDs[recipeID].three
+			recipeID = app.slLegendaryRecipeIDs[recipeID].three
 		elseif rank == 4 then
-			recipeID = slLegendaryRecipeIDs[recipeID].four
+			recipeID = app.slLegendaryRecipeIDs[recipeID].four
 		end
 	end
 
@@ -547,7 +553,7 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 
 			-- Try again if error
 			if itemLink == nil then
-				RunNextFrame(function() pslTrackRecipe(recipeID, recipeQuantity) end)
+				RunNextFrame(function() app.TrackRecipe(recipeID, recipeQuantity) end)
 				do return end
 			end
 		-- Exception for stuff like Abominable Stitching
@@ -556,8 +562,8 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 		end
 
 		-- Exceptions for SL legendary crafts
-		if slLegendaryRecipeIDs[recipeID] then
-			itemLink = itemLink.." (Rank "..slLegendaryRecipeIDs[recipeID].rank..")" -- Append the rank
+		if app.slLegendaryRecipeIDs[recipeID] then
+			itemLink = itemLink.." (Rank "..app.slLegendaryRecipeIDs[recipeID].rank..")" -- Append the rank
 		else
 			itemLink = string.gsub(itemLink, " |A:Professions%-ChatIcon%-Quality%-Tier1:17:15::1|a", "") -- Remove the quality from the item string
 		end
@@ -580,7 +586,7 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 	recipesTracked[recipeID] = recipesTracked[recipeID] + recipeQuantity
 
 	-- Show windows
-	pslShow()	-- This also triggers the recipe update
+	app.Show()	-- This also triggers the recipe update
 
 	-- Update the editbox
 	ebRecipeQuantityNo = recipesTracked[recipeID] or 0
@@ -588,7 +594,7 @@ function pslTrackRecipe(recipeID, recipeQuantity)
 end
 
 -- Untrack recipe
-function pslUntrackRecipe(recipeID, recipeQuantity)
+function app.UntrackRecipe(recipeID, recipeQuantity)
 	if recipesTracked[recipeID] ~= nil then
 		-- Clear all recipes if quantity was set to 0
 		if recipeQuantity == 0 then recipesTracked[recipeID] = 0 end
@@ -605,10 +611,10 @@ function pslUntrackRecipe(recipeID, recipeQuantity)
 
 	-- Clear the cache if no recipes are tracked anymore
 	local next = next
-	if next(recipesTracked) == nil then pslClear() end
+	if next(recipesTracked) == nil then app.Clear() end
 
 	-- Update numbers
-	pslUpdateRecipes()
+	app.UpdateRecipes()
 
 	-- Update the editbox
 	ebRecipeQuantityNo = recipesTracked[recipeID] or 0
@@ -616,7 +622,7 @@ function pslUntrackRecipe(recipeID, recipeQuantity)
 end
 
 -- Create assets
-function pslCreateAssets()
+function app.CreateAssets()
 	-- Hide and disable existing tracking buttons
 	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckBox:SetAlpha(0)
 	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckBox:EnableMouse(false)
@@ -631,7 +637,7 @@ function pslCreateAssets()
 		trackProfessionButton:SetPoint("TOPRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "TOPRIGHT", -9, -10)
 		trackProfessionButton:SetFrameStrata("HIGH")
 		trackProfessionButton:SetScript("OnClick", function()
-			pslTrackRecipe(pslSelectedRecipeID, 1)
+			app.TrackRecipe(pslSelectedRecipeID, 1)
 		end)
 	end
 	
@@ -642,9 +648,9 @@ function pslCreateAssets()
 		newValue = math.floor(self:GetNumber())
 		-- If the value is positive, change the number of recipes tracked
 		if newValue >= 0 then
-			pslUntrackRecipe(pslSelectedRecipeID,0)
+			app.UntrackRecipe(pslSelectedRecipeID,0)
 			if newValue >0 then
-				pslTrackRecipe(pslSelectedRecipeID, newValue)
+				app.TrackRecipe(pslSelectedRecipeID, newValue)
 			end
 		end
 	end
@@ -676,10 +682,10 @@ function pslCreateAssets()
 		untrackProfessionButton:SetPoint("TOPRIGHT", trackProfessionButton, "TOPLEFT", -38, 0)
 		untrackProfessionButton:SetFrameStrata("HIGH")
 		untrackProfessionButton:SetScript("OnClick", function()
-			pslUntrackRecipe(pslSelectedRecipeID, 1)
+			app.UntrackRecipe(pslSelectedRecipeID, 1)
 	
 			-- Show windows
-			pslShow()
+			app.Show()
 		end)
 	end
 
@@ -710,7 +716,7 @@ function pslCreateAssets()
 		trackPlaceOrderButton:SetPoint("TOPLEFT", ProfessionsCustomerOrdersFrame.Form, "TOPLEFT", 12, -73)
 		trackPlaceOrderButton:SetFrameStrata("HIGH")
 		trackPlaceOrderButton:SetScript("OnClick", function()
-			pslTrackRecipe(pslSelectedRecipeID, 1)
+			app.TrackRecipe(pslSelectedRecipeID, 1)
 		end)
 	end
 
@@ -722,10 +728,10 @@ function pslCreateAssets()
 		untrackPlaceOrderButton:SetPoint("TOPLEFT", trackPlaceOrderButton, "TOPRIGHT", 0, 0)
 		untrackPlaceOrderButton:SetFrameStrata("HIGH")
 		untrackPlaceOrderButton:SetScript("OnClick", function()
-			pslUntrackRecipe(pslSelectedRecipeID, 1)
+			app.UntrackRecipe(pslSelectedRecipeID, 1)
 	
 			-- Show windows
-			pslShow()
+			app.Show()
 		end)
 	end
 
@@ -739,15 +745,15 @@ function pslCreateAssets()
 		personalCharname:SetCursorPosition(0)
 		personalCharname:SetScript("OnEditFocusLost", function(self)
 			personalOrders[pslSelectedRecipeID] = tostring(personalCharname:GetText())
-			pslUpdateAssets()
+			app.UpdateAssets()
 		end)
 		personalCharname:SetScript("OnEnterPressed", function(self)
 			personalOrders[pslSelectedRecipeID] = tostring(personalCharname:GetText())
 			self:ClearFocus()
-			pslUpdateAssets()
+			app.UpdateAssets()
 		end)
 		personalCharname:SetScript("OnEscapePressed", function(self)
-			pslUpdateAssets()
+			app.UpdateAssets()
 		end)
 		personalCharname:SetScript("OnEnter", function()
 			personalOrderTooltip:Show()
@@ -774,9 +780,9 @@ function pslCreateAssets()
 			pslQuickOrderActive = 1
 
 			local function localReagentsOrder()
-				-- Run pslGetReagents to cache reagent tier info
+				-- Run app.GetReagents to cache reagent tier info
 				local _ = {}
-				pslGetReagents(_, pslSelectedRecipeID, 1)
+				app.GetReagents(_, pslSelectedRecipeID, 1)
 
 				-- Get recipe info
 				local recipeInfo = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID, false).reagentSlotSchematics
@@ -938,13 +944,13 @@ function pslCreateAssets()
 		trackMakeOrderButton:SetFrameStrata("HIGH")
 		trackMakeOrderButton:SetScript("OnClick", function()
 			if pslOrderRecipeID == 0 then
-				pslTrackRecipe(pslSelectedRecipeID, 1)
+				app.TrackRecipe(pslSelectedRecipeID, 1)
 			else
-				pslTrackRecipe(pslOrderRecipeID, 1)
+				app.TrackRecipe(pslOrderRecipeID, 1)
 			end
 
 			-- Show windows
-			pslShow()
+			app.Show()
 		end)
 	end
 
@@ -957,13 +963,13 @@ function pslCreateAssets()
 		untrackMakeOrderButton:SetFrameStrata("HIGH")
 		untrackMakeOrderButton:SetScript("OnClick", function()
 			if pslOrderRecipeID == 0 then
-				pslUntrackRecipe(pslSelectedRecipeID, 1)
+				app.UntrackRecipe(pslSelectedRecipeID, 1)
 			else
-				pslUntrackRecipe(pslOrderRecipeID, 1)
+				app.UntrackRecipe(pslOrderRecipeID, 1)
 			end
 
 			-- Show windows
-			pslShow()
+			app.Show()
 		end)
 	end
 
@@ -1007,7 +1013,7 @@ function pslCreateAssets()
 				-- PSL is no longer doing stuff with crafting orders, delayed to let the errors run through
 				C_Timer.After(5, function() pslQuickOrderActive = 0 end)
 			else
-				print("PSL: No last order found.")
+				app.print("No last order found.")
 			end
 		end)
 		repeatOrderButton:SetScript("OnEnter", function()
@@ -1237,7 +1243,7 @@ function pslCreateAssets()
 end
 
 -- Update assets
-function pslUpdateAssets()
+function app.UpdateAssets()
 	-- Enable tracking button for 1 = Item, 3 = Enchant
 	if pslRecipeType == 1 or pslRecipeType == 3 then
 		trackProfessionButton:Enable()
@@ -1327,7 +1333,7 @@ function pslUpdateAssets()
 end
 
 -- Tooltip information
-function pslTooltipInfo()
+function app.TooltipInfo()
 	local function OnTooltipSetItem(tooltip)
 		-- Only run this if the setting is enabled
 		if userSettings["showTooltip"] == true then
@@ -1389,12 +1395,12 @@ function pslTooltipInfo()
 end
 
 -- Clear everything except the recipe cache
-function pslClear()
+function app.Clear()
 	recipesTracked = {}
 	reagentsTracked = {}
 	recipeLinks = {}
 	reagentTiers = {}
-	pslUpdateRecipes()
+	app.UpdateRecipes()
 
 	-- Disable remove button
 	untrackProfessionButton:Disable()
@@ -1407,12 +1413,12 @@ function pslClear()
 end
 
 -- Open settings
-function pslOpenSettings()
+function app.OpenSettings()
 	InterfaceOptionsFrame_OpenToCategory("Profession Shopping List")
 end
 
 -- Settings and minimap icon
-function pslSettings()
+function app.Settings()
 	-- Initialise the Settings page so the Minimap button can go there
 	local settings = CreateFrame("Frame")
 	settings.name = "Profession Shopping List"
@@ -1426,9 +1432,9 @@ function pslSettings()
 		
 		OnClick = function(self, button)
 			if button == "LeftButton" then
-				pslToggle()
+				app.Toggle()
 			elseif button == "RightButton" then
-				pslOpenSettings()
+				app.OpenSettings()
 			end
 		end,
 		
@@ -1511,7 +1517,7 @@ function pslSettings()
 	cbPcRecipesTracked:SetChecked(userSettings["pcRecipesTracked"])
 	cbPcRecipesTracked:SetScript("OnClick", function(self)
 		userSettings["pcRecipesTracked"] = cbPcRecipesTracked:GetChecked()
-		pslUpdateRecipes()
+		app.UpdateRecipes()
 	end)
 
 	-- Category: List and tracking
@@ -1563,7 +1569,7 @@ function pslSettings()
 	cbShowRemaining:SetChecked(userSettings["showRemaining"])
 	cbShowRemaining:SetScript("OnClick", function(self)
 		userSettings["showRemaining"] = cbShowRemaining:GetChecked()
-		pslUpdateNumbers()
+		app.UpdateNumbers()
 	end)
 
 	local cbShowTooltip = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
@@ -1595,7 +1601,7 @@ function pslSettings()
 		userSettings["reagentQuality"] = newValue
 		self:SetValue(userSettings["reagentQuality"])
 		self.Label:SetText("Min: |A:Professions-ChatIcon-Quality-Tier"..slReagentQuality:GetValue()..":17:15::1|a")
-		pslUpdateNumbers()
+		app.UpdateNumbers()
 	end)
 
 	local slRecipeRows = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
@@ -1617,7 +1623,7 @@ function pslSettings()
 		userSettings["recipeRows"] = newValue
 		self:SetValue(userSettings["recipeRows"])
 		self.Label:SetText(self:GetValue())
-		pslTrackingWindows()
+		app.TrackingWindows()
 	end)
 
 	local slRecipeWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
@@ -1639,7 +1645,7 @@ function pslSettings()
 		userSettings["recipeWidth"] = newValue
 		self:SetValue(userSettings["recipeWidth"])
 		self.Label:SetText(self:GetValue())
-		pslTrackingWindows()
+		app.TrackingWindows()
 	end)
 
 	local slRecipeNoWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
@@ -1661,7 +1667,7 @@ function pslSettings()
 		userSettings["recipeNoWidth"] = newValue
 		self:SetValue(userSettings["recipeNoWidth"])
 		self.Label:SetText(self:GetValue())
-		pslTrackingWindows()
+		app.TrackingWindows()
 	end)
 
 	local slReagentRows = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
@@ -1683,7 +1689,7 @@ function pslSettings()
 		userSettings["reagentRows"] = newValue
 		self:SetValue(userSettings["reagentRows"])
 		self.Label:SetText(self:GetValue())
-		pslTrackingWindows()
+		app.TrackingWindows()
 	end)
 
 	local slReagentWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
@@ -1705,7 +1711,7 @@ function pslSettings()
 		userSettings["reagentWidth"] = newValue
 		self:SetValue(userSettings["reagentWidth"])
 		self.Label:SetText(self:GetValue())
-		pslTrackingWindows()
+		app.TrackingWindows()
 	end)
 
 	local slReagentNoWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
@@ -1727,7 +1733,7 @@ function pslSettings()
 		userSettings["reagentNoWidth"] = newValue
 		self:SetValue(userSettings["reagentNoWidth"])
 		self.Label:SetText(self:GetValue())
-		pslTrackingWindows()
+		app.TrackingWindows()
 	end)
 
 	-- Category: Knowledge Tracker
@@ -2009,24 +2015,24 @@ function pslSettings()
 	end)
 
 	-- Extra text
-	local pslSettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	pslSettingsText1:SetPoint("TOPLEFT", cbLootDefault, "BOTTOMLEFT", 3, -15)
-	pslSettingsText1:SetJustifyH("LEFT")
-	pslSettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl resetpos |cffFFFFFF- Reset the PSL window positions.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.\n|R/psl track |cff1B9C85recipeID quantity |R|cffFFFFFF- Track a recipe.\n|R/psl untrack |cff1B9C85recipeID quantity |R|cffFFFFFF- Untrack a recipe.\n|R/psl untrack |cff1B9C85recipeID |Rall |cffFFFFFF- Untrack all of a recipe.\n|R/psl |cff1B9C85[crafting achievement] |R |cffFFFFFF- Track the recipes needed for the linked achievement.")
+	local SettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	SettingsText1:SetPoint("TOPLEFT", cbLootDefault, "BOTTOMLEFT", 3, -15)
+	SettingsText1:SetJustifyH("LEFT")
+	SettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl resetpos |cffFFFFFF- Reset the PSL window positions.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.\n|R/psl track |cff1B9C85recipeID quantity |R|cffFFFFFF- Track a recipe.\n|R/psl untrack |cff1B9C85recipeID quantity |R|cffFFFFFF- Untrack a recipe.\n|R/psl untrack |cff1B9C85recipeID |Rall |cffFFFFFF- Untrack all of a recipe.\n|R/psl |cff1B9C85[crafting achievement] |R |cffFFFFFF- Track the recipes needed for the linked achievement.")
 
-	local pslSettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	pslSettingsText2:SetPoint("TOPLEFT", pslSettingsText1, "BOTTOMLEFT", 0, -15)
-	pslSettingsText2:SetJustifyH("LEFT")
-	pslSettingsText2:SetText("Mouse interactions:\nDrag|cffFFFFFF: Move the PSL windows.\n|RShift+click Recipe|cffFFFFFF: Link the recipe.\n|RCtrl+click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click Recipe (# column)|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click Recipe (# column)|cffFFFFFF: Untrack all of the selected recipe.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
+	local SettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	SettingsText2:SetPoint("TOPLEFT", SettingsText1, "BOTTOMLEFT", 0, -15)
+	SettingsText2:SetJustifyH("LEFT")
+	SettingsText2:SetText("Mouse interactions:\nDrag|cffFFFFFF: Move the PSL windows.\n|RShift+click Recipe|cffFFFFFF: Link the recipe.\n|RCtrl+click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click Recipe (# column)|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click Recipe (# column)|cffFFFFFF: Untrack all of the selected recipe.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
 
-	local pslSettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	pslSettingsText3:SetPoint("TOPLEFT", pslSettingsText2, "BOTTOMLEFT", 0, -15)
-	pslSettingsText3:SetJustifyH("LEFT")
-	pslSettingsText3:SetText("Other features:\n|cffFFFFFF- Adds buttons for Cooking Fire, Chef's Hat, and Thermal Anvil.\n- Copy tracked reagents to the Auctionator import window.")
+	local SettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	SettingsText3:SetPoint("TOPLEFT", SettingsText2, "BOTTOMLEFT", 0, -15)
+	SettingsText3:SetJustifyH("LEFT")
+	SettingsText3:SetText("Other features:\n|cffFFFFFF- Adds buttons for Cooking Fire, Chef's Hat, and Thermal Anvil.\n- Copy tracked reagents to the Auctionator import window.")
 end
 
 -- Window functions
-function pslWindowFunctions()
+function app.WindowFunctions()
 	-- Reagents window
 	pslTable1:RegisterEvents({
 		["OnEnter"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
@@ -2056,7 +2062,7 @@ function pslWindowFunctions()
 			end
 		end,
 		["OnMouseUp"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-			pslSaveWindowPosition()
+			app.SaveWindowPosition()
 
 			if realrow ~= nil then
 				local celldata = data[realrow][1]
@@ -2074,7 +2080,7 @@ function pslWindowFunctions()
 				if recipesTracked[recipeID] then amount = math.max(0, (amount - recipesTracked[recipeID])) end
 
 				-- Track the recipe (don't track if 0)
-				if amount > 0 then pslTrackRecipe(recipeID, amount) end
+				if amount > 0 then app.TrackRecipe(recipeID, amount) end
 			end
 
 			-- Control+click on reagent
@@ -2089,7 +2095,7 @@ function pslWindowFunctions()
 
 				for recipe, recipeInfo in pairs(recipeLibrary) do
 					if type(recipeInfo) ~= "number" then	-- Because of old recipeLibrary
-						if recipeInfo.itemID == itemID and not nyiRecipes[recipe] then
+						if recipeInfo.itemID == itemID and not app.nyiRecipes[recipe] then
 							no = no + 1
 							recipeIDs[no] = recipe
 						end
@@ -2142,7 +2148,7 @@ function pslWindowFunctions()
 
 					-- Get reagents #1
 					local reagentsTable = {}
-					pslGetReagents(reagentsTable, recipeIDs[1], 1)
+					app.GetReagents(reagentsTable, recipeIDs[1], 1)
 
 					-- Create text #1
 					for reagentID, reagentAmount in pairs(reagentsTable) do
@@ -2195,7 +2201,7 @@ function pslWindowFunctions()
 
 						-- Get reagents #2
 						local reagentsTable = {}
-						pslGetReagents(reagentsTable, recipeIDs[2], 1)
+						app.GetReagents(reagentsTable, recipeIDs[2], 1)
 
 						-- Create text #2
 						for reagentID, reagentAmount in pairs(reagentsTable) do
@@ -2249,7 +2255,7 @@ function pslWindowFunctions()
 
 						-- Get reagents #3
 						local reagentsTable = {}
-						pslGetReagents(reagentsTable, recipeIDs[3], 1)
+						app.GetReagents(reagentsTable, recipeIDs[3], 1)
 
 						-- Create text #3
 						for reagentID, reagentAmount in pairs(reagentsTable) do
@@ -2303,7 +2309,7 @@ function pslWindowFunctions()
 
 						-- Get reagents #4
 						local reagentsTable = {}
-						pslGetReagents(reagentsTable, recipeIDs[4], 1)
+						app.GetReagents(reagentsTable, recipeIDs[4], 1)
 
 						-- Create text #4
 						for reagentID, reagentAmount in pairs(reagentsTable) do
@@ -2354,7 +2360,7 @@ function pslWindowFunctions()
 
 						-- Get reagents #5
 						local reagentsTable = {}
-						pslGetReagents(reagentsTable, recipeIDs[5], 1)
+						app.GetReagents(reagentsTable, recipeIDs[5], 1)
 
 						-- Create text #5
 						for reagentID, reagentAmount in pairs(reagentsTable) do
@@ -2405,7 +2411,7 @@ function pslWindowFunctions()
 
 						-- Get reagents #6
 						local reagentsTable = {}
-						pslGetReagents(reagentsTable, recipeIDs[6], 1)
+						app.GetReagents(reagentsTable, recipeIDs[6], 1)
 
 						-- Create text #6
 						for reagentID, reagentAmount in pairs(reagentsTable) do
@@ -2485,13 +2491,13 @@ function pslWindowFunctions()
 
 				-- Untrack the recipe
 				if IsControlKeyDown() == true then
-					pslUntrackRecipe(selectedRecipeID, 0)
+					app.UntrackRecipe(selectedRecipeID, 0)
 				else
-					pslUntrackRecipe(selectedRecipeID, 1)
+					app.UntrackRecipe(selectedRecipeID, 1)
 				end
 
 				-- Show windows
-				pslShow()
+				app.Show()
 			-- Left-click on recipe
 			elseif column == 1 and button == "LeftButton" and row ~= nil and realrow ~= nil then
 				-- If Shift is held also
@@ -2521,7 +2527,7 @@ function pslWindowFunctions()
 			end
 		end,
 		["OnMouseUp"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-			pslSaveWindowPosition()
+			app.SaveWindowPosition()
 
 			if realrow ~= nil then
 				local celldata = data[realrow][1]
@@ -2537,12 +2543,12 @@ end
 api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	-- When the AddOn is fully loaded, actually run the components
 	if event == "ADDON_LOADED" and arg1 == "ProfessionShoppingList" then
-		pslInitialise()
-		pslTrackingWindows()
-		pslCreateAssets()
-		pslTooltipInfo()		
-		pslSettings()
-		pslWindowFunctions()
+		app.Initialise()
+		app.TrackingWindows()
+		app.CreateAssets()
+		app.TooltipInfo()		
+		app.Settings()
+		app.WindowFunctions()
 
 		-- Slash commands
 		SLASH_PSL1 = "/psl";
@@ -2552,10 +2558,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 			-- Open settings
 			if command == "settings" then
-				pslOpenSettings()
+				app.OpenSettings()
 			-- Clear list
 			elseif command == "clear" then
-				pslClear()
+				app.Clear()
 			-- Reset window positions
 			elseif command == "resetpos" then
 				-- Set the window positions back to default
@@ -2588,12 +2594,12 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				-- Only run if the recipeID is cached and the quantity is an actual number
 				if recipeLibrary[recipeID] then
 					if type(recipeQuantity) == "number" and recipeQuantity ~= 0 then
-						pslTrackRecipe(recipeID, recipeQuantity)
+						app.TrackRecipe(recipeID, recipeQuantity)
 					else
-						print("PSL: Invalid parameters. Please enter a valid recipe quantity.")
+						app.print("Invalid parameters. Please enter a valid recipe quantity.")
 					end
 				else
-					print("PSL: Invalid parameters. Please enter a cached recipe ID.")
+					app.print("Invalid parameters. Please enter a cached recipe ID.")
 				end
 			elseif command == 'untrack' then
 				-- Split entered recipeID and recipeQuantity and turn them into real numbers
@@ -2604,24 +2610,24 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				-- Only run if the recipeID is tracked and the quantity is an actual number (with a maximum of the amount of recipes tracked)
 				if recipesTracked[recipeID] then
 					if part2 == "all" then
-						pslUntrackRecipe(recipeID, 0)
+						app.UntrackRecipe(recipeID, 0)
 
 						-- Show windows
-						pslShow()
+						app.Show()
 					elseif type(recipeQuantity) == "number" and recipeQuantity ~= 0 and recipeQuantity <= recipesTracked[recipeID] then
-						pslUntrackRecipe(recipeID, recipeQuantity)
+						app.UntrackRecipe(recipeID, recipeQuantity)
 
 						-- Show windows
-						pslShow()
+						app.Show()
 					else
-						print("PSL: Invalid parameters. Please enter a valid recipe quantity.")
+						app.print("Invalid parameters. Please enter a valid recipe quantity.")
 					end
 				else
-					print("PSL: Invalid parameters. Please enter a tracked recipe ID.")
+					app.print("Invalid parameters. Please enter a tracked recipe ID.")
 				end
 			-- No command
 			elseif command == "" then
-				pslToggle()
+				app.Toggle()
 			-- Unlisted command
 			else
 				-- If achievement string
@@ -2638,7 +2644,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						for i=1,numCriteria,1 do
 							local _, criteriaType, completed, _, _, _, _, assetID = GetAchievementCriteriaInfo(achievementID, i)
 							-- If the criteria has not yet been completed, add the recipe
-							if completed == false then pslTrackRecipe(assetID, 1) end
+							if completed == false then app.TrackRecipe(assetID, 1) end
 						end
 					-- Chromatic Calibration: Cranial Cannons
 					elseif achievementID == 18906 then
@@ -2661,13 +2667,13 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 							elseif i == 8 then assetID = 198971 end
 
 							-- If the criteria has not yet been completed, add the recipe
-							if completed == false then pslTrackRecipe(assetID, 1) end
+							if completed == false then app.TrackRecipe(assetID, 1) end
 						end
 					else
-						print("PSL: This is not a crafting achievement. No recipes were added.")
+						app.print("This is not a crafting achievement. No recipes were added.")
 					end
 				else
-					print("PSL: Invalid command. See /psl settings for more info.")
+					app.print("Invalid command. See /psl settings for more info.")
 				end
 			end
 		end
@@ -2680,7 +2686,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		pslSelectedRecipeID = arg1
 		pslRecipeType = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).recipeType
 
-		pslUpdateAssets()
+		app.UpdateAssets()
 
 		local function professionExtra()
 			-- Check if/what Milling info should be displayed
@@ -2691,10 +2697,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end
 
 			-- Check if the SL rank editbox should be displayed
-			if slLegendaryRecipeIDs[pslSelectedRecipeID] then
+			if app.slLegendaryRecipeIDs[pslSelectedRecipeID] then
 				ebSLrankText:Show()
 				ebSLrank:Show()
-				ebSLrank:SetText(slLegendaryRecipeIDs[pslSelectedRecipeID].rank)
+				ebSLrank:SetText(app.slLegendaryRecipeIDs[pslSelectedRecipeID].rank)
 			else
 				ebSLrankText:Hide()
 				ebSLrank:Hide()
@@ -2784,63 +2790,63 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 			local function kpTooltip()
 				-- Treatise
-				local treatiseStatus = iconNotReady
+				local treatiseStatus = app.iconNotReady
 				local treatiseNumber = 0
 				
 				if treatiseQuest ~= nil then
 					if C_QuestLog.IsQuestFlaggedCompleted(treatiseQuest) then
-						treatiseStatus = iconReady
+						treatiseStatus = app.iconReady
 						treatiseNumber = 1
 					end
 
-					if treatiseStatus == iconNotReady then progress = false end
+					if treatiseStatus == app.iconNotReady then progress = false end
 				end
 
 				-- Crafting order quest
-				local orderQuestStatus = iconNotReady
+				local orderQuestStatus = app.iconNotReady
 				local orderQuestNumber = 0
 
 				if orderQuest ~= nil then 
 					if C_QuestLog.IsQuestFlaggedCompleted(orderQuest) then
-						orderQuestStatus = iconReady
+						orderQuestStatus = app.iconReady
 						orderQuestNumber = 1
 					end
 
-					if orderQuestStatus == iconNotReady then progress = false end
+					if orderQuestStatus == app.iconNotReady then progress = false end
 				end
 
 				-- Gather quests
-				local gatherQuestStatus = iconNotReady
+				local gatherQuestStatus = app.iconNotReady
 				local gatherQuestNumber = 0
 
 				if gatherQuests ~= nil then
 					for no, questID in pairs (gatherQuests) do
 						if C_QuestLog.IsQuestFlaggedCompleted(questID) then
-							gatherQuestStatus = iconReady
+							gatherQuestStatus = app.iconReady
 							gatherQuestNumber = 1
 						end
 					end
 
-					if gatherQuestStatus == iconNotReady then progress = false end
+					if gatherQuestStatus == app.iconNotReady then progress = false end
 				end
 
 				-- Craft quests
-				local craftQuestStatus = iconNotReady
+				local craftQuestStatus = app.iconNotReady
 				local craftQuestNumber = 0
 
 				if craftQuests ~= nil then
 					for no, questID in pairs (craftQuests) do
 						if C_QuestLog.IsQuestFlaggedCompleted(questID) then
 							craftQuestNumber = 1
-							craftQuestStatus = iconReady
+							craftQuestStatus = app.iconReady
 						end
 					end
 
-					if craftQuestStatus == iconNotReady then progress = false end
+					if craftQuestStatus == app.iconNotReady then progress = false end
 				end
 
 				-- Drops
-				local dropsStatus = iconNotReady
+				local dropsStatus = app.iconNotReady
 				local dropsNoCurrent = 0
 				local dropsNoTotal = 0
 
@@ -2853,15 +2859,15 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					end
 
 					if dropsNoCurrent == dropsNoTotal then
-						dropsStatus = iconReady
+						dropsStatus = app.iconReady
 					end
 
-					if dropsStatus == iconNotReady then progress = false end
+					if dropsStatus == app.iconNotReady then progress = false end
 				end
 
 				-- Dragon Shards
 				local shardQuests = {67295, 69946, 69979, 67298}
-				local shardStatus = iconNotReady
+				local shardStatus = app.iconNotReady
 				local shardNo = 0
 
 				for _, questID in pairs (shardQuests) do
@@ -2870,25 +2876,25 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					end
 				end
 
-				if shardNo == 4 then shardStatus = iconReady end
+				if shardNo == 4 then shardStatus = app.iconReady end
 
-				if shardStatus == iconNotReady then progress = false end
+				if shardStatus == app.iconNotReady then progress = false end
 
 				-- Hidden profession master
-				local hiddenStatus = iconNotReady
+				local hiddenStatus = app.iconNotReady
 				local hiddenNumber = 0
 
 				if hiddenMaster ~= nil then 
 					if C_QuestLog.IsQuestFlaggedCompleted(hiddenMaster) then
 						hiddenNumber = 1
-						hiddenStatus = iconReady
+						hiddenStatus = app.iconReady
 					end
 
-					if hiddenStatus == iconNotReady then progress = false end
+					if hiddenStatus == app.iconNotReady then progress = false end
 				end
 
 				-- Treasures
-				local treasureStatus = iconNotReady
+				local treasureStatus = app.iconNotReady
 				local treasureNoCurrent = 0
 				local treasureNoTotal = 0
 
@@ -2900,13 +2906,13 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						treasureNoTotal = treasureNoTotal + 1
 					end
 
-					if treasureNoCurrent == treasureNoTotal then treasureStatus = iconReady end
+					if treasureNoCurrent == treasureNoTotal then treasureStatus = app.iconReady end
 
-					if treasureStatus == iconNotReady then progress = false end
+					if treasureStatus == app.iconNotReady then progress = false end
 				end
 
 				-- Books
-				local bookStatus = iconNotReady
+				local bookStatus = app.iconNotReady
 				local bookNoCurrent = 0
 				local bookNoTotal = 0
 
@@ -2918,9 +2924,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						bookNoTotal = bookNoTotal + 1
 					end
 
-					if bookNoCurrent == bookNoTotal then bookStatus = iconReady end
+					if bookNoCurrent == bookNoTotal then bookStatus = app.iconReady end
 
-					if bookStatus == iconNotReady then progress = false end
+					if bookStatus == app.iconNotReady then progress = false end
 				end
 				
 				-- Weekly knowledge (text)
@@ -2973,9 +2979,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 							end
 		
 							if C_QuestLog.IsQuestFlaggedCompleted(dropInfo.questID) then
-								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconReady..":0|t "..itemLink.." - "..dropInfo.source)
+								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..app.iconReady..":0|t "..itemLink.." - "..dropInfo.source)
 							else
-								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconNotReady..":0|t "..itemLink.." - "..dropInfo.source)
+								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..app.iconNotReady..":0|t "..itemLink.." - "..dropInfo.source)
 							end
 						end
 					end
@@ -3018,9 +3024,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 							end
 
 							if C_QuestLog.IsQuestFlaggedCompleted(questID) then
-								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconReady..":0|t ".."|cffffff00|Hquest:"..questID.."62|h["..questTitle.."]|h|r")
+								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..app.iconReady..":0|t ".."|cffffff00|Hquest:"..questID.."62|h["..questTitle.."]|h|r")
 							else
-								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconNotReady..":0|t ".."|cffffff00|Hquest:"..questID.."62|h["..questTitle.."]|h|r")
+								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..app.iconNotReady..":0|t ".."|cffffff00|Hquest:"..questID.."62|h["..questTitle.."]|h|r")
 							end
 						end
 					end
@@ -3057,9 +3063,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 								end
 			
 								if C_QuestLog.IsQuestFlaggedCompleted(questID) then
-									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconReady..":0|t "..itemLink)
+									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..app.iconReady..":0|t "..itemLink)
 								else
-									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconNotReady..":0|t "..itemLink)
+									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..app.iconNotReady..":0|t "..itemLink)
 								end
 							end
 						end
@@ -3089,9 +3095,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 								end
 			
 								if C_QuestLog.IsQuestFlaggedCompleted(bookInfo.questID) then
-									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconReady..":0|t "..itemLink)
+									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..app.iconReady..":0|t "..itemLink)
 								else
-									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..iconNotReady..":0|t "..itemLink)
+									knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..app.iconNotReady..":0|t "..itemLink)
 								end
 							end
 						end
@@ -3548,7 +3554,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 		-- Profession button stuff
 		if spellID == 818 or spellID == 67556 or spellID == 126462 then
-			C_Timer.After(0.1, function() pslUpdateAssets() end)
+			C_Timer.After(0.1, function() app.UpdateAssets() end)
 		end
 	
 		-- Run only when the spell cast is a known recipe
@@ -3583,7 +3589,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		-- Run only when crafting a tracked recipe, and if the remove craft option is enabled
 		if recipesTracked[spellID] and userSettings["removeCraft"] == true then
 			-- Remove 1 tracked recipe when it has been crafted (if the option is enabled)
-			pslUntrackRecipe(spellID, 1)
+			app.UntrackRecipe(spellID, 1)
 			
 			-- Close windows if no recipes are left and the option is enabled
 			local next = next
@@ -3599,7 +3605,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		-- If any recipes are tracked
 		local next = next
 		if next(recipesTracked) ~= nil then
-			pslUpdateNumbers()
+			app.UpdateNumbers()
 		end
 
 		-- If the setting for split reagent bag count is enabled
@@ -3650,7 +3656,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 			-- If all 4 attempts fail, tell the user this
 			if pslQuickOrderActive >= 4 then
-				print("PSL quick order failed. Sorry. :(")
+				app.print("Quick order failed. Sorry. :(")
 			end
 
 			-- Add 1 to the pslQuickOrderActive, so we can use it to count the number of fails
@@ -3671,7 +3677,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	-- Replace the in-game tracking of shift+clicking a recipe with PSL's
 	if event == "TRACKED_RECIPE_UPDATE" then
 		if arg2 == true then
-			pslTrackRecipe(pslSelectedRecipeID,1)
+			app.TrackRecipe(pslSelectedRecipeID,1)
 			C_TradeSkillUI.SetRecipeTracked(arg1, false, false)
 		end
 	end
@@ -3716,7 +3722,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					auctionatorImportButton:SetWidth(110)
 					auctionatorImportButton:SetPoint("BOTTOMRIGHT", AuctionatorImportListFrame.Import, "BOTTOMLEFT", 0, 0)
 					auctionatorImportButton:SetScript("OnClick", function()
-						pslUpdateRecipes()
+						app.UpdateRecipes()
 						-- Add another delay because I have no idea how to optimise my AddOn
 						C_Timer.After(0.5, function()
 							getReagentNames()
@@ -3740,7 +3746,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				-- If the option to show recipe cooldowns is enabled
 				if userSettings["showRecipeCooldowns"] == true then
 					-- Show the reminder
-					print("PSL: " .. recipeInfo.name .. " (ID: " .. recipeID .. ") is ready to craft again on " .. recipeInfo.user .. ".")
+					app.print(recipeInfo.name .. " (ID: " .. recipeID .. ") is ready to craft again on " .. recipeInfo.user .. ".")
 				end
 
 				-- Remove the recipe from recipeCooldowns
