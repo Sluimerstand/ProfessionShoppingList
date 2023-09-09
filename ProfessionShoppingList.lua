@@ -3561,16 +3561,20 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 				-- Get spell cooldown info
 				local recipeName = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name
-				local recipeCooldown = C_TradeSkillUI.GetRecipeCooldown(spellID)
+				local recipeCooldown = C_TradeSkillUI.GetRecipeCooldown(spellID)	-- This returns the time until midnight. Only after a relog does it return the time until daily reset, when the recipe actually resets.
 				local recipeStart = GetServerTime()
 
 				-- Set timer to 7 days for the Alchemy sac transmutes
 				if spellID == 213256 or spellID == 251808 then
 					recipeCooldown = 7 * 24 * 60 * 60
+				-- Otherwise, if the cooldown exists, set it to line up with daily reset
+				elseif recipeCooldown and recipeCooldown >= 60 then
+					local days = math.floor( recipeCooldown / 86400 )	-- Count how many days we add to the time until daily reset
+					recipeCooldown = GetQuestResetTime() + ( days * 86400 )
 				end
 
-				-- If the spell cooldown is 1 minute or more, track it
-				if recipeCooldown >= 60 then
+				-- If the spell cooldown exists
+				if recipeCooldown then
 					recipeCooldowns[spellID] = {name = recipeName, cooldown = recipeCooldown, start = recipeStart, user = character .. "-" .. realm}
 				end
 			end)
