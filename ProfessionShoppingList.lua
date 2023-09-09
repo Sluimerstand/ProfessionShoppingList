@@ -38,8 +38,8 @@ function app.dump(o)
 end
 
 -- Print function
-app.print = function(...)
-	print("[|cffFFFF00PSL|R]", ...);
+function app.Print(...)
+	print("[|cffFFFF00PSL|R]", ...)
 end
 
 -- Create SavedVariables, default window position, and default user settings
@@ -1013,7 +1013,7 @@ function app.CreateAssets()
 				-- PSL is no longer doing stuff with crafting orders, delayed to let the errors run through
 				C_Timer.After(5, function() pslQuickOrderActive = 0 end)
 			else
-				app.print("No last order found.")
+				app.Print("No last order found.")
 			end
 		end)
 		repeatOrderButton:SetScript("OnEnter", function()
@@ -2596,10 +2596,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					if type(recipeQuantity) == "number" and recipeQuantity ~= 0 then
 						app.TrackRecipe(recipeID, recipeQuantity)
 					else
-						app.print("Invalid parameters. Please enter a valid recipe quantity.")
+						app.Print("Invalid parameters. Please enter a valid recipe quantity.")
 					end
 				else
-					app.print("Invalid parameters. Please enter a cached recipe ID.")
+					app.Print("Invalid parameters. Please enter a cached recipe ID.")
 				end
 			elseif command == 'untrack' then
 				-- Split entered recipeID and recipeQuantity and turn them into real numbers
@@ -2620,10 +2620,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						-- Show windows
 						app.Show()
 					else
-						app.print("Invalid parameters. Please enter a valid recipe quantity.")
+						app.Print("Invalid parameters. Please enter a valid recipe quantity.")
 					end
 				else
-					app.print("Invalid parameters. Please enter a tracked recipe ID.")
+					app.Print("Invalid parameters. Please enter a tracked recipe ID.")
 				end
 			-- No command
 			elseif command == "" then
@@ -2670,10 +2670,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 							if completed == false then app.TrackRecipe(assetID, 1) end
 						end
 					else
-						app.print("This is not a crafting achievement. No recipes were added.")
+						app.Print("This is not a crafting achievement. No recipes were added.")
 					end
 				else
-					app.print("Invalid command. See /psl settings for more info.")
+					app.Print("Invalid command. See /psl settings for more info.")
 				end
 			end
 		end
@@ -3656,7 +3656,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 			-- If all 4 attempts fail, tell the user this
 			if pslQuickOrderActive >= 4 then
-				app.print("Quick order failed. Sorry. :(")
+				app.Print("Quick order failed. Sorry. :(")
 			end
 
 			-- Add 1 to the pslQuickOrderActive, so we can use it to count the number of fails
@@ -3746,7 +3746,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				-- If the option to show recipe cooldowns is enabled
 				if userSettings["showRecipeCooldowns"] == true then
 					-- Show the reminder
-					app.print(recipeInfo.name .. " (ID: " .. recipeID .. ") is ready to craft again on " .. recipeInfo.user .. ".")
+					app.Print(recipeInfo.name .. " (ID: " .. recipeID .. ") is ready to craft again on " .. recipeInfo.user .. ".")
 				end
 
 				-- Remove the recipe from recipeCooldowns
