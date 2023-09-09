@@ -1399,6 +1399,7 @@ function app.Clear()
 	recipesTracked = {}
 	reagentsTracked = {}
 	recipeLinks = {}
+	reagentLinks = {}
 	reagentTiers = {}
 	app.UpdateRecipes()
 
