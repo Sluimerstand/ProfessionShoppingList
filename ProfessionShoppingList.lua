@@ -1409,7 +1409,6 @@ function app.Clear()
 
 	-- Remove old version variables
 	reagentNumbers = nil
-	reagentLinks = nil
 end
 
 -- Open settings
