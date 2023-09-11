@@ -54,7 +54,6 @@ function app.Initialise()
 	if not reagentTiers then reagentTiers = {} end
 	if not personalOrders then personalOrders = {} end
 	if not recipeCooldowns then recipeCooldowns = {} end
-	if not lastOrder then lastOrder = {} end
 	
 	-- Set default window position
 	if not windowPosition then
@@ -763,6 +762,95 @@ function app.CreateAssets()
 		end)
 	end
 
+	local function quickOrder(recipeID)
+		-- Create crafting info variables
+		local reagentInfo = {}
+		local craftingReagentInfo = {}
+
+		-- Create a variable to determine if PSL is doing stuff with the crafting orders, and set it to 1
+		pslQuickOrderActive = 1
+
+		local function localReagentsOrder()
+			-- Run app.GetReagents to cache reagent tier info
+			local _ = {}
+			app.GetReagents(_, recipeID, 1)
+
+			-- Get recipe info
+			local recipeInfo = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).reagentSlotSchematics
+			
+			-- Go through all the reagents for this recipe
+			local no1 = 1
+			local no2 = 1
+			for i, _ in ipairs (recipeInfo) do
+				if recipeInfo[i].reagentType == 1 then
+					-- Get the required quantity
+					local quantityNo = recipeInfo[i].quantityRequired
+
+					-- Get the primary reagent itemID
+					local reagentID = recipeInfo[i].reagents[1].itemID
+
+					-- Add the info for tiered reagents to craftingReagentItems
+					if reagentTiers[reagentID].three ~= 0 then
+						-- Set it to the lowest quality we have enough of for this order
+						if GetItemCount(reagentTiers[reagentID].one, true, false, true) >= quantityNo then
+							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].one, dataSlotIndex = i, quantity = quantityNo}
+							no1 = no1 + 1
+						elseif GetItemCount(reagentTiers[reagentID].two, true, false, true) >= quantityNo then
+							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].two, dataSlotIndex = i, quantity = quantityNo}
+							no1 = no1 + 1
+						elseif GetItemCount(reagentTiers[reagentID].three, true, false, true) >= quantityNo then
+							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].three, dataSlotIndex = i, quantity = quantityNo}
+							no1 = no1 + 1
+						end
+					-- Add the info for non-tiered reagents to reagentItems
+					else
+						if GetItemCount(reagentID, true, false, true) >= quantityNo then
+							reagentInfo[no2] = {itemID = reagentTiers[reagentID].one, quantity = quantityNo}
+							no2 = no2 + 1
+						end
+					end
+				end
+			end
+		end
+
+		-- Only add the reagentInfo if the option is enabled
+		if userSettings["useLocalReagents"] == true then localReagentsOrder() end
+
+		-- Save this info as the last order done
+		personalOrders["last"] = recipeID
+
+		-- Place the order
+		C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+		
+		-- If there are tiered reagents and the user wants to use local reagents, adjust the dataSlotIndex and try again in case the first one failed
+		local next = next
+		if next(craftingReagentInfo) ~= nil and userSettings["useLocalReagents"] == true then
+			for i, _ in ipairs (craftingReagentInfo) do
+				craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
+			end
+
+			-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
+			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+		
+			for i, _ in ipairs (craftingReagentInfo) do
+				craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
+			end
+
+			-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
+			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+		
+			for i, _ in ipairs (craftingReagentInfo) do
+				craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
+			end
+
+			-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
+			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+		end
+
+		-- PSL is no longer doing stuff with crafting orders, delayed to let the errors run through
+		C_Timer.After(5, function() pslQuickOrderActive = 0 end)
+	end
+
 	-- Create the place crafting orders personal order button
 	if not personalOrderButton then
 		personalOrderButton = CreateFrame("Button", nil, ProfessionsCustomerOrdersFrame.Form, "UIPanelButtonTemplate")
@@ -772,92 +860,7 @@ function app.CreateAssets()
 		personalOrderButton:SetPoint("RIGHT", personalCharname, "LEFT", -8, 0)
 		personalOrderButton:SetFrameStrata("HIGH")
 		personalOrderButton:SetScript("OnClick", function()
-			-- Create crafting info variables
-			local reagentInfo = {}
-			local craftingReagentInfo = {}
-
-			-- Create a variable to determine if PSL is doing stuff with the crafting orders, and set it to 1
-			pslQuickOrderActive = 1
-
-			local function localReagentsOrder()
-				-- Run app.GetReagents to cache reagent tier info
-				local _ = {}
-				app.GetReagents(_, pslSelectedRecipeID, 1)
-
-				-- Get recipe info
-				local recipeInfo = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID, false).reagentSlotSchematics
-				
-				-- Go through all the reagents for this recipe
-				local no1 = 1
-				local no2 = 1
-				for i, _ in ipairs (recipeInfo) do
-					if recipeInfo[i].reagentType == 1 then
-						-- Get the required quantity
-						local quantityNo = recipeInfo[i].quantityRequired
-
-						-- Get the primary reagent itemID
-						local reagentID = recipeInfo[i].reagents[1].itemID
-
-						-- Add the info for tiered reagents to craftingReagentItems
-						if reagentTiers[reagentID].three ~= 0 then
-							-- Set it to the lowest quality we have enough of for this order
-							if GetItemCount(reagentTiers[reagentID].one, true, false, true) >= quantityNo then
-								craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].one, dataSlotIndex = i, quantity = quantityNo}
-								no1 = no1 + 1
-							elseif GetItemCount(reagentTiers[reagentID].two, true, false, true) >= quantityNo then
-								craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].two, dataSlotIndex = i, quantity = quantityNo}
-								no1 = no1 + 1
-							elseif GetItemCount(reagentTiers[reagentID].three, true, false, true) >= quantityNo then
-								craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].three, dataSlotIndex = i, quantity = quantityNo}
-								no1 = no1 + 1
-							end
-						-- Add the info for non-tiered reagents to reagentItems
-						else
-							if GetItemCount(reagentID, true, false, true) >= quantityNo then
-								reagentInfo[no2] = {itemID = reagentTiers[reagentID].one, quantity = quantityNo}
-								no2 = no2 + 1
-							end
-						end
-					end
-				end
-			end
-
-			-- Only add the reagentInfo if the option is enabled
-			if userSettings["useLocalReagents"] == true then localReagentsOrder() end
-
-			-- Save this info as the last order done
-			lastOrder = { one = recipeLibrary[pslSelectedRecipeID].abilityID, two = personalOrders[pslSelectedRecipeID], three = reagentInfo, four = craftingReagentInfo }
-
-			-- Place the order
-			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
-			
-			-- If there are tiered reagents and the user wants to use local reagents, adjust the dataSlotIndex and try again in case the first one failed
-			local next = next
-			if next(craftingReagentInfo) ~= nil and userSettings["useLocalReagents"] == true then
-				for i, _ in ipairs (craftingReagentInfo) do
-					craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
-				end
-
-				-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
-				C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
-			
-				for i, _ in ipairs (craftingReagentInfo) do
-					craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
-				end
-
-				-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
-				C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
-			
-				for i, _ in ipairs (craftingReagentInfo) do
-					craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
-				end
-
-				-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
-				C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[pslSelectedRecipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[pslSelectedRecipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
-			end
-
-			-- PSL is no longer doing stuff with crafting orders, delayed to let the errors run through
-			C_Timer.After(5, function() pslQuickOrderActive = 0 end)
+			quickOrder(pslSelectedRecipeID)
 		end)
 	end
 
@@ -928,7 +931,7 @@ function app.CreateAssets()
 		useLocalReagentsTooltipText = useLocalReagentsTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		useLocalReagentsTooltipText:SetPoint("TOPLEFT", useLocalReagentsTooltip, "TOPLEFT", 10, -10)
 		useLocalReagentsTooltipText:SetJustifyH("LEFT")
-		useLocalReagentsTooltipText:SetText("Use (the lowest quality) available local reagents.\nWhich reagents are used |cffFF0000cannot|r be customised.\n\nThis may sometimes fail. Blizz code is wack.")
+		useLocalReagentsTooltipText:SetText("Use (the lowest quality) available local reagents.\nWhich reagents are used |cffFF0000cannot|r be customised.")
 
 		-- Set the tooltip size to fit its contents
 		useLocalReagentsTooltip:SetHeight(useLocalReagentsTooltipText:GetStringHeight()+20)
@@ -976,42 +979,11 @@ function app.CreateAssets()
 	-- Create the repeat last crafting order button
 	if not repeatOrderButton then
 		repeatOrderButton = CreateFrame("Button", nil, ProfessionsCustomerOrdersFrame, "UIPanelButtonTemplate")
-		repeatOrderButton:SetText("Repeat Last Order")
-		repeatOrderButton:SetWidth(130)
-		repeatOrderButton:SetPoint("BOTTOMLEFT", ProfessionsCustomerOrdersFrame, 170, 4)
+		repeatOrderButton:SetPoint("BOTTOMLEFT", ProfessionsCustomerOrdersFrame, 170, 5)
 		repeatOrderButton:SetFrameStrata("HIGH")
 		repeatOrderButton:SetScript("OnClick", function()
-			if lastOrder.one ~= nil then
-				-- Place the order
-				C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=lastOrder.one, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=lastOrder.two, reagentItems=lastOrder.three, craftingReagentItems=lastOrder.four })
-				
-				-- If there are tiered reagents and the user wants to use local reagents, adjust the dataSlotIndex and try again in case the first one failed
-				local next = next
-				if next(lastOrder.four) ~= nil and userSettings["useLocalReagents"] == true then
-					for i, _ in ipairs (lastOrder.four) do
-						lastOrder.four[i].dataSlotIndex = math.max(lastOrder.four[i].dataSlotIndex - 1, 0)
-					end
-
-					-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
-					C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=lastOrder.one, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=lastOrder.two, reagentItems=lastOrder.three, craftingReagentItems=lastOrder.four })
-				
-					for i, _ in ipairs (lastOrder.four) do
-						lastOrder.four[i].dataSlotIndex = math.max(lastOrder.four[i].dataSlotIndex - 1, 0)
-					end
-
-					-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
-					C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=lastOrder.one, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=lastOrder.two, reagentItems=lastOrder.three, craftingReagentItems=lastOrder.four })
-				
-					for i, _ in ipairs (lastOrder.four) do
-						lastOrder.four[i].dataSlotIndex = math.max(lastOrder.four[i].dataSlotIndex - 1, 0)
-					end
-
-					-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
-					C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=lastOrder.one, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=lastOrder.two, reagentItems=lastOrder.three, craftingReagentItems=lastOrder.four })
-				end
-
-				-- PSL is no longer doing stuff with crafting orders, delayed to let the errors run through
-				C_Timer.After(5, function() pslQuickOrderActive = 0 end)
+			if personalOrders["last"] ~= nil then
+				quickOrder(personalOrders["last"])
 			else
 				app.Print("No last order found.")
 			end
@@ -1022,6 +994,15 @@ function app.CreateAssets()
 		repeatOrderButton:SetScript("OnLeave", function()
 			repeatOrderTooltip:Hide()
 		end)
+
+		-- Set the last used recipe name for the repeat order button title
+		local recipeName = "No last order found"
+		-- Check for the name if there has been a last order
+		if personalOrders["last"] ~= nil then
+			recipeName = C_TradeSkillUI.GetRecipeSchematic(personalOrders["last"], false).name
+		end
+		repeatOrderButton:SetText(recipeName)
+		repeatOrderButton:SetWidth(repeatOrderButton:GetTextWidth()+20)
 	end
 
 	-- Create the local reagents tooltip
@@ -1041,23 +1022,10 @@ function app.CreateAssets()
 		repeatOrderTooltip:SetMovable(false)
 		repeatOrderTooltip:Hide()
 
-		-- Set the last used recipe name
-		local recipeName = "No last order found."
-		-- Check for the name if there has been a last order
-		if lastOrder.one ~= nil then
-			for recipeID, recipeInfo in pairs (recipeLibrary) do
-				if type(recipeInfo) ~= "number" then	-- Because of old recipeLibrary
-					if recipeInfo.abilityID == lastOrder.one then
-						recipeName = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).name
-					end
-				end
-			end
-		end
-
 		repeatOrderTooltipText = repeatOrderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		repeatOrderTooltipText:SetPoint("TOPLEFT", repeatOrderTooltip, "TOPLEFT", 10, -10)
 		repeatOrderTooltipText:SetJustifyH("LEFT")
-		repeatOrderTooltipText:SetText("Repeat the last quick order done on this character:\n"..recipeName)
+		repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.")
 
 		-- Set the tooltip size to fit its contents
 		repeatOrderTooltip:SetHeight(repeatOrderTooltipText:GetStringHeight()+20)
@@ -1408,8 +1376,9 @@ function app.Clear()
 	untrackPlaceOrderButton:Disable()
 	untrackMakeOrderButton:Disable()
 
-	-- Remove old version variables
+	-- Remove old variables
 	reagentNumbers = nil
+	lastOrder = nil
 end
 
 -- Open settings
@@ -3632,19 +3601,14 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 	-- If placing a crafting order through PSL
 	if event == "CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE" and pslQuickOrderActive >= 1 then
-		-- Set the last used recipe name for the repeat order tooltip
-		local recipeName = "No last order found."
+		-- Set the last used recipe name for the repeat order button title
+		local recipeName = "No last order found"
 		-- Check for the name if there has been a last order
-		if lastOrder.one ~= nil then
-			for recipeID, recipeInfo in pairs (recipeLibrary) do
-				if type(recipeInfo) ~= "number" then	-- Because of old recipeLibrary
-					if recipeInfo.abilityID == lastOrder.one then
-						recipeName = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).name
-					end
-				end
-			end
+		if personalOrders["last"] ~= nil then
+			recipeName = C_TradeSkillUI.GetRecipeSchematic(personalOrders["last"], false).name
 		end
-		repeatOrderTooltipText:SetText("Repeat the last quick order done on this character:\n"..recipeName)
+		repeatOrderButton:SetText(recipeName)
+		repeatOrderButton:SetWidth(repeatOrderButton:GetTextWidth()+20)
 		
 		-- If this gives an error
 		if arg1 ~= 0 then
