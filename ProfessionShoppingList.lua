@@ -107,8 +107,12 @@ function app.Initialise()
 		recipeLinks = pcRecipeLinks
 	end
 
-	-- Initialise the changingMultipleRecipes variable, to prevent the game from freezing when multiple recipes are being added or removed at the same time
+	-- Initialise some flag variables
 	changingMultipleRecipes = false
+	pslOrderRecipeID = 0
+	pslQuickOrderActive = 0
+	pslQuickOrderAttempts = 0
+	pslQuickOrderErrors = 0
 end
 
 -- Save the window position
@@ -767,7 +771,7 @@ function app.CreateAssets()
 		local reagentInfo = {}
 		local craftingReagentInfo = {}
 
-		-- Create a variable to determine if PSL is doing stuff with the crafting orders, and set it to 1
+		-- Signal that PSL is currently working on a quick order
 		pslQuickOrderActive = 1
 
 		local function localReagentsOrder()
@@ -819,6 +823,12 @@ function app.CreateAssets()
 		-- Save this info as the last order done
 		personalOrders["last"] = recipeID
 
+		-- Signal that PSL is currently working on a quick order with local reagents, if applicable
+		local next = next
+		if next(craftingReagentInfo) ~= nil and userSettings["useLocalReagents"] == true then
+			pslQuickOrderActive = 2
+		end
+
 		-- Place the order
 		C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 		
@@ -846,9 +856,6 @@ function app.CreateAssets()
 			-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
 			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 		end
-
-		-- PSL is no longer doing stuff with crafting orders, delayed to let the errors run through
-		C_Timer.After(5, function() pslQuickOrderActive = 0 end)
 	end
 
 	-- Create the place crafting orders personal order button
@@ -902,6 +909,15 @@ function app.CreateAssets()
 		cbUseLocalReagents:SetChecked(userSettings["useLocalReagents"])
 		cbUseLocalReagents:SetScript("OnClick", function(self)
 			userSettings["useLocalReagents"] = self:GetChecked()
+
+			if personalOrders["last"] ~= nil then
+				local reagents = "false"
+				local recipient = personalOrders[personalOrders["last"]]
+				if userSettings["useLocalReagents"] == true then reagents = "true" end
+				repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.\nRecipient: "..recipient.."\nUse local reagents: "..reagents)
+				repeatOrderTooltip:SetHeight(repeatOrderTooltipText:GetStringHeight()+20)
+				repeatOrderTooltip:SetWidth(repeatOrderTooltipText:GetStringWidth()+20)
+			end
 		end)
 		cbUseLocalReagents:SetScript("OnEnter", function()
 			useLocalReagentsTooltip:Show()
@@ -985,7 +1001,7 @@ function app.CreateAssets()
 			if personalOrders["last"] ~= nil then
 				quickOrder(personalOrders["last"])
 			else
-				app.Print("No last order found.")
+				app.Print("No last Quick Order found.")
 			end
 		end)
 		repeatOrderButton:SetScript("OnEnter", function()
@@ -996,7 +1012,7 @@ function app.CreateAssets()
 		end)
 
 		-- Set the last used recipe name for the repeat order button title
-		local recipeName = "No last order found"
+		local recipeName = "No last Quick Order found"
 		-- Check for the name if there has been a last order
 		if personalOrders["last"] ~= nil then
 			recipeName = C_TradeSkillUI.GetRecipeSchematic(personalOrders["last"], false).name
@@ -1025,15 +1041,19 @@ function app.CreateAssets()
 		repeatOrderTooltipText = repeatOrderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		repeatOrderTooltipText:SetPoint("TOPLEFT", repeatOrderTooltip, "TOPLEFT", 10, -10)
 		repeatOrderTooltipText:SetJustifyH("LEFT")
-		repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.")
-
+		if personalOrders["last"] ~= nil then
+			local reagents = "false"
+			local recipient = personalOrders[personalOrders["last"]]
+			if userSettings["useLocalReagents"] == true then reagents = "true" end
+			repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.\nRecipient: "..recipient.."\nUse local reagents: "..reagents)
+		else
+			repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.")
+		end
+		
 		-- Set the tooltip size to fit its contents
 		repeatOrderTooltip:SetHeight(repeatOrderTooltipText:GetStringHeight()+20)
 		repeatOrderTooltip:SetWidth(repeatOrderTooltipText:GetStringWidth()+20)
 	end
-
-	-- Initialise this variable for the MakeOrderButtons
-	if not pslOrderRecipeID then pslOrderRecipeID = 0 end
 
 	-- Create Cooking Fire button
 	if not cookingFireButton then
@@ -3606,12 +3626,25 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		-- Check for the name if there has been a last order
 		if personalOrders["last"] ~= nil then
 			recipeName = C_TradeSkillUI.GetRecipeSchematic(personalOrders["last"], false).name
+
+			local reagents = "false"
+			local recipient = personalOrders[personalOrders["last"]]
+			if userSettings["useLocalReagents"] == true then reagents = "true" end
+			repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.\nRecipient: "..recipient.."\nUse local reagents: "..reagents)
+			repeatOrderTooltip:SetHeight(repeatOrderTooltipText:GetStringHeight()+20)
+			repeatOrderTooltip:SetWidth(repeatOrderTooltipText:GetStringWidth()+20)
 		end
 		repeatOrderButton:SetText(recipeName)
 		repeatOrderButton:SetWidth(repeatOrderButton:GetTextWidth()+20)
+
+		-- Count a(nother) quick order attempt
+		pslQuickOrderAttempts = pslQuickOrderAttempts + 1
 		
 		-- If this gives an error
 		if arg1 ~= 0 then
+			-- Count a(nother) error for the quick order attempt
+			pslQuickOrderErrors = pslQuickOrderErrors + 1
+
 			-- Hide the error frame
 			UIErrorsFrame:Hide()
 
@@ -3619,12 +3652,16 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			C_Timer.After(1.0, function() UIErrorsFrame:Clear() UIErrorsFrame:Show() end)
 
 			-- If all 4 attempts fail, tell the user this
-			if pslQuickOrderActive >= 4 then
+			if pslQuickOrderErrors >= 4 then
 				app.Print("Quick order failed. Sorry. :(")
 			end
+		end
 
-			-- Add 1 to the pslQuickOrderActive, so we can use it to count the number of fails
-			pslQuickOrderActive = pslQuickOrderActive + 1
+		-- Reset all the numbers if we're done
+		if (pslQuickOrderActive == 1 and pslQuickOrderAttempts >= 1) or (pslQuickOrderActive == 2 and pslQuickOrderAttempts >= 4) then
+			pslQuickOrderActive = 0
+			pslQuickOrderAttempts = 0
+			pslQuickOrderErrors = 0
 		end
 	end
 
