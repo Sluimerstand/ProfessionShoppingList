@@ -2,9 +2,9 @@
 ## Title: Profession Shopping List
 ## Author: Sluimerstand
 ## IconTexture: Interface\AddOns\ProfessionShoppingList\assets\psl_icon.blp
-## AddonCompartmentFunc: ProfessionShoppingList.MetaClick
-## AddonCompartmentFuncOnEnter: ProfessionShoppingList.MetaEnter
-## AddonCompartmentFuncOnLeave: ProfessionShoppingList.MetaLeave
+## AddonCompartmentFunc: ProfessionShoppingList_Click
+## AddonCompartmentFuncOnEnter: ProfessionShoppingList_Enter
+## AddonCompartmentFuncOnLeave: ProfessionShoppingList_Leave
 ## Version: @project-version@
 ## X-Curse-Project-ID: 498475
 ## X-Wago-ID: Xb6X71Np

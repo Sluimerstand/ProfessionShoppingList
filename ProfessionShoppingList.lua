@@ -1406,7 +1406,7 @@ function app.OpenSettings()
 	InterfaceOptionsFrame_OpenToCategory("Profession Shopping List")
 end
 
-function app.MetaClick(self, button)
+function ProfessionShoppingList_Click(self, button)
 	if button == "LeftButton" then
 		app.Toggle()
 	elseif button == "RightButton" then
@@ -1414,14 +1414,14 @@ function app.MetaClick(self, button)
 	end
 end
 
-function app.MetaEnter(self)
+function ProfessionShoppingList_Enter(self, button)
 	GameTooltip:ClearLines()
-	GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
+	GameTooltip:SetOwner(type(self) ~= "string" and self or button, "ANCHOR_LEFT")
 	GameTooltip:AddLine("|cffFFFFFFProfession Shopping List|R\n|cff9D9D9DLeft-click:|R Toggle the windows.\n|cff9D9D9DRight-click:|R Show the settings.")
 	GameTooltip:Show()
 end
 
-function app.MetaLeave()
+function ProfessionShoppingList_Leave()
 	GameTooltip:Hide()
 end
 
@@ -1438,8 +1438,18 @@ function app.Settings()
 		text = "Profession Shopping List",
 		icon = "Interface\\AddOns\\ProfessionShoppingList\\assets\\psl_icon",
 		
-		OnClick = app.MetaClick(self, button)
-		OnTooltipShow = app.MetaEnter(tooltip)
+		OnClick = function(self, button)
+			if button == "LeftButton" then
+				app.Toggle()
+			elseif button == "RightButton" then
+				app.OpenSettings()
+			end
+		end,
+		
+		OnTooltipShow = function(tooltip)
+			if not tooltip or not tooltip.AddLine then return end
+			tooltip:AddLine("|cffFFFFFFProfession Shopping List|R\n|cff9D9D9DLeft-click:|R Toggle the windows.\n|cff9D9D9DRight-click:|R Show the settings.")
+		end,
 	})
 						
 	local icon = LibStub("LibDBIcon-1.0", true)
