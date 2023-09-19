@@ -1406,6 +1406,25 @@ function app.OpenSettings()
 	InterfaceOptionsFrame_OpenToCategory("Profession Shopping List")
 end
 
+function app.MetaClick(self, button)
+	if button == "LeftButton" then
+		app.Toggle()
+	elseif button == "RightButton" then
+		app.OpenSettings()
+	end
+end
+
+function app.MetaEnter(self)
+	GameTooltip:ClearLines()
+	GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
+	GameTooltip:AddLine("|cffFFFFFFProfession Shopping List|R\n|cff9D9D9DLeft-click:|R Toggle the windows.\n|cff9D9D9DRight-click:|R Show the settings.")
+	GameTooltip:Show()
+end
+
+function app.MetaLeave()
+	GameTooltip:Hide()
+end
+
 -- Settings and minimap icon
 function app.Settings()
 	-- Initialise the Settings page so the Minimap button can go there
@@ -1419,18 +1438,8 @@ function app.Settings()
 		text = "Profession Shopping List",
 		icon = "Interface\\AddOns\\ProfessionShoppingList\\assets\\psl_icon",
 		
-		OnClick = function(self, button)
-			if button == "LeftButton" then
-				app.Toggle()
-			elseif button == "RightButton" then
-				app.OpenSettings()
-			end
-		end,
-		
-		OnTooltipShow = function(tooltip)
-			if not tooltip or not tooltip.AddLine then return end
-			tooltip:AddLine("|cffFFFFFFProfession Shopping List|R\n|cff9D9D9DLeft-click:|R Toggle the windows.\n|cff9D9D9DRight-click:|R Show the settings.")
-		end,
+		OnClick = app.MetaClick(self, button)
+		OnTooltipShow = app.MetaEnter(tooltip)
 	})
 						
 	local icon = LibStub("LibDBIcon-1.0", true)
