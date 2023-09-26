@@ -2084,7 +2084,7 @@ function app.WindowFunctions()
 			local function trackSubreagent(recipeID, itemID)
 				-- Define the amount of recipes to be tracked
 				local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-				local amount = math.max(0, math.ceil(reagentsTracked[itemID] / quantityMade) - GetItemCount(itemID))
+				local amount = math.max(0, math.ceil((reagentsTracked[itemID] - GetItemCount(itemID)) / quantityMade))
 				if recipesTracked[recipeID] then amount = math.max(0, (amount - recipesTracked[recipeID])) end
 
 				-- Track the recipe (don't track if 0)
