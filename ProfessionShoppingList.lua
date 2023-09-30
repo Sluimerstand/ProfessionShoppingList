@@ -3746,6 +3746,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						-- Add another delay because I have no idea how to optimise my AddOn
 						C_Timer.After(0.5, function()
 							getReagentNames()
+							-- Remove old list
+							if Auctionator.Shopping.ListManager:GetIndexForName("PSL") ~= nil then
+								Auctionator.Shopping.ListManager:Delete("PSL")
+							end
+							-- Import new list
 							AuctionatorImportListFrame.EditBoxContainer:SetText(auctionatorReagents)
 						end)
 					end)
