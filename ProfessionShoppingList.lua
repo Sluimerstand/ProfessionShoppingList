@@ -2550,7 +2550,7 @@ end
 
 api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	-- When the AddOn is fully loaded, actually run the components
-	if event == "ADDON_LOADED" and arg1 == "ProfessionShoppingList" then
+	if event == "ADDON_LOADED" and arg1 == appName then
 		app.Initialise()
 		app.TrackingWindows()
 		app.CreateAssets()
