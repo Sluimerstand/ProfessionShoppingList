@@ -2650,9 +2650,17 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					if criteriaType == 29 then	
 						-- For each criteria, track the SpellID
 						for i=1,numCriteria,1 do
-							local _, criteriaType, completed, _, _, _, _, assetID = GetAchievementCriteriaInfo(achievementID, i)
-							-- If the criteria has not yet been completed, add the recipe
-							if completed == false then app.TrackRecipe(assetID, 1) end
+							local _, criteriaType, completed, quantity, reqQuantity, _, _, assetID = GetAchievementCriteriaInfo(achievementID, i)
+							-- If the criteria has not yet been completed
+							if completed == false then
+								-- Proper quantity, if the info is provided
+								local numTrack = 1
+								if quantity ~= nil and reqQuantity ~= nil then
+									numTrack = reqQuantity - quantity
+								end
+								-- Add the recipe
+								app.TrackRecipe(assetID, numTrack)
+							end
 						end
 					-- Chromatic Calibration: Cranial Cannons
 					elseif achievementID == 18906 then
