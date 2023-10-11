@@ -1472,17 +1472,17 @@ function app.Settings()
 	scrollChild:SetHeight(1)	-- This is automatically defined, so long as the attribute exists at all
 
 	-- -- Subcategory
-	-- local scrollFrame2 = CreateFrame("ScrollFrame", nil, settings, "ScrollFrameTemplate")
+	-- local scrollFrame2 = CreateFrame("ScrollFrame", nil, self, "ScrollFrameTemplate")
 	-- scrollFrame2:Hide()	-- I'm fairly sure this isn't how you're supposed to prevent the subcategories from showing initially, but it works!
-	-- scrollFrame2:SetPoint("TOPLEFT", 0, 0)
-	-- scrollFrame2:SetPoint("BOTTOMRIGHT", -25, 0)    -- Allow space for the scrollbar
+	-- scrollFrame2.ScrollBar:ClearPoint("RIGHT")
+	-- scrollFrame2.ScrollBar:SetPoint("RIGHT", -36, 0)
 
 	-- local scrollChild2 = CreateFrame("Frame")
 	-- scrollFrame2:SetScrollChild(scrollChild2)
 	-- scrollChild2:SetWidth(1)    -- This is automatically defined, so long as the attribute exists at all
 	-- scrollChild2:SetHeight(1)    -- This is automatically defined, so long as the attribute exists at all
 
-	-- local subcategory1 = scrollChild2
+	-- local subcategory1 = scrollFrame2
 	-- subcategory1.name = "Hello"
 	-- subcategory1.parent = "Profession Shopping List"
 	-- InterfaceOptions_AddCategory(subcategory1)
