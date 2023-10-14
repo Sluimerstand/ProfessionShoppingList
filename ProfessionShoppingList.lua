@@ -2652,6 +2652,17 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			-- No command
 			elseif command == "" then
 				app.Toggle()
+			-- elseif command == "test" then
+			-- testTable = {}
+			-- for key, value in pairs(reagentLinks) do
+			-- 	testTable[#testTable + 1] = { key = key, value = value }
+			-- end
+			-- table.sort(testTable, function(a,b) return a.value.name < b.value.name end)
+
+			-- for k,v in ipairs(testTable) do
+			-- 	print(v.value.name)
+			-- end
+
 			-- Unlisted command
 			else
 				-- If achievement string
