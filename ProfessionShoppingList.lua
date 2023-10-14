@@ -3750,7 +3750,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				-- Reset the reagents list
 				auctionatorReagents = "PSL"
 
-				for reagentID, _ in pairs(reagentsTracked) do
+				for reagentID, reagentAmount in pairs(reagentsTracked) do
 					-- Cache item
 					if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
 					
@@ -3764,7 +3764,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					end
 
 					-- Put the item names in the temporary variable
-					auctionatorReagents = auctionatorReagents .. '^"' .. itemName .. '";;0;0;0;0;0;0;0;0;;#;'
+					auctionatorReagents = auctionatorReagents .. '^"' .. itemName .. '";;0;0;0;0;0;0;0;0;;#;;' .. reagentAmount
 				end
 			end
 
