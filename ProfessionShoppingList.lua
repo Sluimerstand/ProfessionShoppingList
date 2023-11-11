@@ -3199,18 +3199,24 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[4] = {questID = 70513, itemID = 198966, source = "Mobs: Fire"}
 				drops[5] = {questID = 74931, itemID = 204230, source = "Tidesmith Zarviss"}
 				treasures = {}
-				treasures[70230] = 198791
-				treasures[70246] = 201007
-				treasures[70296] = 201008
-				treasures[70310] = 201010
-				treasures[70311] = 201006
-				treasures[70312] = 201005
-				treasures[70313] = 201004
-				treasures[70314] = 201011
-				treasures[70353] = 201009
-				treasures[76078] = 205986
-				treasures[76079] = 205987
-				treasures[76080] = 205988
+				-- 10.0
+				treasures[70230] = 198791	-- Glimmer of Blacksmithing Wisdom
+				treasures[70246] = 201007	-- Ancient Monument
+				treasures[70296] = 201008	-- Molten Ingot
+				treasures[70310] = 201010	-- Qalashi Weapon Diagram
+				treasures[70311] = 201006	-- Draconic Flux
+				treasures[70312] = 201005	-- Curious Ingots
+				treasures[70313] = 201004	-- Ancient Spear Shards
+				treasures[70314] = 201011	-- Spelltouched Tongs
+				treasures[70353] = 201009	-- Falconer Gauntlet Drawings
+				-- 10.1
+				treasures[76078] = 205986	-- Well-Worn Kiln
+				treasures[76079] = 205987	-- Brimstone Rescue Ring
+				treasures[76080] = 205988	-- Zaqali Elder Spear
+				-- 10.2
+				treasures[78417] = 210464	-- Amirdrassil Defender's Shield
+				treasures[78418] = 210465	-- Deathstalker Chassis
+				treasures[78419] = 210466	-- Flamesworn Render
 				books = {}
 				books[1] = {questID = 71894, itemID = 200972}
 				books[2] = {questID = 71905, itemID = 201268}
@@ -3235,16 +3241,22 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[4] = {questID = 70523, itemID = 198976, source = "Mobs: Slyvern & Vorquin"}
 				drops[5] = {questID = 74928, itemID = 204232, source = "Snarfang"}
 				treasures = {}
-				treasures[70266] = 198658
-				treasures[70269] = 201018
-				treasures[70280] = 198667
-				treasures[70286] = 198683
-				treasures[70294] = 198690
-				treasures[70300] = 198696
-				treasures[70308] = 198711
-				treasures[75495] = 204986
-				treasures[75496] = 204987
-				treasures[75502] = 204988
+				-- 10.0
+				treasures[70266] = 198658	-- Decay-Infused Tanning Oil
+				treasures[70269] = 201018	-- Well-Danced Drum
+				treasures[70280] = 198667	-- Spare Djaradin Tools
+				treasures[70286] = 198683	-- Treated Hides
+				treasures[70294] = 198690	-- Bag of Decayed Scales
+				treasures[70300] = 198696	-- Wind-Blessed Hide
+				treasures[70308] = 198711	-- Poacher's Pack
+				-- 10.1
+				treasures[75495] = 204986	-- Flame-Infused Scale Oil
+				treasures[75496] = 204987	-- Lava-Forged Leatherworker's "Knife"
+				treasures[75502] = 204988	-- Sulfur-Soaked Skins
+				-- 10.2
+				treasures[78298] = 210208	-- Tuft of Dreamsaber Fur
+				treasures[78299] = 210211	-- Molted Fearie Dragon Scales
+				treasures[78305] = 210215	-- Dreamtalon Claw
 				books = {}
 				books[1] = {questID = 71900, itemID = 200979}
 				books[2] = {questID = 71911, itemID = 201275}
@@ -3269,16 +3281,22 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[4] = {questID = 70511, itemID = 198964, source = "Mobs: Elemental"}
 				drops[5] = {questID = 74935, itemID = 204226, source = "Agni Blazehoof"}
 				treasures = {}
-				treasures[70208] = 198599
-				treasures[70274] = 198663
-				treasures[70278] = 201003
-				treasures[70289] = 198685
-				treasures[70301] = 198697
-				treasures[70305] = 198710
-				treasures[70309] = 198712
-				treasures[75646] = 205211
-				treasures[75649] = 205212
-				treasures[75651] = 205213
+				-- 10.0
+				treasures[70208] = 198599	-- Experimental Decay Sample
+				treasures[70274] = 198663	-- Frostforged Potion
+				treasures[70278] = 203471	-- Tasty Candy (formerly Furry Gloop 201003)
+				treasures[70289] = 198685	-- Well Insulated Mug
+				treasures[70301] = 198697	-- Contraband Concoction
+				treasures[70305] = 198710	-- Canteen of Suspicious Water
+				treasures[70309] = 198712	-- Small Basket of Firewater Powder
+				-- 10.1
+				treasures[75646] = 205211	-- Nutriend Diluted Protofluid
+				treasures[75649] = 205212	-- Marrow-Ripened Slime
+				treasures[75651] = 205213	-- Suspicious Mold
+				-- 10.2
+				treasures[78264] = 210184	-- Half-Filled Dreamless Sleep Potion
+				treasures[78269] = 210185	-- Splash Potion of Narcolepsy
+				treasures[78275] = 210190	-- Blazeroot
 				books = {}
 				books[1] = {questID = 71893, itemID = 200974}
 				books[2] = {questID = 71904, itemID = 201270}
@@ -3355,17 +3373,23 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[4] = {questID = 70525, itemID = 198978, source = "Mobs: Gnoll"}
 				drops[5] = {questID = 74929, itemID = 204225, source = "Gareed"}
 				treasures = {}
-				treasures[70267] = 198662
-				treasures[70284] = 198680
-				treasures[70288] = 198684
-				treasures[70295] = 198692
-				treasures[70302] = 198699
-				treasures[70303] = 201020
-				treasures[70304] = 198702
-				treasures[70372] = 201019
-				treasures[76102] = 206019
-				treasures[76110] = 206025
-				treasures[76116] = 206030
+				-- 10.0
+				treasures[70267] = 198662	-- Intriguing Bolt of Blue Cloth
+				treasures[70284] = 198680	-- Decaying Brackenhide Blanket
+				treasures[70288] = 198684	-- Miniature Bronze Dragonflight Banner
+				treasures[70295] = 198692	-- Noteworthy Scrap of Carpet
+				treasures[70302] = 198699	-- Mysterious Banner
+				treasures[70303] = 201020	-- Silky Surprise
+				treasures[70304] = 198702	-- Itinerant Singed Fabric
+				treasures[70372] = 201019	-- Ancient Dragonweave Bolt
+				-- 10.1
+				treasures[76102] = 206019	-- Abandoned Reserve Chute
+				treasures[76110] = 206025	-- Used Medical Wrap Kit
+				treasures[76116] = 206030	-- Exquisitely Embroidered Banner
+				-- 10.2
+				treasures[78414] = 210461	-- Exceedingly Soft Wildercloth
+				treasures[78415] = 210462	-- Plush Pillow
+				treasures[78416] = 210463	-- Snuggle Buddy
 				books = {}
 				books[1] = {questID = 71903, itemID = 200975}
 				books[2] = {questID = 71914, itemID = 201271}
@@ -3390,16 +3414,22 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[4] = {questID = 70517, itemID = 198970, source = "Mobs: Dragonkin"}
 				drops[5] = {questID = 74934, itemID = 204227, source = "Fimbol"}
 				treasures = {}
-				treasures[70270] = 201014
-				treasures[70275] = 198789
-				treasures[75180] = 204469
-				treasures[75183] = 204470
-				treasures[75184] = 204471
-				treasures[75186] = 204475
-				treasures[75188] = 204480
-				treasures[75430] = 204850
-				treasures[75431] = 204853
-				treasures[75433] = 204855
+				-- 10.0
+				treasures[70270] = 201014	-- Boomthyr Rocket
+				treasures[70275] = 198789	-- Intact Coil Capacitor
+				-- 10.1
+				treasures[75180] = 204469	-- Misplaced Aberrus Outflow Blueprints
+				treasures[75183] = 204470	-- Haphazardly Discarded Bomb
+				treasures[75184] = 204471	-- Defective Survival Pack
+				treasures[75186] = 204475	-- Busted Wyrmhole Generator
+				treasures[75188] = 204480	-- Inconspicuous Data Miner
+				treasures[75430] = 204850	-- Handful of Khaz'gorite Bolts
+				treasures[75431] = 204853	-- Discarded Dracothyst Drill
+				treasures[75433] = 204855	-- Overclocked Determination Core
+				-- 10.2
+				treasures[78278] = 210193	-- Experimental Dreamcatcher
+				treasures[78279] = 210194	-- Insomniotron
+				treasures[78281] = 210197	-- Unhatched Battery
 				books = {}
 				books[1] = {questID = 71896, itemID = 200977}
 				books[2] = {questID = 71907, itemID = 201273}
@@ -3424,17 +3454,23 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[4] = {questID = 70515, itemID = 198968, source = "Mobs: Primalist"}
 				drops[5] = {questID = 74927, itemID = 204224, source = "Manathema"}
 				treasures = {}
-				treasures[70272] = 201012
-				treasures[70283] = 198675
-				treasures[70290] = 201013
-				treasures[70291] = 198689
-				treasures[70298] = 198694
-				treasures[70320] = 198798
-				treasures[70336] = 198799
-				treasures[70342] = 198800
-				treasures[75508] = 204990
-				treasures[75509] = 204999
-				treasures[75510] = 205001
+				-- 10.0
+				treasures[70272] = 201012	-- Enchanted Debris
+				treasures[70283] = 198675	-- Lava-Infused Seed
+				treasures[70290] = 201013	-- Faintly Enchanted Remains
+				treasures[70291] = 198689	-- Stormbound Horn
+				treasures[70298] = 198694	-- Enriched Earthen Shard
+				treasures[70320] = 198798	-- Flashfrozen Scroll
+				treasures[70336] = 198799	-- Forgotten Arcane Tome
+				treasures[70342] = 198800	-- Fractured Titanic Sphere
+				-- 10.1
+				treasures[75508] = 204990	-- Lava-Drenched Shadow Crystal
+				treasures[75509] = 204999	-- Shimmering Aqueous Orb
+				treasures[75510] = 205001	-- Resonating Arcane Crystal
+				-- 10.2
+				treasures[78308] = 210228	-- Pure Dream Water
+				treasures[78309] = 210231	-- Everburning Core
+				treasures[78310] = 210234	-- Essence of Dreams
 				books = {}
 				books[1] = {questID = 71895, itemID = 200976}
 				books[2] = {questID = 71906, itemID = 201272}
@@ -3485,17 +3521,23 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[4] = {questID = 70521, itemID = 198974, source = "Mobs: Dragonkin"}
 				drops[5] = {questID = 74936, itemID = 204222, source = "Amephyst"}
 				treasures = {}
-				treasures[70273] = 201017
-				treasures[70292] = 198687
-				treasures[70271] = 201016
-				treasures[70277] = 198664
-				treasures[70282] = 198670
-				treasures[70263] = 198660
-				treasures[70261] = 198656
-				treasures[70285] = 198682
-				treasures[75652] = 205214
-				treasures[75653] = 205216
-				treasures[75654] = 205219
+				-- 10.0
+				treasures[70273] = 201017	-- Igneous Gem
+				treasures[70292] = 198687	-- Closely Guarded Shiny
+				treasures[70271] = 201016	-- Harmonic Crystal Harmonizer
+				treasures[70277] = 198664	-- Crystalline Overgrowth
+				treasures[70282] = 198670	-- Lofty Malygite
+				treasures[70263] = 198660	-- Fragmented Key
+				treasures[70261] = 198656	-- Painter's Pretty Jewel
+				treasures[70285] = 198682	-- Alexstraszite Cluster
+				-- 10.1
+				treasures[75652] = 205214	-- Snubbed Snail Shells
+				treasures[75653] = 205216	-- Gently Jostled Jewels
+				treasures[75654] = 205219	-- Broken Barter Boulder
+				-- 10.2
+				treasures[78282] = 210200	-- Petrified Hope
+				treasures[78283] = 210201	-- Handful of Pebbles
+				treasures[78285] = 210202	-- Coalesced Dreamstone
 				books = {}
 				books[1] = {questID = 71899, itemID = 200978}
 				books[2] = {questID = 71910, itemID = 201274}
@@ -3520,17 +3562,23 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				drops[4] = {questID = 70519, itemID = 198972, source = "Mobs: Dragonkin"}
 				drops[5] = {questID = 74932, itemID = 204229, source = "Arcantrix"}
 				treasures = {}
-				treasures[70248] = 198659
-				treasures[70264] = 198659
-				treasures[70281] = 198669
-				treasures[70287] = 201015
-				treasures[70293] = 198686
-				treasures[70297] = 198693
-				treasures[70306] = 198704
-				treasures[70307] = 198703
-				treasures[76117] = 206031
-				treasures[76120] = 206034
-				treasures[76121] = 206035
+				-- 10.0
+				treasures[70248] = 198659	-- Forgetful Apprentice's Tome 1
+				treasures[70264] = 198659	-- Forgetful Apprentice's Tome 2
+				treasures[70281] = 198669	-- How to Train Your Whelpling
+				treasures[70287] = 201015	-- Counterfeit Darkmoon Deck
+				treasures[70293] = 198686	-- Frosted Parchment
+				treasures[70297] = 198693	-- Dusty Darkmoon Card
+				treasures[70306] = 198704	-- Pulsing Earth Rune
+				treasures[70307] = 198703	-- Sign Language Reference Sheet
+				-- 10.1
+				treasures[76117] = 206031	-- Intricate Zaqali Runes
+				treasures[76120] = 206034	-- Hissing Rune Draft
+				treasures[76121] = 206035	-- Ancient Research
+				-- 10.2
+				treasures[78411] = 210458	-- Winnie's Notes on Flora and Fauna
+				treasures[78412] = 210459	-- Grove Keeper's Pillar
+				treasures[78413] = 210460	-- Primalist Shadowbinding Rune
 				books = {}
 				books[1] = {questID = 71898, itemID = 200973}
 				books[2] = {questID = 71909, itemID = 201269}
