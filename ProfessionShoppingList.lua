@@ -2832,6 +2832,31 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			local progress = true
 
 			local function kpTooltip()
+				-- Check if DMF is active
+				local dmfActive = false
+				C_Calendar.OpenCalendar()
+				local date = C_DateAndTime.GetCurrentCalendarTime()
+				local numEvents = C_Calendar.GetNumDayEvents(0, date.monthDay)
+				for i=1, numEvents do
+					local event = C_Calendar.GetHolidayInfo(0, date.monthDay, i)
+					if event and (event.texture == 235446 or event.texture == 235447 or event.texture == 235448) then -- Non-localised way to detect specific holiday
+						dmfActive = true
+					end
+				end
+
+				-- Darkmoon Faire
+				local dmfStatus = app.iconNotReady
+				local dmfNumber = 0
+
+				if dmf ~= nil and dmfActive == true then
+					if C_QuestLog.IsQuestFlaggedCompleted(dmf) then
+						dmfStatus = app.iconReady
+						treatiseNumber = 1
+					end
+
+					if dmfStatus == app.iconNotReady then progress = false end
+				end
+
 				-- Treatise
 				local treatiseStatus = app.iconNotReady
 				local treatiseNumber = 0
@@ -3000,6 +3025,13 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 				-- Weekly knowledge (text)
 				local oldText
+				knowledgePointTooltipText:SetText("Weekly:|cffFFFFFF")
+
+				if dmf ~= nil and dmfActive == true then
+					oldText = knowledgePointTooltipText:GetText()
+					knowledgePointTooltipText:SetText(oldText.."\n".."|T"..dmfStatus..":0|t "..dmfNumber.."/1 "..CALENDAR_FILTER_DARKMOON)
+				end
+
 				if treatiseQuest ~= nil then
 					-- Cache treatise item
 					if not C_Item.IsItemDataCachedByID(treatiseItem) then local item = Item:CreateFromItemID(treatiseItem) end
@@ -3010,8 +3042,8 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 						RunNextFrame(kpTooltip)
 						do return end
 					end
-
-					knowledgePointTooltipText:SetText("Weekly:\n|cffFFFFFF".."|T"..treatiseStatus..":0|t "..treatiseNumber.."/1 "..itemLink)
+					oldText = knowledgePointTooltipText:GetText()
+					knowledgePointTooltipText:SetText(oldText.."\n".."|T"..treatiseStatus..":0|t "..treatiseNumber.."/1 "..itemLink)
 				end
 
 				if orderQuest ~= nil then
@@ -3270,6 +3302,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				renown = {}
 				renown[1] = {factionID = 2503, questID14 = 72312, questID24 = 72315}
 				renown[2] = {factionID = 2510, questID14 = 72329, questID24 = 70909}
+				dmf = 29508
 			end
 
 			-- Leatherworking
@@ -3313,6 +3346,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				renown = {}
 				renown[1] = {factionID = 2503, questID14 = 72296, questID24 = 72297}
 				renown[2] = {factionID = 2511, questID14 = 72321, questID24 = 72326}
+				dmf = 29517
 			end
 
 			-- Alchemy
@@ -3356,6 +3390,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				renown = {}
 				renown[1] = {factionID = 2503, questID14 = 72311, questID24 = 72314}
 				renown[2] = {factionID = 2510, questID14 = 70892, questID24 = 70889}
+				dmf = 29506
 			end
 
 			-- Herbalism
@@ -3385,6 +3420,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				renown = {}
 				renown[1] = {factionID = 2503, questID14 = 72313, questID24 = 72316}
 				renown[2] = {factionID = 2511, questID14 = 72319, questID24 = 72324}
+				dmf = 29514
 			end
 
 			-- Mining
@@ -3414,6 +3450,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				renown = {}
 				renown[1] = {factionID = 2507, questID14 = 72302, questID24 = 72308}
 				renown[2] = {factionID = 2510, questID14 = 72332, questID24 = 72335}
+				dmf = 29518
 			end
 
 			-- Tailoring
@@ -3458,6 +3495,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				renown = {}
 				renown[1] = {factionID = 2507, questID14 = 72303, questID24 = 72309}
 				renown[2] = {factionID = 2510, questID14 = 72333, questID24 = 72336}
+				dmf = 29520
 			end
 
 			-- Engineering
@@ -3501,6 +3539,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				renown = {}
 				renown[1] = {factionID = 2507, questID14 = 72300, questID24 = 72305}
 				renown[2] = {factionID = 2510, questID14 = 72330, questID24 = 70902}
+				dmf = 29511
 			end
 
 			-- Enchanting
@@ -3545,6 +3584,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				renown = {}
 				renown[1] = {factionID = 2507, questID14 = 72299, questID24 = 72304}
 				renown[2] = {factionID = 2511, questID14 = 72318, questID24 = 72323}
+				dmf = 29510
 			end
 
 			-- Skinning
@@ -3574,6 +3614,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				renown = {}
 				renown[1] = {factionID = 2503, questID14 = 72310, questID24 = 72317}
 				renown[2] = {factionID = 2511, questID14 = 72322, questID24 = 72327}
+				dmf = 29519
 			end
 
 			-- Jewelcrafting
@@ -3618,6 +3659,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				renown = {}
 				renown[1] = {factionID = 2507, questID14 = 72301, questID24 = 72306}
 				renown[2] = {factionID = 2511, questID14 = 72320, questID24 = 72325}
+				dmf = 29516
 			end
 
 			-- Inscription
@@ -3662,6 +3704,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				renown = {}
 				renown[1] = {factionID = 2507, questID14 = 72294, questID24 = 72295}
 				renown[2] = {factionID = 2510, questID14 = 72331, questID24 = 72334}
+				dmf = 29515
 			end
 
 			-- Professions with Knowledge Points
