@@ -2968,10 +2968,36 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					end
 
 					if bookNoCurrent == bookNoTotal then bookStatus = app.iconReady end
-
 					if bookStatus == app.iconNotReady then progress = false end
 				end
 				
+				-- Renown
+				if renown ~= nil then
+					renownStatus = app.iconNotReady
+
+					renownInfo = {}
+					local title1 = GetFactionInfoByID(renown[1].factionID)
+					local title2 = GetFactionInfoByID(renown[2].factionID)
+					renownInfo[1] = { locked = C_MajorFactions.GetRenownLevels(renown[1].factionID)[12].locked, questID = renown[1].questID14, title = title1, level = 12 }
+					renownInfo[2] = { locked = C_MajorFactions.GetRenownLevels(renown[1].factionID)[24].locked, questID = renown[1].questID24, title = title1, level = 24 }
+					renownInfo[3] = { locked = C_MajorFactions.GetRenownLevels(renown[2].factionID)[12].locked, questID = renown[2].questID14, title = title2, level = 12 }
+					renownInfo[4] = { locked = C_MajorFactions.GetRenownLevels(renown[2].factionID)[24].locked, questID = renown[2].questID24, title = title2, level = 24 }
+
+					renownCount = 0
+					for key, info in ipairs (renownInfo) do
+						renownInfo[key].status = app.iconWaiting
+						if C_QuestLog.IsQuestFlaggedCompleted(renownInfo[key].questID) == true then
+							renownInfo[key].status = app.iconReady
+							renownCount = renownCount + 1
+						elseif renownInfo[key].locked == true then
+							renownInfo[key].status = app.iconNotReady
+						end
+					end
+
+					if renownCount == 4 then renownStatus = app.iconReady end
+					if renownStatus == app.iconNotReady then progress = false end
+				end
+
 				-- Weekly knowledge (text)
 				local oldText
 				if treatiseQuest ~= nil then
@@ -3035,7 +3061,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					-- Do not show this
 				else
 					oldText = knowledgePointTooltipText:GetText()
-					knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000One-time:")
+					knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000One-time:|cffFFFFFF")
 				end
 				
 				-- Dragon Shard of Knowledge
@@ -3053,7 +3079,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					end
 
 					oldText = knowledgePointTooltipText:GetText()
-					knowledgePointTooltipText:SetText(oldText.."\n|T"..shardStatus..":0|t ".."|cffFFFFFF"..shardNo.."/4 "..itemLink)
+					knowledgePointTooltipText:SetText(oldText.."\n|T"..shardStatus..":0|t "..shardNo.."/4 "..itemLink)
 
 					if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
 						for no, questID in pairs (shardQuests) do
@@ -3147,6 +3173,23 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					end
 				end
 
+				-- Renown
+				if renown ~= nil then
+					if userSettings["knowledgeHideDone"] == true and renownCount == 4 then
+						-- Don't show this
+					else
+						oldText = knowledgePointTooltipText:GetText()
+						knowledgePointTooltipText:SetText(oldText.."\n".."|T"..renownStatus..":0|t "..renownCount.."/4 Renown")
+						if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
+							for key, info in ipairs (renownInfo) do
+
+								oldText = knowledgePointTooltipText:GetText()
+								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..renownInfo[key].status..":0|t "..renownInfo[key].title.." ("..RENOWN_LEVEL_LABEL..renownInfo[key].level..")")
+							end
+						end
+					end
+				end
+				
 				oldText = knowledgePointTooltipText:GetText()
 				if IsModifierKeyDown() == false and userSettings["knowledgeAlwaysShowDetails"] == false then knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000Hold Alt, Ctrl, or Shift to show details.") end
 
@@ -3224,6 +3267,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[4] = {questID = 75755, itemID = 205352}
 				books[5] = {questID = 75846, itemID = 205428}
 				books[6] = {questID = 75849, itemID = 205439}
+				renown = {}
+				renown[1] = {factionID = 2503, questID14 = 72312, questID24 = 72315}
+				renown[2] = {factionID = 2510, questID14 = 72329, questID24 = 70909}
 			end
 
 			-- Leatherworking
@@ -3264,6 +3310,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[4] = {questID = 75751, itemID = 198613}
 				books[5] = {questID = 75840, itemID = 205426}
 				books[6] = {questID = 75855, itemID = 205437}
+				renown = {}
+				renown[1] = {factionID = 2503, questID14 = 72296, questID24 = 72297}
+				renown[2] = {factionID = 2511, questID14 = 72321, questID24 = 72326}
 			end
 
 			-- Alchemy
@@ -3304,6 +3353,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[4] = {questID = 75756, itemID = 205353}
 				books[5] = {questID = 75847, itemID = 205429}
 				books[6] = {questID = 75848, itemID = 205440}
+				renown = {}
+				renown[1] = {factionID = 2503, questID14 = 72311, questID24 = 72314}
+				renown[2] = {factionID = 2510, questID14 = 70892, questID24 = 70889}
 			end
 
 			-- Herbalism
@@ -3330,6 +3382,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[4] = {questID = 75753, itemID = 205358}
 				books[5] = {questID = 75843, itemID = 205434}
 				books[6] = {questID = 75852, itemID = 205445}
+				renown = {}
+				renown[1] = {factionID = 2503, questID14 = 72313, questID24 = 72316}
+				renown[2] = {factionID = 2511, questID14 = 72319, questID24 = 72324}
 			end
 
 			-- Mining
@@ -3356,6 +3411,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[4] = {questID = 75758, itemID = 205356}
 				books[5] = {questID = 75839, itemID = 205432}
 				books[6] = {questID = 75856, itemID = 205443}
+				renown = {}
+				renown[1] = {factionID = 2507, questID14 = 72302, questID24 = 72308}
+				renown[2] = {factionID = 2510, questID14 = 72332, questID24 = 72335}
 			end
 
 			-- Tailoring
@@ -3397,6 +3455,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[4] = {questID = 75757, itemID = 205355}
 				books[5] = {questID = 75837, itemID = 205431}
 				books[6] = {questID = 75858, itemID = 205442}
+				renown = {}
+				renown[1] = {factionID = 2507, questID14 = 72303, questID24 = 72309}
+				renown[2] = {factionID = 2510, questID14 = 72333, questID24 = 72336}
 			end
 
 			-- Engineering
@@ -3437,6 +3498,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[4] = {questID = 75759, itemID = 205349}
 				books[5] = {questID = 75844, itemID = 205425}
 				books[6] = {questID = 75851, itemID = 205436}
+				renown = {}
+				renown[1] = {factionID = 2507, questID14 = 72300, questID24 = 72305}
+				renown[2] = {factionID = 2510, questID14 = 72330, questID24 = 70902}
 			end
 
 			-- Enchanting
@@ -3478,6 +3542,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[4] = {questID = 75752, itemID = 205351}
 				books[5] = {questID = 75845, itemID = 205427}
 				books[6] = {questID = 75850, itemID = 205438}
+				renown = {}
+				renown[1] = {factionID = 2507, questID14 = 72299, questID24 = 72304}
+				renown[2] = {factionID = 2511, questID14 = 72318, questID24 = 72323}
 			end
 
 			-- Skinning
@@ -3504,6 +3571,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[4] = {questID = 75760, itemID = 205357}
 				books[5] = {questID = 75838, itemID = 205433}
 				books[6] = {questID = 75857, itemID = 205444}
+				renown = {}
+				renown[1] = {factionID = 2503, questID14 = 72310, questID24 = 72317}
+				renown[2] = {factionID = 2511, questID14 = 72322, questID24 = 72327}
 			end
 
 			-- Jewelcrafting
@@ -3545,6 +3615,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[4] = {questID = 75754, itemID = 205348}
 				books[5] = {questID = 75841, itemID = 205424}
 				books[6] = {questID = 75854, itemID = 205435}
+				renown = {}
+				renown[1] = {factionID = 2507, questID14 = 72301, questID24 = 72306}
+				renown[2] = {factionID = 2511, questID14 = 72320, questID24 = 72325}
 			end
 
 			-- Inscription
@@ -3586,6 +3659,9 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[4] = {questID = 75761, itemID = 205354}
 				books[5] = {questID = 75842, itemID = 205430}
 				books[6] = {questID = 75853, itemID = 205441}
+				renown = {}
+				renown[1] = {factionID = 2507, questID14 = 72294, questID24 = 72295}
+				renown[2] = {factionID = 2510, questID14 = 72331, questID24 = 72334}
 			end
 
 			-- Professions with Knowledge Points
