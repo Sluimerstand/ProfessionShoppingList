@@ -3905,6 +3905,10 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				app.Print("Quick order failed. Sorry. :(")
 			end
 		end
+		-- Separate error message for mandatory reagents
+		if arg1 == 29 then
+			app.Print("Can't create a quick order for items with mandatory reagents. Sorry. :(")
+		end
 
 		-- Reset all the numbers if we're done
 		if (pslQuickOrderActive == 1 and pslQuickOrderAttempts >= 1) or (pslQuickOrderActive == 2 and pslQuickOrderAttempts >= 4) then
