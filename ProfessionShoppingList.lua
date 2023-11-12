@@ -13,6 +13,7 @@ api:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 api:RegisterEvent("SPELL_DATA_LOAD_RESULT")
 api:RegisterEvent("MERCHANT_SHOW")
 api:RegisterEvent("CRAFTINGORDERS_CLAIM_ORDER_RESPONSE")
+api:RegisterEvent("CRAFTINGORDERS_HIDE_CUSTOMER")
 api:RegisterEvent("CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE")
 api:RegisterEvent("CRAFTINGORDERS_RELEASE_ORDER_RESPONSE")
 api:RegisterEvent("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE")
@@ -24,7 +25,7 @@ api:RegisterEvent("LFG_PROPOSAL_SHOW")
 api:RegisterEvent("PET_BATTLE_QUEUE_PROPOSE_MATCH")
 
 -- Might as well keep this in here, it's useful
-function app.dump(o)
+local function dump(o)
 	if type(o) == 'table' then
 		local s = '{ '
 		for k,v in pairs(o) do
@@ -108,11 +109,25 @@ function app.Initialise()
 	end
 
 	-- Initialise some flag variables
+	isRecraft = false
 	changingMultipleRecipes = false
 	pslOrderRecipeID = 0
 	pslQuickOrderActive = 0
 	pslQuickOrderAttempts = 0
 	pslQuickOrderErrors = 0
+
+	-- Change recipesTracked to the new format
+	for key, value in pairs (recipesTracked) do
+		if type(value) == "number" then
+			recipesTracked[key] = { quantity = value, recraft = false }
+		end
+	end
+
+	for key, value in pairs (pcRecipesTracked) do
+		if type(value) == "number" then
+			recipesTracked[key] = { quantity = value, recraft = false }
+		end
+	end
 end
 
 -- Save the window position
@@ -293,7 +308,7 @@ function app.TrackingWindows()
 end
 
 -- Get reagents for recipe
-function app.GetReagents(reagentVariable, recipeID, recipeQuantity, qualityTier)
+function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qualityTier)
 	-- Grab all the reagent info from the API
 	local reagentsTable
 
@@ -301,7 +316,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, qualityTier)
 	if app.slLegendaryRecipeIDs[recipeID] then
 		reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, false, app.slLegendaryRecipeIDs[recipeID].rank).reagentSlotSchematics
 	else
-		reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).reagentSlotSchematics
+		reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, recraft).reagentSlotSchematics
 	end
 
 	-- Check which quality to use
@@ -441,8 +456,8 @@ function app.UpdateRecipes()
 	-- Update recipes tracked
 	local data = {}
 
-	for recipeID, no in pairs(recipesTracked) do
-		table.insert(data, {recipeLinks[recipeID], no})
+	for recipeID, recipeInfo in pairs(recipesTracked) do
+		table.insert(data, {recipeLinks[recipeID], recipeInfo.quantity})
 		pslTable2:SetData(data, true)
 	end
 	pslTable2:SetData(data, true)
@@ -451,8 +466,8 @@ function app.UpdateRecipes()
 	if changingMultipleRecipes == false then
 		reagentsTracked = {}
 
-		for recipeID, no in pairs(recipesTracked) do
-			app.GetReagents(reagentsTracked, recipeID, no)
+		for recipeID, recipeInfo in pairs(recipesTracked) do
+			app.GetReagents(reagentsTracked, recipeID, recipeInfo.quantity, recipeInfo.recraft)
 		end
 
 		-- Update numbers tracked
@@ -460,7 +475,7 @@ function app.UpdateRecipes()
 	end
 
 	-- Check if the Untrack button should be enabled
-	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID] == 0 then
+	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID].quantity == 0 then
 		untrackProfessionButton:Disable()
 		untrackPlaceOrderButton:Disable()
 		untrackMakeOrderButton:Disable()
@@ -472,7 +487,7 @@ function app.UpdateRecipes()
 
 	-- Check if the making crafting orders Untrack button should be enabled
 	if pslOrderRecipeID ~= 0 then
-		if not recipesTracked[pslOrderRecipeID] or recipesTracked[pslOrderRecipeID] == 0 then
+		if not recipesTracked[pslOrderRecipeID] or recipesTracked[pslOrderRecipeID].quantity == 0 then
 			untrackMakeOrderButton:Disable()
 		else
 			untrackMakeOrderButton:Enable()
@@ -585,14 +600,14 @@ function app.TrackRecipe(recipeID, recipeQuantity)
 	end
 
 	-- Track recipe
-	if not recipesTracked[recipeID] then recipesTracked[recipeID] = 0 end
-	recipesTracked[recipeID] = recipesTracked[recipeID] + recipeQuantity
+	if not recipesTracked[recipeID] then recipesTracked[recipeID] = { quantity = 0, recraft = isRecraft } end
+	recipesTracked[recipeID].quantity = recipesTracked[recipeID].quantity + recipeQuantity
 
 	-- Show windows
 	app.Show()	-- This also triggers the recipe update
 
 	-- Update the editbox
-	ebRecipeQuantityNo = recipesTracked[recipeID] or 0
+	ebRecipeQuantityNo = recipesTracked[recipeID].quantity or 0
 	ebRecipeQuantity:SetText(ebRecipeQuantityNo)
 end
 
@@ -600,13 +615,13 @@ end
 function app.UntrackRecipe(recipeID, recipeQuantity)
 	if recipesTracked[recipeID] ~= nil then
 		-- Clear all recipes if quantity was set to 0
-		if recipeQuantity == 0 then recipesTracked[recipeID] = 0 end
+		if recipeQuantity == 0 then recipesTracked[recipeID].quantity = 0 end
 
 		-- Untrack recipe
-		recipesTracked[recipeID] = recipesTracked[recipeID] - recipeQuantity
+		recipesTracked[recipeID].quantity = recipesTracked[recipeID].quantity - recipeQuantity
 
 		-- Set numbers to nil if it doesn't exist anymore
-		if recipesTracked[recipeID] <= 0 then
+		if recipesTracked[recipeID].quantity <= 0 then
 			recipesTracked[recipeID] = nil
 			recipeLinks[recipeID] = nil
 		end
@@ -620,7 +635,11 @@ function app.UntrackRecipe(recipeID, recipeQuantity)
 	app.UpdateRecipes()
 
 	-- Update the editbox
-	ebRecipeQuantityNo = recipesTracked[recipeID] or 0
+	if recipesTracked[pslSelectedRecipeID] then
+		ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID].quantity
+	else
+		ebRecipeQuantityNo = 0
+	end
 	ebRecipeQuantity:SetText(ebRecipeQuantityNo)
 end
 
@@ -775,9 +794,9 @@ function app.CreateAssets()
 		pslQuickOrderActive = 1
 
 		local function localReagentsOrder()
-			-- Run app.GetReagents to cache reagent tier info
+			-- Cache reagent tier info
 			local _ = {}
-			app.GetReagents(_, recipeID, 1)
+			app.GetReagents(_, recipeID, 1, false)
 
 			-- Get recipe info
 			local recipeInfo = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).reagentSlotSchematics
@@ -1252,7 +1271,7 @@ function app.UpdateAssets()
 	end
 
 	-- Enable tracking button for tracked recipes
-	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID] == 0 then
+	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID].quantity == 0 then
 		untrackProfessionButton:Disable()
 		untrackPlaceOrderButton:Disable()
 		untrackMakeOrderButton:Disable()
@@ -1264,7 +1283,11 @@ function app.UpdateAssets()
 
 	-- Update the quantity textbox
 	if ebRecipeQuantityNo ~= nil then
-		ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID] or 0
+		if recipesTracked[pslSelectedRecipeID] then
+			ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID].quantity
+		else
+			ebRecipeQuantityNo = 0
+		end
 		ebRecipeQuantity:SetText(ebRecipeQuantityNo)
 	end
 
@@ -2101,7 +2124,7 @@ function app.WindowFunctions()
 				-- Define the amount of recipes to be tracked
 				local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
 				local amount = math.max(0, math.ceil((reagentsTracked[itemID] - GetItemCount(itemID)) / quantityMade))
-				if recipesTracked[recipeID] then amount = math.max(0, (amount - recipesTracked[recipeID])) end
+				if recipesTracked[recipeID] then amount = math.max(0, (amount - recipesTracked[recipeID].quantity)) end
 
 				-- Track the recipe (don't track if 0)
 				if amount > 0 then app.TrackRecipe(recipeID, amount) end
@@ -2172,7 +2195,7 @@ function app.WindowFunctions()
 
 					-- Get reagents #1
 					local reagentsTable = {}
-					app.GetReagents(reagentsTable, recipeIDs[1], 1)
+					app.GetReagents(reagentsTable, recipeIDs[1], 1, false)
 
 					-- Create text #1
 					for reagentID, reagentAmount in pairs(reagentsTable) do
@@ -2225,7 +2248,7 @@ function app.WindowFunctions()
 
 						-- Get reagents #2
 						local reagentsTable = {}
-						app.GetReagents(reagentsTable, recipeIDs[2], 1)
+						app.GetReagents(reagentsTable, recipeIDs[2], 1, false)
 
 						-- Create text #2
 						for reagentID, reagentAmount in pairs(reagentsTable) do
@@ -2279,7 +2302,7 @@ function app.WindowFunctions()
 
 						-- Get reagents #3
 						local reagentsTable = {}
-						app.GetReagents(reagentsTable, recipeIDs[3], 1)
+						app.GetReagents(reagentsTable, recipeIDs[3], 1, false)
 
 						-- Create text #3
 						for reagentID, reagentAmount in pairs(reagentsTable) do
@@ -2333,7 +2356,7 @@ function app.WindowFunctions()
 
 						-- Get reagents #4
 						local reagentsTable = {}
-						app.GetReagents(reagentsTable, recipeIDs[4], 1)
+						app.GetReagents(reagentsTable, recipeIDs[4], 1, false)
 
 						-- Create text #4
 						for reagentID, reagentAmount in pairs(reagentsTable) do
@@ -2384,7 +2407,7 @@ function app.WindowFunctions()
 
 						-- Get reagents #5
 						local reagentsTable = {}
-						app.GetReagents(reagentsTable, recipeIDs[5], 1)
+						app.GetReagents(reagentsTable, recipeIDs[5], 1, false)
 
 						-- Create text #5
 						for reagentID, reagentAmount in pairs(reagentsTable) do
@@ -2435,7 +2458,7 @@ function app.WindowFunctions()
 
 						-- Get reagents #6
 						local reagentsTable = {}
-						app.GetReagents(reagentsTable, recipeIDs[6], 1)
+						app.GetReagents(reagentsTable, recipeIDs[6], 1, false)
 
 						-- Create text #6
 						for reagentID, reagentAmount in pairs(reagentsTable) do
@@ -2638,7 +2661,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 						-- Show windows
 						app.Show()
-					elseif type(recipeQuantity) == "number" and recipeQuantity ~= 0 and recipeQuantity <= recipesTracked[recipeID] then
+					elseif type(recipeQuantity) == "number" and recipeQuantity ~= 0 and recipeQuantity <= recipesTracked[recipeID].quantity then
 						app.UntrackRecipe(recipeID, recipeQuantity)
 
 						-- Show windows
@@ -2722,7 +2745,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		end
 	end
 
-	-- When a recipe is selected (out of combat)
+	-- When a recipe is selected (out of combat) (sort of)
 	if event == "SPELL_DATA_LOAD_RESULT" and UnitAffectingCombat("player") == false then
 		-- Get selected recipe ID and type (global variables)
 		if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
@@ -3746,6 +3769,11 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		end
 		professionFeatures()
 	end
+
+	-- When closing the crafting orders window entirely
+	if event == "CRAFTINGORDERS_HIDE_CUSTOMER" then
+		isRecraft = false
+	end
 	
 	-- When a profession window is loaded (out of combat)
 	if event == "TRADE_SKILL_LIST_UPDATE" and UnitAffectingCombat("player") == false then
@@ -3990,6 +4018,23 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			PlaySoundFile(567478, "Master")
 		end
 	end
+end)
+
+-- When a recipe is selected (very for realsies)
+EventRegistry:RegisterCallback("ProfessionsRecipeListMixin.Event.OnRecipeSelected", function(arg1, arg2, arg3)
+	if arg2["isRecraft"] == true then isRecraft = true
+	elseif arg2["isRecraft"] == false then isRecraft = false
+	end
+end)
+
+-- When opening the recrafting order window
+EventRegistry:RegisterCallback("ProfessionsCustomerOrders.RecraftCategorySelected", function()
+	isRecraft = true
+end)
+
+-- When selecting a non-recrafting order
+EventRegistry:RegisterCallback("ProfessionsCustomerOrders.RecipeSelected", function()
+	isRecraft = false
 end)
 
 -- When a PvP queue pops up
