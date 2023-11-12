@@ -839,8 +839,8 @@ function app.CreateAssets()
 		-- Only add the reagentInfo if the option is enabled
 		if userSettings["useLocalReagents"] == true then localReagentsOrder() end
 
-		-- Save this info as the last order done
-		personalOrders["last"] = recipeID
+		-- -- Save this info as the last order done, unless it was an order with mandatory reagents
+		-- personalOrders["last"] = recipeID
 
 		-- Signal that PSL is currently working on a quick order with local reagents, if applicable
 		local next = next
@@ -3870,22 +3870,6 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 	-- If placing a crafting order through PSL
 	if event == "CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE" and pslQuickOrderActive >= 1 then
-		-- Set the last used recipe name for the repeat order button title
-		local recipeName = "No last order found"
-		-- Check for the name if there has been a last order
-		if personalOrders["last"] ~= nil then
-			recipeName = C_TradeSkillUI.GetRecipeSchematic(personalOrders["last"], false).name
-
-			local reagents = "false"
-			local recipient = personalOrders[personalOrders["last"]]
-			if userSettings["useLocalReagents"] == true then reagents = "true" end
-			repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.\nRecipient: "..recipient.."\nUse local reagents: "..reagents)
-			repeatOrderTooltip:SetHeight(repeatOrderTooltipText:GetStringHeight()+20)
-			repeatOrderTooltip:SetWidth(repeatOrderTooltipText:GetStringWidth()+20)
-		end
-		repeatOrderButton:SetText(recipeName)
-		repeatOrderButton:SetWidth(repeatOrderButton:GetTextWidth()+20)
-
 		-- Count a(nother) quick order attempt
 		pslQuickOrderAttempts = pslQuickOrderAttempts + 1
 		
@@ -3909,6 +3893,25 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		if arg1 == 29 then
 			app.Print("Can't create a quick order for items with mandatory reagents. Sorry. :(")
 		end
+
+		-- Save this info as the last order done, unless it was afaileds order
+		if arg1 ~= 29 or pslQuickOrderErrors >= 4 then personalOrders["last"] = pslSelectedRecipeID	end
+
+		-- Set the last used recipe name for the repeat order button title
+		local recipeName = "No last order found"
+		-- Check for the name if there has been a last order
+		if personalOrders["last"] ~= nil then
+			recipeName = C_TradeSkillUI.GetRecipeSchematic(personalOrders["last"], false).name
+
+			local reagents = "false"
+			local recipient = personalOrders[personalOrders["last"]]
+			if userSettings["useLocalReagents"] == true then reagents = "true" end
+			repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.\nRecipient: "..recipient.."\nUse local reagents: "..reagents)
+			repeatOrderTooltip:SetHeight(repeatOrderTooltipText:GetStringHeight()+20)
+			repeatOrderTooltip:SetWidth(repeatOrderTooltipText:GetStringWidth()+20)
+		end
+		repeatOrderButton:SetText(recipeName)
+		repeatOrderButton:SetWidth(repeatOrderButton:GetTextWidth()+20)
 
 		-- Reset all the numbers if we're done
 		if (pslQuickOrderActive == 1 and pslQuickOrderAttempts >= 1) or (pslQuickOrderActive == 2 and pslQuickOrderAttempts >= 4) then
@@ -4026,6 +4029,7 @@ end)
 
 -- When a recipe is selected (very for realsies)
 EventRegistry:RegisterCallback("ProfessionsRecipeListMixin.Event.OnRecipeSelected", function(arg1, arg2, arg3)
+	--print(dump(arg2))
 	if arg2["isRecraft"] == true then isRecraft = true
 	elseif arg2["isRecraft"] == false then isRecraft = false
 	end
