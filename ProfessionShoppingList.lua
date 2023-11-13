@@ -3287,7 +3287,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treatiseItem = 198454
 				treatiseQuest = 74109
 				orderQuest = 70589
-				gatherQuests = {66517, 66897, 66941, 72398, 75148, 75569}
+				gatherQuests = {66517, 66897, 66941, 72398, 75148, 75569, 77935, 77936}
 				craftQuests = {70211, 70233, 70234, 70235}
 				hiddenMaster = 70250
 				drops = {}
@@ -3333,7 +3333,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treatiseItem = 194700
 				treatiseQuest = 74113
 				orderQuest = 70594
-				gatherQuests = {66363, 66364, 66951, 72407, 75354, 75368}
+				gatherQuests = {66363, 66364, 66951, 72407, 75354, 75368, 77945, 77946}
 				craftQuests = {70567, 70568, 70569, 70571}
 				hiddenMaster = 70256
 				drops = {}
@@ -3377,7 +3377,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treatiseItem = 194697
 				treatiseQuest = 74108
 				orderQuest = nil
-				gatherQuests = {66937, 66938, 66940, 72427, 75363, 75371}
+				gatherQuests = {66937, 66938, 66940, 72427, 75363, 75371, 77932}
 				craftQuests = {70530, 70531, 70532, 70533}
 				hiddenMaster = 70247
 				drops = {}
@@ -3481,7 +3481,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treatiseItem = 194698
 				treatiseQuest = 74115
 				orderQuest = 70595
-				gatherQuests = {66899, 66952, 66953, 72410, 75407, 75600}
+				gatherQuests = {66899, 66952, 66953, 72410, 75407, 75600, 77947, 77949}
 				craftQuests = {70572, 70582, 70586, 70587}
 				hiddenMaster = 70260
 				drops = {}
@@ -3526,7 +3526,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treatiseItem = 198510
 				treatiseQuest = 74111
 				orderQuest = 70591
-				gatherQuests = {66890, 66891, 66942, 72396, 75575, 75608}
+				gatherQuests = {66890, 66891, 66942, 72396, 75575, 75608, 77891, 77938}
 				craftQuests = {70539, 70540, 70545, 70557}
 				hiddenMaster = 70252
 				drops = {}
@@ -3570,7 +3570,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treatiseItem = 194702
 				treatiseQuest = 74110
 				orderQuest = nil
-				gatherQuests = {66884, 66900, 66935, 72423, 75150, 75865}
+				gatherQuests = {66884, 66900, 66935, 72423, 75150, 75865, 77910, 77937}
 				craftQuests = {72155, 72172, 72173, 72175}
 				hiddenMaster = 70251
 				drops = {}
@@ -3645,7 +3645,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treatiseItem = 194703
 				treatiseQuest = 74112
 				orderQuest = 70593
-				gatherQuests = {66516, 66949, 66950, 72428, 75362, 75602}
+				gatherQuests = {66516, 66949, 66950, 72428, 75362, 75602, 77892, 77912}
 				craftQuests = {70562, 70563, 70564, 70565}
 				hiddenMaster = 70255
 				drops = {}
@@ -3690,7 +3690,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treatiseItem = 194699
 				treatiseQuest = 74105
 				orderQuest = 70592
-				gatherQuests = {66943, 66944, 66945, 72438, 75149, 75573}
+				gatherQuests = {66943, 66944, 66945, 72438, 75149, 75573, 77889, 77914}
 				craftQuests = {70558, 70559, 70560, 70561}
 				hiddenMaster = 70254
 				drops = {}
