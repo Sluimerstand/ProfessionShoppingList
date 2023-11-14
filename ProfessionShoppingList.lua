@@ -125,7 +125,7 @@ function app.Initialise()
 
 	for key, value in pairs (pcRecipesTracked) do
 		if type(value) == "number" then
-			recipesTracked[key] = { quantity = value, recraft = false }
+			pcRecipesTracked[key] = { quantity = value, recraft = false }
 		end
 	end
 end
