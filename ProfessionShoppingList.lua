@@ -3033,12 +3033,12 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 					renownCount = 0
 					for key, info in ipairs (renownInfo) do
-						renownInfo[key].status = app.iconWaiting
+						renownInfo[key].status = app.iconNotReady
 						if C_QuestLog.IsQuestFlaggedCompleted(renownInfo[key].questID) == true then
 							renownInfo[key].status = app.iconReady
 							renownCount = renownCount + 1
 						elseif renownInfo[key].locked == true then
-							renownInfo[key].status = app.iconNotReady
+							renownInfo[key].status = app.iconWaiting
 						end
 					end
 
