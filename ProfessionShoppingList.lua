@@ -3377,7 +3377,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				treatiseItem = 194697
 				treatiseQuest = 74108
 				orderQuest = nil
-				gatherQuests = {66937, 66938, 66940, 72427, 75363, 75371, 77932}
+				gatherQuests = {66937, 66938, 66940, 72427, 75363, 75371, 77932, 77918}
 				craftQuests = {70530, 70531, 70532, 70533}
 				hiddenMaster = 70247
 				drops = {}
