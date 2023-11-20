@@ -2,27 +2,27 @@
 local appName, app = ...	-- Returns the addon name and a unique table
 local api = CreateFrame("Frame")	-- To register API events
 local ScrollingTable = LibStub("ScrollingTable")	-- To refer to the ScrollingTable library
-if not Blizzard_Professions then UIParentLoadAddOn("Blizzard_Professions") end	-- To refer to the TradeSkillUI
-if not Blizzard_ProfessionsCustomerOrders then UIParentLoadAddOn("Blizzard_ProfessionsCustomerOrders") end	-- To refer to the ProfessionsCustomerOrders
 
 -- API Events
 api:RegisterEvent("ADDON_LOADED")
+api:RegisterEvent("AUCTION_HOUSE_SHOW")
 api:RegisterEvent("BAG_UPDATE_DELAYED")
-api:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
-api:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-api:RegisterEvent("SPELL_DATA_LOAD_RESULT")
-api:RegisterEvent("MERCHANT_SHOW")
 api:RegisterEvent("CRAFTINGORDERS_CLAIM_ORDER_RESPONSE")
+api:RegisterEvent("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE")
 api:RegisterEvent("CRAFTINGORDERS_HIDE_CUSTOMER")
 api:RegisterEvent("CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE")
 api:RegisterEvent("CRAFTINGORDERS_RELEASE_ORDER_RESPONSE")
-api:RegisterEvent("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE")
-api:RegisterEvent("TRACKED_RECIPE_UPDATE")
+api:RegisterEvent("CRAFTINGORDERS_SHOW_CUSTOMER")
+api:RegisterEvent("LFG_PROPOSAL_SHOW")
+api:RegisterEvent("MERCHANT_SHOW")
+api:RegisterEvent("PET_BATTLE_QUEUE_PROPOSE_MATCH")
 api:RegisterEvent("PLAYER_ENTERING_WORLD")
 api:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
-api:RegisterEvent("AUCTION_HOUSE_SHOW")
-api:RegisterEvent("LFG_PROPOSAL_SHOW")
-api:RegisterEvent("PET_BATTLE_QUEUE_PROPOSE_MATCH")
+api:RegisterEvent("SPELL_DATA_LOAD_RESULT")
+api:RegisterEvent("TRACKED_RECIPE_UPDATE")
+api:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
+api:RegisterEvent("TRADE_SKILL_SHOW")
+api:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 
 -- Might as well keep this in here, it's useful
 local function dump(o)
@@ -109,6 +109,8 @@ function app.Initialise()
 	end
 
 	-- Initialise some flag variables
+	assetsTradeskillExist = false
+	assetsCraftingOrdersExist = false
 	isRecraft = false
 	changingMultipleRecipes = false
 	pslOrderRecipeID = 0
@@ -476,13 +478,21 @@ function app.UpdateRecipes()
 
 	-- Check if the Untrack button should be enabled
 	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID].quantity == 0 then
-		untrackProfessionButton:Disable()
-		untrackPlaceOrderButton:Disable()
-		untrackMakeOrderButton:Disable()
+		if assetsTradeskillExist == true then
+			untrackProfessionButton:Disable()
+		end
+		if assetsCraftingOrdersExist == true then
+			untrackPlaceOrderButton:Disable()
+			untrackMakeOrderButton:Disable()
+		end
 	else
-		untrackProfessionButton:Enable()
-		untrackPlaceOrderButton:Enable()
-		untrackMakeOrderButton:Enable()
+		if assetsTradeskillExist == true then
+			untrackProfessionButton:Enable()
+		end
+		if assetsCraftingOrdersExist == true then
+			untrackPlaceOrderButton:Enable()
+			untrackMakeOrderButton:Enable()
+		end
 	end
 
 	-- Check if the making crafting orders Untrack button should be enabled
@@ -607,8 +617,10 @@ function app.TrackRecipe(recipeID, recipeQuantity)
 	app.Show()	-- This also triggers the recipe update
 
 	-- Update the editbox
-	ebRecipeQuantityNo = recipesTracked[recipeID].quantity or 0
-	ebRecipeQuantity:SetText(ebRecipeQuantityNo)
+	if assetsTradeskillExist == true then
+		ebRecipeQuantityNo = recipesTracked[recipeID].quantity or 0
+		ebRecipeQuantity:SetText(ebRecipeQuantityNo)
+	end
 end
 
 -- Untrack recipe
@@ -635,21 +647,77 @@ function app.UntrackRecipe(recipeID, recipeQuantity)
 	app.UpdateRecipes()
 
 	-- Update the editbox
-	if recipesTracked[pslSelectedRecipeID] then
-		ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID].quantity
-	else
-		ebRecipeQuantityNo = 0
+	if assetsTradeskillExist == true then
+		if recipesTracked[pslSelectedRecipeID] then
+			ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID].quantity
+		else
+			ebRecipeQuantityNo = 0
+		end
+		ebRecipeQuantity:SetText(ebRecipeQuantityNo)
 	end
-	ebRecipeQuantity:SetText(ebRecipeQuantityNo)
 end
 
 -- Create assets
-function app.CreateAssets()
+function app.CreateGeneralAssets()
+	-- Create Recipes header tooltip
+	if not recipeHeaderTooltip then
+		recipeHeaderTooltip = CreateFrame("Frame", nil, pslTrackingWindow2, "BackdropTemplate")
+		recipeHeaderTooltip:SetPoint("CENTER")
+		recipeHeaderTooltip:SetPoint("BOTTOM", pslTrackingWindow2, "TOP", 0, 0)
+		recipeHeaderTooltip:SetFrameStrata("TOOLTIP")
+		recipeHeaderTooltip:SetBackdrop({
+			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+			edgeSize = 16,
+			insets = { left = 4, right = 4, top = 4, bottom = 4 },
+		})
+		recipeHeaderTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		recipeHeaderTooltip:EnableMouse(false)
+		recipeHeaderTooltip:SetMovable(false)
+		recipeHeaderTooltip:Hide()
+
+		recipeHeaderTooltipText = recipeHeaderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		recipeHeaderTooltipText:SetPoint("TOPLEFT", recipeHeaderTooltip, "TOPLEFT", 10, -10)
+		recipeHeaderTooltipText:SetJustifyH("LEFT")
+		recipeHeaderTooltipText:SetText("Drag|cffFFFFFF: Move the window.\n|RShift+click Recipe|cffFFFFFF: Link the recipe.\n|RCtrl+click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click #|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click #|cffFFFFFF: Untrack all of the selected recipe.")
+
+		-- Set the tooltip size to fit its contents
+		recipeHeaderTooltip:SetHeight(recipeHeaderTooltipText:GetStringHeight()+20)
+		recipeHeaderTooltip:SetWidth(recipeHeaderTooltipText:GetStringWidth()+20)
+	end
+
+	-- Create Reagents header tooltip
+	if not reagentHeaderTooltip then
+		reagentHeaderTooltip = CreateFrame("Frame", nil, pslTrackingWindow1, "BackdropTemplate")
+		reagentHeaderTooltip:SetPoint("CENTER")
+		reagentHeaderTooltip:SetPoint("BOTTOM", pslTrackingWindow1, "TOP", 0, 0)
+		reagentHeaderTooltip:SetFrameStrata("TOOLTIP")
+		reagentHeaderTooltip:SetBackdrop({
+			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+			edgeSize = 16,
+			insets = { left = 4, right = 4, top = 4, bottom = 4 },
+		})
+		reagentHeaderTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		reagentHeaderTooltip:EnableMouse(false)
+		reagentHeaderTooltip:SetMovable(false)
+		reagentHeaderTooltip:Hide()
+
+		reagentHeaderTooltipText = reagentHeaderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		reagentHeaderTooltipText:SetPoint("TOPLEFT", reagentHeaderTooltip, "TOPLEFT", 10, -10)
+		reagentHeaderTooltipText:SetJustifyH("LEFT")
+		reagentHeaderTooltipText:SetText("Drag|cffFFFFFF: Move the window.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)\nThe reagents listed here can also be imported to a new Auctionator shopping list.")
+
+		-- Set the tooltip size to fit its contents
+		reagentHeaderTooltip:SetHeight(reagentHeaderTooltipText:GetStringHeight()+20)
+		reagentHeaderTooltip:SetWidth(reagentHeaderTooltipText:GetStringWidth()+20)
+	end
+end
+
+function app.CreateTradeskillAssets()
 	-- Hide and disable existing tracking buttons
 	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckBox:SetAlpha(0)
 	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckBox:EnableMouse(false)
-	ProfessionsCustomerOrdersFrame.Form.TrackRecipeCheckBox:SetAlpha(0)
-	ProfessionsCustomerOrdersFrame.Form.TrackRecipeCheckBox:EnableMouse(false)
 
 	-- Create the profession UI track button
 	if not trackProfessionButton then
@@ -729,6 +797,135 @@ function app.CreateAssets()
 		ebSLrankText:SetText("Rank:")
 		ebSLrankText:Hide()
 	end
+
+	-- Create Cooking Fire button
+	if not cookingFireButton then
+		cookingFireButton = CreateFrame("Button", "CookingFireButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
+		cookingFireButton:SetWidth(40)
+		cookingFireButton:SetHeight(40)
+		cookingFireButton:SetNormalTexture(135805)
+		cookingFireButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		cookingFireButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
+		cookingFireButton:SetFrameStrata("HIGH")
+		cookingFireButton:RegisterForClicks("AnyDown")
+		cookingFireButton:SetAttribute("type", "spell")
+		cookingFireButton:SetAttribute("spell1", 818)
+		cookingFireButton:SetAttribute("unit1", "player")
+		cookingFireButton:SetAttribute("spell2", 818)
+
+		cookingFireCooldown = CreateFrame("Cooldown", "CookingFireCooldown", cookingFireButton, "CooldownFrameTemplate")
+		cookingFireCooldown:SetAllPoints(cookingFireButton)
+		cookingFireCooldown:SetSwipeColor(1, 1, 1)
+	end
+
+	-- Create Chef's Hat button
+	if not chefsHatButton then
+		chefsHatButton = CreateFrame("Button", "ChefsHatButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
+		chefsHatButton:SetWidth(40)
+		chefsHatButton:SetHeight(40)
+		chefsHatButton:SetNormalTexture(236571)
+		chefsHatButton:GetNormalTexture():SetDesaturated(true)
+		chefsHatButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		chefsHatButton:SetPoint("BOTTOMRIGHT", cookingFireButton, "BOTTOMLEFT", -3, 0)
+		chefsHatButton:SetFrameStrata("HIGH")
+		chefsHatButton:RegisterForClicks("AnyDown")
+		chefsHatButton:SetAttribute("type1", "toy")
+		chefsHatButton:SetAttribute("toy", 134020)
+
+		chefsHatCooldown = CreateFrame("Cooldown", "ChefsHatCooldown", chefsHatButton, "CooldownFrameTemplate")
+		chefsHatCooldown:SetAllPoints(chefsHatButton)
+		chefsHatCooldown:SetSwipeColor(1, 1, 1)
+	end
+
+	-- Create Thermal Anvil button
+	if not thermalAnvilButton then
+		thermalAnvilButton = CreateFrame("Button", "ThermalAnvilButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
+		thermalAnvilButton:SetWidth(40)
+		thermalAnvilButton:SetHeight(40)
+		thermalAnvilButton:SetNormalTexture(136241)
+		thermalAnvilButton:GetNormalTexture():SetDesaturated(true)
+		thermalAnvilButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		thermalAnvilButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
+		thermalAnvilButton:SetFrameStrata("HIGH")
+		thermalAnvilButton:RegisterForClicks("AnyDown")
+		thermalAnvilButton:SetAttribute("type1", "macro")
+		thermalAnvilButton:SetAttribute("macrotext1", "/use item:87216")
+
+		thermalAnvilCooldown = CreateFrame("Cooldown", "ThermalAnvilCooldown", thermalAnvilButton, "CooldownFrameTemplate")
+		thermalAnvilCooldown:SetAllPoints(thermalAnvilButton)
+		thermalAnvilCooldown:SetSwipeColor(1, 1, 1)
+
+		thermalAnvilCharges = thermalAnvilButton:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		thermalAnvilCharges:SetPoint("BOTTOMRIGHT", thermalAnvilButton, "BOTTOMRIGHT", 0, 0)
+		thermalAnvilCharges:SetJustifyH("RIGHT")
+		if not C_Item.IsItemDataCachedByID(87216) then local item = Item:CreateFromItemID(87216) end
+		local anvilCharges = GetItemCount(87216, false, true, false)
+		thermalAnvilCharges:SetText(anvilCharges)
+	end
+
+	-- Create Dragonflight Milling info
+	if not millingDragonflight then
+		millingDragonflight = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		millingDragonflight:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 30, 30)
+		millingDragonflight:SetJustifyH("LEFT")
+		millingDragonflight:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+		millingDragonflight:SetText("|cffFFFFFFFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nBlazing Pigment: Saxifrage\nShimmering Pigment: Hochenblume")
+	end
+
+	-- Create Knowledge Point tracker
+	if not knowledgePointTracker then
+		-- Bar wrapper
+		knowledgePointTracker = CreateFrame("Frame", "KnowledgePointTracker", ProfessionsFrame.SpecPage, "TooltipBackdropTemplate")
+		knowledgePointTracker:SetBackdropBorderColor(0.5, 0.5, 0.5)
+		knowledgePointTracker:SetSize(470,25)
+		knowledgePointTracker:SetPoint("TOPRIGHT", ProfessionsFrame.SpecPage, "TOPRIGHT", -5, -24)
+		knowledgePointTracker:SetFrameStrata("HIGH")
+
+		-- Bar
+		knowledgePointTracker.Bar = CreateFrame("StatusBar", nil, knowledgePointTracker)
+		knowledgePointTracker.Bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+		knowledgePointTracker.Bar:SetStatusBarColor(1, .5, 0)
+		knowledgePointTracker.Bar:SetPoint("TOPLEFT", 5, -5)
+		knowledgePointTracker.Bar:SetPoint("BOTTOMRIGHT", -5, 5)
+		Mixin(knowledgePointTracker.Bar, SmoothStatusBarMixin)
+
+		-- Text
+		knowledgePointTracker.Text = knowledgePointTracker.Bar:CreateFontString("OVERLAY", nil, "GameFontNormal")
+		knowledgePointTracker.Text:SetPoint("CENTER", knowledgePointTracker, "CENTER", 0, 0)
+		knowledgePointTracker.Text:SetTextColor(1, 1, 1, 1)
+		knowledgePointTracker.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+	end
+
+	-- Create Knowledge Point tracker tooltip
+	if not knowledgePointTooltip then
+		knowledgePointTooltip = CreateFrame("Frame", nil, knowledgePointTracker, "BackdropTemplate")
+		knowledgePointTooltip:SetPoint("CENTER")
+		knowledgePointTooltip:SetPoint("TOP", knowledgePointTracker, "BOTTOM", 0, 0)
+		knowledgePointTooltip:SetFrameStrata("TOOLTIP")
+		knowledgePointTooltip:SetBackdrop({
+			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+			edgeSize = 16,
+			insets = { left = 4, right = 4, top = 4, bottom = 4 },
+		})
+		knowledgePointTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		knowledgePointTooltip:EnableMouse(false)
+		knowledgePointTooltip:SetMovable(false)
+		knowledgePointTooltip:Hide()
+
+		knowledgePointTooltipText = knowledgePointTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		knowledgePointTooltipText:SetPoint("TOPLEFT", knowledgePointTooltip, "TOPLEFT", 10, -10)
+		knowledgePointTooltipText:SetJustifyH("LEFT")
+	end
+
+	-- Set the flag for assets created to true
+	assetsTradeskillExist = true
+end
+
+function app.CreateCraftingOrdersAssets()
+	-- Hide and disable existing tracking buttons
+	ProfessionsCustomerOrdersFrame.Form.TrackRecipeCheckBox:SetAlpha(0)
+	ProfessionsCustomerOrdersFrame.Form.TrackRecipeCheckBox:EnableMouse(false)
 
 	-- Create the place crafting orders UI Track button
 	if not trackPlaceOrderButton then
@@ -838,9 +1035,6 @@ function app.CreateAssets()
 
 		-- Only add the reagentInfo if the option is enabled
 		if userSettings["useLocalReagents"] == true then localReagentsOrder() end
-
-		-- -- Save this info as the last order done, unless it was an order with mandatory reagents
-		-- personalOrders["last"] = recipeID
 
 		-- Signal that PSL is currently working on a quick order with local reagents, if applicable
 		local next = next
@@ -1074,273 +1268,119 @@ function app.CreateAssets()
 		repeatOrderTooltip:SetWidth(repeatOrderTooltipText:GetStringWidth()+20)
 	end
 
-	-- Create Cooking Fire button
-	if not cookingFireButton then
-		cookingFireButton = CreateFrame("Button", "CookingFireButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
-		cookingFireButton:SetWidth(40)
-		cookingFireButton:SetHeight(40)
-		cookingFireButton:SetNormalTexture(135805)
-		cookingFireButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-		cookingFireButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
-		cookingFireButton:SetFrameStrata("HIGH")
-		cookingFireButton:RegisterForClicks("AnyDown")
-		cookingFireButton:SetAttribute("type", "spell")
-		cookingFireButton:SetAttribute("spell1", 818)
-		cookingFireButton:SetAttribute("unit1", "player")
-		cookingFireButton:SetAttribute("spell2", 818)
-
-		cookingFireCooldown = CreateFrame("Cooldown", "CookingFireCooldown", cookingFireButton, "CooldownFrameTemplate")
-		cookingFireCooldown:SetAllPoints(cookingFireButton)
-		cookingFireCooldown:SetSwipeColor(1, 1, 1)
-	end
-
-	-- Create Chef's Hat button
-	if not chefsHatButton then
-		chefsHatButton = CreateFrame("Button", "ChefsHatButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
-		chefsHatButton:SetWidth(40)
-		chefsHatButton:SetHeight(40)
-		chefsHatButton:SetNormalTexture(236571)
-		chefsHatButton:GetNormalTexture():SetDesaturated(true)
-		chefsHatButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-		chefsHatButton:SetPoint("BOTTOMRIGHT", cookingFireButton, "BOTTOMLEFT", -3, 0)
-		chefsHatButton:SetFrameStrata("HIGH")
-		chefsHatButton:RegisterForClicks("AnyDown")
-		chefsHatButton:SetAttribute("type1", "toy")
-		chefsHatButton:SetAttribute("toy", 134020)
-
-		chefsHatCooldown = CreateFrame("Cooldown", "ChefsHatCooldown", chefsHatButton, "CooldownFrameTemplate")
-		chefsHatCooldown:SetAllPoints(chefsHatButton)
-		chefsHatCooldown:SetSwipeColor(1, 1, 1)
-	end
-
-	-- Create Thermal Anvil button
-	if not thermalAnvilButton then
-		thermalAnvilButton = CreateFrame("Button", "ThermalAnvilButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
-		thermalAnvilButton:SetWidth(40)
-		thermalAnvilButton:SetHeight(40)
-		thermalAnvilButton:SetNormalTexture(136241)
-		thermalAnvilButton:GetNormalTexture():SetDesaturated(true)
-		thermalAnvilButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-		thermalAnvilButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
-		thermalAnvilButton:SetFrameStrata("HIGH")
-		thermalAnvilButton:RegisterForClicks("AnyDown")
-		thermalAnvilButton:SetAttribute("type1", "macro")
-		thermalAnvilButton:SetAttribute("macrotext1", "/use item:87216")
-
-		thermalAnvilCooldown = CreateFrame("Cooldown", "ThermalAnvilCooldown", thermalAnvilButton, "CooldownFrameTemplate")
-		thermalAnvilCooldown:SetAllPoints(thermalAnvilButton)
-		thermalAnvilCooldown:SetSwipeColor(1, 1, 1)
-
-		thermalAnvilCharges = thermalAnvilButton:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		thermalAnvilCharges:SetPoint("BOTTOMRIGHT", thermalAnvilButton, "BOTTOMRIGHT", 0, 0)
-		thermalAnvilCharges:SetJustifyH("RIGHT")
-		if not C_Item.IsItemDataCachedByID(87216) then local item = Item:CreateFromItemID(87216) end
-		local anvilCharges = GetItemCount(87216, false, true, false)
-		thermalAnvilCharges:SetText(anvilCharges)
-	end
-
-	-- Create Dragonflight Milling info
-	if not millingDragonflight then
-		millingDragonflight = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		millingDragonflight:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 30, 30)
-		millingDragonflight:SetJustifyH("LEFT")
-		millingDragonflight:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-		millingDragonflight:SetText("|cffFFFFFFFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nBlazing Pigment: Saxifrage\nShimmering Pigment: Hochenblume")
-	end
-
-	-- Create Knowledge Point tracker
-	if not knowledgePointTracker then
-		-- Bar wrapper
-		knowledgePointTracker = CreateFrame("Frame", "KnowledgePointTracker", ProfessionsFrame.SpecPage, "TooltipBackdropTemplate")
-		knowledgePointTracker:SetBackdropBorderColor(0.5, 0.5, 0.5)
-		knowledgePointTracker:SetSize(470,25)
-		knowledgePointTracker:SetPoint("TOPRIGHT", ProfessionsFrame.SpecPage, "TOPRIGHT", -5, -24)
-		knowledgePointTracker:SetFrameStrata("HIGH")
-
-		-- Bar
-		knowledgePointTracker.Bar = CreateFrame("StatusBar", nil, knowledgePointTracker)
-		knowledgePointTracker.Bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-		knowledgePointTracker.Bar:SetStatusBarColor(1, .5, 0)
-		knowledgePointTracker.Bar:SetPoint("TOPLEFT", 5, -5)
-		knowledgePointTracker.Bar:SetPoint("BOTTOMRIGHT", -5, 5)
-		Mixin(knowledgePointTracker.Bar, SmoothStatusBarMixin)
-
-		-- Text
-		knowledgePointTracker.Text = knowledgePointTracker.Bar:CreateFontString("OVERLAY", nil, "GameFontNormal")
-		knowledgePointTracker.Text:SetPoint("CENTER", knowledgePointTracker, "CENTER", 0, 0)
-		knowledgePointTracker.Text:SetTextColor(1, 1, 1, 1)
-		knowledgePointTracker.Text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-	end
-
-	-- Create Knowledge Point tracker tooltip
-	if not knowledgePointTooltip then
-		knowledgePointTooltip = CreateFrame("Frame", nil, knowledgePointTracker, "BackdropTemplate")
-		knowledgePointTooltip:SetPoint("CENTER")
-		knowledgePointTooltip:SetPoint("TOP", knowledgePointTracker, "BOTTOM", 0, 0)
-		knowledgePointTooltip:SetFrameStrata("TOOLTIP")
-		knowledgePointTooltip:SetBackdrop({
-			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-			edgeSize = 16,
-			insets = { left = 4, right = 4, top = 4, bottom = 4 },
-		})
-		knowledgePointTooltip:SetBackdropColor(0, 0, 0, 0.9)
-		knowledgePointTooltip:EnableMouse(false)
-		knowledgePointTooltip:SetMovable(false)
-		knowledgePointTooltip:Hide()
-
-		knowledgePointTooltipText = knowledgePointTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		knowledgePointTooltipText:SetPoint("TOPLEFT", knowledgePointTooltip, "TOPLEFT", 10, -10)
-		knowledgePointTooltipText:SetJustifyH("LEFT")
-	end
-
-	-- Create Recipes header tooltip
-	if not recipeHeaderTooltip then
-		recipeHeaderTooltip = CreateFrame("Frame", nil, pslTrackingWindow2, "BackdropTemplate")
-		recipeHeaderTooltip:SetPoint("CENTER")
-		recipeHeaderTooltip:SetPoint("BOTTOM", pslTrackingWindow2, "TOP", 0, 0)
-		recipeHeaderTooltip:SetFrameStrata("TOOLTIP")
-		recipeHeaderTooltip:SetBackdrop({
-			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-			edgeSize = 16,
-			insets = { left = 4, right = 4, top = 4, bottom = 4 },
-		})
-		recipeHeaderTooltip:SetBackdropColor(0, 0, 0, 0.9)
-		recipeHeaderTooltip:EnableMouse(false)
-		recipeHeaderTooltip:SetMovable(false)
-		recipeHeaderTooltip:Hide()
-
-		recipeHeaderTooltipText = recipeHeaderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		recipeHeaderTooltipText:SetPoint("TOPLEFT", recipeHeaderTooltip, "TOPLEFT", 10, -10)
-		recipeHeaderTooltipText:SetJustifyH("LEFT")
-		recipeHeaderTooltipText:SetText("Drag|cffFFFFFF: Move the window.\n|RShift+click Recipe|cffFFFFFF: Link the recipe.\n|RCtrl+click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click #|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click #|cffFFFFFF: Untrack all of the selected recipe.")
-
-		-- Set the tooltip size to fit its contents
-		recipeHeaderTooltip:SetHeight(recipeHeaderTooltipText:GetStringHeight()+20)
-		recipeHeaderTooltip:SetWidth(recipeHeaderTooltipText:GetStringWidth()+20)
-	end
-
-	-- Create Reagents header tooltip
-	if not reagentHeaderTooltip then
-		reagentHeaderTooltip = CreateFrame("Frame", nil, pslTrackingWindow1, "BackdropTemplate")
-		reagentHeaderTooltip:SetPoint("CENTER")
-		reagentHeaderTooltip:SetPoint("BOTTOM", pslTrackingWindow1, "TOP", 0, 0)
-		reagentHeaderTooltip:SetFrameStrata("TOOLTIP")
-		reagentHeaderTooltip:SetBackdrop({
-			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-			edgeSize = 16,
-			insets = { left = 4, right = 4, top = 4, bottom = 4 },
-		})
-		reagentHeaderTooltip:SetBackdropColor(0, 0, 0, 0.9)
-		reagentHeaderTooltip:EnableMouse(false)
-		reagentHeaderTooltip:SetMovable(false)
-		reagentHeaderTooltip:Hide()
-
-		reagentHeaderTooltipText = reagentHeaderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		reagentHeaderTooltipText:SetPoint("TOPLEFT", reagentHeaderTooltip, "TOPLEFT", 10, -10)
-		reagentHeaderTooltipText:SetJustifyH("LEFT")
-		reagentHeaderTooltipText:SetText("Drag|cffFFFFFF: Move the window.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)\nThe reagents listed here can also be imported to a new Auctionator shopping list.")
-
-		-- Set the tooltip size to fit its contents
-		reagentHeaderTooltip:SetHeight(reagentHeaderTooltipText:GetStringHeight()+20)
-		reagentHeaderTooltip:SetWidth(reagentHeaderTooltipText:GetStringWidth()+20)
-	end
+	-- Set the flag for assets created to true
+	assetsCraftingOrdersExist = true
 end
 
 -- Update assets
 function app.UpdateAssets()
-	-- Enable tracking button for 1 = Item, 3 = Enchant
-	if pslRecipeType == 1 or pslRecipeType == 3 then
-		trackProfessionButton:Enable()
-		trackPlaceOrderButton:Enable()
-		trackMakeOrderButton:Enable()
-		ebRecipeQuantity:Enable()
-	end
-
-	-- Disable tracking button for 2 = Salvage, recipes without reagents
-	if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).reagentSlotSchematics[1] == nil then
-		trackProfessionButton:Disable()
-		untrackProfessionButton:Disable()
-		trackPlaceOrderButton:Disable()
-		untrackPlaceOrderButton:Disable()
-		trackMakeOrderButton:Disable()
-		untrackMakeOrderButton:Disable()
-		ebRecipeQuantity:Disable()
-	end
-
-	-- Enable tracking button for tracked recipes
-	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID].quantity == 0 then
-		untrackProfessionButton:Disable()
-		untrackPlaceOrderButton:Disable()
-		untrackMakeOrderButton:Disable()
-	else
-		untrackProfessionButton:Enable()
-		untrackPlaceOrderButton:Enable()
-		untrackMakeOrderButton:Enable()
-	end
-
-	-- Update the quantity textbox
-	if ebRecipeQuantityNo ~= nil then
-		if recipesTracked[pslSelectedRecipeID] then
-			ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID].quantity
-		else
-			ebRecipeQuantityNo = 0
+	if assetsTradeskillExist == true then
+		-- Enable tracking button for 1 = Item, 3 = Enchant
+		if pslRecipeType == 1 or pslRecipeType == 3 then
+			trackProfessionButton:Enable()
+			ebRecipeQuantity:Enable()
 		end
-		ebRecipeQuantity:SetText(ebRecipeQuantityNo)
+
+		-- Disable tracking button for 2 = Salvage, recipes without reagents
+		if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).reagentSlotSchematics[1] == nil then
+			trackProfessionButton:Disable()
+			untrackProfessionButton:Disable()
+			ebRecipeQuantity:Disable()
+		end
+
+		-- Enable tracking button for tracked recipes
+		if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID].quantity == 0 then
+			untrackProfessionButton:Disable()
+		else
+			untrackProfessionButton:Enable()
+		end
+
+		-- Update the quantity textbox
+		if ebRecipeQuantityNo ~= nil then
+			if recipesTracked[pslSelectedRecipeID] then
+				ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID].quantity
+			else
+				ebRecipeQuantityNo = 0
+			end
+			ebRecipeQuantity:SetText(ebRecipeQuantityNo)
+		end
+
+		-- Make the Chef's Hat button not desaturated if it can be used
+		if PlayerHasToy(134020) and C_TradeSkillUI.GetProfessionInfoBySkillLineID(2546).skillLevel >= 25 then
+			chefsHatButton:GetNormalTexture():SetDesaturated(false)
+		end
+
+		-- Check how many thermal anvils the player has
+		if not C_Item.IsItemDataCachedByID(87216) then local item = Item:CreateFromItemID(87216) end
+		local anvilCount = GetItemCount(87216)
+		-- (De)saturate based on that
+		if anvilCount >= 1 then
+			thermalAnvilButton:GetNormalTexture():SetDesaturated(false)
+		else
+			thermalAnvilButton:GetNormalTexture():SetDesaturated(true)
+		end
+		-- Update charges
+		local anvilCharges = GetItemCount(87216, false, true, false)
+		thermalAnvilCharges:SetText(anvilCharges)
+
+		-- Cooking Fire button cooldown
+		local start, duration = GetSpellCooldown(818)
+		CookingFireCooldown:SetCooldown(start, duration)
+
+		-- Chef's Hat button cooldown
+		start, duration = GetItemCooldown(134020)
+		ChefsHatCooldown:SetCooldown(start, duration)
+
+		-- Thermal Anvil button cooldown
+		start, duration = GetItemCooldown(87216)
+		thermalAnvilCooldown:SetCooldown(start, duration)
 	end
 
-	-- Remove the personal order entry if the value is ""
-	if personalOrders[pslSelectedRecipeID] == "" then personalOrders[pslSelectedRecipeID] = nil end
+	if assetsCraftingOrdersExist == true then
+		-- Enable tracking button for 1 = Item, 3 = Enchant
+		if pslRecipeType == 1 or pslRecipeType == 3 then
+			trackPlaceOrderButton:Enable()
+			trackMakeOrderButton:Enable()
+		end
 
-	-- Enable the quick order button if abilityID and target are known
-	if recipeLibrary[pslSelectedRecipeID] and type(recipeLibrary[pslSelectedRecipeID]) ~= "number" then
-		if recipeLibrary[pslSelectedRecipeID].abilityID ~= nil and personalOrders[pslSelectedRecipeID] ~= nil then
-			personalOrderButton:Enable()
+		-- Disable tracking button for 2 = Salvage, recipes without reagents
+		if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).reagentSlotSchematics[1] == nil then
+			trackPlaceOrderButton:Disable()
+			untrackPlaceOrderButton:Disable()
+			trackMakeOrderButton:Disable()
+			untrackMakeOrderButton:Disable()
+		end
+
+		-- Enable tracking button for tracked recipes
+		if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID].quantity == 0 then
+			untrackPlaceOrderButton:Disable()
+			untrackMakeOrderButton:Disable()
+		else
+			untrackPlaceOrderButton:Enable()
+			untrackMakeOrderButton:Enable()
+		end
+
+		-- Remove the personal order entry if the value is ""
+		if personalOrders[pslSelectedRecipeID] == "" then personalOrders[pslSelectedRecipeID] = nil end
+
+		-- Enable the quick order button if abilityID and target are known
+		if recipeLibrary[pslSelectedRecipeID] and type(recipeLibrary[pslSelectedRecipeID]) ~= "number" then
+			if recipeLibrary[pslSelectedRecipeID].abilityID ~= nil and personalOrders[pslSelectedRecipeID] ~= nil then
+				personalOrderButton:Enable()
+			else
+				personalOrderButton:Disable()
+			end
 		else
 			personalOrderButton:Disable()
 		end
-	else
-		personalOrderButton:Disable()
+
+		-- Update the personal order name textbox
+		if personalOrders[pslSelectedRecipeID] then
+			personalCharname:SetText(personalOrders[pslSelectedRecipeID])
+		else
+			personalCharname:SetText("")
+		end
 	end
-
-	-- Update the personal order name textbox
-	if personalOrders[pslSelectedRecipeID] then
-		personalCharname:SetText(personalOrders[pslSelectedRecipeID])
-	else
-		personalCharname:SetText("")
-	end
-
-	-- Make the Chef's Hat button not desaturated if it can be used
-	if PlayerHasToy(134020) and C_TradeSkillUI.GetProfessionInfoBySkillLineID(2546).skillLevel >= 25 then
-		chefsHatButton:GetNormalTexture():SetDesaturated(false)
-	end
-
-	-- Check how many thermal anvils the player has
-	if not C_Item.IsItemDataCachedByID(87216) then local item = Item:CreateFromItemID(87216) end
-	local anvilCount = GetItemCount(87216)
-	-- (De)saturate based on that
-	if anvilCount >= 1 then
-		thermalAnvilButton:GetNormalTexture():SetDesaturated(false)
-	else
-		thermalAnvilButton:GetNormalTexture():SetDesaturated(true)
-	end
-	-- Update charges
-	local anvilCharges = GetItemCount(87216, false, true, false)
-	thermalAnvilCharges:SetText(anvilCharges)
-
-	-- Cooking Fire button cooldown
-	local start, duration = GetSpellCooldown(818)
-	CookingFireCooldown:SetCooldown(start, duration)
-
-	-- Chef's Hat button cooldown
-	start, duration = GetItemCooldown(134020)
-	ChefsHatCooldown:SetCooldown(start, duration)
-
-	-- Thermal Anvil button cooldown
-	start, duration = GetItemCooldown(87216)
-	thermalAnvilCooldown:SetCooldown(start, duration)
 end
 
 -- Tooltip information
@@ -1415,9 +1455,13 @@ function app.Clear()
 	app.UpdateRecipes()
 
 	-- Disable remove button
-	untrackProfessionButton:Disable()
-	untrackPlaceOrderButton:Disable()
-	untrackMakeOrderButton:Disable()
+	if assetsTradeskillExist == true then
+		untrackProfessionButton:Disable()
+	end
+	if assetsCraftingOrdersExist == true then
+		untrackPlaceOrderButton:Disable()
+		untrackMakeOrderButton:Disable()
+	end
 
 	-- Remove old variables
 	reagentNumbers = nil
@@ -2592,7 +2636,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	if event == "ADDON_LOADED" and arg1 == appName then
 		app.Initialise()
 		app.TrackingWindows()
-		app.CreateAssets()
+		app.CreateGeneralAssets()
 		app.TooltipInfo()		
 		app.Settings()
 		app.WindowFunctions()
@@ -2745,6 +2789,14 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		end
 	end
 
+	if event == "TRADE_SKILL_SHOW" then
+		app.CreateTradeskillAssets()
+	end
+
+	if event == "CRAFTINGORDERS_SHOW_CUSTOMER" then
+		app.CreateCraftingOrdersAssets()
+	end
+	
 	-- When a recipe is selected (out of combat) (sort of)
 	if event == "SPELL_DATA_LOAD_RESULT" and UnitAffectingCombat("player") == false then
 		-- Get selected recipe ID and type (global variables)
@@ -2772,7 +2824,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				ebSLrank:Hide()
 			end
 		end
-		professionExtra()
+		if assetsTradeskillExist == true then professionExtra() end
 
 		local function professionFeatures()
 			-- Show stuff depending on which profession is opened
@@ -3767,7 +3819,7 @@ api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				thermalAnvilButton:Hide()
 			end
 		end
-		professionFeatures()
+		if assetsTradeskillExist == true then professionFeatures() end
 	end
 
 	-- When closing the crafting orders window entirely
