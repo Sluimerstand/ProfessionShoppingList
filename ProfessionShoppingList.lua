@@ -40,7 +40,7 @@ end
 
 -- Print function
 function app.Print(...)
-	print("[|cffFFFF00PSL|R]", ...)
+	print("|cffC69B6DPSL|R:", ...)
 end
 
 -- Create SavedVariables, default window position, and default user settings
