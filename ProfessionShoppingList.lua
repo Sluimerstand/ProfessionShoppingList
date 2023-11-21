@@ -1,9 +1,10 @@
 -- Initialise some stuff
 local appName, app = ...	-- Returns the addon name and a unique table
-local api = CreateFrame("Frame")	-- To register API events
+ProfessionShoppingList = app	-- Create a namespace for other addons to use
 local ScrollingTable = LibStub("ScrollingTable")	-- To refer to the ScrollingTable library
 
 -- API Events
+local api = CreateFrame("Frame")
 api:RegisterEvent("ADDON_LOADED")
 api:RegisterEvent("AUCTION_HOUSE_SHOW")
 api:RegisterEvent("BAG_UPDATE_DELAYED")
