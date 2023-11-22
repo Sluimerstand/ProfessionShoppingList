@@ -1,29 +1,31 @@
--- Initialise some stuff
+-- ProfessionShoppingList.lua: Current/old code, pending review
+
+-- Initialisation
 local appName, app = ...	-- Returns the addon name and a unique table
-ProfessionShoppingList = app	-- Create a namespace for other addons to use
+local api = app.api	-- Our "API" prefix
 local ScrollingTable = LibStub("ScrollingTable")	-- To refer to the ScrollingTable library
 
--- API Events
-local api = CreateFrame("Frame")
-api:RegisterEvent("ADDON_LOADED")
-api:RegisterEvent("AUCTION_HOUSE_SHOW")
-api:RegisterEvent("BAG_UPDATE_DELAYED")
-api:RegisterEvent("CRAFTINGORDERS_CLAIM_ORDER_RESPONSE")
-api:RegisterEvent("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE")
-api:RegisterEvent("CRAFTINGORDERS_HIDE_CUSTOMER")
-api:RegisterEvent("CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE")
-api:RegisterEvent("CRAFTINGORDERS_RELEASE_ORDER_RESPONSE")
-api:RegisterEvent("CRAFTINGORDERS_SHOW_CUSTOMER")
-api:RegisterEvent("LFG_PROPOSAL_SHOW")
-api:RegisterEvent("MERCHANT_SHOW")
-api:RegisterEvent("PET_BATTLE_QUEUE_PROPOSE_MATCH")
-api:RegisterEvent("PLAYER_ENTERING_WORLD")
-api:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
-api:RegisterEvent("SPELL_DATA_LOAD_RESULT")
-api:RegisterEvent("TRACKED_RECIPE_UPDATE")
-api:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
-api:RegisterEvent("TRADE_SKILL_SHOW")
-api:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+-- Blizzard API Events
+local event = CreateFrame("Frame")
+event:RegisterEvent("ADDON_LOADED")
+event:RegisterEvent("AUCTION_HOUSE_SHOW")
+event:RegisterEvent("BAG_UPDATE_DELAYED")
+event:RegisterEvent("CRAFTINGORDERS_CLAIM_ORDER_RESPONSE")
+event:RegisterEvent("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE")
+event:RegisterEvent("CRAFTINGORDERS_HIDE_CUSTOMER")
+event:RegisterEvent("CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE")
+event:RegisterEvent("CRAFTINGORDERS_RELEASE_ORDER_RESPONSE")
+event:RegisterEvent("CRAFTINGORDERS_SHOW_CUSTOMER")
+event:RegisterEvent("LFG_PROPOSAL_SHOW")
+event:RegisterEvent("MERCHANT_SHOW")
+event:RegisterEvent("PET_BATTLE_QUEUE_PROPOSE_MATCH")
+event:RegisterEvent("PLAYER_ENTERING_WORLD")
+event:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
+event:RegisterEvent("SPELL_DATA_LOAD_RESULT")
+event:RegisterEvent("TRACKED_RECIPE_UPDATE")
+event:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
+event:RegisterEvent("TRADE_SKILL_SHOW")
+event:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 
 -- Might as well keep this in here, it's useful
 local function dump(o)
@@ -2632,7 +2634,7 @@ function app.WindowFunctions()
 	})
 end
 
-api:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
+event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	-- When the AddOn is fully loaded, actually run the components
 	if event == "ADDON_LOADED" and arg1 == appName then
 		app.Initialise()
