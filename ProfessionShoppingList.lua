@@ -499,7 +499,7 @@ function app.UpdateRecipes()
 	end
 
 	-- Check if the making crafting orders Untrack button should be enabled
-	if pslOrderRecipeID ~= 0 then
+	if pslOrderRecipeID ~= 0 and assetsCraftingOrdersExist == true then
 		if not recipesTracked[pslOrderRecipeID] or recipesTracked[pslOrderRecipeID].quantity == 0 then
 			untrackMakeOrderButton:Disable()
 		else
