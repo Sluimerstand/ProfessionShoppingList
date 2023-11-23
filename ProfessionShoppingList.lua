@@ -483,23 +483,23 @@ function app.UpdateRecipes()
 	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID].quantity == 0 then
 		if assetsTradeskillExist == true then
 			untrackProfessionButton:Disable()
+			untrackMakeOrderButton:Disable()
 		end
 		if assetsCraftingOrdersExist == true then
 			untrackPlaceOrderButton:Disable()
-			untrackMakeOrderButton:Disable()
 		end
 	else
 		if assetsTradeskillExist == true then
 			untrackProfessionButton:Enable()
+			untrackMakeOrderButton:Enable()
 		end
 		if assetsCraftingOrdersExist == true then
 			untrackPlaceOrderButton:Enable()
-			untrackMakeOrderButton:Enable()
 		end
 	end
 
 	-- Check if the making crafting orders Untrack button should be enabled
-	if pslOrderRecipeID ~= 0 and assetsCraftingOrdersExist == true then
+	if pslOrderRecipeID ~= 0 and assetsTradeskillExist == true then
 		if not recipesTracked[pslOrderRecipeID] or recipesTracked[pslOrderRecipeID].quantity == 0 then
 			untrackMakeOrderButton:Disable()
 		else
@@ -921,6 +921,44 @@ function app.CreateTradeskillAssets()
 		knowledgePointTooltipText:SetJustifyH("LEFT")
 	end
 
+	-- Create the fulfil crafting orders UI Track button
+	if not trackMakeOrderButton then
+		trackMakeOrderButton = CreateFrame("Button", nil, ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "UIPanelButtonTemplate")
+		trackMakeOrderButton:SetText("Track")
+		trackMakeOrderButton:SetWidth(60)
+		trackMakeOrderButton:SetPoint("TOPRIGHT", ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "TOPRIGHT", -9, -10)
+		trackMakeOrderButton:SetFrameStrata("HIGH")
+		trackMakeOrderButton:SetScript("OnClick", function()
+			if pslOrderRecipeID == 0 then
+				app.TrackRecipe(pslSelectedRecipeID, 1)
+			else
+				app.TrackRecipe(pslOrderRecipeID, 1)
+			end
+
+			-- Show windows
+			app.Show()
+		end)
+	end
+
+	-- Create the fulfil crafting orders UI untrack button
+	if not untrackMakeOrderButton then
+		untrackMakeOrderButton = CreateFrame("Button", nil, ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "UIPanelButtonTemplate")
+		untrackMakeOrderButton:SetText("Untrack")
+		untrackMakeOrderButton:SetWidth(70)
+		untrackMakeOrderButton:SetPoint("TOPRIGHT", trackMakeOrderButton, "TOPLEFT", -4, 0)
+		untrackMakeOrderButton:SetFrameStrata("HIGH")
+		untrackMakeOrderButton:SetScript("OnClick", function()
+			if pslOrderRecipeID == 0 then
+				app.UntrackRecipe(pslSelectedRecipeID, 1)
+			else
+				app.UntrackRecipe(pslOrderRecipeID, 1)
+			end
+
+			-- Show windows
+			app.Show()
+		end)
+	end
+
 	-- Set the flag for assets created to true
 	assetsTradeskillExist = true
 end
@@ -1170,44 +1208,6 @@ function app.CreateCraftingOrdersAssets()
 		useLocalReagentsTooltip:SetWidth(useLocalReagentsTooltipText:GetStringWidth()+20)
 	end
 
-	-- Create the fulfil crafting orders UI Track button
-	if not trackMakeOrderButton then
-		trackMakeOrderButton = CreateFrame("Button", nil, ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "UIPanelButtonTemplate")
-		trackMakeOrderButton:SetText("Track")
-		trackMakeOrderButton:SetWidth(60)
-		trackMakeOrderButton:SetPoint("TOPRIGHT", ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "TOPRIGHT", -9, -10)
-		trackMakeOrderButton:SetFrameStrata("HIGH")
-		trackMakeOrderButton:SetScript("OnClick", function()
-			if pslOrderRecipeID == 0 then
-				app.TrackRecipe(pslSelectedRecipeID, 1)
-			else
-				app.TrackRecipe(pslOrderRecipeID, 1)
-			end
-
-			-- Show windows
-			app.Show()
-		end)
-	end
-
-	-- Create the fulfil crafting orders UI untrack button
-	if not untrackMakeOrderButton then
-		untrackMakeOrderButton = CreateFrame("Button", nil, ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "UIPanelButtonTemplate")
-		untrackMakeOrderButton:SetText("Untrack")
-		untrackMakeOrderButton:SetWidth(70)
-		untrackMakeOrderButton:SetPoint("TOPRIGHT", trackMakeOrderButton, "TOPLEFT", -4, 0)
-		untrackMakeOrderButton:SetFrameStrata("HIGH")
-		untrackMakeOrderButton:SetScript("OnClick", function()
-			if pslOrderRecipeID == 0 then
-				app.UntrackRecipe(pslSelectedRecipeID, 1)
-			else
-				app.UntrackRecipe(pslOrderRecipeID, 1)
-			end
-
-			-- Show windows
-			app.Show()
-		end)
-	end
-
 	-- Create the repeat last crafting order button
 	if not repeatOrderButton then
 		repeatOrderButton = CreateFrame("Button", nil, ProfessionsCustomerOrdersFrame, "UIPanelButtonTemplate")
@@ -1339,34 +1339,50 @@ function app.UpdateAssets()
 		thermalAnvilCooldown:SetCooldown(start, duration)
 	end
 
-	if assetsCraftingOrdersExist == true then
-		-- Enable tracking button for 1 = Item, 3 = Enchant
-		if pslRecipeType == 1 or pslRecipeType == 3 then
+	-- Enable tracking button for 1 = Item, 3 = Enchant
+	if pslRecipeType == 1 or pslRecipeType == 3 then
+		if assetsCraftingOrdersExist == true then
 			trackPlaceOrderButton:Enable()
+		end
+		if assetsTradeskillExist == true then
 			trackMakeOrderButton:Enable()
 		end
+	end
 
-		-- Disable tracking button for 2 = Salvage, recipes without reagents
-		if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).reagentSlotSchematics[1] == nil then
+	-- Disable tracking button for 2 = Salvage, recipes without reagents
+	if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).reagentSlotSchematics[1] == nil then
+		if assetsCraftingOrdersExist == true then
 			trackPlaceOrderButton:Disable()
 			untrackPlaceOrderButton:Disable()
+		end
+		if assetsTradeskillExist == true then
 			trackMakeOrderButton:Disable()
 			untrackMakeOrderButton:Disable()
 		end
+	end
 
-		-- Enable tracking button for tracked recipes
-		if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID].quantity == 0 then
+	-- Enable tracking button for tracked recipes
+	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID].quantity == 0 then
+		if assetsCraftingOrdersExist == true then
 			untrackPlaceOrderButton:Disable()
+		end
+		if assetsTradeskillExist == true then
 			untrackMakeOrderButton:Disable()
-		else
+		end
+	else
+		if assetsCraftingOrdersExist == true then
 			untrackPlaceOrderButton:Enable()
+		end
+		if assetsTradeskillExist == true then
 			untrackMakeOrderButton:Enable()
 		end
+	end
 
-		-- Remove the personal order entry if the value is ""
-		if personalOrders[pslSelectedRecipeID] == "" then personalOrders[pslSelectedRecipeID] = nil end
+	-- Remove the personal order entry if the value is ""
+	if personalOrders[pslSelectedRecipeID] == "" then personalOrders[pslSelectedRecipeID] = nil end
 
-		-- Enable the quick order button if abilityID and target are known
+	-- Enable the quick order button if abilityID and target are known
+	if assetsCraftingOrdersExist == true then
 		if recipeLibrary[pslSelectedRecipeID] and type(recipeLibrary[pslSelectedRecipeID]) ~= "number" then
 			if recipeLibrary[pslSelectedRecipeID].abilityID ~= nil and personalOrders[pslSelectedRecipeID] ~= nil then
 				personalOrderButton:Enable()
