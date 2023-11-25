@@ -53,7 +53,6 @@ function app.Initialise()
 	-- Declare SavedVariables
 	if not userSettings then userSettings = {} end
 	if not recipesTracked then recipesTracked = {} end
-	if not recipeLinks then recipeLinks = {} end
 	if not reagentLinks then reagentLinks = {} end
 	if not reagentsTracked then reagentsTracked = {} end
 	if not recipeLibrary then recipeLibrary = {} end
@@ -110,7 +109,6 @@ function app.Initialise()
 	-- Load personal recipes, if the setting is enabled
 	if userSettings["pcRecipesTracked"] == true then
 		recipesTracked = pcRecipesTracked
-		recipeLinks = pcRecipeLinks
 	end
 
 	-- Initialise some flag variables
@@ -450,6 +448,10 @@ function app.UpdateNumbers()
 		-- Push the info to the windows
 		table.insert(data, {itemLink, itemAmount})
 		pslTable1:SetData(data, true)
+
+		local row = _G[appName..".reagent."..reagentID..".text2"]
+		if row then row:SetText(itemAmount) end
+
 	end
 	pslTable1:SetData(data, true)
 end
@@ -458,13 +460,12 @@ end
 function app.UpdateRecipes()
 	-- Set personal recipes to be the same as global recipes
 	pcRecipesTracked = recipesTracked
-	pcRecipeLinks = recipeLinks
 
 	-- Update recipes tracked
 	local data = {}
 
 	for recipeID, recipeInfo in pairs(recipesTracked) do
-		table.insert(data, {recipeLinks[recipeID], recipeInfo.quantity})
+		table.insert(data, {recipeInfo.link, recipeInfo.quantity})
 		pslTable2:SetData(data, true)
 	end
 	pslTable2:SetData(data, true)
@@ -574,6 +575,8 @@ function app.TrackRecipe(recipeID, recipeQuantity)
 	local recipeMax = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).quantityMax
 
 	-- Add recipe link for crafted items
+	local recipeLink
+
 	if recipeType == 1 then
 		local itemID = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).outputItemID
 		local _, itemLink
@@ -608,14 +611,14 @@ function app.TrackRecipe(recipeID, recipeQuantity)
 			itemLink = itemLink.." ×"..recipeMin.."-"..recipeMax
 		end
 
-		recipeLinks[recipeID] = itemLink
+		recipeLink = itemLink
 
 	-- Add recipe "link" for enchants
-	elseif recipeType == 3 then recipeLinks[recipeID] = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
+	elseif recipeType == 3 then recipeLink = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
 	end
 
 	-- Track recipe
-	if not recipesTracked[recipeID] then recipesTracked[recipeID] = { quantity = 0, recraft = isRecraft } end
+	if not recipesTracked[recipeID] then recipesTracked[recipeID] = { quantity = 0, recraft = isRecraft, link = recipeLink } end
 	recipesTracked[recipeID].quantity = recipesTracked[recipeID].quantity + recipeQuantity
 
 	-- Show windows
@@ -640,7 +643,6 @@ function app.UntrackRecipe(recipeID, recipeQuantity)
 		-- Set numbers to nil if it doesn't exist anymore
 		if recipesTracked[recipeID].quantity <= 0 then
 			recipesTracked[recipeID] = nil
-			recipeLinks[recipeID] = nil
 		end
 	end
 
@@ -1470,7 +1472,6 @@ end
 function app.Clear()
 	recipesTracked = {}
 	reagentsTracked = {}
-	recipeLinks = {}
 	reagentLinks = {}
 	reagentTiers = {}
 	app.UpdateRecipes()
@@ -1487,6 +1488,7 @@ function app.Clear()
 	-- Remove old variables
 	reagentNumbers = nil
 	lastOrder = nil
+	recipeLinks = nil
 end
 
 -- Open settings
@@ -2597,8 +2599,8 @@ function app.WindowFunctions()
 				local selectedRecipe = data[realrow][1]
 				local selectedRecipeID
 
-				for recipeID, recipeLink in pairs(recipeLinks) do
-					if selectedRecipe == recipeLink then selectedRecipeID = recipeID end
+				for recipeID, recipeInfo in pairs(recipesTracked) do
+					if selectedRecipe == recipeInfo.link then selectedRecipeID = recipeID end
 				end
 
 				-- Untrack the recipe
@@ -2622,8 +2624,8 @@ function app.WindowFunctions()
 					local selectedRecipe = data[realrow][1]
 					local selectedRecipeID = 0
 
-					for recipeID, recipeLink in pairs(recipeLinks) do
-						if selectedRecipe == recipeLink then selectedRecipeID = recipeID end
+					for recipeID, recipeInfo in pairs(recipesTracked) do
+						if selectedRecipe == recipeInfo.link then selectedRecipeID = recipeID end
 					end
 
 					-- Open recipe if it is learned
@@ -2699,8 +2701,6 @@ function api.CreateTrackingWindow()
 	local scrollFrame = CreateFrame("ScrollFrame", nil, app.Window, "ScrollFrameTemplate")
 	scrollFrame:SetPoint("TOPLEFT", app.Window, 8, -6)
 	scrollFrame:SetPoint("BOTTOMRIGHT", app.Window, -23, 8)
-	--scrollFrame:SetPoint("TOPLEFT", app.Window, 10, -10)
-	--scrollFrame:SetPoint("BOTTOMRIGHT", app.Window, -27, 10)
 	scrollFrame:Show()
 
 	scrollFrame.ScrollBar.Back:Hide()
@@ -2753,7 +2753,40 @@ function api.CreateTrackingWindow()
     recipes1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 
 	local reagents = {}
-	for recipeID, recipeInfo in pairs (recipesTracked) do
+
+	local customSortList = {
+		"|cffff8000",	-- Legendary
+		"|cffa335ee",	-- Epic
+		"|cff0070dd",	-- Rare
+		"|cff1eff00",	-- Uncommon
+		"|cffffffff",	-- Common
+		"|cff9d9d9d",	-- Poor (quantity 0)
+	}
+
+	-- Custom comparison function based on the beginning of the string (thanks ChatGPT)
+	local function customSort(a, b)
+		local indexA = 0
+		local indexB = 0
+	
+		for i, v in ipairs(customSortList) do
+			if string.find(a.link, v, 1, true) == 1 then
+				indexA = i
+			end
+			if string.find(b.link, v, 1, true) == 1 then
+				indexB = i
+			end
+		end
+	
+		return indexA < indexB
+	end
+
+	recipesSorted = {}
+	for k, v in pairs (recipesTracked) do
+		recipesSorted[#recipesSorted+1] = {recipeID = k, recraft = v.recraft, quantity = v.quantity, link = v.link}
+	end
+	table.sort(recipesSorted, customSort)
+
+	for _, recipeInfo in ipairs (recipesSorted) do
 		local row = CreateFrame("Button", appName..".recipeRow"..rowNo+1, recipesHeader)
 		row:SetSize(0,16)
 		row:SetPoint("TOPLEFT", appName..".recipeRow"..rowNo, "BOTTOMLEFT")
@@ -2762,8 +2795,19 @@ function api.CreateTrackingWindow()
         row:RegisterForDrag("LeftButton")
         row:SetScript("OnDragStart", function() app.Window:StartMoving() end)
 	    row:SetScript("OnDragStop", function() app.Window:StopMovingOrSizing() end)
+		row:SetScript("OnEnter", function()
+			-- Show item tooltip if hovering over the actual rows
+			GameTooltip:ClearLines()
+			GameTooltip:SetOwner(app.Window, "ANCHOR_BOTTOM")
+			GameTooltip:SetHyperlink(recipeInfo.link)
+			GameTooltip:Show()
+		end)
+		row:SetScript("OnLeave", function()
+			GameTooltip:ClearLines()
+			GameTooltip:Hide()
+		end)
 
-        local tradeskill = recipeLibrary[recipeID].tradeskillID or 999
+        local tradeskill = recipeLibrary[recipeInfo.recipeID].tradeskillID or 999
 
         local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		icon1:SetPoint("LEFT", row)
@@ -2783,14 +2827,14 @@ function api.CreateTrackingWindow()
         text1:SetPoint("RIGHT", text2, "LEFT")
         text1:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 		text1:SetTextColor(1, 1, 1)
-		text1:SetText(recipeLinks[recipeID])
+		text1:SetText(recipeInfo.link)
         text1:SetJustifyH("LEFT")
         text1:SetWordWrap(false)
 
 		rowNo = rowNo + 1
 		maxLength1 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength1)
 
-		app.GetReagents(reagents, recipeID, recipeInfo.quantity, recipeInfo.recraft)
+		app.GetReagents(reagents, recipeInfo.recipeID, recipeInfo.quantity, recipeInfo.recraft)
 	end
 
 	local rowNo2 = 0
@@ -2823,7 +2867,23 @@ function api.CreateTrackingWindow()
 	reagents1:SetText("Reagents")
     reagents1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 
-	for reagentID, reagentQuantity in pairs (reagents) do
+	reagentsSorted = {}
+	for k, v in pairs (reagents) do
+		if k == 52979 then
+			reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = app.iconReady, link = "|cff9d9d9d|Hitem:52979::::::::10:259:::::::::|h[Blackened Dragonscale]|h|r"}
+		else
+			reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = reagentLinks[k].icon, link = reagentLinks[k].link}
+		end
+	end
+	table.sort(reagentsSorted, customSort)
+
+	if recipeLinks then
+		for k, v in pairs (recipeLinks) do
+			recipesTracked[k].link = v
+		end
+	end
+
+	for _, reagentInfo in pairs (reagentsSorted) do
 		local row = CreateFrame("Button", appName..".reagentRow"..rowNo2+1, reagentsHeader)
 		row:SetSize(0,16)
 		row:SetPoint("TOPLEFT", appName..".reagentRow"..rowNo2, "BOTTOMLEFT")
@@ -2833,25 +2893,25 @@ function api.CreateTrackingWindow()
         row:SetScript("OnDragStart", function() app.Window:StartMoving() end)
 	    row:SetScript("OnDragStop", function() app.Window:StopMovingOrSizing() end)
 
-        local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+        local icon1 = row:CreateFontString(appName..".reagent."..reagentInfo.reagentID..".icon", "ARTWORK", "GameFontNormal")
 		icon1:SetPoint("LEFT", row)
         icon1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-		icon1:SetText("|T"..reagentLinks[reagentID].icon..":0|t")
+		icon1:SetText("|T"..reagentInfo.icon..":0|t")
 
-        local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+        local text2 = row:CreateFontString(appName..".reagent."..reagentInfo.reagentID..".text2", "ARTWORK", "GameFontNormal")
 		text2:SetPoint("CENTER", icon1)
 		text2:SetPoint("RIGHT", scrollChild)
 		text2:SetJustifyH("RIGHT")
         text2:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 		text2:SetTextColor(1, 1, 1)
-		text2:SetText(reagentQuantity)
+		text2:SetText(reagentInfo.quantity)
 
-		local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		local text1 = row:CreateFontString(appName..".reagent."..reagentInfo.reagentID..".text1", "ARTWORK", "GameFontNormal")
 		text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
         text1:SetPoint("RIGHT", text2, "LEFT")
         text1:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
 		text1:SetTextColor(1, 1, 1)
-		text1:SetText(reagentLinks[reagentID].link)
+		text1:SetText(reagentInfo.link)
         text1:SetJustifyH("LEFT")
         text1:SetWordWrap(false)
 
@@ -4417,7 +4477,6 @@ end)
 
 -- When a recipe is selected (very for realsies)
 EventRegistry:RegisterCallback("ProfessionsRecipeListMixin.Event.OnRecipeSelected", function(arg1, arg2, arg3)
-	--print(dump(arg2))
 	if arg2["isRecraft"] == true then isRecraft = true
 	elseif arg2["isRecraft"] == false then isRecraft = false
 	end
