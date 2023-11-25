@@ -7,6 +7,21 @@ local appName, app = ...	-- Returns the addon name and a unique table
 app.iconWaiting = "Interface\\RaidFrame\\ReadyCheck-Waiting"
 app.iconReady = "Interface\\RaidFrame\\ReadyCheck-Ready"
 app.iconNotReady = "Interface\\RaidFrame\\ReadyCheck-NotReady"
+app.iconProfession = {}
+app.iconProfession[164] = "Interface\\Icons\\ui_profession_blacksmithing"
+app.iconProfession[165] = "Interface\\Icons\\ui_profession_leatherworking"
+app.iconProfession[171] = "Interface\\Icons\\ui_profession_alchemy"
+app.iconProfession[182] = "Interface\\Icons\\ui_profession_herbalism"
+app.iconProfession[185] = "Interface\\Icons\\ui_profession_cooking"
+app.iconProfession[186] = "Interface\\Icons\\ui_profession_mining"
+app.iconProfession[197] = "Interface\\Icons\\ui_profession_tailoring"
+app.iconProfession[202] = "Interface\\Icons\\ui_profession_engineering"
+app.iconProfession[333] = "Interface\\Icons\\ui_profession_enchanting"
+app.iconProfession[356] = "Interface\\Icons\\ui_profession_fishing"
+app.iconProfession[393] = "Interface\\Icons\\ui_profession_skinning"
+app.iconProfession[755] = "Interface\\Icons\\ui_profession_jewelcrafting"
+app.iconProfession[773] = "Interface\\Icons\\ui_profession_inscription"
+app.iconProfession[999] = "Interface\\Icons\\inv_misc_questionmark"
 
 -- Shadowlands Legendary craft SpellIDs
 app.slLegendaryRecipeIDs = {}

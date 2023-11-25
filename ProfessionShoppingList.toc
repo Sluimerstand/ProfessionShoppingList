@@ -16,5 +16,4 @@ libs\LibDBIcon-1.0\embeds.xml
 libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua
 libs\lib-st\lib-st.xml
 Core.lua
-ProfessionShoppingList.lua
 Database.lua
