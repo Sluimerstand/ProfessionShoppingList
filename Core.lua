@@ -933,10 +933,19 @@ function app.CreateTradeskillAssets()
 		trackMakeOrderButton:SetPoint("TOPRIGHT", ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "TOPRIGHT", -9, -10)
 		trackMakeOrderButton:SetFrameStrata("HIGH")
 		trackMakeOrderButton:SetScript("OnClick", function()
+			local oldIsRecraft = isRecraft
+			if ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.RecraftingOutputText:IsVisible() == true then
+				isRecraft = true
+			end
+
 			if pslOrderRecipeID == 0 then
 				app.TrackRecipe(pslSelectedRecipeID, 1)
 			else
 				app.TrackRecipe(pslOrderRecipeID, 1)
+			end
+
+			if ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.RecraftingOutputText:IsVisible() == true then
+				isRecraft = oldIsRecraft
 			end
 
 			-- Show windows
