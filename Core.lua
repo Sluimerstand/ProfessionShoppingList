@@ -1,7 +1,10 @@
--- Core.lua: Main AddOn code (once cleaned up and reviewed)
+----------------------------------------
+-- Profession Shopping List: Core.lua --
+----------------------------------------
+-- Main AddOn code (once cleaned up and reviewed)
 
 -- Initialisation
-local appName, app = ...	-- Returns the addon name and a unique table
+local appName, app = ...	-- Returns the AddOn name and a unique table
 app.api = {}	-- Create a table to use for our "API"
 ProfessionShoppingList = app.api	-- Create a namespace for our "API"
 local api = app.api	-- Our "API" prefix
@@ -29,67 +32,50 @@ event:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
 event:RegisterEvent("TRADE_SKILL_SHOW")
 event:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 
--- Might as well keep this in here, it's useful
-local function dump(o)
-	if type(o) == 'table' then
-		local s = '{ '
-		for k,v in pairs(o) do
-			if type(k) ~= 'number' then k = '"'..k..'"' end
-			s = s .. '['..k..'] = ' .. dump(v) .. ','
+----------------------
+-- HELPER FUNCTIONS --
+----------------------
+
+-- Table dump
+function app.Dump(table)
+	local function dumpTable(o)
+		if type(o) == 'table' then
+			local s = '{ '
+			for k,v in pairs(o) do
+				if type(k) ~= 'number' then k = '"'..k..'"' end
+				s = s .. '['..k..'] = ' .. dumpTable(v) .. ','
+			end
+		return s .. '} '
+		else
+			return tostring(o)
 		end
-	return s .. '} '
-	else
-		return tostring(o)
 	end
+	print(dumpTable(table))
 end
 
--- Print function
+-- Print with AddOn prefix
 function app.Print(...)
 	print("|cffC69B6DPSL|R:", ...)
 end
 
--- Create SavedVariables, default window position, and default user settings
+-- Create SavedVariables, default user settings, and variable flags
 function app.Initialise()
 	-- Declare SavedVariables
 	if not userSettings then userSettings = {} end
 	if not recipesTracked then recipesTracked = {} end
-	if not reagentLinks then reagentLinks = {} end
 	if not reagentsTracked then reagentsTracked = {} end
-	if not recipeLibrary then recipeLibrary = {} end
-	if not reagentTiers then reagentTiers = {} end
-	if not personalOrders then personalOrders = {} end
 	if not recipeCooldowns then recipeCooldowns = {} end
-	
-	-- Set default window position
-	if not windowPosition then
-		windowPosition = {
-			["pslFrame1"] = {
-				["left"] = 1168,
-				["bottom"] = 529,
-			},
-			["pslFrame2"] = {
-				["left"] = 1168,
-				["bottom"] = 782,
-			},
-		}
-	end
-
-	-- Declare per-character SavedVariables
-	if not pcWindowPosition then pcWindowPosition = windowPosition end
+	if not reagentTiers then reagentTiers = {} end
+	if not recipeLibrary then recipeLibrary = {} end
 	if not pcRecipesTracked then pcRecipesTracked = {} end
-	if not pcRecipeLinks then pcRecipeLinks = {} end
+	if not personalOrders then personalOrders = {} end
 
 	-- Enable default user settings
+	-- TODO: Order by visual settings
 	if userSettings["hide"] == nil then userSettings["hide"] = false end
 	if userSettings["removeCraft"] == nil then userSettings["removeCraft"] = true end
 	if userSettings["showRemaining"] == nil then userSettings["showRemaining"] = false end
 	if userSettings["showTooltip"] == nil then userSettings["showTooltip"] = true end
-	if userSettings["recipeRows"] == nil then userSettings["recipeRows"] = 15 end
-	if userSettings["reagentRows"] == nil then userSettings["reagentRows"] = 15 end
-	if userSettings["recipeWidth"] == nil then userSettings["recipeWidth"] = 150 end
-	if userSettings["recipeNoWidth"] == nil then userSettings["recipeNoWidth"] = 30 end
-	if userSettings["reagentWidth"] == nil then userSettings["reagentWidth"] = 150 end
-	if userSettings["reagentNoWidth"] == nil then userSettings["reagentNoWidth"] = 50 end
 	if userSettings["vendorAll"] == nil then userSettings["vendorAll"] = true end
 	if userSettings["reagentQuality"] == nil then userSettings["reagentQuality"] = 1 end
 	if userSettings["closeWhenDone"] == nil then userSettings["closeWhenDone"] = false end
@@ -105,6 +91,8 @@ function app.Initialise()
 	if userSettings["queueSound"] == nil then userSettings["queueSound"] = false end
 	if userSettings["backpackCleanup"] == nil then userSettings["backpackCleanup"] = "default" end
 	if userSettings["backpackLoot"] == nil then userSettings["backpackLoot"] = "default" end
+	if userSettings["windowPosition"] == nil then userSettings["windowPosition"] = { ["left"] = 1295, ["bottom"] = 836, ["width"] = 200, ["height"] = 200, } end
+	if userSettings["pcwindowPosition"] == nil then userSettings["pcWindowPosition"] = userSettings["windowPosition"] end
 
 	-- Load personal recipes, if the setting is enabled
 	if userSettings["pcRecipesTracked"] == true then
@@ -112,6 +100,9 @@ function app.Initialise()
 	end
 
 	-- Initialise some flag variables
+	-- TODO: convert to app.variable
+	app.Hidden = CreateFrame("Frame")
+	reagentQuantities = {}
 	assetsTradeskillExist = false
 	assetsCraftingOrdersExist = false
 	isRecraft = false
@@ -120,106 +111,131 @@ function app.Initialise()
 	pslQuickOrderActive = 0
 	pslQuickOrderAttempts = 0
 	pslQuickOrderErrors = 0
-
-	-- Change recipesTracked to the new format
-	for key, value in pairs (recipesTracked) do
-		if type(value) == "number" then
-			recipesTracked[key] = { quantity = value, recraft = false }
-		end
-	end
-
-	for key, value in pairs (pcRecipesTracked) do
-		if type(value) == "number" then
-			pcRecipesTracked[key] = { quantity = value, recraft = false }
-		end
-	end
 end
 
--- Save the window position
-function app.SaveWindowPosition()
-	-- Stop moving the windows
-	pslFrame1:StopMovingOrSizing()
-	pslFrame2:StopMovingOrSizing()
+-- Convert and/or delete older SavedVariables
+function app.Legacy()
+	-- v10.2.0-007
+		-- Convert recipeLinks to recipesTracked
+		for key, value in pairs (recipesTracked) do
+			if type(value) == "number" then
+				recipesTracked[key] = { quantity = value, recraft = false }
+			end
+		end
 
-	-- Save the window positions globally
-	windowPosition["pslFrame1"].left = pslFrame1:GetLeft()
-	windowPosition["pslFrame1"].bottom = pslFrame1:GetBottom()
-	windowPosition["pslFrame2"].left = pslFrame2:GetLeft()
-	windowPosition["pslFrame2"].bottom = pslFrame2:GetBottom()
+		for key, value in pairs (pcRecipesTracked) do
+			if type(value) == "number" then
+				pcRecipesTracked[key] = { quantity = value, recraft = false }
+			end
+		end
 
-	-- Save the window positions per character
-	pcWindowPosition = windowPosition
+		if recipeLinks then
+			for key, value in pairs (recipeLinks) do
+				recipesTracked[key].link = value
+			end
+		end
+
+		if pcRecipeLinks then
+			for key, value in pairs (pcRecipeLinks) do
+				pcRecipesTracked[key].link = value
+			end
+		end
+
+		-- Delete old window position and size
+		userSettings["recipeRows"] = nil
+		userSettings["reagentRows"] = nil
+		userSettings["recipeWidth"] = nil
+		userSettings["recipeNoWidth"] = nil
+		userSettings["reagentWidth"] = nil
+		userSettings["reagentNoWidth"] = nil
+end
+
+-- Save the window position and size
+function app.SaveWindow()
+	-- Stop moving or resizing the window
+	app.Window:StopMovingOrSizing()
+
+	-- Get the window properties
+	local left = app.Window:GetLeft()
+	local bottom = app.Window:GetBottom()
+	local width, height = app.Window:GetSize()
+
+	-- Save the window position and size
+	userSettings["windowPosition"] = { ["left"] = left, ["bottom"] = bottom, ["width"] = width, ["height"] = height, }
+	userSettings["pcWindowPosition"] = userSettings["windowPosition"]
+end
+
+-- Create the main window
+function app.CreateWindow()
+	-- Create popup frame
+	app.Window = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+	app.Window:SetPoint("CENTER")
+	app.Window:SetBackdrop({
+		bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+		edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+		edgeSize = 16,
+		insets = { left = 4, right = 4, top = 4, bottom = 4 },
+	})
+	app.Window:SetBackdropColor(0, 0, 0, 1)
+	app.Window:EnableMouse(true)
+	app.Window:SetMovable(true)
+	app.Window:SetResizable(true)
+	app.Window:SetResizeBounds(200, 200, 600, 600)
+	app.Window:RegisterForDrag("LeftButton")
+	app.Window:SetScript("OnDragStart", function() app.Window:StartMoving() end)
+	app.Window:SetScript("OnDragStop", function() app.SaveWindow() end)
+	app.Window:Hide()
+
+	-- Resize corner
+	local corner = CreateFrame("Button", nil, app.Window)
+	corner:EnableMouse("true")
+	corner:SetPoint("BOTTOMRIGHT")
+	corner:SetSize(16,16)
+	corner:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+	corner:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+	corner:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+	corner:SetScript("OnMouseDown", function(self)
+		app.Window:StartSizing("BOTTOMRIGHT") 
+	end)
+	corner:SetScript("OnMouseUp", function()
+		app.SaveWindow()
+	end)
+	app.Window.Corner = corner
+
+	-- Close button
+	local close = CreateFrame("Button", "pslOptionCloseButton", app.Window, "UIPanelCloseButton")
+	close:SetPoint("TOPRIGHT", app.Window, "TOPRIGHT", -1, -1)
+	close:SetScript("OnClick", function()
+		app.Window:Hide()
+	end)
+
+	-- ScrollFrame inside the popup frame
+	local scrollFrame = CreateFrame("ScrollFrame", nil, app.Window, "ScrollFrameTemplate")
+	scrollFrame:SetPoint("TOPLEFT", app.Window, 8, -6)
+	scrollFrame:SetPoint("BOTTOMRIGHT", app.Window, -23, 8)
+	scrollFrame:Show()
+
+	scrollFrame.ScrollBar.Back:Hide()
+	scrollFrame.ScrollBar.Forward:Hide()
+	scrollFrame.ScrollBar:ClearAllPoints()
+	scrollFrame.ScrollBar:SetPoint("TOP", scrollFrame, 0, -3)
+	scrollFrame.ScrollBar:SetPoint("RIGHT", scrollFrame, 14, 0)
+	scrollFrame.ScrollBar:SetPoint("BOTTOM", scrollFrame, 0, -18)
+	
+	-- ScrollChild inside the ScrollFrame
+	local scrollChild = CreateFrame("Frame", nil, scrollFrame)
+	scrollFrame:SetScrollChild(scrollChild)
+	scrollChild:SetWidth(1)    -- This is automatically defined, so long as the attribute exists at all
+	scrollChild:SetHeight(1)    -- This is automatically defined, so long as the attribute exists at all
+	scrollChild:SetAllPoints(scrollFrame)
+	scrollChild:Show()
+	scrollFrame:SetScript("OnVerticalScroll", function() scrollChild:SetPoint("BOTTOMRIGHT", scrollFrame) end)
+	app.Window.Child = scrollChild
+	app.Window.ScrollFrame = scrollFrame
 end
 
 -- Create or update the tracking windows
 function app.TrackingWindows()
-	local cols = {}
-
-	-- Column formatting, Reagents
-	cols[1] = {
-		["name"] = "Reagents",
-		["width"] = userSettings["reagentWidth"],
-		["align"] = "LEFT",
-		["color"] = {
-			["r"] = 1.0,
-			["g"] = 1.0,
-			["b"] = 1.0,
-			["a"] = 1.0
-		},
-		["colorargs"] = nil,
-		["bgcolor"] = {
-			["r"] = 0.0,
-			["g"] = 0.0,
-			["b"] = 0.0,
-			["a"] = 0.0
-		},
-		["defaultsort"] = "dsc",
-		["sort"] = "dsc",
-		["DoCellUpdate"] = nil,
-	}
-	
-	-- Column formatting, Amount
-	cols[2] = {
-		["name"] = "#",
-		["width"] = userSettings["reagentNoWidth"],
-		["align"] = "RIGHT",
-		["color"] = {
-			["r"] = 1.0,
-			["g"] = 1.0,
-			["b"] = 1.0,
-			["a"] = 1.0
-		},
-		["bgcolor"] = {
-			["r"] = 0.0,
-			["g"] = 0.0,
-			["b"] = 0.0,
-			["a"] = 0.0
-		},
-		["defaultsort"] = "dsc",
-		["sort"] = "dsc",
-		["DoCellUpdate"] = nil,
-	}
-
-	-- Reagent tracking
-	if not pslFrame1 then
-		-- Frame
-		pslFrame1 = CreateFrame("Frame", "pslTrackingWindow1", UIParent, "BackdropTemplateMixin" and "BackdropTemplate")
-		pslFrame1:EnableMouse(true)
-		pslFrame1:SetMovable(true)
-		pslFrame1:Hide()
-
-		-- Close button
-		pslFrame1.closeButton = CreateFrame("Button", "pslCloseButton1", pslFrame1, "UIPanelCloseButton")
-		pslFrame1.closeButton:SetPoint("TOPRIGHT", pslFrame1, 2, 0)
-		pslFrame1.closeButton:SetScript("OnClick", function() pslFrame1:Hide() end)
-
-		-- Create tracking window
-		pslTable1 = ScrollingTable:CreateST(cols, 50, nil, nil, pslFrame1)
-	end
-
-	pslTable1:SetDisplayRows(userSettings["reagentRows"], 15)
-	pslTable1:SetDisplayCols(cols)
-	pslFrame1:SetSize(userSettings["reagentWidth"]+userSettings["reagentNoWidth"]+30, userSettings["reagentRows"]*15+45)
 	pslFrame1:SetScript("OnMouseDown", function(self, button)
 		if button == "LeftButton" and not IsModifierKeyDown() then
 			pslFrame1:StartMoving()
@@ -231,85 +247,9 @@ function app.TrackingWindows()
 		app.SaveWindowPosition()
 	end)
 
-	-- Column formatting, Recipes
-	local cols = {}
-	cols[1] = {
-		["name"] = "Recipes",
-		["width"] = userSettings["recipeWidth"],
-		["align"] = "LEFT",
-		["color"] = {
-			["r"] = 1.0,
-			["g"] = 1.0,
-			["b"] = 1.0,
-			["a"] = 1.0
-		},
-		["colorargs"] = nil,
-		["bgcolor"] = {
-			["r"] = 0.0,
-			["g"] = 0.0,
-			["b"] = 0.0,
-			["a"] = 0.0
-		},
-		["defaultsort"] = "dsc",
-		["sort"] = "dsc",
-		["DoCellUpdate"] = nil,
-	}
-	
-	-- Column formatting, Tracked
-	cols[2] = {
-		["name"] = "#",
-		["width"] = userSettings["recipeNoWidth"],
-		["align"] = "RIGHT",
-		["color"] = {
-			["r"] = 1.0,
-			["g"] = 1.0,
-			["b"] = 1.0,
-			["a"] = 1.0
-		},
-		["bgcolor"] = {
-			["r"] = 0.0,
-			["g"] = 0.0,
-			["b"] = 0.0,
-			["a"] = 0.0
-		},
-		["defaultsort"] = "dsc",
-		["sort"] = "dsc",
-		["DoCellUpdate"] = nil,
-	}
-
-	-- Recipe tracking
-	if not pslFrame2 then
-		-- Frame
-		pslFrame2 = CreateFrame("Frame", "pslTrackingWindow2", UIParent, "BackdropTemplateMixin" and "BackdropTemplate")
-		pslFrame2:EnableMouse(true)
-		pslFrame2:SetMovable(true)
-		pslFrame2:Hide()
 		pslFrame2:SetScript("OnDragStart", function(self, button) self:StartMoving() end)
 		pslFrame2:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
 
-		-- Close button
-		pslFrame2.closeButton = CreateFrame("Button", "pslCloseButton2", pslFrame2, "UIPanelCloseButton")
-		pslFrame2.closeButton:SetPoint("TOPRIGHT", pslFrame2, 2, 0)
-		pslFrame2.closeButton:SetScript("OnClick", function() pslFrame2:Hide() end)
-
-		-- Create tracking window
-		pslTable2 = ScrollingTable:CreateST(cols, 50, nil, nil, pslFrame2)
-	end
-
-	pslTable2:SetDisplayRows(userSettings["recipeRows"], 15)
-	pslTable2:SetDisplayCols(cols)
-	pslFrame2:SetSize(userSettings["recipeWidth"]+userSettings["recipeNoWidth"]+30, userSettings["recipeRows"]*15+45)
-	
-	pslFrame2:SetScript("OnMouseDown", function(self, button)
-		if button == "LeftButton" and not IsModifierKeyDown() then
-			pslFrame2:StartMoving()
-			GameTooltip:ClearLines()
-			GameTooltip:Hide()
-		end
-	end)
-	pslFrame2:SetScript("OnMouseUp", function()
-		app.SaveWindowPosition()
-	end)
 end
 
 -- Get reagents for recipe
@@ -376,30 +316,28 @@ end
 -- Update numbers tracked
 function app.UpdateNumbers()
 	-- Update reagents tracked
-	local data = {}
+	for reagentID, amount in pairs(reagentQuantities) do
+		local itemLink, fileID
 
-	for reagentID, amount in pairs(reagentsTracked) do
-		local itemName, itemLink
-
-		if not reagentLinks[reagentID] then
+		if not reagentsTracked[reagentID] then
 			-- Cache item
 			if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
 
 			-- Get item info
-			itemName, itemLink, _, _, _, _, _, _, _, fileID = GetItemInfo(reagentID)
+			_, itemLink, _, _, _, _, _, _, _, fileID = GetItemInfo(reagentID)
 
 			-- Try again if error
-			if itemName == nil or itemLink == nil then
+			if itemLink == nil then
 				RunNextFrame(app.UpdateNumbers)
 				do return end
 			end
 
 			-- Write the info to the cache
-			reagentLinks[reagentID] = {name = itemName, link = itemLink, icon = fileID}
+			reagentsTracked[reagentID] = {link = itemLink, icon = fileID}
 		else
 			-- Read the info from the cache
-			itemName = reagentLinks[reagentID].name
-			itemLink = reagentLinks[reagentID].link
+			itemLink = reagentsTracked[reagentID].link
+			icon = reagentsTracked[reagentID].icon
 		end
 
 		-- Get needed/owned number of reagents
@@ -427,15 +365,17 @@ function app.UpdateNumbers()
 
 		-- Make stuff grey and add a checkmark if 0 are needed
 		local itemAmount = ""
+		local itemIcon = reagentsTracked[reagentID].icon
 		if math.max(0,amount-reagentAmountHave) == 0 then
+			itemIcon = app.iconReady
 			itemAmount = "|cff9d9d9d"
-			itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|T"..app.iconReady..":0|t |cff9d9d9d|") -- Poor
-			itemLink = string.gsub(itemLink, "|cffffffff|", "|T"..app.iconReady..":0|t |cff9d9d9d|") -- Common
-			itemLink = string.gsub(itemLink, "|cff1eff00|", "|T"..app.iconReady..":0|t |cff9d9d9d|") -- Uncommon
-			itemLink = string.gsub(itemLink, "|cff0070dd|", "|T"..app.iconReady..":0|t |cff9d9d9d|") -- Rare
-			itemLink = string.gsub(itemLink, "|cffa335ee|", "|T"..app.iconReady..":0|t |cff9d9d9d|") -- Epic
-			itemLink = string.gsub(itemLink, "|cffff8000|", "|T"..app.iconReady..":0|t |cff9d9d9d|") -- Legendary
-			itemLink = string.gsub(itemLink, "|cffe6cc80|", "|T"..app.iconReady..":0|t |cff9d9d9d|") -- Artifact
+			itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|cff9d9d9d|") -- Poor
+			itemLink = string.gsub(itemLink, "|cffffffff|", "|cff9d9d9d|") -- Common
+			itemLink = string.gsub(itemLink, "|cff1eff00|", "|cff9d9d9d|") -- Uncommon
+			itemLink = string.gsub(itemLink, "|cff0070dd|", "|cff9d9d9d|") -- Rare
+			itemLink = string.gsub(itemLink, "|cffa335ee|", "|cff9d9d9d|") -- Epic
+			itemLink = string.gsub(itemLink, "|cffff8000|", "|cff9d9d9d|") -- Legendary
+			itemLink = string.gsub(itemLink, "|cffe6cc80|", "|cff9d9d9d|") -- Artifact
 		end
 
 		-- Set the displayed amount based on settings
@@ -446,14 +386,63 @@ function app.UpdateNumbers()
 		end
 
 		-- Push the info to the windows
-		table.insert(data, {itemLink, itemAmount})
-		pslTable1:SetData(data, true)
-
-		local row = _G[appName..".reagent."..reagentID..".text2"]
-		if row then row:SetText(itemAmount) end
-
+		if reagentRow then
+			for i, row in pairs (reagentRow) do
+				if row:GetID() == reagentID then
+					row.icon:SetText("|T"..itemIcon..":0|t")
+					row.text1:SetText(itemLink)
+					row.text2:SetText(itemAmount)
+				end
+			end
+		end
 	end
-	pslTable1:SetData(data, true)
+
+	local customSortList = {
+		"|cffe6cc80",	-- Artifact
+		"|cffff8000",	-- Legendary
+		"|cffa335ee",	-- Epic
+		"|cff0070dd",	-- Rare
+		"|cff1eff00",	-- Uncommon
+		"|cffffffff",	-- Common
+		"|cff9d9d9d",	-- Poor (quantity 0)
+	}
+
+	local function customSort(a, b)
+		local indexA = 0
+		local indexB = 0
+	
+		for i, v in ipairs(customSortList) do
+			if string.find(a.link, v, 1, true) == 1 then
+				indexA = i
+			end
+			if string.find(b.link, v, 1, true) == 1 then
+				indexB = i
+			end
+		end
+	
+		return indexA < indexB
+	end
+
+	if reagentRow then
+		if #reagentRow >= 1 then
+			local reagentsSorted = {}
+			for _, row in pairs (reagentRow) do
+				table.insert(reagentsSorted, {["row"] = row, ["link"] = row.text1:GetText()})
+			end
+			table.sort(reagentsSorted, customSort)
+
+			for i, info in ipairs (reagentsSorted) do
+				if i == 1 then
+					info.row:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT")
+					info.row:SetPoint("TOPRIGHT", app.Window.Reagents, "BOTTOMRIGHT")
+				else
+					local offset = -16*(i-1)
+					info.row:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, offset)
+					info.row:SetPoint("TOPRIGHT", app.Window.Reagents, "BOTTOMRIGHT", 0, offset)
+				end
+			end
+		end
+	end
 end
 
 -- Update recipes and reagents tracked
@@ -461,26 +450,375 @@ function app.UpdateRecipes()
 	-- Set personal recipes to be the same as global recipes
 	pcRecipesTracked = recipesTracked
 
-	-- Update recipes tracked
-	local data = {}
-
-	for recipeID, recipeInfo in pairs(recipesTracked) do
-		table.insert(data, {recipeInfo.link, recipeInfo.quantity})
-		pslTable2:SetData(data, true)
-	end
-	pslTable2:SetData(data, true)
-	
 	-- Recalculate reagents tracked
 	if changingMultipleRecipes == false then
-		reagentsTracked = {}
+		reagentQuantities = {}
 
 		for recipeID, recipeInfo in pairs(recipesTracked) do
-			app.GetReagents(reagentsTracked, recipeID, recipeInfo.quantity, recipeInfo.recraft)
+			app.GetReagents(reagentQuantities, recipeID, recipeInfo.quantity, recipeInfo.recraft)
 		end
 
 		-- Update numbers tracked
 		app.UpdateNumbers()
 	end
+
+	local rowNo = 0
+	local showRecipes = true
+	local maxLength1 = 0
+	local maxLength2 = 0
+	local maxLength3 = 0
+
+	if recipeRow then
+		for i, row in pairs (recipeRow) do
+			row:SetParent(app.Hidden)
+			row:Hide()
+		end
+	end
+	if reagentRow then
+		for i, row in pairs (reagentRow) do
+			row:SetParent(app.Hidden)
+			row:Hide()
+		end
+	end
+	if cooldownRow then
+		for i, row in pairs (cooldownRow) do
+			row:SetParent(app.Hidden)
+			row:Hide()
+		end
+	end
+
+	recipeRow = {}
+	reagentRow = {}
+	cooldownRow = {}
+
+	if not app.Window.Recipes then
+		app.Window.Recipes = CreateFrame("Button", nil, app.Window.Child)
+		app.Window.Recipes:SetSize(0,16)
+		app.Window.Recipes:SetPoint("TOPLEFT", app.Window.Child, -1, 0)
+		app.Window.Recipes:SetPoint("RIGHT", app.Window.Child)
+		app.Window.Recipes:RegisterForDrag("LeftButton")
+		app.Window.Recipes:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+		app.Window.Recipes:SetScript("OnDragStart", function() app.Window:StartMoving() end)
+		app.Window.Recipes:SetScript("OnDragStop", function() app.SaveWindow() end)
+		
+		local recipes1 = app.Window.Recipes:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		recipes1:SetPoint("LEFT", app.Window.Recipes)
+		recipes1:SetText("Recipes")
+		recipes1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+	end
+	app.Window.Recipes:SetScript("OnClick", function(self)
+		local children = {self:GetChildren()}
+
+		if showRecipes == true then
+			for _, child in ipairs(children) do child:Hide() end
+			app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, -2)
+			showRecipes = false
+		else
+			for _, child in ipairs(children) do child:Show() end
+			if rowNo == 0 then
+				app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, -2)
+			else
+				app.Window.Reagents:SetPoint("TOPLEFT", recipeRow[rowNo], "BOTTOMLEFT", 0, -2)
+			end
+			showRecipes = true
+		end
+	end)
+
+	local customSortList = {
+		"|cffe6cc80",	-- Artifact
+		"|cffff8000",	-- Legendary
+		"|cffa335ee",	-- Epic
+		"|cff0070dd",	-- Rare
+		"|cff1eff00",	-- Uncommon
+		"|cffffffff",	-- Common
+		"|cff9d9d9d",	-- Poor (quantity 0)
+	}
+
+	-- Custom comparison function based on the beginning of the string (thanks ChatGPT)
+	local function customSort(a, b)
+		local indexA = 0
+		local indexB = 0
+	
+		for i, v in ipairs(customSortList) do
+			if string.find(a.link, v, 1, true) == 1 then
+				indexA = i
+			end
+			if string.find(b.link, v, 1, true) == 1 then
+				indexB = i
+			end
+		end
+	
+		return indexA < indexB
+	end
+
+	local recipesSorted = {}
+	for k, v in pairs (recipesTracked) do
+		recipesSorted[#recipesSorted+1] = {recipeID = k, recraft = v.recraft, quantity = v.quantity, link = v.link}
+	end
+	table.sort(recipesSorted, customSort)
+
+	for _i, recipeInfo in ipairs (recipesSorted) do
+		rowNo = rowNo + 1
+
+		local row = CreateFrame("Button", nil, app.Window.Recipes)
+		row:SetSize(0,16)
+		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+        row:RegisterForDrag("LeftButton")
+        row:SetScript("OnDragStart", function() app.Window:StartMoving() end)
+		row:SetScript("OnDragStop", function() app.SaveWindow() end)
+		row:SetScript("OnEnter", function()
+			-- Show item tooltip if hovering over the actual rows
+			GameTooltip:ClearLines()
+			GameTooltip:SetOwner(app.Window, "ANCHOR_BOTTOM")
+			GameTooltip:SetHyperlink(recipeInfo.link)
+			GameTooltip:Show()
+		end)
+		row:SetScript("OnLeave", function()
+			GameTooltip:ClearLines()
+			GameTooltip:Hide()
+		end)
+
+		recipeRow[rowNo] = row
+		if rowNo == 1 then
+			row:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT")
+			row:SetPoint("TOPRIGHT", app.Window.Recipes, "BOTTOMRIGHT")
+		else
+			row:SetPoint("TOPLEFT", recipeRow[rowNo-1], "BOTTOMLEFT")
+			row:SetPoint("TOPRIGHT", recipeRow[rowNo-1], "BOTTOMRIGHT")
+		end
+
+        local tradeskill = recipeLibrary[recipeInfo.recipeID].tradeskillID or 999
+
+        local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		icon1:SetPoint("LEFT", row)
+        icon1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+		icon1:SetText("|T"..app.iconProfession[tradeskill]..":0|t")
+
+        local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		text2:SetPoint("CENTER", icon1)
+		text2:SetPoint("RIGHT", app.Window.Child)
+		text2:SetJustifyH("RIGHT")
+        text2:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+		text2:SetTextColor(1, 1, 1)
+		text2:SetText(recipeInfo.quantity)
+
+		local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
+        text1:SetPoint("RIGHT", text2, "LEFT")
+        text1:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+		text1:SetTextColor(1, 1, 1)
+		text1:SetText(recipeInfo.link)
+        text1:SetJustifyH("LEFT")
+        text1:SetWordWrap(false)
+
+		maxLength1 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength1)
+	end
+
+	local rowNo2 = 0
+	local showReagents = true
+
+	if not app.Window.Reagents then
+		app.Window.Reagents = CreateFrame("Button", nil, app.Window.Child)
+		app.Window.Reagents:SetSize(0,16)
+		app.Window.Reagents:SetPoint("RIGHT", app.Window.Child)
+		app.Window.Reagents:RegisterForDrag("LeftButton")
+		app.Window.Reagents:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+		app.Window.Reagents:SetScript("OnDragStart", function() app.Window:StartMoving() end)
+		app.Window.Reagents:SetScript("OnDragStop", function() app.SaveWindow() end)
+		
+		local reagents1 = app.Window.Reagents:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		reagents1:SetPoint("LEFT", app.Window.Reagents)
+		reagents1:SetText("Reagents")
+		reagents1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+	end
+	if rowNo == 0 then
+		app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, -2)
+	else
+		app.Window.Reagents:SetPoint("TOPLEFT", recipeRow[rowNo], "BOTTOMLEFT", 0, -2)
+	end
+	app.Window.Reagents:SetScript("OnClick", function(self)
+		local children = {self:GetChildren()}
+
+		if showReagents == true then
+			for _, child in ipairs(children) do child:Hide() end
+			app.Window.Cooldowns:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, -2)
+			showReagents = false
+		else
+			for _, child in ipairs(children) do child:Show() end
+			local offset = -16*#reagentRow
+			app.Window.Cooldowns:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, offset)
+			showReagents = true
+		end
+	end)
+
+	reagentsSorted = {}
+	for k, v in pairs (reagentQuantities) do
+		reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = reagentsTracked[k].icon, link = reagentsTracked[k].link}
+	end
+	table.sort(reagentsSorted, customSort)
+
+	for _, reagentInfo in ipairs (reagentsSorted) do
+		rowNo2 = rowNo2 + 1
+
+		local row = CreateFrame("Button", nil, app.Window.Reagents, "", reagentInfo.reagentID)
+		row:SetSize(0,16)
+		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+        row:RegisterForDrag("LeftButton")
+        row:SetScript("OnDragStart", function() app.Window:StartMoving() end)
+		row:SetScript("OnDragStop", function() app.SaveWindow() end)
+
+		reagentRow[rowNo2] = row
+
+        local icon1 = row:CreateFontString(nil, "ARTWORK", nil, "GameFontNormal")
+		icon1:SetPoint("LEFT", row)
+        icon1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+		icon1:SetText("|T"..reagentInfo.icon..":0|t")
+		row.icon = icon1
+
+        local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		text2:SetPoint("CENTER", icon1)
+		text2:SetPoint("RIGHT", app.Window.Child)
+		text2:SetJustifyH("RIGHT")
+        text2:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+		text2:SetTextColor(1, 1, 1)
+		text2:SetText(reagentInfo.quantity)
+		row.text2 = text2
+
+		local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
+        text1:SetPoint("RIGHT", text2, "LEFT")
+        text1:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+		text1:SetTextColor(1, 1, 1)
+		text1:SetText(reagentInfo.link)
+        text1:SetJustifyH("LEFT")
+        text1:SetWordWrap(false)
+		row.text1 = text1
+
+		maxLength2 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength2)
+	end
+
+	local rowNo3 = 0
+	local showCooldowns = true
+
+	-- local next = next
+	-- if next(recipeCooldowns) == nil then
+	if not app.Window.Cooldowns then
+		app.Window.Cooldowns = CreateFrame("Button", nil, app.Window.Child)
+		app.Window.Cooldowns:SetSize(0,16)
+		app.Window.Cooldowns:SetPoint("RIGHT", app.Window.Child)
+		app.Window.Cooldowns:RegisterForDrag("LeftButton")
+		app.Window.Cooldowns:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+		app.Window.Cooldowns:SetScript("OnDragStart", function() app.Window:StartMoving() end)
+		app.Window.Cooldowns:SetScript("OnDragStop", function() app.SaveWindow() end)
+		
+		local cooldowns1 = app.Window.Cooldowns:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		cooldowns1:SetPoint("LEFT", app.Window.Cooldowns)
+		cooldowns1:SetText("Cooldowns")
+		cooldowns1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+	end
+	local offset = -2
+	if rowNo2 >= 1 then offset = -16*#reagentRow end
+	app.Window.Cooldowns:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, offset)
+
+	app.Window.Cooldowns:SetScript("OnClick", function(self)
+		local children = {self:GetChildren()}
+
+		if showCooldowns == true then
+			for i_, child in ipairs(children) do child:Hide() end
+			showCooldowns = false
+		else
+			for i_, child in ipairs(children) do child:Show() end
+			showCooldowns = true
+		end
+	end)
+
+	for recipeID, cooldownInfo in pairs (recipeCooldowns) do
+		rowNo3 = rowNo3 + 1
+
+		local row = CreateFrame("Button", nil, app.Window.Cooldowns)
+		row:SetSize(0,16)
+		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+		row:RegisterForDrag("LeftButton")
+		row:SetScript("OnDragStart", function() app.Window:StartMoving() end)
+		row:SetScript("OnDragStop", function() app.SaveWindow() end)
+
+		cooldownRow[rowNo3] = row
+		if rowNo3 == 1 then
+			row:SetPoint("TOPLEFT", app.Window.Cooldowns, "BOTTOMLEFT")
+			row:SetPoint("TOPRIGHT", app.Window.Cooldowns, "BOTTOMRIGHT")
+		else
+			row:SetPoint("TOPLEFT", cooldownRow[rowNo3-1], "BOTTOMLEFT")
+			row:SetPoint("TOPRIGHT", cooldownRow[rowNo3-1], "BOTTOMRIGHT")
+		end
+
+		local tradeskill = recipeLibrary[recipeID].tradeskillID or 999
+
+		local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		icon1:SetPoint("LEFT", row)
+		icon1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
+		icon1:SetText("|T"..app.iconProfession[tradeskill]..":0|t")
+
+		local cooldownRemaining = cooldownInfo.start + cooldownInfo.cooldown - GetServerTime()
+		local days, hours, minutes
+
+		days = math.floor(cooldownRemaining/(60*60*24))
+		hours = math.floor((cooldownRemaining - (days*60*60*24))/(60*60))
+		minutes = math.floor((cooldownRemaining - ((days*60*60*24) + (hours*60*60)))/60)
+
+		local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		text2:SetPoint("CENTER", icon1)
+		text2:SetPoint("RIGHT", app.Window.Child)
+		text2:SetJustifyH("RIGHT")
+		text2:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+		text2:SetTextColor(1, 1, 1)
+		if cooldownRemaining <= 0 then
+			text2:SetText("Ready")
+		elseif cooldownRemaining < 60*60 then
+			text2:SetText(minutes.."m")
+		elseif cooldownRemaining < 60*60*24 then
+			text2:SetText(hours.."h "..minutes.."m")
+		else
+			text2:SetText(days.."d "..hours.."h "..minutes.."m")
+		end
+
+		local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
+		text1:SetPoint("RIGHT", text2, "LEFT")
+		text1:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+		text1:SetTextColor(1, 1, 1)
+		text1:SetText(cooldownInfo.name)
+		text1:SetJustifyH("LEFT")
+		text1:SetWordWrap(false)
+
+		maxLength3 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength3)
+	end
+	
+	app.Window.Corner:SetScript("OnDoubleClick", function (self, button)
+		local windowHeight = 66
+		local windowWidth = 0
+		if rowNo3 == 0 then
+			windowHeight = windowHeight - 18
+		elseif showCooldowns == true then
+			windowHeight = windowHeight + rowNo3 * 16
+			windowWidth = math.max(windowWidth, maxLength3)
+		end
+		if showReagents == true then
+			windowHeight = windowHeight + rowNo2 * 16
+			windowWidth = math.max(windowWidth, maxLength2)
+		end
+		if showRecipes == true then
+			windowHeight = windowHeight + rowNo * 16
+			windowWidth = math.max(windowWidth, maxLength1)
+		end
+		app.Window:SetHeight(math.max(200,windowHeight))
+		app.Window:SetWidth(math.max(200,windowWidth+40))
+		app.Window.ScrollFrame:SetVerticalScroll(0)
+		app.SaveWindow()
+	end)
+
+
+
+
 
 	-- Check if the Untrack button should be enabled
 	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID].quantity == 0 then
@@ -509,29 +847,25 @@ function app.UpdateRecipes()
 			untrackMakeOrderButton:Enable()
 		end
 	end
+
+	app.UpdateNumbers()
+
 end
 
 -- Show windows and update numbers
 function app.Show()
-	-- Set the reagents window to its proper coordinates
-	pslFrame1:ClearAllPoints()
+	-- Set window to its proper position and size
+	app.Window:ClearAllPoints()
 	if userSettings["pcWindowPosition"] == true then
-		pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", pcWindowPosition["pslFrame1"].left, pcWindowPosition["pslFrame1"].bottom)
+		app.Window:SetSize(userSettings["pcWindowPosition"].width, userSettings["pcWindowPosition"].height)
+		app.Window:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", userSettings["pcWindowPosition"].left, userSettings["pcWindowPosition"].bottom)
 	else
-		pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame1"].left, windowPosition["pslFrame1"].bottom)
-	end
-	
-	-- Set the recipes window to its proper coordinates
-	pslFrame2:ClearAllPoints()
-	if userSettings["pcWindowPosition"] == true then
-		pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", pcWindowPosition["pslFrame2"].left, pcWindowPosition["pslFrame2"].bottom)
-	else
-		pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame2"].left, windowPosition["pslFrame2"].bottom)
+		app.Window:SetSize(userSettings["windowPosition"].width, userSettings["windowPosition"].height)
+		app.Window:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", userSettings["windowPosition"].left, userSettings["windowPosition"].bottom)
 	end
 
 	-- Show the windows
-	pslFrame1:Show()
-	pslFrame2:Show()
+	app.Window:Show()
 
 	-- Update numbers
 	app.UpdateRecipes()
@@ -540,9 +874,8 @@ end
 -- Toggle windows
 function app.Toggle()
 	-- Toggle tracking windows
-	if pslFrame1:IsShown() then
-		pslFrame1:Hide()
-		pslFrame2:Hide()
+	if app.Window:IsShown() then
+		app.Window:Hide()
 	else
 		app.Show()
 	end
@@ -1458,13 +1791,13 @@ function app.TooltipInfo()
 			local reagentAmountNeed = 0
 			if itemID == reagentID1 then
 				reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
-				reagentAmountNeed = reagentsTracked[reagentID1]
+				reagentAmountNeed = reagentQuantities[reagentID1]
 			elseif itemID == reagentID2 then
 				reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
-				reagentAmountNeed = reagentsTracked[reagentID2]
+				reagentAmountNeed = reagentQuantities[reagentID2]
 			elseif itemID == reagentID3 then
 				reagentAmountHave = reagentAmountHave3
-				reagentAmountNeed = reagentsTracked[reagentID3]
+				reagentAmountNeed = reagentQuantities[reagentID3]
 			end
 
 			-- Add the tooltip info
@@ -1481,7 +1814,6 @@ end
 function app.Clear()
 	recipesTracked = {}
 	reagentsTracked = {}
-	reagentLinks = {}
 	reagentTiers = {}
 	app.UpdateRecipes()
 
@@ -1493,11 +1825,6 @@ function app.Clear()
 		untrackPlaceOrderButton:Disable()
 		untrackMakeOrderButton:Disable()
 	end
-
-	-- Remove old variables
-	reagentNumbers = nil
-	lastOrder = nil
-	recipeLinks = nil
 end
 
 -- Open settings
@@ -1725,138 +2052,6 @@ function app.Settings()
 		self:SetValue(userSettings["reagentQuality"])
 		self.Label:SetText("Min: |A:Professions-ChatIcon-Quality-Tier"..slReagentQuality:GetValue()..":17:15::1|a")
 		app.UpdateNumbers()
-	end)
-
-	local slRecipeRows = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-	slRecipeRows:SetPoint("TOPLEFT", cbRemoveCraft, "TOPLEFT", 250, -19)
-	slRecipeRows:SetOrientation("HORIZONTAL")
-	slRecipeRows:SetWidth(150)
-	slRecipeRows:SetHeight(17)
-	slRecipeRows:SetMinMaxValues(5,50)
-	slRecipeRows:SetValueStep(1)
-	slRecipeRows:SetObeyStepOnDrag(true)
-	slRecipeRows.Low:SetText("5")
-	slRecipeRows.High:SetText("50")
-	slRecipeRows.Text:SetText("Recipe rows")
-	slRecipeRows:SetValue(userSettings["recipeRows"])
-	slRecipeRows.Label = slRecipeRows:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	slRecipeRows.Label:SetPoint("TOP", slRecipeRows, "BOTTOM", 0, 0)
-	slRecipeRows.Label:SetText(slRecipeRows:GetValue())
-	slRecipeRows:SetScript("OnValueChanged", function(self, newValue)
-		userSettings["recipeRows"] = newValue
-		self:SetValue(userSettings["recipeRows"])
-		self.Label:SetText(self:GetValue())
-		app.TrackingWindows()
-	end)
-
-	local slRecipeWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-	slRecipeWidth:SetPoint("TOPLEFT", slRecipeRows, "BOTTOMLEFT", 0, -30)
-	slRecipeWidth:SetOrientation("HORIZONTAL")
-	slRecipeWidth:SetWidth(150)
-	slRecipeWidth:SetHeight(17)
-	slRecipeWidth:SetMinMaxValues(100,300)
-	slRecipeWidth:SetValueStep(5)
-	slRecipeWidth:SetObeyStepOnDrag(true)
-	slRecipeWidth.Low:SetText("100")
-	slRecipeWidth.High:SetText("300")
-	slRecipeWidth.Text:SetText("Recipe width")
-	slRecipeWidth:SetValue(userSettings["recipeWidth"])
-	slRecipeWidth.Label = slRecipeWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	slRecipeWidth.Label:SetPoint("TOP", slRecipeWidth, "BOTTOM", 0, 0)
-	slRecipeWidth.Label:SetText(slRecipeWidth:GetValue())
-	slRecipeWidth:SetScript("OnValueChanged", function(self, newValue)
-		userSettings["recipeWidth"] = newValue
-		self:SetValue(userSettings["recipeWidth"])
-		self.Label:SetText(self:GetValue())
-		app.TrackingWindows()
-	end)
-
-	local slRecipeNoWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-	slRecipeNoWidth:SetPoint("TOPLEFT", slRecipeWidth, "BOTTOMLEFT", 0, -30)
-	slRecipeNoWidth:SetOrientation("HORIZONTAL")
-	slRecipeNoWidth:SetWidth(150)
-	slRecipeNoWidth:SetHeight(17)
-	slRecipeNoWidth:SetMinMaxValues(30,100)
-	slRecipeNoWidth:SetValueStep(5)
-	slRecipeNoWidth:SetObeyStepOnDrag(true)
-	slRecipeNoWidth.Low:SetText("30")
-	slRecipeNoWidth.High:SetText("100")
-	slRecipeNoWidth.Text:SetText("Recipe # width")
-	slRecipeNoWidth:SetValue(userSettings["recipeNoWidth"])
-	slRecipeNoWidth.Label = slRecipeNoWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	slRecipeNoWidth.Label:SetPoint("TOP", slRecipeNoWidth, "BOTTOM", 0, 0)
-	slRecipeNoWidth.Label:SetText(slRecipeNoWidth:GetValue())
-	slRecipeNoWidth:SetScript("OnValueChanged", function(self, newValue)
-		userSettings["recipeNoWidth"] = newValue
-		self:SetValue(userSettings["recipeNoWidth"])
-		self.Label:SetText(self:GetValue())
-		app.TrackingWindows()
-	end)
-
-	local slReagentRows = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-	slReagentRows:SetPoint("TOPLEFT", slRecipeRows, "TOPRIGHT", 20, 0)
-	slReagentRows:SetOrientation("HORIZONTAL")
-	slReagentRows:SetWidth(150)
-	slReagentRows:SetHeight(17)
-	slReagentRows:SetMinMaxValues(5,50)
-	slReagentRows:SetValueStep(1)
-	slReagentRows:SetObeyStepOnDrag(true)
-	slReagentRows.Low:SetText("5")
-	slReagentRows.High:SetText("50")
-	slReagentRows.Text:SetText("Reagent rows")
-	slReagentRows:SetValue(userSettings["reagentRows"])
-	slReagentRows.Label = slReagentRows:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	slReagentRows.Label:SetPoint("TOP", slReagentRows, "BOTTOM", 0, 0)
-	slReagentRows.Label:SetText(slReagentRows:GetValue())
-	slReagentRows:SetScript("OnValueChanged", function(self, newValue)
-		userSettings["reagentRows"] = newValue
-		self:SetValue(userSettings["reagentRows"])
-		self.Label:SetText(self:GetValue())
-		app.TrackingWindows()
-	end)
-
-	local slReagentWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-	slReagentWidth:SetPoint("TOPLEFT", slReagentRows, "BOTTOMLEFT", 0, -30)
-	slReagentWidth:SetOrientation("HORIZONTAL")
-	slReagentWidth:SetWidth(150)
-	slReagentWidth:SetHeight(17)
-	slReagentWidth:SetMinMaxValues(100,300)
-	slReagentWidth:SetValueStep(5)
-	slReagentWidth:SetObeyStepOnDrag(true)
-	slReagentWidth.Low:SetText("100")
-	slReagentWidth.High:SetText("300")
-	slReagentWidth.Text:SetText("Reagent width")
-	slReagentWidth:SetValue(userSettings["reagentWidth"])
-	slReagentWidth.Label = slReagentWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	slReagentWidth.Label:SetPoint("TOP", slReagentWidth, "BOTTOM", 0, 0)
-	slReagentWidth.Label:SetText(slReagentWidth:GetValue())
-	slReagentWidth:SetScript("OnValueChanged", function(self, newValue)
-		userSettings["reagentWidth"] = newValue
-		self:SetValue(userSettings["reagentWidth"])
-		self.Label:SetText(self:GetValue())
-		app.TrackingWindows()
-	end)
-
-	local slReagentNoWidth = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-	slReagentNoWidth:SetPoint("TOPLEFT", slReagentWidth, "BOTTOMLEFT", 0, -30)
-	slReagentNoWidth:SetOrientation("HORIZONTAL")
-	slReagentNoWidth:SetWidth(150)
-	slReagentNoWidth:SetHeight(17)
-	slReagentNoWidth:SetMinMaxValues(30,100)
-	slReagentNoWidth:SetValueStep(5)
-	slReagentNoWidth:SetObeyStepOnDrag(true)
-	slReagentNoWidth.Low:SetText("30")
-	slReagentNoWidth.High:SetText("100")
-	slReagentNoWidth.Text:SetText("Reagent # width")
-	slReagentNoWidth:SetValue(userSettings["reagentNoWidth"])
-	slReagentNoWidth.Label = slReagentNoWidth:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	slReagentNoWidth.Label:SetPoint("TOP", slReagentNoWidth, "BOTTOM", 0, 0)
-	slReagentNoWidth.Label:SetText(slReagentNoWidth:GetValue())
-	slReagentNoWidth:SetScript("OnValueChanged", function(self, newValue)
-		userSettings["reagentNoWidth"] = newValue
-		self:SetValue(userSettings["reagentNoWidth"])
-		self.Label:SetText(self:GetValue())
-		app.TrackingWindows()
 	end)
 
 	-- Category: Knowledge Tracker
@@ -2199,7 +2394,7 @@ function app.WindowFunctions()
 			local function trackSubreagent(recipeID, itemID)
 				-- Define the amount of recipes to be tracked
 				local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-				local amount = math.max(0, math.ceil((reagentsTracked[itemID] - GetItemCount(itemID)) / quantityMade))
+				local amount = math.max(0, math.ceil((reagentQuantities[itemID] - GetItemCount(itemID)) / quantityMade))
 				if recipesTracked[recipeID] then amount = math.max(0, (amount - recipesTracked[recipeID].quantity)) end
 
 				-- Track the recipe (don't track if 0)
@@ -2663,387 +2858,15 @@ function app.WindowFunctions()
 	})
 end
 
-function api.CreateTrackingWindow()
-	-- Create popup frame
-	app.Window = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-	app.Window:SetPoint("CENTER")
-	app.Window:SetBackdrop({
-		bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-		edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-		edgeSize = 16,
-		insets = { left = 4, right = 4, top = 4, bottom = 4 },
-	})
-	app.Window:SetBackdropColor(0, 0, 0, 1)
-	app.Window:EnableMouse(true)
-	app.Window:SetMovable(true)
-	app.Window:SetResizable(true)
-	app.Window:SetResizeBounds(200, 200, 600, 600)
-	app.Window:RegisterForDrag("LeftButton")
-	app.Window:SetScript("OnDragStart", function(self, button) self:StartMoving() end)
-	app.Window:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-	app.Window:SetSize(200, 200)
-	app.Window:Show()
-
-	-- Resize corner
-	local corner = CreateFrame("Button", nil, app.Window)
-	corner:EnableMouse("true")
-	corner:SetPoint("BOTTOMRIGHT")
-	corner:SetSize(16,16)
-	corner:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-	corner:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
-	corner:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-	corner:SetScript("OnMouseDown", function(self)
-		app.Window:StartSizing("BOTTOMRIGHT") 
-	end)
-	corner:SetScript("OnMouseUp", function()
-		app.Window:StopMovingOrSizing("BOTTOMRIGHT")
-	end)
-
-	-- Close button
-	local close = CreateFrame("Button", "pslOptionCloseButton", app.Window, "UIPanelCloseButton")
-	close:SetPoint("TOPRIGHT", app.Window, "TOPRIGHT", -1, -1)
-	close:SetScript("OnClick", function()
-		app.Window:Hide()
-	end)
-
-	-- ScrollFrame inside the popup frame
-	local scrollFrame = CreateFrame("ScrollFrame", nil, app.Window, "ScrollFrameTemplate")
-	scrollFrame:SetPoint("TOPLEFT", app.Window, 8, -6)
-	scrollFrame:SetPoint("BOTTOMRIGHT", app.Window, -23, 8)
-	scrollFrame:Show()
-
-	scrollFrame.ScrollBar.Back:Hide()
-	scrollFrame.ScrollBar.Forward:Hide()
-	scrollFrame.ScrollBar:ClearAllPoints()
-	scrollFrame.ScrollBar:SetPoint("TOP", scrollFrame, 0, -3)
-	scrollFrame.ScrollBar:SetPoint("RIGHT", scrollFrame, 14, 0)
-	scrollFrame.ScrollBar:SetPoint("BOTTOM", scrollFrame, 0, -18)
-	
-	-- ScrollChild inside the ScrollFrame
-	local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-	scrollFrame:SetScrollChild(scrollChild)
-	scrollChild:SetWidth(1)    -- This is automatically defined, so long as the attribute exists at all
-	scrollChild:SetHeight(1)    -- This is automatically defined, so long as the attribute exists at all
-	scrollChild:SetAllPoints(scrollFrame)
-	scrollChild:Show()
-	scrollFrame:SetScript("OnVerticalScroll", function() scrollChild:SetPoint("BOTTOMRIGHT", scrollFrame) end)
-
-	local rowNo = 0
-	local showRecipes = true
-	local maxLength1 = 0
-	local maxLength2 = 0
-	local maxLength3 = 0
-
-	recipesHeader = CreateFrame("Button", appName..".recipeRow"..rowNo, scrollChild)
-	recipesHeader:SetSize(0,16)
-	recipesHeader:SetPoint("TOPLEFT", scrollChild, -1, 0)
-	recipesHeader:SetPoint("RIGHT", scrollChild)
-    recipesHeader:RegisterForDrag("LeftButton")
-	recipesHeader:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-    recipesHeader:SetScript("OnDragStart", function() app.Window:StartMoving() end)
-	recipesHeader:SetScript("OnDragStop", function() app.Window:StopMovingOrSizing() end)
-	recipesHeader:SetScript("OnClick", function(self)
-		local children = {self:GetChildren()}
-
-		if showRecipes == true then
-			for i_, child in ipairs(children) do child:Hide() end
-			reagentsHeader:SetPoint("TOPLEFT", recipesHeader, "BOTTOMLEFT", 0, -2)
-			showRecipes = false
-		else
-			for i_, child in ipairs(children) do child:Show() end
-			reagentsHeader:SetPoint("TOPLEFT", appName..".recipeRow"..rowNo, "BOTTOMLEFT", 0, -2)
-			showRecipes = true
-		end
-	end)
-	
-	local recipes1 = recipesHeader:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	recipes1:SetPoint("LEFT", recipesHeader)
-	recipes1:SetText("Recipes")
-    recipes1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-
-	local reagents = {}
-
-	local customSortList = {
-		"|cffff8000",	-- Legendary
-		"|cffa335ee",	-- Epic
-		"|cff0070dd",	-- Rare
-		"|cff1eff00",	-- Uncommon
-		"|cffffffff",	-- Common
-		"|cff9d9d9d",	-- Poor (quantity 0)
-	}
-
-	-- Custom comparison function based on the beginning of the string (thanks ChatGPT)
-	local function customSort(a, b)
-		local indexA = 0
-		local indexB = 0
-	
-		for i, v in ipairs(customSortList) do
-			if string.find(a.link, v, 1, true) == 1 then
-				indexA = i
-			end
-			if string.find(b.link, v, 1, true) == 1 then
-				indexB = i
-			end
-		end
-	
-		return indexA < indexB
-	end
-
-	recipesSorted = {}
-	for k, v in pairs (recipesTracked) do
-		recipesSorted[#recipesSorted+1] = {recipeID = k, recraft = v.recraft, quantity = v.quantity, link = v.link}
-	end
-	table.sort(recipesSorted, customSort)
-
-	for _, recipeInfo in ipairs (recipesSorted) do
-		local row = CreateFrame("Button", appName..".recipeRow"..rowNo+1, recipesHeader)
-		row:SetSize(0,16)
-		row:SetPoint("TOPLEFT", appName..".recipeRow"..rowNo, "BOTTOMLEFT")
-		row:SetPoint("TOPRIGHT", appName..".recipeRow"..rowNo, "BOTTOMRIGHT")
-		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-        row:RegisterForDrag("LeftButton")
-        row:SetScript("OnDragStart", function() app.Window:StartMoving() end)
-	    row:SetScript("OnDragStop", function() app.Window:StopMovingOrSizing() end)
-		row:SetScript("OnEnter", function()
-			-- Show item tooltip if hovering over the actual rows
-			GameTooltip:ClearLines()
-			GameTooltip:SetOwner(app.Window, "ANCHOR_BOTTOM")
-			GameTooltip:SetHyperlink(recipeInfo.link)
-			GameTooltip:Show()
-		end)
-		row:SetScript("OnLeave", function()
-			GameTooltip:ClearLines()
-			GameTooltip:Hide()
-		end)
-
-        local tradeskill = recipeLibrary[recipeInfo.recipeID].tradeskillID or 999
-
-        local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		icon1:SetPoint("LEFT", row)
-        icon1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-		icon1:SetText("|T"..app.iconProfession[tradeskill]..":0|t")
-
-        local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		text2:SetPoint("CENTER", icon1)
-		text2:SetPoint("RIGHT", scrollChild)
-		text2:SetJustifyH("RIGHT")
-        text2:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-		text2:SetTextColor(1, 1, 1)
-		text2:SetText(recipeInfo.quantity)
-
-		local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
-        text1:SetPoint("RIGHT", text2, "LEFT")
-        text1:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-		text1:SetTextColor(1, 1, 1)
-		text1:SetText(recipeInfo.link)
-        text1:SetJustifyH("LEFT")
-        text1:SetWordWrap(false)
-
-		rowNo = rowNo + 1
-		maxLength1 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength1)
-
-		app.GetReagents(reagents, recipeInfo.recipeID, recipeInfo.quantity, recipeInfo.recraft)
-	end
-
-	local rowNo2 = 0
-	local showReagents = true
-
-	reagentsHeader = CreateFrame("Button", appName..".reagentRow"..rowNo2, scrollChild)
-	reagentsHeader:SetSize(0,16)
-	reagentsHeader:SetPoint("TOPLEFT", appName..".recipeRow"..rowNo, "BOTTOMLEFT", 0, -2)
-	reagentsHeader:SetPoint("RIGHT", scrollChild)
-    reagentsHeader:RegisterForDrag("LeftButton")
-	reagentsHeader:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-    reagentsHeader:SetScript("OnDragStart", function() app.Window:StartMoving() end)
-	reagentsHeader:SetScript("OnDragStop", function() app.Window:StopMovingOrSizing() end)
-	reagentsHeader:SetScript("OnClick", function(self)
-		local children = {self:GetChildren()}
-
-		if showReagents == true then
-			for i_, child in ipairs(children) do child:Hide() end
-			cooldownsHeader:SetPoint("TOPLEFT", reagentsHeader, "BOTTOMLEFT", 0, -2)
-			showReagents = false
-		else
-			for i_, child in ipairs(children) do child:Show() end
-			cooldownsHeader:SetPoint("TOPLEFT", appName..".reagentRow"..rowNo2, "BOTTOMLEFT", 0, -2)
-			showReagents = true
-		end
-	end)
-	
-	local reagents1 = reagentsHeader:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	reagents1:SetPoint("LEFT", reagentsHeader)
-	reagents1:SetText("Reagents")
-    reagents1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-
-	reagentsSorted = {}
-	for k, v in pairs (reagents) do
-		if k == 52979 then
-			reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = app.iconReady, link = "|cff9d9d9d|Hitem:52979::::::::10:259:::::::::|h[Blackened Dragonscale]|h|r"}
-		else
-			reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = reagentLinks[k].icon, link = reagentLinks[k].link}
-		end
-	end
-	table.sort(reagentsSorted, customSort)
-
-	if recipeLinks then
-		for k, v in pairs (recipeLinks) do
-			recipesTracked[k].link = v
-		end
-	end
-
-	for _, reagentInfo in pairs (reagentsSorted) do
-		local row = CreateFrame("Button", appName..".reagentRow"..rowNo2+1, reagentsHeader)
-		row:SetSize(0,16)
-		row:SetPoint("TOPLEFT", appName..".reagentRow"..rowNo2, "BOTTOMLEFT")
-		row:SetPoint("TOPRIGHT", appName..".reagentRow"..rowNo2, "BOTTOMRIGHT")
-		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-        row:RegisterForDrag("LeftButton")
-        row:SetScript("OnDragStart", function() app.Window:StartMoving() end)
-	    row:SetScript("OnDragStop", function() app.Window:StopMovingOrSizing() end)
-
-        local icon1 = row:CreateFontString(appName..".reagent."..reagentInfo.reagentID..".icon", "ARTWORK", "GameFontNormal")
-		icon1:SetPoint("LEFT", row)
-        icon1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-		icon1:SetText("|T"..reagentInfo.icon..":0|t")
-
-        local text2 = row:CreateFontString(appName..".reagent."..reagentInfo.reagentID..".text2", "ARTWORK", "GameFontNormal")
-		text2:SetPoint("CENTER", icon1)
-		text2:SetPoint("RIGHT", scrollChild)
-		text2:SetJustifyH("RIGHT")
-        text2:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-		text2:SetTextColor(1, 1, 1)
-		text2:SetText(reagentInfo.quantity)
-
-		local text1 = row:CreateFontString(appName..".reagent."..reagentInfo.reagentID..".text1", "ARTWORK", "GameFontNormal")
-		text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
-        text1:SetPoint("RIGHT", text2, "LEFT")
-        text1:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-		text1:SetTextColor(1, 1, 1)
-		text1:SetText(reagentInfo.link)
-        text1:SetJustifyH("LEFT")
-        text1:SetWordWrap(false)
-
-		rowNo2 = rowNo2 + 1
-		maxLength2 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength2)
-	end
-
-	local rowNo3 = 0
-	local showCooldowns = true
-
-	local next = next
-	if next(recipeCooldowns) == nil then
-	else
-		cooldownsHeader = CreateFrame("Button", appName..".cooldownRow"..rowNo3, scrollChild)
-		cooldownsHeader:SetSize(0,16)
-		cooldownsHeader:SetPoint("TOPLEFT", appName..".reagentRow"..rowNo2, "BOTTOMLEFT", 0, -2)
-		cooldownsHeader:SetPoint("RIGHT", scrollChild)
-		cooldownsHeader:RegisterForDrag("LeftButton")
-		cooldownsHeader:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-		cooldownsHeader:SetScript("OnDragStart", function() app.Window:StartMoving() end)
-		cooldownsHeader:SetScript("OnDragStop", function() app.Window:StopMovingOrSizing() end)
-		cooldownsHeader:SetScript("OnClick", function(self)
-			local children = {self:GetChildren()}
-
-			if showCooldowns == true then
-				for i_, child in ipairs(children) do child:Hide() end
-				showCooldowns = false
-			else
-				for i_, child in ipairs(children) do child:Show() end
-				showCooldowns = true
-			end
-		end)
-		
-		local cooldowns1 = cooldownsHeader:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		cooldowns1:SetPoint("LEFT", cooldownsHeader)
-		cooldowns1:SetText("Cooldowns")
-		cooldowns1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-
-		for recipeID, cooldownInfo in pairs (recipeCooldowns) do
-			local row = CreateFrame("Button", appName..".cooldownRow"..rowNo3+1, cooldownsHeader)
-			row:SetSize(0,16)
-			row:SetPoint("TOPLEFT", appName..".cooldownRow"..rowNo3, "BOTTOMLEFT")
-			row:SetPoint("TOPRIGHT", appName..".cooldownRow"..rowNo3, "BOTTOMRIGHT")
-			row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-			row:RegisterForDrag("LeftButton")
-			row:SetScript("OnDragStart", function() app.Window:StartMoving() end)
-			row:SetScript("OnDragStop", function() app.Window:StopMovingOrSizing() end)
-
-			local tradeskill = recipeLibrary[recipeID].tradeskillID or 999
-
-			local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-			icon1:SetPoint("LEFT", row)
-			icon1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
-			icon1:SetText("|T"..app.iconProfession[tradeskill]..":0|t")
-
-			local cooldownRemaining = cooldownInfo.start + cooldownInfo.cooldown - GetServerTime()
-			local days, hours, minutes
-
-			days = math.floor(cooldownRemaining/(60*60*24))
-			hours = math.floor((cooldownRemaining - (days*60*60*24))/(60*60))
-			minutes = math.floor((cooldownRemaining - ((days*60*60*24) + (hours*60*60)))/60)
-
-			local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-			text2:SetPoint("CENTER", icon1)
-			text2:SetPoint("RIGHT", scrollChild)
-			text2:SetJustifyH("RIGHT")
-			text2:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-			text2:SetTextColor(1, 1, 1)
-			if cooldownRemaining <= 0 then
-				text2:SetText("Ready")
-			elseif cooldownRemaining < 60*60 then
-				text2:SetText(minutes.."m")
-			elseif cooldownRemaining < 60*60*24 then
-				text2:SetText(hours.."h "..minutes.."m")
-			else
-				text2:SetText(days.."d "..hours.."h "..minutes.."m")
-			end
-
-			local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-			text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
-			text1:SetPoint("RIGHT", text2, "LEFT")
-			text1:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-			text1:SetTextColor(1, 1, 1)
-			text1:SetText(cooldownInfo.name)
-			text1:SetJustifyH("LEFT")
-			text1:SetWordWrap(false)
-
-			rowNo3 = rowNo3 + 1
-			maxLength3 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength3)
-		end
-	end
-	
-	corner:SetScript("OnDoubleClick", function (self, button)
-		local windowHeight = 66
-		local windowWidth = 0
-		if rowNo3 == 0 then
-			windowHeight = windowHeight - 18
-		elseif showCooldowns == true then
-			windowHeight = windowHeight + rowNo3 * 16
-			windowWidth = math.max(windowWidth, maxLength3)
-		end
-		if showReagents == true then
-			windowHeight = windowHeight + rowNo2 * 16
-			windowWidth = math.max(windowWidth, maxLength2)
-		end
-		if showRecipes == true then
-			windowHeight = windowHeight + rowNo * 16
-			windowWidth = math.max(windowWidth, maxLength1)
-		end
-		app.Window:SetHeight(windowHeight)
-		app.Window:SetWidth(windowWidth+40)
-	end)
-end
-
 event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 	-- When the AddOn is fully loaded, actually run the components
 	if event == "ADDON_LOADED" and arg1 == appName then
 		app.Initialise()
-		app.TrackingWindows()
+		app.Legacy()
+		app.CreateWindow()
 		app.CreateGeneralAssets()
 		app.TooltipInfo()		
 		app.Settings()
-		app.WindowFunctions()
 
 		-- Slash commands
 		SLASH_PSL1 = "/psl";
@@ -3059,26 +2882,12 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				app.Clear()
 			-- Reset window positions
 			elseif command == "resetpos" then
-				-- Set the window positions back to default
-				windowPosition = {
-					["pslFrame1"] = {
-						["left"] = 1168,
-						["bottom"] = 529,
-					},
-					["pslFrame2"] = {
-						["left"] = 1168,
-						["bottom"] = 782,
-					},
-				}
+				-- Set the window size and position back to default
+				userSettings["windowPosition"] = { ["left"] = 1295, ["bottom"] = 836, ["width"] = 200, ["height"] = 200, }
+				userSettings["pcWindowPosition"] = userSettings["windowPosition"]
 
-				-- Copy these values from global to personal window position, so if they use that setting that one is also reset
-				pcWindowPosition = windowPosition
-
-				-- Actually move the windows to their new positions
-				pslFrame1:ClearAllPoints()
-				pslFrame1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame1"].left, windowPosition["pslFrame1"].bottom)
-				pslFrame2:ClearAllPoints()
-				pslFrame2:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", windowPosition["pslFrame2"].left, windowPosition["pslFrame2"].bottom)
+				-- Show the window, which will also run setting its size and position
+				app.Show()
 			-- Track recipe
 			elseif command == 'track' then
 				-- Split entered recipeID and recipeQuantity and turn them into real numbers
@@ -3123,17 +2932,6 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			-- No command
 			elseif command == "" then
 				app.Toggle()
-			-- elseif command == "test" then
-			-- testTable = {}
-			-- for key, value in pairs(reagentLinks) do
-			-- 	testTable[#testTable + 1] = { key = key, value = value }
-			-- end
-			-- table.sort(testTable, function(a,b) return a.value.name < b.value.name end)
-
-			-- for k,v in ipairs(testTable) do
-			-- 	print(v.value.name)
-			-- end
-
 			-- Unlisted command
 			else
 				-- If achievement string

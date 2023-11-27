@@ -1,4 +1,7 @@
--- Database.lua: Raw information to refer to
+--------------------------------------------
+-- Profession Shopping List: Database.lua --
+--------------------------------------------
+-- Raw information to refer to
 
 -- Initialisation
 local appName, app = ...	-- Returns the addon name and a unique table
