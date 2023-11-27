@@ -732,7 +732,14 @@ function app.UpdateRecipes()
 		end
 	end)
 
-	for recipeID, cooldownInfo in pairs (recipeCooldowns) do
+	cooldownsSorted = {}
+	for k, v in pairs (recipeCooldowns) do
+		local timedone = v.start + v.cooldown
+		cooldownsSorted[#cooldownsSorted+1] = {recipeID = k, start = v.start, cooldown = v.cooldown, name = v.name, user = v.user, time = timedone}
+	end
+	table.sort(cooldownsSorted, function(a, b) return a.time > b.time end)
+
+	for _, cooldownInfo in pairs (cooldownsSorted) do
 		rowNo3 = rowNo3 + 1
 
 		local row = CreateFrame("Button", nil, app.Window.Cooldowns)
@@ -751,7 +758,7 @@ function app.UpdateRecipes()
 			row:SetPoint("TOPRIGHT", cooldownRow[rowNo3-1], "BOTTOMRIGHT")
 		end
 
-		local tradeskill = recipeLibrary[recipeID].tradeskillID or 999
+		local tradeskill = recipeLibrary[cooldownInfo.recipeID].tradeskillID or 999
 
 		local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		icon1:SetPoint("LEFT", row)
