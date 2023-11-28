@@ -3302,10 +3302,16 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					renownInfo = {}
 					local title1 = GetFactionInfoByID(renown[1].factionID)
 					local title2 = GetFactionInfoByID(renown[2].factionID)
-					renownInfo[1] = { locked = C_MajorFactions.GetRenownLevels(renown[1].factionID)[12].locked, questID = renown[1].questID14, title = title1, level = 12 }
-					renownInfo[2] = { locked = C_MajorFactions.GetRenownLevels(renown[1].factionID)[24].locked, questID = renown[1].questID24, title = title1, level = 24 }
-					renownInfo[3] = { locked = C_MajorFactions.GetRenownLevels(renown[2].factionID)[12].locked, questID = renown[2].questID14, title = title2, level = 12 }
-					renownInfo[4] = { locked = C_MajorFactions.GetRenownLevels(renown[2].factionID)[24].locked, questID = renown[2].questID24, title = title2, level = 24 }
+					renownInfo[1] = { locked = C_MajorFactions.GetRenownLevels(renown[1].factionID)[14].locked, questID = renown[1].questID1, title = title1, level = 14 }
+					renownInfo[2] = { locked = C_MajorFactions.GetRenownLevels(renown[1].factionID)[24].locked, questID = renown[1].questID2, title = title1, level = 24 }
+					renownInfo[3] = { locked = C_MajorFactions.GetRenownLevels(renown[2].factionID)[14].locked, questID = renown[2].questID1, title = title2, level = 14 }
+					renownInfo[4] = { locked = C_MajorFactions.GetRenownLevels(renown[2].factionID)[24].locked, questID = renown[2].questID2, title = title2, level = 24 }
+					
+					-- Exception for Dragonscale Expedition, for some reason
+					if renown[1].factionID == 2507 then
+						renownInfo[2].locked = C_MajorFactions.GetRenownLevels(renown[1].factionID)[23].locked
+						renownInfo[2].level = 23
+					end
 
 					renownCount = 0
 					for key, info in ipairs (renownInfo) do
@@ -3599,8 +3605,8 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[5] = {questID = 75846, itemID = 205428}
 				books[6] = {questID = 75849, itemID = 205439}
 				renown = {}
-				renown[1] = {factionID = 2503, questID14 = 72312, questID24 = 72315}
-				renown[2] = {factionID = 2510, questID14 = 72329, questID24 = 70909}
+				renown[1] = {factionID = 2503, questID1 = 72312, questID2 = 72315}
+				renown[2] = {factionID = 2510, questID1 = 72329, questID2 = 70909}
 				dmf = 29508
 			end
 
@@ -3643,8 +3649,8 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[5] = {questID = 75840, itemID = 205426}
 				books[6] = {questID = 75855, itemID = 205437}
 				renown = {}
-				renown[1] = {factionID = 2503, questID14 = 72296, questID24 = 72297}
-				renown[2] = {factionID = 2511, questID14 = 72321, questID24 = 72326}
+				renown[1] = {factionID = 2503, questID1 = 72296, questID2 = 72297}
+				renown[2] = {factionID = 2511, questID1 = 72321, questID2 = 72326}
 				dmf = 29517
 			end
 
@@ -3687,8 +3693,8 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[5] = {questID = 75847, itemID = 205429}
 				books[6] = {questID = 75848, itemID = 205440}
 				renown = {}
-				renown[1] = {factionID = 2503, questID14 = 72311, questID24 = 72314}
-				renown[2] = {factionID = 2510, questID14 = 70892, questID24 = 70889}
+				renown[1] = {factionID = 2503, questID1 = 72311, questID2 = 72314}
+				renown[2] = {factionID = 2510, questID1 = 70892, questID2 = 70889}
 				dmf = 29506
 			end
 
@@ -3717,8 +3723,8 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[5] = {questID = 75843, itemID = 205434}
 				books[6] = {questID = 75852, itemID = 205445}
 				renown = {}
-				renown[1] = {factionID = 2503, questID14 = 72313, questID24 = 72316}
-				renown[2] = {factionID = 2511, questID14 = 72319, questID24 = 72324}
+				renown[1] = {factionID = 2503, questID1 = 72313, questID2 = 72316}
+				renown[2] = {factionID = 2511, questID1 = 72319, questID2 = 72324}
 				dmf = 29514
 			end
 
@@ -3747,8 +3753,8 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[5] = {questID = 75839, itemID = 205432}
 				books[6] = {questID = 75856, itemID = 205443}
 				renown = {}
-				renown[1] = {factionID = 2507, questID14 = 72302, questID24 = 72308}
-				renown[2] = {factionID = 2510, questID14 = 72332, questID24 = 72335}
+				renown[1] = {factionID = 2507, questID1 = 72302, questID2 = 72308}
+				renown[2] = {factionID = 2510, questID1 = 72332, questID2 = 72335}
 				dmf = 29518
 			end
 
@@ -3792,8 +3798,8 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[5] = {questID = 75837, itemID = 205431}
 				books[6] = {questID = 75858, itemID = 205442}
 				renown = {}
-				renown[1] = {factionID = 2507, questID14 = 72303, questID24 = 72309}
-				renown[2] = {factionID = 2510, questID14 = 72333, questID24 = 72336}
+				renown[1] = {factionID = 2507, questID1 = 72303, questID2 = 72309}
+				renown[2] = {factionID = 2510, questID1 = 72333, questID2 = 72336}
 				dmf = 29520
 			end
 
@@ -3836,8 +3842,8 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[5] = {questID = 75844, itemID = 205425}
 				books[6] = {questID = 75851, itemID = 205436}
 				renown = {}
-				renown[1] = {factionID = 2507, questID14 = 72300, questID24 = 72305}
-				renown[2] = {factionID = 2510, questID14 = 72330, questID24 = 70902}
+				renown[1] = {factionID = 2507, questID1 = 72300, questID2 = 72305}
+				renown[2] = {factionID = 2510, questID1 = 72330, questID2 = 70902}
 				dmf = 29511
 			end
 
@@ -3881,8 +3887,8 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[5] = {questID = 75845, itemID = 205427}
 				books[6] = {questID = 75850, itemID = 205438}
 				renown = {}
-				renown[1] = {factionID = 2507, questID14 = 72299, questID24 = 72304}
-				renown[2] = {factionID = 2511, questID14 = 72318, questID24 = 72323}
+				renown[1] = {factionID = 2507, questID1 = 72299, questID2 = 72304}
+				renown[2] = {factionID = 2511, questID1 = 72318, questID2 = 72323}
 				dmf = 29510
 			end
 
@@ -3911,8 +3917,8 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[5] = {questID = 75838, itemID = 205433}
 				books[6] = {questID = 75857, itemID = 205444}
 				renown = {}
-				renown[1] = {factionID = 2503, questID14 = 72310, questID24 = 72317}
-				renown[2] = {factionID = 2511, questID14 = 72322, questID24 = 72327}
+				renown[1] = {factionID = 2503, questID1 = 72310, questID2 = 72317}
+				renown[2] = {factionID = 2511, questID1 = 72322, questID2 = 72327}
 				dmf = 29519
 			end
 
@@ -3956,8 +3962,8 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[5] = {questID = 75841, itemID = 205424}
 				books[6] = {questID = 75854, itemID = 205435}
 				renown = {}
-				renown[1] = {factionID = 2507, questID14 = 72301, questID24 = 72306}
-				renown[2] = {factionID = 2511, questID14 = 72320, questID24 = 72325}
+				renown[1] = {factionID = 2507, questID1 = 72301, questID2 = 72306}
+				renown[2] = {factionID = 2511, questID1 = 72320, questID2 = 72325}
 				dmf = 29516
 			end
 
@@ -4001,8 +4007,8 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				books[5] = {questID = 75842, itemID = 205430}
 				books[6] = {questID = 75853, itemID = 205441}
 				renown = {}
-				renown[1] = {factionID = 2507, questID14 = 72294, questID24 = 72295}
-				renown[2] = {factionID = 2510, questID14 = 72331, questID24 = 72334}
+				renown[1] = {factionID = 2507, questID1 = 72294, questID2 = 72295}
+				renown[2] = {factionID = 2510, questID1 = 72331, questID2 = 72334}
 				dmf = 29515
 			end
 
