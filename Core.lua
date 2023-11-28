@@ -556,6 +556,7 @@ function app.UpdateRecipes()
 	end
 	table.sort(recipesSorted, customSort)
 
+	-- TODO: Use offset like with reagents
 	for _i, recipeInfo in ipairs (recipesSorted) do
 		rowNo = rowNo + 1
 
@@ -699,6 +700,8 @@ function app.UpdateRecipes()
 	local rowNo3 = 0
 	local showCooldowns = true
 
+	-- TODO: Include checking for if any cooldowns exist
+	-- TODO: Use offset like with reagents
 	-- local next = next
 	-- if next(recipeCooldowns) == nil then
 	if not app.Window.Cooldowns then
@@ -799,6 +802,7 @@ function app.UpdateRecipes()
 		maxLength3 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength3)
 	end
 	
+	-- TODO: Check size, bottom seems off
 	app.Window.Corner:SetScript("OnDoubleClick", function (self, button)
 		local windowHeight = 66
 		local windowWidth = 0
@@ -4064,6 +4068,7 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				local character = UnitName("player")
 				local realm = GetNormalizedRealmName()
 
+				-- TODO: include recipe link + don't remove when timer is 0
 				-- Get spell cooldown info
 				local recipeName = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name
 				local recipeCooldown = C_TradeSkillUI.GetRecipeCooldown(spellID)	-- This returns the time until midnight. Only after a relog does it return the time until daily reset, when the recipe actually resets.
