@@ -181,7 +181,11 @@ function app.CreateWindow()
 	app.Window:SetResizable(true)
 	app.Window:SetResizeBounds(200, 200, 600, 600)
 	app.Window:RegisterForDrag("LeftButton")
-	app.Window:SetScript("OnDragStart", function() app.Window:StartMoving() end)
+	app.Window:SetScript("OnDragStart", function()
+		app.Window:StartMoving()
+		GameTooltip:ClearLines()
+		GameTooltip:Hide()
+	end)
 	app.Window:SetScript("OnDragStop", function() app.SaveWindow() end)
 	app.Window:Hide()
 
@@ -193,12 +197,12 @@ function app.CreateWindow()
 	corner:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
 	corner:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
 	corner:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-	corner:SetScript("OnMouseDown", function(self)
-		app.Window:StartSizing("BOTTOMRIGHT") 
+	corner:SetScript("OnMouseDown", function()
+		app.Window:StartSizing("BOTTOMRIGHT")
+		GameTooltip:ClearLines()
+		GameTooltip:Hide()
 	end)
-	corner:SetScript("OnMouseUp", function()
-		app.SaveWindow()
-	end)
+	corner:SetScript("OnMouseUp", function() app.SaveWindow() end)
 	app.Window.Corner = corner
 
 	-- Close button
@@ -231,24 +235,6 @@ function app.CreateWindow()
 	scrollFrame:SetScript("OnVerticalScroll", function() scrollChild:SetPoint("BOTTOMRIGHT", scrollFrame) end)
 	app.Window.Child = scrollChild
 	app.Window.ScrollFrame = scrollFrame
-end
-
--- Create or update the tracking windows
-function app.TrackingWindows()
-	pslFrame1:SetScript("OnMouseDown", function(self, button)
-		if button == "LeftButton" and not IsModifierKeyDown() then
-			pslFrame1:StartMoving()
-			GameTooltip:ClearLines()
-			GameTooltip:Hide()
-		end
-	end)
-	pslFrame1:SetScript("OnMouseUp", function()
-		app.SaveWindowPosition()
-	end)
-
-		pslFrame2:SetScript("OnDragStart", function(self, button) self:StartMoving() end)
-		pslFrame2:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-
 end
 
 -- Get reagents for recipe
@@ -422,6 +408,21 @@ function app.UpdateNumbers()
 		return indexA < indexB
 	end
 
+	if recipeRow then
+		if #recipeRow >= 1 then
+			for _, row in ipairs (recipeRow) do
+				if #recipeRow == 1 then
+					row:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT")
+					row:SetPoint("TOPRIGHT", app.Window.Recipes, "BOTTOMRIGHT")
+				else
+					local offset = -16*(#recipeRow-1)
+					row:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, offset)
+					row:SetPoint("TOPRIGHT", app.Window.Recipes, "BOTTOMRIGHT", 0, offset)
+				end
+			end
+		end
+	end
+
 	if reagentRow then
 		if #reagentRow >= 1 then
 			local reagentsSorted = {}
@@ -497,7 +498,11 @@ function app.UpdateRecipes()
 		app.Window.Recipes:SetPoint("RIGHT", app.Window.Child)
 		app.Window.Recipes:RegisterForDrag("LeftButton")
 		app.Window.Recipes:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-		app.Window.Recipes:SetScript("OnDragStart", function() app.Window:StartMoving() end)
+		app.Window.Recipes:SetScript("OnDragStart", function()
+			app.Window:StartMoving()
+			GameTooltip:ClearLines()
+			GameTooltip:Hide()
+		end)
 		app.Window.Recipes:SetScript("OnDragStop", function() app.SaveWindow() end)
 		
 		local recipes1 = app.Window.Recipes:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -505,6 +510,7 @@ function app.UpdateRecipes()
 		recipes1:SetText("Recipes")
 		recipes1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 	end
+
 	app.Window.Recipes:SetScript("OnClick", function(self)
 		local children = {self:GetChildren()}
 
@@ -514,11 +520,9 @@ function app.UpdateRecipes()
 			showRecipes = false
 		else
 			for _, child in ipairs(children) do child:Show() end
-			if rowNo == 0 then
-				app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, -2)
-			else
-				app.Window.Reagents:SetPoint("TOPLEFT", recipeRow[rowNo], "BOTTOMLEFT", 0, -2)
-			end
+			local offset = -2
+			if #reagentRow >= 1 then offset = -16*#reagentRow end
+			app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, offset)
 			showRecipes = true
 		end
 	end)
@@ -556,7 +560,6 @@ function app.UpdateRecipes()
 	end
 	table.sort(recipesSorted, customSort)
 
-	-- TODO: Use offset like with reagents
 	for _i, recipeInfo in ipairs (recipesSorted) do
 		rowNo = rowNo + 1
 
@@ -564,7 +567,11 @@ function app.UpdateRecipes()
 		row:SetSize(0,16)
 		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
         row:RegisterForDrag("LeftButton")
-        row:SetScript("OnDragStart", function() app.Window:StartMoving() end)
+        row:SetScript("OnDragStart", function()
+			app.Window:StartMoving()
+			GameTooltip:ClearLines()
+			GameTooltip:Hide()
+		end)
 		row:SetScript("OnDragStop", function() app.SaveWindow() end)
 		row:SetScript("OnEnter", function()
 			-- Show item tooltip if hovering over the actual rows
@@ -579,13 +586,6 @@ function app.UpdateRecipes()
 		end)
 
 		recipeRow[rowNo] = row
-		if rowNo == 1 then
-			row:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT")
-			row:SetPoint("TOPRIGHT", app.Window.Recipes, "BOTTOMRIGHT")
-		else
-			row:SetPoint("TOPLEFT", recipeRow[rowNo-1], "BOTTOMLEFT")
-			row:SetPoint("TOPRIGHT", recipeRow[rowNo-1], "BOTTOMRIGHT")
-		end
 
         local tradeskill = recipeLibrary[recipeInfo.recipeID].tradeskillID or 999
 
@@ -623,7 +623,11 @@ function app.UpdateRecipes()
 		app.Window.Reagents:SetPoint("RIGHT", app.Window.Child)
 		app.Window.Reagents:RegisterForDrag("LeftButton")
 		app.Window.Reagents:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-		app.Window.Reagents:SetScript("OnDragStart", function() app.Window:StartMoving() end)
+		app.Window.Reagents:SetScript("OnDragStart", function()
+			app.Window:StartMoving()
+			GameTooltip:ClearLines()
+			GameTooltip:Hide()
+		end)
 		app.Window.Reagents:SetScript("OnDragStop", function() app.SaveWindow() end)
 		
 		local reagents1 = app.Window.Reagents:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -645,7 +649,8 @@ function app.UpdateRecipes()
 			showReagents = false
 		else
 			for _, child in ipairs(children) do child:Show() end
-			local offset = -16*#reagentRow
+			local offset = -2
+			if #reagentRow >= 1 then offset = -16*#reagentRow end
 			app.Window.Cooldowns:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, offset)
 			showReagents = true
 		end
@@ -664,7 +669,11 @@ function app.UpdateRecipes()
 		row:SetSize(0,16)
 		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
         row:RegisterForDrag("LeftButton")
-        row:SetScript("OnDragStart", function() app.Window:StartMoving() end)
+        row:SetScript("OnDragStart", function()
+			app.Window:StartMoving()
+			GameTooltip:ClearLines()
+			GameTooltip:Hide()
+		end)
 		row:SetScript("OnDragStop", function() app.SaveWindow() end)
 
 		reagentRow[rowNo2] = row
@@ -710,7 +719,11 @@ function app.UpdateRecipes()
 		app.Window.Cooldowns:SetPoint("RIGHT", app.Window.Child)
 		app.Window.Cooldowns:RegisterForDrag("LeftButton")
 		app.Window.Cooldowns:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-		app.Window.Cooldowns:SetScript("OnDragStart", function() app.Window:StartMoving() end)
+		app.Window.Cooldowns:SetScript("OnDragStart", function()
+			app.Window:StartMoving()
+			GameTooltip:ClearLines()
+			GameTooltip:Hide()
+		end)
 		app.Window.Cooldowns:SetScript("OnDragStop", function() app.SaveWindow() end)
 		
 		local cooldowns1 = app.Window.Cooldowns:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -748,7 +761,11 @@ function app.UpdateRecipes()
 		row:SetSize(0,16)
 		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
 		row:RegisterForDrag("LeftButton")
-		row:SetScript("OnDragStart", function() app.Window:StartMoving() end)
+		row:SetScript("OnDragStart", function()
+			app.Window:StartMoving()
+			GameTooltip:ClearLines()
+			GameTooltip:Hide()
+		end)
 		row:SetScript("OnDragStop", function() app.SaveWindow() end)
 
 		cooldownRow[rowNo3] = row
@@ -4104,8 +4121,7 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			-- Close windows if no recipes are left and the option is enabled
 			local next = next
 			if next(recipesTracked) == nil then
-				pslFrame1:Hide()
-				pslFrame2:Hide()
+				app.Window:Hide()
 			end
 		end
 	end
@@ -4267,6 +4283,14 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end)
 		end
 	end
+
+	-- events:RegisterEvent("PLAYER_ENTERING_WORLD")
+	--
+	-- function f:PLAYER_ENTERING_WORLD(isInitialLoad, isReloading)
+	-- 	if isInitialLoad or isReloading then
+	-- 		--- do somethng here that is only supposed to happen once
+	-- 	end
+	-- end
 
 	-- When the user encounters a loading screen
 	if event == "PLAYER_ENTERING_WORLD" then
