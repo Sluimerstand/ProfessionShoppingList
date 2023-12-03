@@ -574,9 +574,17 @@ function app.UpdateRecipes()
 		end)
 		row:SetScript("OnDragStop", function() app.SaveWindow() end)
 		row:SetScript("OnEnter", function()
-			-- Show item tooltip if hovering over the actual rows
+			-- Show item tooltip if hovering over the actual row
 			GameTooltip:ClearLines()
-			GameTooltip:SetOwner(app.Window, "ANCHOR_BOTTOM")
+
+			-- Set the tooltip to either the left or right, depending on where the window is placed
+			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+				GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
+				GameTooltip:SetPoint("LEFT", app.Window, "RIGHT")
+			else
+				GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
+				GameTooltip:SetPoint("RIGHT", app.Window, "LEFT")
+			end
 			GameTooltip:SetHyperlink(recipeInfo.link)
 			GameTooltip:Show()
 		end)
@@ -675,6 +683,25 @@ function app.UpdateRecipes()
 			GameTooltip:Hide()
 		end)
 		row:SetScript("OnDragStop", function() app.SaveWindow() end)
+		row:SetScript("OnEnter", function()
+			-- Show item tooltip if hovering over the actual row
+			GameTooltip:ClearLines()
+			
+			-- Set the tooltip to either the left or right, depending on where the window is placed
+			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+				GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
+				GameTooltip:SetPoint("LEFT", app.Window, "RIGHT")
+			else
+				GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
+				GameTooltip:SetPoint("RIGHT", app.Window, "LEFT")
+			end
+			GameTooltip:SetHyperlink(reagentInfo.link)
+			GameTooltip:Show()
+		end)
+		row:SetScript("OnLeave", function()
+			GameTooltip:ClearLines()
+			GameTooltip:Hide()
+		end)
 
 		reagentRow[rowNo2] = row
 
@@ -767,6 +794,48 @@ function app.UpdateRecipes()
 			GameTooltip:Hide()
 		end)
 		row:SetScript("OnDragStop", function() app.SaveWindow() end)
+		row:SetScript("OnEnter", function()
+			if not cooldownTooltip then
+				cooldownTooltip = CreateFrame("Frame", nil, app.Window, "BackdropTemplate")
+				cooldownTooltip:SetPoint("CENTER")
+				cooldownTooltip:SetFrameStrata("TOOLTIP")
+				cooldownTooltip:SetBackdrop({
+					bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+					edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+					edgeSize = 16,
+					insets = { left = 4, right = 4, top = 4, bottom = 4 },
+				})
+				cooldownTooltip:SetBackdropColor(0, 0, 0, 0.9)
+				cooldownTooltip:EnableMouse(false)
+				cooldownTooltip:SetMovable(false)
+				cooldownTooltip:Hide()
+
+				cooldownTooltipText = cooldownTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+				cooldownTooltipText:SetPoint("TOPLEFT", cooldownTooltip, "TOPLEFT", 10, -10)
+				cooldownTooltipText:SetJustifyH("LEFT")
+			end
+
+			-- Set the tooltip text
+			cooldownTooltipText:SetText("|cffFFFFFF"..cooldownInfo.user)
+
+			-- Set the tooltip size to fit its contents
+			cooldownTooltip:SetHeight(cooldownTooltipText:GetStringHeight()+20)
+			cooldownTooltip:SetWidth(cooldownTooltipText:GetStringWidth()+20)
+
+			-- Set the tooltip to either the left or right, depending on where the window is placed
+			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+				cooldownTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
+			else
+				cooldownTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
+			end	
+
+			-- Show item tooltip if hovering over the actual row
+			cooldownTooltip:Show()
+		end)
+		row:SetScript("OnLeave", function()
+			cooldownTooltip:ClearAllPoints()
+			cooldownTooltip:Hide()
+		end)
 
 		cooldownRow[rowNo3] = row
 		if rowNo3 == 1 then
@@ -1510,6 +1579,7 @@ function app.CreateCraftingOrdersAssets()
 			edgeSize = 16,
 			insets = { left = 4, right = 4, top = 4, bottom = 4 },
 		})
+
 		personalOrderTooltip:SetBackdropColor(0, 0, 0, 0.9)
 		personalOrderTooltip:EnableMouse(false)
 		personalOrderTooltip:SetMovable(false)
@@ -2399,24 +2469,6 @@ function app.WindowFunctions()
 			GameTooltip:Hide()
 			reagentHeaderTooltip:Hide()
 		end,
-		["OnMouseDown"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
-			if button == "LeftButton" and not IsModifierKeyDown() then
-				pslFrame1:StartMoving()
-				GameTooltip:ClearLines()
-				GameTooltip:Hide()
-			end
-		end,
-		["OnMouseUp"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-			app.SaveWindowPosition()
-
-			if realrow ~= nil then
-				local celldata = data[realrow][1]
-				GameTooltip:ClearLines()
-				GameTooltip:SetOwner(pslFrame1, "ANCHOR_BOTTOM")
-				GameTooltip:SetHyperlink(celldata)
-				GameTooltip:Show()
-			end
-		end,
 		["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
 			local function trackSubreagent(recipeID, itemID)
 				-- Define the amount of recipes to be tracked
@@ -2862,24 +2914,6 @@ function app.WindowFunctions()
 					-- Open recipe if it is learned
 					if selectedRecipeID ~= 0 and C_TradeSkillUI.IsRecipeProfessionLearned(selectedRecipeID) == true then C_TradeSkillUI.OpenRecipe(selectedRecipeID) end
 				end
-			end
-		end,
-		["OnMouseDown"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
-			if button == "LeftButton" and not IsModifierKeyDown() then
-				pslFrame2:StartMoving()
-				GameTooltip:ClearLines()
-				GameTooltip:Hide()
-			end
-		end,
-		["OnMouseUp"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-			app.SaveWindowPosition()
-
-			if realrow ~= nil then
-				local celldata = data[realrow][1]
-				GameTooltip:ClearLines()
-				GameTooltip:SetOwner(pslFrame2, "ANCHOR_BOTTOM")
-				GameTooltip:SetHyperlink(celldata)
-				GameTooltip:Show()
 			end
 		end,
 	})
