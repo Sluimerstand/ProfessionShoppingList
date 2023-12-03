@@ -445,6 +445,32 @@ function app.UpdateNumbers()
 	end
 end
 
+function app.UpdateCooldowns()
+	if cooldownRow then
+		if #cooldownRow >= 1 then
+			for i, row in ipairs (cooldownRow) do
+				local recipeID = row:GetID()
+				local cooldownRemaining = recipeCooldowns[recipeID].start + recipeCooldowns[recipeID].cooldown - GetServerTime()
+				local days, hours, minutes
+
+				days = math.floor(cooldownRemaining/(60*60*24))
+				hours = math.floor((cooldownRemaining - (days*60*60*24))/(60*60))
+				minutes = math.floor((cooldownRemaining - ((days*60*60*24) + (hours*60*60)))/60)
+
+				if cooldownRemaining <= 0 then
+					row.text2:SetText("Ready")
+				elseif cooldownRemaining < 60*60 then
+					row.text2:SetText(minutes.."m")
+				elseif cooldownRemaining < 60*60*24 then
+					row.text2:SetText(hours.."h "..minutes.."m")
+				else
+					row.text2:SetText(days.."d "..hours.."h "..minutes.."m")
+				end
+			end
+		end
+	end
+end
+
 -- Update recipes and reagents tracked
 function app.UpdateRecipes()
 	-- Set personal recipes to be the same as global recipes
@@ -1232,10 +1258,11 @@ function app.UpdateRecipes()
 	for _, cooldownInfo in pairs (cooldownsSorted) do
 		rowNo3 = rowNo3 + 1
 
-		local row = CreateFrame("Button", nil, app.Window.Cooldowns)
+		local row = CreateFrame("Button", nil, app.Window.Cooldowns, "", cooldownInfo.recipeID)
 		row:SetSize(0,16)
 		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
 		row:RegisterForDrag("LeftButton")
+		row:RegisterForClicks("AnyDown", "AnyUp")
 		row:SetScript("OnDragStart", function()
 			app.Window:StartMoving()
 			GameTooltip:ClearLines()
@@ -1284,6 +1311,11 @@ function app.UpdateRecipes()
 			cooldownTooltip:ClearAllPoints()
 			cooldownTooltip:Hide()
 		end)
+		row:SetScript("OnClick", function(self, button)
+			if button == "RightButton" then
+				recipeCooldowns[cooldownInfo.recipeID] = nil
+			end
+		end)
 
 		cooldownRow[rowNo3] = row
 		if rowNo3 == 1 then
@@ -1323,6 +1355,7 @@ function app.UpdateRecipes()
 		else
 			text2:SetText(days.."d "..hours.."h "..minutes.."m")
 		end
+		row.text2 = text2
 
 		local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
@@ -1393,7 +1426,6 @@ function app.UpdateRecipes()
 	end
 
 	app.UpdateNumbers()
-
 end
 
 -- Show windows and update numbers
@@ -2925,6 +2957,12 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		app.TooltipInfo()		
 		app.Settings()
 
+		local function refreshCooldowns()
+			app.UpdateCooldowns()
+			C_Timer.After(60, refreshCooldowns)
+		end
+		refreshCooldowns()
+
 		-- Slash commands
 		SLASH_PSL1 = "/psl";
 		function SlashCmdList.PSL(msg, editBox)
@@ -4139,6 +4177,7 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 				-- If the spell cooldown exists
 				if recipeCooldown then
 					recipeCooldowns[spellID] = {name = recipeName, cooldown = recipeCooldown, start = recipeStart, user = character .. "-" .. realm}
+					app.UpdateRecipes()
 				end
 			end)
 		end
@@ -4336,9 +4375,6 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 					-- Show the reminder
 					app.Print(recipeInfo.name .. " (ID: " .. recipeID .. ") is ready to craft again on " .. recipeInfo.user .. ".")
 				end
-
-				-- Remove the recipe from recipeCooldowns
-				recipeCooldowns[recipeID] = nil
 			end
 		end
 	end
