@@ -504,6 +504,18 @@ function app.UpdateRecipes()
 			GameTooltip:Hide()
 		end)
 		app.Window.Recipes:SetScript("OnDragStop", function() app.SaveWindow() end)
+		app.Window.Recipes:SetScript("OnEnter", function()
+			-- Set the tooltip to either the left or right, depending on where the window is placed
+			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+				recipeHeaderTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
+			else
+				recipeHeaderTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
+			end
+			recipeHeaderTooltip:Show()
+		end)
+		app.Window.Recipes:SetScript("OnLeave", function()
+			recipeHeaderTooltip:Hide()
+		end)
 		
 		local recipes1 = app.Window.Recipes:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		recipes1:SetPoint("LEFT", app.Window.Recipes)
@@ -637,6 +649,18 @@ function app.UpdateRecipes()
 			GameTooltip:Hide()
 		end)
 		app.Window.Reagents:SetScript("OnDragStop", function() app.SaveWindow() end)
+		app.Window.Reagents:SetScript("OnEnter", function()
+			-- Set the tooltip to either the left or right, depending on where the window is placed
+			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+				reagentHeaderTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
+			else
+				reagentHeaderTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
+			end
+			reagentHeaderTooltip:Show()
+		end)
+		app.Window.Reagents:SetScript("OnLeave", function()
+			reagentHeaderTooltip:Hide()
+		end)
 		
 		local reagents1 = app.Window.Reagents:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		reagents1:SetPoint("LEFT", app.Window.Reagents)
@@ -752,6 +776,18 @@ function app.UpdateRecipes()
 			GameTooltip:Hide()
 		end)
 		app.Window.Cooldowns:SetScript("OnDragStop", function() app.SaveWindow() end)
+		app.Window.Cooldowns:SetScript("OnEnter", function()
+			-- Set the tooltip to either the left or right, depending on where the window is placed
+			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+				cooldownHeaderTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
+			else
+				cooldownHeaderTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
+			end
+			cooldownHeaderTooltip:Show()
+		end)
+		app.Window.Cooldowns:SetScript("OnLeave", function()
+			cooldownHeaderTooltip:Hide()
+		end)
 		
 		local cooldowns1 = app.Window.Cooldowns:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		cooldowns1:SetPoint("LEFT", app.Window.Cooldowns)
@@ -1097,9 +1133,7 @@ end
 function app.CreateGeneralAssets()
 	-- Create Recipes header tooltip
 	if not recipeHeaderTooltip then
-		recipeHeaderTooltip = CreateFrame("Frame", nil, pslTrackingWindow2, "BackdropTemplate")
-		recipeHeaderTooltip:SetPoint("CENTER")
-		recipeHeaderTooltip:SetPoint("BOTTOM", pslTrackingWindow2, "TOP", 0, 0)
+		recipeHeaderTooltip = CreateFrame("Frame", nil, app.Window, "BackdropTemplate")
 		recipeHeaderTooltip:SetFrameStrata("TOOLTIP")
 		recipeHeaderTooltip:SetBackdrop({
 			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -1115,7 +1149,7 @@ function app.CreateGeneralAssets()
 		recipeHeaderTooltipText = recipeHeaderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		recipeHeaderTooltipText:SetPoint("TOPLEFT", recipeHeaderTooltip, "TOPLEFT", 10, -10)
 		recipeHeaderTooltipText:SetJustifyH("LEFT")
-		recipeHeaderTooltipText:SetText("Drag|cffFFFFFF: Move the window.\n|RShift+click Recipe|cffFFFFFF: Link the recipe.\n|RCtrl+click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click #|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click #|cffFFFFFF: Untrack all of the selected recipe.")
+		recipeHeaderTooltipText:SetText("Shift+click|cffFFFFFF: Link the recipe.\n|RCtrl+click|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click|cffFFFFFF: Untrack all of the selected recipe.")
 
 		-- Set the tooltip size to fit its contents
 		recipeHeaderTooltip:SetHeight(recipeHeaderTooltipText:GetStringHeight()+20)
@@ -1124,9 +1158,7 @@ function app.CreateGeneralAssets()
 
 	-- Create Reagents header tooltip
 	if not reagentHeaderTooltip then
-		reagentHeaderTooltip = CreateFrame("Frame", nil, pslTrackingWindow1, "BackdropTemplate")
-		reagentHeaderTooltip:SetPoint("CENTER")
-		reagentHeaderTooltip:SetPoint("BOTTOM", pslTrackingWindow1, "TOP", 0, 0)
+		reagentHeaderTooltip = CreateFrame("Frame", nil, app.Window, "BackdropTemplate")
 		reagentHeaderTooltip:SetFrameStrata("TOOLTIP")
 		reagentHeaderTooltip:SetBackdrop({
 			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -1142,11 +1174,36 @@ function app.CreateGeneralAssets()
 		reagentHeaderTooltipText = reagentHeaderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		reagentHeaderTooltipText:SetPoint("TOPLEFT", reagentHeaderTooltip, "TOPLEFT", 10, -10)
 		reagentHeaderTooltipText:SetJustifyH("LEFT")
-		reagentHeaderTooltipText:SetText("Drag|cffFFFFFF: Move the window.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)\nThe reagents listed here can also be imported to a new Auctionator shopping list.")
+		reagentHeaderTooltipText:SetText("Shift+click|cffFFFFFF: Link the reagent.\n|RCtrl+click|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)\nThe reagents listed here can also be imported to a new Auctionator shopping list.")
 
 		-- Set the tooltip size to fit its contents
 		reagentHeaderTooltip:SetHeight(reagentHeaderTooltipText:GetStringHeight()+20)
 		reagentHeaderTooltip:SetWidth(reagentHeaderTooltipText:GetStringWidth()+20)
+	end
+
+	-- Create Cooldowns header tooltip
+	if not cooldownHeaderTooltip then
+		cooldownHeaderTooltip = CreateFrame("Frame", nil, app.Window, "BackdropTemplate")
+		cooldownHeaderTooltip:SetFrameStrata("TOOLTIP")
+		cooldownHeaderTooltip:SetBackdrop({
+			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+			edgeSize = 16,
+			insets = { left = 4, right = 4, top = 4, bottom = 4 },
+		})
+		cooldownHeaderTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		cooldownHeaderTooltip:EnableMouse(false)
+		cooldownHeaderTooltip:SetMovable(false)
+		cooldownHeaderTooltip:Hide()
+
+		cooldownHeaderTooltipText = cooldownHeaderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		cooldownHeaderTooltipText:SetPoint("TOPLEFT", cooldownHeaderTooltip, "TOPLEFT", 10, -10)
+		cooldownHeaderTooltipText:SetJustifyH("LEFT")
+		cooldownHeaderTooltipText:SetText("Right+click|cffFFFFFF: Remove the cooldown reminder.")
+
+		-- Set the tooltip size to fit its contents
+		cooldownHeaderTooltip:SetHeight(cooldownHeaderTooltipText:GetStringHeight()+20)
+		cooldownHeaderTooltip:SetWidth(cooldownHeaderTooltipText:GetStringWidth()+20)
 	end
 end
 
@@ -2450,25 +2507,6 @@ end
 function app.WindowFunctions()
 	-- Reagents window
 	pslTable1:RegisterEvents({
-		["OnEnter"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-			-- Show item tooltip if hovering over the actual rows
-			if row and realrow ~= nil then
-				local celldata = data[realrow][1]
-				GameTooltip:ClearLines()
-				GameTooltip:SetOwner(pslFrame1, "ANCHOR_BOTTOM")
-				GameTooltip:SetHyperlink(celldata)
-				GameTooltip:Show()
-				reagentHeaderTooltip:Hide()
-			-- Show header tooltip
-			elseif userSettings["headerTooltip"] == true then
-				reagentHeaderTooltip:Show()
-			end
-		end,
-		["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-			GameTooltip:ClearLines()
-			GameTooltip:Hide()
-			reagentHeaderTooltip:Hide()
-		end,
 		["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
 			local function trackSubreagent(recipeID, itemID)
 				-- Define the amount of recipes to be tracked
@@ -2856,25 +2894,6 @@ function app.WindowFunctions()
 
 	-- Recipes window
 	pslTable2:RegisterEvents({
-		["OnEnter"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-			-- Show item tooltip if hovering over the actual rows
-			if row and realrow ~= nil then
-				local celldata = data[realrow][1]
-				GameTooltip:ClearLines()
-				GameTooltip:SetOwner(pslFrame2, "ANCHOR_BOTTOM")
-				GameTooltip:SetHyperlink(celldata)
-				GameTooltip:Show()
-				recipeHeaderTooltip:Hide()
-			-- Show header tooltip
-			elseif userSettings["headerTooltip"] == true then
-				recipeHeaderTooltip:Show()
-			end
-		end,
-		["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
-			GameTooltip:ClearLines()
-			GameTooltip:Hide()
-			recipeHeaderTooltip:Hide()
-		end,
 		["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, button, ...)
 			-- Right-click on recipe amount
 			if column == 2 and button == "RightButton" and row ~= nil and realrow ~= nil then
