@@ -31,6 +31,22 @@ event:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
 event:RegisterEvent("TRADE_SKILL_SHOW")
 event:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 
+-- local f = CreateFrame("Frame")
+-- f:RegisterEvent("PLAYER_ENTERING_WORLD")
+-- f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
+--     if self[event] then
+--         self[event](self, arg1, arg2, ...)
+--     end
+-- end)
+
+-- function f:PLAYER_ENTERING_WORLD(arg1, arg2, ...)
+-- 	if arg1 == true then	-- Only on initial load
+-- 		print("oh hi mark")
+-- 	else
+-- 		print("not initial load")
+-- 	end
+-- end
+
 ----------------------
 -- HELPER FUNCTIONS --
 ----------------------
@@ -4382,14 +4398,6 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end)
 		end
 	end
-
-	-- events:RegisterEvent("PLAYER_ENTERING_WORLD")
-	--
-	-- function f:PLAYER_ENTERING_WORLD(isInitialLoad, isReloading)
-	-- 	if isInitialLoad or isReloading then
-	-- 		--- do somethng here that is only supposed to happen once
-	-- 	end
-	-- end
 
 	-- When the user encounters a loading screen
 	if event == "PLAYER_ENTERING_WORLD" then
