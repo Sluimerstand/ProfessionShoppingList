@@ -4363,17 +4363,20 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 
 	-- When the user encounters a loading screen
 	if event == "PLAYER_ENTERING_WORLD" then
-		-- Check all tracked recipe cooldowns
-		for recipeID, recipeInfo in pairs (recipeCooldowns) do
-			-- Check the remaining cooldown
-			local cooldownRemaining = recipeInfo.start + recipeInfo.cooldown - GetServerTime()
+		-- Only on initialLoad
+		if arg1 == true then
+			-- Check all tracked recipe cooldowns
+			for recipeID, recipeInfo in pairs (recipeCooldowns) do
+				-- Check the remaining cooldown
+				local cooldownRemaining = recipeInfo.start + recipeInfo.cooldown - GetServerTime()
 
-			-- If the recipe is off cooldown
-			if cooldownRemaining <= 0 then
-				-- If the option to show recipe cooldowns is enabled
-				if userSettings["showRecipeCooldowns"] == true then
-					-- Show the reminder
-					app.Print(recipeInfo.name .. " (ID: " .. recipeID .. ") is ready to craft again on " .. recipeInfo.user .. ".")
+				-- If the recipe is off cooldown
+				if cooldownRemaining <= 0 then
+					-- If the option to show recipe cooldowns is enabled
+					if userSettings["showRecipeCooldowns"] == true then
+						-- Show the reminder
+						app.Print(recipeInfo.name .. " is ready to craft again on " .. recipeInfo.user .. ".")
+					end
 				end
 			end
 		end
