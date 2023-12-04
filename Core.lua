@@ -1800,6 +1800,25 @@ function app.CreateTradeskillAssets()
 		thermalAnvilCharges:SetText(anvilCharges)
 	end
 
+	-- Create Alvin the Anvil button
+	if not alvinButton then
+		alvinButton = CreateFrame("Button", "AlvinButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
+		alvinButton:SetWidth(40)
+		alvinButton:SetHeight(40)
+		alvinButton:SetNormalTexture(1020356)
+		alvinButton:GetNormalTexture():SetDesaturated(true)
+		alvinButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		alvinButton:SetPoint("BOTTOMRIGHT", thermalAnvilButton, "BOTTOMLEFT", -3, 0)
+		alvinButton:SetFrameStrata("HIGH")
+		alvinButton:RegisterForClicks("AnyDown")
+		alvinButton:SetAttribute("type1", "macro")
+		alvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('BattlePet-0-0000100C1FB2')")
+
+		alvinCooldown = CreateFrame("Cooldown", "AlvinCooldown", alvinButton, "CooldownFrameTemplate")
+		alvinCooldown:SetAllPoints(alvinButton)
+		alvinCooldown:SetSwipeColor(1, 1, 1)
+	end
+
 	-- Create Dragonflight Milling info
 	if not millingDragonflight then
 		millingDragonflight = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -2281,6 +2300,15 @@ function app.UpdateAssets()
 		-- Thermal Anvil button cooldown
 		start, duration = GetItemCooldown(87216)
 		thermalAnvilCooldown:SetCooldown(start, duration)
+
+		-- Make the Alvin the Anvil button not desaturated if it can be used
+		if C_PetJournal.PetIsSummonable('BattlePet-0-0000100C1FB2') == true then
+			alvinButton:GetNormalTexture():SetDesaturated(false)
+		end
+
+		-- Alvin button cooldown
+		start, duration = GetSpellCooldown(61304)	-- Global spell cooldown
+		alvinCooldown:SetCooldown(start, duration)
 	end
 
 	-- Enable tracking button for 1 = Item, 3 = Enchant
@@ -4130,8 +4158,10 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			-- Thermal Anvil button
 			if professionID == 1 or professionID == 6 or professionID == 8 then
 				thermalAnvilButton:Show()
+				alvinButton:Show()
 			else
 				thermalAnvilButton:Hide()
+				alvinButton:Hide()
 			end
 		end
 		if assetsTradeskillExist == true then professionFeatures() end
@@ -4147,7 +4177,7 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		local spellID = ...
 
 		-- Profession button stuff
-		if spellID == 818 or spellID == 67556 or spellID == 126462 then
+		if spellID == 818 or spellID == 67556 or spellID == 126462 or spellID == 279205 then
 			C_Timer.After(0.1, function() app.UpdateAssets() end)
 		end
 	
