@@ -1835,6 +1835,25 @@ function app.CreateTradeskillAssets()
 		alvinCooldown:SetSwipeColor(1, 1, 1)
 	end
 
+	-- Create Alvin the Anvil button
+	if not lightforgeButton then
+		lightforgeButton = CreateFrame("Button", "LightforgeButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
+		lightforgeButton:SetWidth(40)
+		lightforgeButton:SetHeight(40)
+		lightforgeButton:SetNormalTexture(1723995)
+		lightforgeButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		lightforgeButton:SetPoint("BOTTOMRIGHT", alvinButton, "BOTTOMLEFT", -3, 0)
+		lightforgeButton:SetFrameStrata("HIGH")
+		lightforgeButton:RegisterForClicks("AnyDown")
+		lightforgeButton:SetAttribute("type", "spell")
+		lightforgeButton:SetAttribute("spell", 259930)
+		lightforgeButton:Hide()
+
+		lightforgeCooldown = CreateFrame("Cooldown", "LightforgeCooldown", lightforgeButton, "CooldownFrameTemplate")
+		lightforgeCooldown:SetAllPoints(lightforgeButton)
+		lightforgeCooldown:SetSwipeColor(1, 1, 1)
+	end
+
 	-- Create Dragonflight Milling info
 	if not millingDragonflight then
 		millingDragonflight = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -2325,6 +2344,10 @@ function app.UpdateAssets()
 		-- Alvin button cooldown
 		start, duration = GetSpellCooldown(61304)	-- Global spell cooldown
 		alvinCooldown:SetCooldown(start, duration)
+
+		-- Lightforge cooldown
+		start, duration = GetSpellCooldown(259930)
+		lightforgeCooldown:SetCooldown(start, duration)
 	end
 
 	-- Enable tracking button for 1 = Item, 3 = Enchant
@@ -4175,9 +4198,14 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			if professionID == 1 or professionID == 6 or professionID == 8 then
 				thermalAnvilButton:Show()
 				alvinButton:Show()
+				local _, _, raceID = UnitRace("player")
+				if raceID == 30 then
+					lightforgeButton:Show()
+				end
 			else
 				thermalAnvilButton:Hide()
 				alvinButton:Hide()
+				lightforgeButton:Hide()
 			end
 		end
 		if assetsTradeskillExist == true then professionFeatures() end
@@ -4193,7 +4221,7 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		local spellID = ...
 
 		-- Profession button stuff
-		if spellID == 818 or spellID == 67556 or spellID == 126462 or spellID == 279205 then
+		if spellID == 818 or spellID == 67556 or spellID == 126462 or spellID == 279205 or spellID == 259930 then
 			C_Timer.After(0.1, function() app.UpdateAssets() end)
 		end
 	
