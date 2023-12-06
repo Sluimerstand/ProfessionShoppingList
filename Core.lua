@@ -2545,6 +2545,7 @@ function app.Clear()
 	reagentTiers = {}
 	reagentCache = {}
 	app.UpdateRecipes()
+	app.Window.ScrollFrame:SetVerticalScroll(0)
 
 	-- Disable remove button
 	if assetsTradeskillExist == true then
