@@ -3232,7 +3232,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 	if UnitAffectingCombat("player") == false then
 		-- Get selected recipe ID and type (global variables)
 		if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
-		pslSelectedRecipeID = spellID
+		if recipeLibrary[spellID] then pslSelectedRecipeID = spellID end	-- Only set this number if it actually is a recipe
 		pslRecipeType = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).recipeType
 
 		app.UpdateAssets()
@@ -4387,7 +4387,7 @@ function event:CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE(result)
 		end
 
 		-- Save this info as the last order done, unless it was afaileds order
-		if result ~= 29 or pslQuickOrderErrors >= 4 then personalOrders["last"] = pslSelectedRecipeID	end
+		if result ~= 29 or pslQuickOrderErrors >= 4 then personalOrders["last"] = pslSelectedRecipeID end
 
 		-- Set the last used recipe name for the repeat order button title
 		local recipeName = "No last order found"
