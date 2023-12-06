@@ -306,10 +306,11 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 				-- Cache item
 				local item = Item:CreateFromItemID(reagentID)
 	
-				-- Get item info
-				_, itemLink, _, _, _, _, _, _, _, fileID = GetItemInfo(reagentID)
-	
+				-- And when the item is cached
 				item:ContinueOnItemLoad(function()
+					-- Get item info
+					_, itemLink, _, _, _, _, _, _, _, fileID = GetItemInfo(reagentID)
+
 					-- Write the info to the cache
 					reagentCache[reagentID] = {link = itemLink, icon = fileID}
 				end)
