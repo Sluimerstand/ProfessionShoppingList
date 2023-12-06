@@ -301,6 +301,20 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 				reagentID = reagentID1
 			end
 
+			-- Add the reagentID to the reagent cache
+			if not reagentCache[reagentID] then
+				-- Cache item
+				if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+	
+				-- Get item info
+				_, itemLink, _, _, _, _, _, _, _, fileID = GetItemInfo(reagentID)
+	
+				Item:ContinueOnItemLoad(function()
+					-- Write the info to the cache
+					reagentCache[reagentID] = {link = itemLink, icon = fileID}
+				end)
+			end
+
 			-- Add the info to the specified variable
 			if reagentVariable[reagentID] == nil then reagentVariable[reagentID] = 0 end
 			reagentVariable[reagentID] = reagentVariable[reagentID] + ( reagentAmount * recipeQuantity )
