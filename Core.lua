@@ -71,7 +71,7 @@ function app.Initialise()
 	-- Declare SavedVariables
 	if not userSettings then userSettings = {} end
 	if not recipesTracked then recipesTracked = {} end
-	if not reagentsTracked then reagentsTracked = {} end
+	if not reagentCache then reagentCache = {} end
 	if not recipeCooldowns then recipeCooldowns = {} end
 	if not reagentTiers then reagentTiers = {} end
 	if not recipeLibrary then recipeLibrary = {} end
@@ -314,7 +314,7 @@ function app.UpdateNumbers()
 	for reagentID, amount in pairs(reagentQuantities) do
 		local itemLink, fileID
 
-		if not reagentsTracked[reagentID] then
+		if not reagentCache[reagentID] then
 			-- Cache item
 			if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
 
@@ -328,11 +328,11 @@ function app.UpdateNumbers()
 			end
 
 			-- Write the info to the cache
-			reagentsTracked[reagentID] = {link = itemLink, icon = fileID}
+			reagentCache[reagentID] = {link = itemLink, icon = fileID}
 		else
 			-- Read the info from the cache
-			itemLink = reagentsTracked[reagentID].link
-			icon = reagentsTracked[reagentID].icon
+			itemLink = reagentCache[reagentID].link
+			icon = reagentCache[reagentID].icon
 		end
 
 		-- Get needed/owned number of reagents
@@ -360,7 +360,7 @@ function app.UpdateNumbers()
 
 		-- Make stuff grey and add a checkmark if 0 are needed
 		local itemAmount = ""
-		local itemIcon = reagentsTracked[reagentID].icon
+		local itemIcon = reagentCache[reagentID].icon
 		if math.max(0,amount-reagentAmountHave) == 0 then
 			itemIcon = app.iconReady
 			itemAmount = "|cff9d9d9d"
@@ -758,7 +758,7 @@ function app.UpdateRecipes()
 
 	reagentsSorted = {}
 	for k, v in pairs (reagentQuantities) do
-		reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = reagentsTracked[k].icon, link = reagentsTracked[k].link}
+		reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = reagentCache[k].icon, link = reagentCache[k].link}
 	end
 	table.sort(reagentsSorted, customSort)
 
@@ -2514,8 +2514,8 @@ end
 -- Clear everything except the recipe cache
 function app.Clear()
 	recipesTracked = {}
-	reagentsTracked = {}
 	reagentTiers = {}
+	reagentCache = {}
 	app.UpdateRecipes()
 
 	-- Disable remove button
@@ -4434,7 +4434,7 @@ function event:AUCTION_HOUSE_SHOW()
 			-- Reset the reagents list
 			auctionatorReagents = "PSL"
 
-			for reagentID, reagentAmount in pairs(reagentsTracked) do
+			for reagentID, reagentAmount in pairs(reagentQuantities) do
 				-- Cache item
 				if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
 				
