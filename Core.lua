@@ -9,8 +9,17 @@ app.api = {}	-- Create a table to use for our "API"
 ProfessionShoppingList = app.api	-- Create a namespace for our "API"
 local api = app.api	-- Our "API" prefix
 
--- Blizzard API Events
+----------------------
+-- HELPER FUNCTIONS --
+----------------------
+
+-- WoW API Events
 local event = CreateFrame("Frame")
+event:SetScript("OnEvent", function(self, event, ...)
+    if self[event] then
+        self[event](self, ...)
+    end
+end)
 event:RegisterEvent("ADDON_LOADED")
 event:RegisterEvent("AUCTION_HOUSE_SHOW")
 event:RegisterEvent("BAG_UPDATE_DELAYED")
@@ -30,26 +39,6 @@ event:RegisterEvent("TRACKED_RECIPE_UPDATE")
 event:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
 event:RegisterEvent("TRADE_SKILL_SHOW")
 event:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-
--- local f = CreateFrame("Frame")
--- f:RegisterEvent("PLAYER_ENTERING_WORLD")
--- f:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
---     if self[event] then
---         self[event](self, arg1, arg2, ...)
---     end
--- end)
-
--- function f:PLAYER_ENTERING_WORLD(arg1, arg2, ...)
--- 	if arg1 == true then	-- Only on initial load
--- 		print("oh hi mark")
--- 	else
--- 		print("not initial load")
--- 	end
--- end
-
-----------------------
--- HELPER FUNCTIONS --
-----------------------
 
 -- Table dump
 function app.Dump(table)
@@ -72,6 +61,10 @@ end
 function app.Print(...)
 	print("|cffC69B6DPSL|R:", ...)
 end
+
+------------------
+-- INITIAL LOAD --
+------------------
 
 -- Create SavedVariables, default user settings, and variable flags
 function app.Initialise()
@@ -3057,9 +3050,9 @@ function app.Settings()
 	SettingsText3:SetText("Other features:\n|cffFFFFFF- Adds buttons for Cooking Fire, Chef's Hat, and Thermal Anvil.\n- Copy tracked reagents to the Auctionator import window.")
 end
 
-event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
-	-- When the AddOn is fully loaded, actually run the components
-	if event == "ADDON_LOADED" and arg1 == appName then
+-- When the AddOn is fully loaded, actually run the components
+function event:ADDON_LOADED(addOnName, containsBindings)
+	if addOnName == appName then
 		app.Initialise()
 		app.Legacy()
 		app.CreateWindow()
@@ -3195,39 +3188,43 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end
 		end
 	end
+end
 
-	if event == "TRADE_SKILL_SHOW" then
-		app.CreateTradeskillAssets()
+-- When a tradeskill window is opened
+function event:TRADE_SKILL_SHOW()
+	app.CreateTradeskillAssets()
 
-		 -- Register all recipes for this profession
-		 for _, recipeID in pairs (C_TradeSkillUI.GetAllRecipeIDs()) do
-            -- If there is an output item
-			local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID
-			if item ~= nil then
-                local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
-				local ability = C_TradeSkillUI.GetRecipeInfo(recipeID).skillLineAbilityID
-                -- Register the output item, the recipe's abilityID, and the recipe's profession
-				recipeLibrary[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill}
-            end
+		-- Register all recipes for this profession
+		for _, recipeID in pairs (C_TradeSkillUI.GetAllRecipeIDs()) do
+		-- If there is an output item
+		local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID
+		if item ~= nil then
+			local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
+			local ability = C_TradeSkillUI.GetRecipeInfo(recipeID).skillLineAbilityID
+			-- Register the output item, the recipe's abilityID, and the recipe's profession
+			recipeLibrary[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill}
 		end
 	end
+end
 
-	if event == "CRAFTINGORDERS_SHOW_CUSTOMER" then
-		app.CreateCraftingOrdersAssets()
-	end
+-- When the crafting orders window is opened
+function event:CRAFTINGORDERS_SHOW_CUSTOMER()
+	app.CreateCraftingOrdersAssets()
+end
 	
-	-- When a recipe is selected (out of combat) (sort of)
-	if event == "SPELL_DATA_LOAD_RESULT" and UnitAffectingCombat("player") == false then
+-- When a recipe is selected (sort of)
+function event:SPELL_DATA_LOAD_RESULT(spellID, success)
+	if UnitAffectingCombat("player") == false then
 		-- Get selected recipe ID and type (global variables)
 		if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
-		pslSelectedRecipeID = arg1
+		pslSelectedRecipeID = spellID
 		pslRecipeType = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).recipeType
 
 		app.UpdateAssets()
 
 		local function professionExtra()
 			-- Check if/what Milling info should be displayed
-			if arg1 == 382981 then
+			if spellID == 382981 then
 				millingDragonflight:Show()
 			else
 				millingDragonflight:Hide()
@@ -4253,16 +4250,16 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 		end
 		if assetsTradeskillExist == true then professionFeatures() end
 	end
+end
 
-	-- When closing the crafting orders window entirely
-	if event == "CRAFTINGORDERS_HIDE_CUSTOMER" then
-		isRecraft = false
-	end
+-- When closing the crafting orders window
+function event:CRAFTINGORDERS_HIDE_CUSTOMER()
+	isRecraft = false
+end
 	
-	-- When a spell is succesfully cast by the player (out of combat)
-	if event == "UNIT_SPELLCAST_SUCCEEDED" and UnitAffectingCombat("player") == false and arg1 == "player" then
-		local spellID = ...
-
+-- When a spell is succesfully cast by the player
+function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
+	if UnitAffectingCombat("player") == false and unitTarget == "player" then
 		-- Profession button stuff
 		if spellID == 818 or spellID == 67556 or spellID == 126462 or spellID == 279205 or spellID == 259930 then
 			C_Timer.After(0.1, function() app.UpdateAssets() end)
@@ -4311,9 +4308,11 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end
 		end
 	end
+end
 
-	-- When bag changes occur (out of combat)
-	if event == "BAG_UPDATE_DELAYED" and UnitAffectingCombat("player") == false then
+-- When bag changes occur (out of combat)
+function event:BAG_UPDATE_DELAYED()
+	if UnitAffectingCombat("player") == false then
 		-- If any recipes are tracked
 		local next = next
 		if next(recipesTracked) ~= nil then
@@ -4333,22 +4332,26 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end
 		end
 	end
+end
 
-	-- Set the Vendor filter to 'All' if the option is enabled
-	if event == "MERCHANT_SHOW" and userSettings["vendorAll"] == true then
+-- Set the Vendor filter to 'All' if the option is enabled
+function event:MERCHANT_SHOW()
+	if userSettings["vendorAll"] == true then
 		RunNextFrame(function()
 			SetMerchantFilter(1)
 			MerchantFrame_Update()
 		end)
 	end
+end
 
-	-- If placing a crafting order through PSL
-	if event == "CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE" and pslQuickOrderActive >= 1 then
+-- If placing a crafting order through PSL
+function event:CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE(result)
+	if pslQuickOrderActive >= 1 then
 		-- Count a(nother) quick order attempt
 		pslQuickOrderAttempts = pslQuickOrderAttempts + 1
 		
 		-- If this gives an error
-		if arg1 ~= 0 then
+		if result ~= 0 then
 			-- Count a(nother) error for the quick order attempt
 			pslQuickOrderErrors = pslQuickOrderErrors + 1
 
@@ -4364,12 +4367,12 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			end
 		end
 		-- Separate error message for mandatory reagents
-		if arg1 == 29 then
+		if result == 29 then
 			app.Print("Can't create a quick order for items with mandatory reagents. Sorry. :(")
 		end
 
 		-- Save this info as the last order done, unless it was afaileds order
-		if arg1 ~= 29 or pslQuickOrderErrors >= 4 then personalOrders["last"] = pslSelectedRecipeID	end
+		if result ~= 29 or pslQuickOrderErrors >= 4 then personalOrders["last"] = pslSelectedRecipeID	end
 
 		-- Set the last used recipe name for the repeat order button title
 		local recipeName = "No last order found"
@@ -4394,117 +4397,129 @@ event:SetScript("OnEvent", function(self, event, arg1, arg2, ...)
 			pslQuickOrderErrors = 0
 		end
 	end
+end
 
-	-- Save the order recipeID if the order has been started, because SPELL_LOAD_RESULT does not fire for it anymore
-	if event == "CRAFTINGORDERS_CLAIM_ORDER_RESPONSE" then
-		pslOrderRecipeID = pslSelectedRecipeID
+-- Save the order recipeID if the order has been started, because SPELL_LOAD_RESULT does not fire for it anymore
+function event:CRAFTINGORDERS_CLAIM_ORDER_RESPONSE()
+	pslOrderRecipeID = pslSelectedRecipeID
+end
+
+-- Revert the above if the order is cancelled or fulfilled, since then SPELL_LOAD_RESULT fires again for it
+function event:CRAFTINGORDERS_RELEASE_ORDER_RESPONSE()
+	pslOrderRecipeID = 0
+end
+
+function event:CRAFTINGORDERS_FULFILL_ORDER_RESPONSE()
+	pslOrderRecipeID = 0
+end
+
+-- Replace the in-game tracking of shift+clicking a recipe with PSL's
+function event:TRACKED_RECIPE_UPDATE(recipeID, tracked)
+	if tracked == true then
+		app.TrackRecipe(pslSelectedRecipeID,1)
+		C_TradeSkillUI.SetRecipeTracked(recipeID, false, false)
 	end
+end
 
-	-- Revert the above if the order is cancelled or fulfilled, since then SPELL_LOAD_RESULT fires again for it
-	if event == "CRAFTINGORDERS_RELEASE_ORDER_RESPONSE" or event == "CRAFTINGORDERS_FULFILL_ORDER_RESPONSE" then
-		pslOrderRecipeID = 0
-	end
+-- When the Auction House is opened
+function event:AUCTION_HOUSE_SHOW()
+	-- If Auctionator is loaded
+	local loaded, finished = IsAddOnLoaded("Auctionator")
+	if finished == true then
+		-- Create a temporary variable
+		if not auctionatorReagents then local auctionatorReagents end
 
-	-- Replace the in-game tracking of shift+clicking a recipe with PSL's
-	if event == "TRACKED_RECIPE_UPDATE" then
-		if arg2 == true then
-			app.TrackRecipe(pslSelectedRecipeID,1)
-			C_TradeSkillUI.SetRecipeTracked(arg1, false, false)
-		end
-	end
+		-- Grab all item names for tracked reagents
+		local function getReagentNames()
+			-- Reset the reagents list
+			auctionatorReagents = "PSL"
 
-	-- When the Auction House is opened
-	if event == "AUCTION_HOUSE_SHOW" then
-		-- If Auctionator is loaded
-		local loaded, finished = IsAddOnLoaded("Auctionator")
-		if finished == true then
-			-- Create a temporary variable
-			if not auctionatorReagents then local auctionatorReagents end
-
-			-- Grab all item names for tracked reagents
-			local function getReagentNames()
-				-- Reset the reagents list
-				auctionatorReagents = "PSL"
-
-				for reagentID, reagentAmount in pairs(reagentsTracked) do
-					-- Cache item
-					if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
-					
-					-- Get item info
-					local itemName = GetItemInfo(reagentID)
-			
-					-- Try again if error
-					if itemName == nil then
-						RunNextFrame(getReagentNames)
-						do return end
-					end
-
-					-- Put the item names in the temporary variable
-					auctionatorReagents = auctionatorReagents .. '^"' .. itemName .. '";;0;0;0;0;0;0;0;0;;#;;' .. reagentAmount
+			for reagentID, reagentAmount in pairs(reagentsTracked) do
+				-- Cache item
+				if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+				
+				-- Get item info
+				local itemName = GetItemInfo(reagentID)
+		
+				-- Try again if error
+				if itemName == nil then
+					RunNextFrame(getReagentNames)
+					do return end
 				end
-			end
 
-			-- Wait 3 seconds, because Auctionator needs to create its frames
-			C_Timer.After(3, function()
-				-- Create PSL Import button for Auctionator, if the frame exists (and the AddOn is loaded)
-				if AuctionatorImportListFrame and not auctionatorImportButton then
-					auctionatorImportButton = CreateFrame("Button", nil, AuctionatorImportListFrame.Import, "UIPanelButtonTemplate")
-					auctionatorImportButton:SetText("Copy from PSL")
-					auctionatorImportButton:SetWidth(110)
-					auctionatorImportButton:SetPoint("BOTTOMRIGHT", AuctionatorImportListFrame.Import, "BOTTOMLEFT", 0, 0)
-					auctionatorImportButton:SetScript("OnClick", function()
-						app.UpdateRecipes()
-						-- Add another delay because I have no idea how to optimise my AddOn
-						C_Timer.After(0.5, function()
-							getReagentNames()
-							-- Remove old list
-							if Auctionator.Shopping.ListManager:GetIndexForName("PSL") ~= nil then
-								Auctionator.Shopping.ListManager:Delete("PSL")
-							end
-							-- Import new list
-							AuctionatorImportListFrame.EditBoxContainer:SetText(auctionatorReagents)
-						end)
+				-- Put the item names in the temporary variable
+				auctionatorReagents = auctionatorReagents .. '^"' .. itemName .. '";;0;0;0;0;0;0;0;0;;#;;' .. reagentAmount
+			end
+		end
+
+		-- Wait 3 seconds, because Auctionator needs to create its frames
+		C_Timer.After(3, function()
+			-- Create PSL Import button for Auctionator, if the frame exists (and the AddOn is loaded)
+			if AuctionatorImportListFrame and not auctionatorImportButton then
+				auctionatorImportButton = CreateFrame("Button", nil, AuctionatorImportListFrame.Import, "UIPanelButtonTemplate")
+				auctionatorImportButton:SetText("Copy from PSL")
+				auctionatorImportButton:SetWidth(110)
+				auctionatorImportButton:SetPoint("BOTTOMRIGHT", AuctionatorImportListFrame.Import, "BOTTOMLEFT", 0, 0)
+				auctionatorImportButton:SetScript("OnClick", function()
+					app.UpdateRecipes()
+					-- Add another delay because I have no idea how to optimise my AddOn
+					C_Timer.After(0.5, function()
+						getReagentNames()
+						-- Remove old list
+						if Auctionator.Shopping.ListManager:GetIndexForName("PSL") ~= nil then
+							Auctionator.Shopping.ListManager:Delete("PSL")
+						end
+						-- Import new list
+						AuctionatorImportListFrame.EditBoxContainer:SetText(auctionatorReagents)
 					end)
-				end
-			end)
-		end
+				end)
+			end
+		end)
 	end
+end
 
-	-- When the user encounters a loading screen
-	if event == "PLAYER_ENTERING_WORLD" then
-		-- Only on initialLoad
-		if arg1 == true then
-			-- Check all tracked recipe cooldowns
-			for recipeID, recipeInfo in pairs (recipeCooldowns) do
-				-- Check the remaining cooldown
-				local cooldownRemaining = recipeInfo.start + recipeInfo.cooldown - GetServerTime()
+-- When the user encounters a loading screen
+function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
+	-- Only on initialLoad
+	if isInitialLogin == true then
+		-- Check all tracked recipe cooldowns
+		for recipeID, recipeInfo in pairs (recipeCooldowns) do
+			-- Check the remaining cooldown
+			local cooldownRemaining = recipeInfo.start + recipeInfo.cooldown - GetServerTime()
 
-				-- If the recipe is off cooldown
-				if cooldownRemaining <= 0 then
-					-- If the option to show recipe cooldowns is enabled
-					if userSettings["showRecipeCooldowns"] == true then
-						-- Show the reminder
-						app.Print(recipeInfo.name .. " is ready to craft again on " .. recipeInfo.user .. ".")
-					end
+			-- If the recipe is off cooldown
+			if cooldownRemaining <= 0 then
+				-- If the option to show recipe cooldowns is enabled
+				if userSettings["showRecipeCooldowns"] == true then
+					-- Show the reminder
+					app.Print(recipeInfo.name .. " is ready to craft again on " .. recipeInfo.user .. ".")
 				end
 			end
 		end
 	end
+end
 
-	-- When a LFG queue or pet battle queue pops up
-	if event == "LFG_PROPOSAL_SHOW" or event == "PET_BATTLE_QUEUE_PROPOSE_MATCH" then
-		-- If the setting for queue sounds is enabled
-		if userSettings["queueSound"] == true then
-			-- Play the DBM-style sound
-			PlaySoundFile(567478, "Master")
-		end
+-- When a LFG queue or pet battle queue pops up
+function event:LFG_PROPOSAL_SHOW()
+	-- If the setting for queue sounds is enabled
+	if userSettings["queueSound"] == true then
+		-- Play the DBM-style sound
+		PlaySoundFile(567478, "Master")
 	end
-end)
+end
+
+function event:PET_BATTLE_QUEUE_PROPOSE_MATCH()
+	-- If the setting for queue sounds is enabled
+	if userSettings["queueSound"] == true then
+		-- Play the DBM-style sound
+		PlaySoundFile(567478, "Master")
+	end
+end
 
 -- When a recipe is selected (very for realsies)
-EventRegistry:RegisterCallback("ProfessionsRecipeListMixin.Event.OnRecipeSelected", function(arg1, arg2, arg3)
-	if arg2["isRecraft"] == true then isRecraft = true
-	elseif arg2["isRecraft"] == false then isRecraft = false
+EventRegistry:RegisterCallback("ProfessionsRecipeListMixin.Event.OnRecipeSelected", function(_, recipeInfo)
+	if recipeInfo["isRecraft"] == true then isRecraft = true
+	elseif recipeInfo["isRecraft"] == false then isRecraft = false
 	end
 end)
 
