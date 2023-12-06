@@ -303,9 +303,8 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 
 			-- Add the reagentID to the reagent cache
 			if not reagentCache[reagentID] then
-				-- Cache item
 				local item = Item:CreateFromItemID(reagentID)
-	
+			
 				-- And when the item is cached
 				item:ContinueOnItemLoad(function()
 					-- Get item info
@@ -777,6 +776,10 @@ function app.UpdateRecipes()
 
 	reagentsSorted = {}
 	for k, v in pairs (reagentQuantities) do
+		if not reagentCache[k] then
+			C_Timer.After(1, function() app.UpdateRecipes() end)
+			do return end
+		end
 		reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = reagentCache[k].icon, link = reagentCache[k].link}
 	end
 	table.sort(reagentsSorted, customSort)
