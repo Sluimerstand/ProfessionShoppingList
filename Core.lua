@@ -801,7 +801,7 @@ function app.UpdateRecipes()
 			local function trackSubreagent(recipeID, itemID)
 				-- Define the amount of recipes to be tracked
 				local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-				local amount = math.max(0, math.ceil((reagentQuantities[itemID] - GetItemCount(itemID)) / quantityMade))
+				local amount = math.max(0, math.ceil((reagentQuantities[itemID] - GetItemCount(itemID, true, false, true)) / quantityMade))
 				if recipesTracked[recipeID] then amount = math.max(0, (amount - recipesTracked[recipeID].quantity)) end
 
 				-- Track the recipe (don't track if 0)
