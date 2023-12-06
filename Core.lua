@@ -117,6 +117,7 @@ function app.Initialise()
 	-- Initialise some flag variables
 	-- TODO: convert to app.variable
 	app.Hidden = CreateFrame("Frame")
+	app.UpdatedCooldownWidth = 0
 	reagentQuantities = {}
 	assetsTradeskillExist = false
 	assetsCraftingOrdersExist = false
@@ -195,7 +196,7 @@ function app.CreateWindow()
 	app.Window:EnableMouse(true)
 	app.Window:SetMovable(true)
 	app.Window:SetResizable(true)
-	app.Window:SetResizeBounds(200, 200, 600, 600)
+	app.Window:SetResizeBounds(140, 140, 600, 600)
 	app.Window:RegisterForDrag("LeftButton")
 	app.Window:SetScript("OnDragStart", function()
 		app.Window:StartMoving()
@@ -230,16 +231,16 @@ function app.CreateWindow()
 
 	-- ScrollFrame inside the popup frame
 	local scrollFrame = CreateFrame("ScrollFrame", nil, app.Window, "ScrollFrameTemplate")
-	scrollFrame:SetPoint("TOPLEFT", app.Window, 8, -6)
-	scrollFrame:SetPoint("BOTTOMRIGHT", app.Window, -23, 8)
+	scrollFrame:SetPoint("TOPLEFT", app.Window, 7, -6)
+	scrollFrame:SetPoint("BOTTOMRIGHT", app.Window, -22, 6)
 	scrollFrame:Show()
 
 	scrollFrame.ScrollBar.Back:Hide()
 	scrollFrame.ScrollBar.Forward:Hide()
 	scrollFrame.ScrollBar:ClearAllPoints()
 	scrollFrame.ScrollBar:SetPoint("TOP", scrollFrame, 0, -3)
-	scrollFrame.ScrollBar:SetPoint("RIGHT", scrollFrame, 14, 0)
-	scrollFrame.ScrollBar:SetPoint("BOTTOM", scrollFrame, 0, -18)
+	scrollFrame.ScrollBar:SetPoint("RIGHT", scrollFrame, 13, 0)
+	scrollFrame.ScrollBar:SetPoint("BOTTOM", scrollFrame, 0, -16)
 	
 	-- ScrollChild inside the ScrollFrame
 	local scrollChild = CreateFrame("Frame", nil, scrollFrame)
@@ -462,6 +463,7 @@ function app.UpdateNumbers()
 end
 
 function app.UpdateCooldowns()
+	app.UpdatedCooldownWidth = 0
 	if cooldownRow then
 		if #cooldownRow >= 1 then
 			for i, row in ipairs (cooldownRow) do
@@ -482,6 +484,8 @@ function app.UpdateCooldowns()
 				else
 					row.text2:SetText(days.."d "..hours.."h "..minutes.."m")
 				end
+
+				app.UpdatedCooldownWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.UpdatedCooldownWidth)
 			end
 		end
 	end
@@ -1330,6 +1334,7 @@ function app.UpdateRecipes()
 		row:SetScript("OnClick", function(self, button)
 			if button == "RightButton" then
 				recipeCooldowns[cooldownInfo.recipeID] = nil
+				app.UpdateRecipes()
 			end
 		end)
 
@@ -1348,6 +1353,7 @@ function app.UpdateRecipes()
 		icon1:SetPoint("LEFT", row)
 		icon1:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
 		icon1:SetText("|T"..app.iconProfession[tradeskill]..":0|t")
+		row.icon = icon1
 
 		local cooldownRemaining = cooldownInfo.start + cooldownInfo.cooldown - GetServerTime()
 		local days, hours, minutes
@@ -1381,19 +1387,19 @@ function app.UpdateRecipes()
 		text1:SetText(cooldownInfo.name)
 		text1:SetJustifyH("LEFT")
 		text1:SetWordWrap(false)
+		row.text1 = text1
 
 		maxLength3 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength3)
 	end
 	
-	-- TODO: Check size, bottom seems off
 	app.Window.Corner:SetScript("OnDoubleClick", function (self, button)
-		local windowHeight = 66
+		local windowHeight = 62
 		local windowWidth = 0
 		if rowNo3 == 0 then
 			windowHeight = windowHeight - 18
 		elseif showCooldowns == true then
 			windowHeight = windowHeight + rowNo3 * 16
-			windowWidth = math.max(windowWidth, maxLength3)
+			windowWidth = math.max(windowWidth, maxLength3, app.UpdatedCooldownWidth)
 		end
 		if showReagents == true then
 			windowHeight = windowHeight + rowNo2 * 16
@@ -1403,10 +1409,22 @@ function app.UpdateRecipes()
 			windowHeight = windowHeight + rowNo * 16
 			windowWidth = math.max(windowWidth, maxLength1)
 		end
-		app.Window:SetHeight(math.max(200,windowHeight))
-		app.Window:SetWidth(math.max(200,windowWidth+40))
+		app.Window:SetHeight(math.max(140,windowHeight))
+		app.Window:SetWidth(math.max(140,windowWidth+34))
 		app.Window.ScrollFrame:SetVerticalScroll(0)
 		app.SaveWindow()
+	end)
+	app.Window.Corner:SetScript("OnEnter", function()
+		-- Set the tooltip to either the left or right, depending on where the window is placed
+		if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+			cornerTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
+		else
+			cornerTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
+		end
+		cornerTooltip:Show()
+	end)
+	app.Window.Corner:SetScript("OnLeave", function()
+		cornerTooltip:Hide()
 	end)
 
 
@@ -1664,6 +1682,31 @@ function app.CreateGeneralAssets()
 		-- Set the tooltip size to fit its contents
 		cooldownHeaderTooltip:SetHeight(cooldownHeaderTooltipText:GetStringHeight()+20)
 		cooldownHeaderTooltip:SetWidth(cooldownHeaderTooltipText:GetStringWidth()+20)
+	end
+
+	-- Create window corner tooltip
+	if not cornerTooltip then
+		cornerTooltip = CreateFrame("Frame", nil, app.Window, "BackdropTemplate")
+		cornerTooltip:SetFrameStrata("TOOLTIP")
+		cornerTooltip:SetBackdrop({
+			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+			edgeSize = 16,
+			insets = { left = 4, right = 4, top = 4, bottom = 4 },
+		})
+		cornerTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		cornerTooltip:EnableMouse(false)
+		cornerTooltip:SetMovable(false)
+		cornerTooltip:Hide()
+
+		cornerTooltipText = cornerTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		cornerTooltipText:SetPoint("TOPLEFT", cornerTooltip, "TOPLEFT", 10, -10)
+		cornerTooltipText:SetJustifyH("LEFT")
+		cornerTooltipText:SetText("Double-click|cffFFFFFF: Autosize to fit the window.")
+
+		-- Set the tooltip size to fit its contents
+		cornerTooltip:SetHeight(cornerTooltipText:GetStringHeight()+20)
+		cornerTooltip:SetWidth(cornerTooltipText:GetStringWidth()+20)
 	end
 end
 
