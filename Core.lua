@@ -561,8 +561,10 @@ function app.UpdateRecipes()
 		app.Window.Recipes:SetScript("OnEnter", function()
 			-- Set the tooltip to either the left or right, depending on where the window is placed
 			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+				recipeHeaderTooltip:ClearAllPoints()
 				recipeHeaderTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
 			else
+				recipeHeaderTooltip:ClearAllPoints()
 				recipeHeaderTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
 			end
 			recipeHeaderTooltip:Show()
@@ -735,8 +737,10 @@ function app.UpdateRecipes()
 		app.Window.Reagents:SetScript("OnEnter", function()
 			-- Set the tooltip to either the left or right, depending on where the window is placed
 			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+				reagentHeaderTooltip:ClearAllPoints()
 				reagentHeaderTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
 			else
+				reagentHeaderTooltip:ClearAllPoints()
 				reagentHeaderTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
 			end
 			reagentHeaderTooltip:Show()
@@ -1245,8 +1249,10 @@ function app.UpdateRecipes()
 		app.Window.Cooldowns:SetScript("OnEnter", function()
 			-- Set the tooltip to either the left or right, depending on where the window is placed
 			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+				cooldownHeaderTooltip:ClearAllPoints()
 				cooldownHeaderTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
 			else
+				cooldownHeaderTooltip:ClearAllPoints()
 				cooldownHeaderTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
 			end
 			cooldownHeaderTooltip:Show()
@@ -1327,8 +1333,10 @@ function app.UpdateRecipes()
 
 			-- Set the tooltip to either the left or right, depending on where the window is placed
 			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+				cooldownTooltip:ClearAllPoints()
 				cooldownTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
 			else
+				cooldownTooltip:ClearAllPoints()
 				cooldownTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
 			end	
 
@@ -1425,8 +1433,10 @@ function app.UpdateRecipes()
 	app.Window.Corner:SetScript("OnEnter", function()
 		-- Set the tooltip to either the left or right, depending on where the window is placed
 		if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+			cornerTooltip:ClearAllPoints()
 			cornerTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
 		else
+			cornerTooltip:ClearAllPoints()
 			cornerTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
 		end
 		cornerTooltip:Show()
