@@ -858,7 +858,7 @@ function app.UpdateRecipes()
 					pslOptionText:SetPoint("CENTER", f, "CENTER", 0, 0)
 					pslOptionText:SetPoint("TOP", f, "TOP", 0, -10)
 					pslOptionText:SetJustifyH("CENTER")
-					pslOptionText:SetText("|cffFFFFFFThere are multiple recipes which can create\n"..data[realrow][1]..".\n\nPlease select one of the following:")
+					pslOptionText:SetText("|cffFFFFFFThere are multiple recipes which can create\n"..reagentInfo.link..".\n\nPlease select one of the following:")
 
 					-- Text
 					local pslOption1 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
