@@ -1423,7 +1423,7 @@ function app.UpdateRecipes()
 			windowWidth = math.max(windowWidth, maxLength1)
 		end
 		app.Window:SetHeight(math.max(140,windowHeight))
-		app.Window:SetWidth(math.max(140,windowWidth+34))
+		app.Window:SetWidth(math.max(140,windowWidth+40))
 		app.Window.ScrollFrame:SetVerticalScroll(0)
 		app.SaveWindow()
 	end)
