@@ -3217,16 +3217,17 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 			end
 		end
 	end
+	if addOnName == Blizzard_Professions then
+		app.CreateTradeskillAssets()
+	end
 end
 
 -- When a tradeskill window is opened
 function event:TRADE_SKILL_SHOW()
-	app.CreateTradeskillAssets()
-
-		-- Register all recipes for this profession
-		for _, recipeID in pairs (C_TradeSkillUI.GetAllRecipeIDs()) do
-		-- If there is an output item
-		local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID
+	-- Register all recipes for this profession
+	for _, recipeID in pairs (C_TradeSkillUI.GetAllRecipeIDs()) do
+	-- If there is an output item
+	local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID
 		if item ~= nil then
 			local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
 			local ability = C_TradeSkillUI.GetRecipeInfo(recipeID).skillLineAbilityID
