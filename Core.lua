@@ -3217,13 +3217,13 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 			end
 		end
 	end
-	if addOnName == Blizzard_Professions then
-		app.CreateTradeskillAssets()
-	end
 end
 
 -- When a tradeskill window is opened
 function event:TRADE_SKILL_SHOW()
+	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
+		app.CreateTradeskillAssets()
+	end
 	-- Register all recipes for this profession
 	for _, recipeID in pairs (C_TradeSkillUI.GetAllRecipeIDs()) do
 	-- If there is an output item
