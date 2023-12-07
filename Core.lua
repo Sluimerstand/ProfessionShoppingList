@@ -1229,10 +1229,7 @@ function app.UpdateRecipes()
 	local rowNo3 = 0
 	local showCooldowns = true
 
-	-- TODO: Include checking for if any cooldowns exist
 	-- TODO: Use offset like with reagents
-	-- local next = next
-	-- if next(recipeCooldowns) == nil then
 	if not app.Window.Cooldowns then
 		app.Window.Cooldowns = CreateFrame("Button", nil, app.Window.Child)
 		app.Window.Cooldowns:SetSize(0,16)
@@ -1265,6 +1262,14 @@ function app.UpdateRecipes()
 		cooldowns1:SetText("Cooldowns")
 		cooldowns1:SetScale(1.1)
 	end
+
+	local next = next
+	if next(recipeCooldowns) == nil then
+		app.Window.Cooldowns:Hide()
+	else
+		app.Window.Cooldowns:Show()
+	end
+
 	local offset = -2
 	if rowNo2 >= 1 then offset = -16*#reagentRow end
 	app.Window.Cooldowns:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, offset)
@@ -1409,7 +1414,7 @@ function app.UpdateRecipes()
 		local windowHeight = 62
 		local windowWidth = 0
 		if rowNo3 == 0 then
-			windowHeight = windowHeight - 18
+			windowHeight = windowHeight - 16
 		elseif showCooldowns == true then
 			windowHeight = windowHeight + rowNo3 * 16
 			windowWidth = math.max(windowWidth, maxLength3, app.UpdatedCooldownWidth)
@@ -4292,7 +4297,6 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 				local character = UnitName("player")
 				local realm = GetNormalizedRealmName()
 
-				-- TODO: include recipe link + don't remove when timer is 0
 				-- Get spell cooldown info
 				local recipeName = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name
 				local recipeCooldown = C_TradeSkillUI.GetRecipeCooldown(spellID)	-- This returns the time until midnight. Only after a relog does it return the time until daily reset, when the recipe actually resets.
