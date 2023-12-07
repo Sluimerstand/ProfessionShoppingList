@@ -1200,7 +1200,7 @@ function app.UpdateRecipes()
 
 		reagentRow[rowNo2] = row
 
-        local icon1 = row:CreateFontString(nil, "ARTWORK", nil, "GameFontNormal")
+        local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		icon1:SetPoint("LEFT", row)
         icon1:SetScale(1.2)
 		icon1:SetText("|T"..reagentInfo.icon..":0|t")
