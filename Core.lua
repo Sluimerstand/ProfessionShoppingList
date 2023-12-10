@@ -3222,11 +3222,13 @@ function event:TRADE_SKILL_SHOW()
 	for _, recipeID in pairs (C_TradeSkillUI.GetAllRecipeIDs()) do
 	-- If there is an output item
 	local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID
+		local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
+		local ability = C_TradeSkillUI.GetRecipeInfo(recipeID).skillLineAbilityID
+		-- Register the output item, the recipe's abilityID, and the recipe's profession
 		if item ~= nil then
-			local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
-			local ability = C_TradeSkillUI.GetRecipeInfo(recipeID).skillLineAbilityID
-			-- Register the output item, the recipe's abilityID, and the recipe's profession
 			recipeLibrary[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill}
+		else
+			recipeLibrary[recipeID] = {itemID = 0, abilityID = ability, tradeskillID = tradeskill}
 		end
 	end
 end
@@ -3235,7 +3237,7 @@ end
 function event:CRAFTINGORDERS_SHOW_CUSTOMER()
 	app.CreateCraftingOrdersAssets()
 end
-	
+
 -- When a recipe is selected (sort of)
 function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 	if UnitAffectingCombat("player") == false then
