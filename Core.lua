@@ -3243,11 +3243,15 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 	if UnitAffectingCombat("player") == false then
 		-- Get selected recipe ID and type (global variables)
 		if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
-		print(spellID)
-		if recipeLibrary[spellID] then pslSelectedRecipeID = spellID end	-- Only set this number if it actually is a recipe
+
+		-- Only set this number if it actually is a recipe
+		if C_TradeSkillUI.GetRecipeSchematic(spellID,false).reagentSlotSchematics[1] ~= nil then
+			pslSelectedRecipeID = spellID
+		else
+			pslSelectedRecipeID = 0
+		end
+		
 		pslRecipeType = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).recipeType
-		print(pslSelectedRecipeID)
-		print(C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID, false).name)
 
 		app.UpdateAssets()
 
