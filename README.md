@@ -38,7 +38,7 @@ It does not replace the profession windows, it only adds a few buttons and a tra
 - Tooltip information for tracked reagents
 - Recipe cooldown reminders
 - Copy tracked reagents to the Auctionator import window
-- Buttons for Cooking Fire, Chef's Hat, and Thermal Anvil
+- Buttons for Cooking Fire, Chef's Hat, Thermal Anvil, Forge of Light, and Alvin the Anvil
 - Quick order button, to instantly create personal crafting orders
 - Profession Knowledge tracker
 - Automatically set vendors' filter to 'All'
