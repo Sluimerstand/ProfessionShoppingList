@@ -692,7 +692,10 @@ function app.UpdateRecipes()
 
 		recipeRow[rowNo] = row
 
-        local tradeskill = recipeLibrary[recipeInfo.recipeID].tradeskillID or 999
+		local tradeskill = 999
+		if recipeLibrary[recipeInfo.recipeID] then
+       		tradeskill = recipeLibrary[recipeInfo.recipeID].tradeskillID or 999
+		end
 
         local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		icon1:SetPoint("LEFT", row)
