@@ -2546,10 +2546,10 @@ function app.Clear()
 	-- Disable remove button
 	if assetsTradeskillExist == true then
 		untrackProfessionButton:Disable()
+		untrackMakeOrderButton:Disable()
 	end
 	if assetsCraftingOrdersExist == true then
 		untrackPlaceOrderButton:Disable()
-		untrackMakeOrderButton:Disable()
 	end
 end
 
@@ -3243,8 +3243,11 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 	if UnitAffectingCombat("player") == false then
 		-- Get selected recipe ID and type (global variables)
 		if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
+		print(spellID)
 		if recipeLibrary[spellID] then pslSelectedRecipeID = spellID end	-- Only set this number if it actually is a recipe
 		pslRecipeType = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).recipeType
+		print(pslSelectedRecipeID)
+		print(C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID, false).name)
 
 		app.UpdateAssets()
 
