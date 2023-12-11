@@ -101,6 +101,7 @@ function app.Initialise()
 	if userSettings["backpackLoot"] == nil then userSettings["backpackLoot"] = "default" end
 	if userSettings["windowPosition"] == nil then userSettings["windowPosition"] = { ["left"] = 1295, ["bottom"] = 836, ["width"] = 200, ["height"] = 200, } end
 	if userSettings["pcwindowPosition"] == nil then userSettings["pcWindowPosition"] = userSettings["windowPosition"] end
+	if userSettings["alvinGUID"] == nil then userSettings["alvinGUID"] = "unknown" end
 
 	-- Load personal recipes, if the setting is enabled
 	if userSettings["pcRecipesTracked"] == true then
@@ -1890,14 +1891,13 @@ function app.CreateTradeskillAssets()
 		alvinButton:SetFrameStrata("HIGH")
 		alvinButton:RegisterForClicks("AnyDown")
 		alvinButton:SetAttribute("type1", "macro")
-		alvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('BattlePet-0-0000100C1FB2')")
 
 		alvinCooldown = CreateFrame("Cooldown", "AlvinCooldown", alvinButton, "CooldownFrameTemplate")
 		alvinCooldown:SetAllPoints(alvinButton)
 		alvinCooldown:SetSwipeColor(1, 1, 1)
 	end
 
-	-- Create Alvin the Anvil button
+	-- Create Lightforged Draenei Lightforge button
 	if not lightforgeButton then
 		lightforgeButton = CreateFrame("Button", "LightforgeButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
 		lightforgeButton:SetWidth(40)
@@ -2397,7 +2397,7 @@ function app.UpdateAssets()
 		thermalAnvilCooldown:SetCooldown(start, duration)
 
 		-- Make the Alvin the Anvil button not desaturated if it can be used
-		if C_PetJournal.PetIsSummonable('BattlePet-0-0000100C1FB2') == true then
+		if C_PetJournal.PetIsSummonable(userSettings["alvinGUID"]) == true then
 			alvinButton:GetNormalTexture():SetDesaturated(false)
 		end
 
@@ -3230,6 +3230,23 @@ function event:TRADE_SKILL_SHOW()
 		else
 			recipeLibrary[recipeID] = {itemID = 0, abilityID = ability, tradeskillID = tradeskill}
 		end
+	end
+
+	-- Get Alvin the Anvil's GUID
+	for i=1, 9999 do
+		local petID, speciesID = C_PetJournal.GetPetInfoByIndex(i)
+		if speciesID == 3274 then
+			if petID then userSettings["alvinGUID"] = petID end
+			break
+		elseif speciesID == nil then
+			break
+		end
+	end
+
+	if userSettings["alvinGUID"] ~= "unknown" then
+		alvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..userSettings["alvinGUID"].."')")
+	else
+		alvinButton:SetAttribute("macrotext1", "")
 	end
 end
 
