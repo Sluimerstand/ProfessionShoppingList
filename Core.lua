@@ -111,6 +111,7 @@ function app.Initialise()
 	-- Initialise some flag variables
 	-- TODO: convert to app.variable
 	app.Hidden = CreateFrame("Frame")
+	app.UpdatedReagentWidth = 0
 	app.UpdatedCooldownWidth = 0
 	reagentQuantities = {}
 	assetsTradeskillExist = false
@@ -402,6 +403,7 @@ function app.UpdateNumbers()
 					row.icon:SetText("|T"..itemIcon..":0|t")
 					row.text1:SetText(itemLink)
 					row.text2:SetText(itemAmount)
+					app.UpdatedReagentWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.UpdatedReagentWidth)
 				end
 			end
 		end
@@ -1425,7 +1427,7 @@ function app.UpdateRecipes()
 		end
 		if showReagents == true then
 			windowHeight = windowHeight + rowNo2 * 16
-			windowWidth = math.max(windowWidth, maxLength2)
+			windowWidth = math.max(windowWidth, maxLength2, app.UpdatedReagentWidth)
 		end
 		if showRecipes == true then
 			windowHeight = windowHeight + rowNo * 16
