@@ -30,6 +30,7 @@ It does not replace the profession windows, it only adds a few buttons and a tra
 - Ctrl+right-click Recipe: Untrack all of the selected recipe
 - Shift+click Reagent: Link the reagent
 - Ctrl+click Reagent: Add recipe for the selected subreagent, if it exists
+- Right-click Cooldown: Untrack the cooldown
 
 **Other features**
 
