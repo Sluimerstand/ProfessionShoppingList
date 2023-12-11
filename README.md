@@ -26,8 +26,8 @@ It does not replace the profession windows, it only adds a few buttons and a tra
 - Drag: Move the tracking windows
 - Shift+click Recipe: Link the recipe
 - Ctrl+click Recipe: Open the selected recipe
-- Right-click Recipe (# column): Untrack 1 of the selected recipe
-- Ctrl+right-click Recipe (# column): Untrack all of the selected recipe
+- Right-click Recipe: Untrack 1 of the selected recipe
+- Ctrl+right-click Recipe: Untrack all of the selected recipe
 - Shift+click Reagent: Link the reagent
 - Ctrl+click Reagent: Add recipe for the selected subreagent, if it exists
 
