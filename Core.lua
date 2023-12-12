@@ -409,6 +409,7 @@ function app.UpdateNumbers()
 		end
 	end
 
+	-- TODO: check enchant strings
 	local customSortList = {
 		"|cffe6cc80",	-- Artifact
 		"|cffff8000",	-- Legendary
@@ -3250,10 +3251,12 @@ function event:TRADE_SKILL_SHOW()
 		end
 	end
 
-	if userSettings["alvinGUID"] ~= "unknown" then
-		alvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..userSettings["alvinGUID"].."')")
-	else
-		alvinButton:SetAttribute("macrotext1", "")
+	if assetsTradeskillExist == true then
+		if userSettings["alvinGUID"] ~= "unknown" then
+			alvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..userSettings["alvinGUID"].."')")
+		else
+			alvinButton:SetAttribute("macrotext1", "")
+		end
 	end
 end
 
