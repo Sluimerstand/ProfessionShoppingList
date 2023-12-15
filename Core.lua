@@ -91,7 +91,7 @@ function app.Initialise()
 	if userSettings["useLocalReagents"] == nil then userSettings["useLocalReagents"] = false end
 	if userSettings["knowledgeHideDone"] == nil then userSettings["knowledgeHideDone"] = false end
 	if userSettings["knowledgeAlwaysShowDetails"] == nil then userSettings["knowledgeAlwaysShowDetails"] = false end
-	if userSettings["pcWindowPosition"] == nil then userSettings["pcWindowPosition"] = false end
+	if userSettings["pcWindows"] == nil then userSettings["pcWindows"] = false end
 	if userSettings["pcRecipesTracked"] == nil then userSettings["pcRecipesTracked"] = false end
 	if userSettings["headerTooltip"] == nil then userSettings["headerTooltip"] = true end
 	if userSettings["showRecipeCooldowns"] == nil then userSettings["showRecipeCooldowns"] = true end
@@ -1496,7 +1496,7 @@ end
 function app.Show()
 	-- Set window to its proper position and size
 	app.Window:ClearAllPoints()
-	if userSettings["pcWindowPosition"] == true then
+	if userSettings["pcWindows"] == true then
 		app.Window:SetSize(userSettings["pcWindowPosition"].width, userSettings["pcWindowPosition"].height)
 		app.Window:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", userSettings["pcWindowPosition"].left, userSettings["pcWindowPosition"].bottom)
 	else
@@ -2689,9 +2689,9 @@ function app.Settings()
 	cbPcWindowPosition.Text:SetTextColor(1, 1, 1, 1)
 	cbPcWindowPosition.Text:SetScale(1.2)
 	cbPcWindowPosition:SetPoint("TOPLEFT", cbMinimapButton, "TOPLEFT", 240, 0)
-	cbPcWindowPosition:SetChecked(userSettings["pcWindowPosition"])
+	cbPcWindowPosition:SetChecked(userSettings["pcWindows"])
 	cbPcWindowPosition:SetScript("OnClick", function(self)
-		userSettings["pcWindowPosition"] = self:GetChecked()
+		userSettings["pcWindows"] = self:GetChecked()
 	end)
 
 	local cbPcRecipesTracked = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
