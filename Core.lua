@@ -4336,15 +4336,14 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 
 				-- Get spell cooldown info
 				local recipeName = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name
-				local recipeCooldown = C_TradeSkillUI.GetRecipeCooldown(spellID)	-- This returns the time until midnight. Only after a relog does it return the time until daily reset, when the recipe actually resets.
+				local recipeCooldown = C_TradeSkillUI.GetRecipeCooldown(spellID)	-- For daily cooldowns, this returns the time until midnight. Only after a relog does it return the time until daily reset, when the recipe actually resets.
 				local recipeStart = GetServerTime()
 
 				-- Set timer to 7 days for the Alchemy sac transmutes
 				if spellID == 213256 or spellID == 251808 then
 					recipeCooldown = 7 * 24 * 60 * 60
-				-- Set timer for 4 hours for Alchemy DF experimentations
-				elseif spellID == 370743 or spellID == 370746 then
-					recipeCooldown = 4 * 60 * 60
+				-- Keep the actual spell coolcown for Dragonflight Alchemy experimentations
+				elseif spellID == 370743 or spellID == 370746 or spellID == 370747 or spellID == 370745 then
 				-- Otherwise, if the cooldown exists, set it to line up with daily reset
 				elseif recipeCooldown and recipeCooldown >= 60 then
 					local days = math.floor( recipeCooldown / 86400 )	-- Count how many days we add to the time until daily reset
