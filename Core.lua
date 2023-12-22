@@ -3113,7 +3113,7 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 			-- Reset window positions
 			elseif command == "resetpos" then
 				-- Set the window size and position back to default
-				userSettings["windowPosition"] = { ["left"] = 1295, ["bottom"] = 836, ["width"] = 200, ["height"] = 200, }
+				userSettings["windowPosition"] = { ["left"] = GetScreenWidth()/2-100, ["bottom"] = GetScreenHeight()/2-100, ["width"] = 200, ["height"] = 200, }
 				userSettings["pcWindowPosition"] = userSettings["windowPosition"]
 
 				-- Show the window, which will also run setting its size and position
