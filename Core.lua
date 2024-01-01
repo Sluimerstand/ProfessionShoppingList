@@ -31,7 +31,6 @@ event:RegisterEvent("CRAFTINGORDERS_RELEASE_ORDER_RESPONSE")
 event:RegisterEvent("CRAFTINGORDERS_SHOW_CUSTOMER")
 event:RegisterEvent("LFG_PROPOSAL_SHOW")
 event:RegisterEvent("MERCHANT_SHOW")
-event:RegisterEvent("MERCHANT_CLOSED")
 event:RegisterEvent("PET_BATTLE_QUEUE_PROPOSE_MATCH")
 event:RegisterEvent("PLAYER_ENTERING_WORLD")
 event:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
@@ -114,8 +113,6 @@ function app.Initialise()
 	app.Hidden = CreateFrame("Frame")
 	app.UpdatedReagentWidth = 0
 	app.UpdatedCooldownWidth = 0
-	app.Flag = {}
-	app.Flag["vendor"] = false
 	reagentQuantities = {}
 	assetsTradeskillExist = false
 	assetsCraftingOrdersExist = false
@@ -2491,8 +2488,15 @@ function app.TooltipInfo()
 		-- Only run this if the setting is enabled
 		if userSettings["showTooltip"] == true then
 			-- Get item info from tooltip
-			local _, _, itemID = TooltipUtil.GetDisplayedItem(tooltip)
-			
+			local _, link = TooltipUtil.GetDisplayedItem(tooltip)
+
+			-- Don't do anything if no item link
+			if not link then return end
+
+			-- Get itemID
+			local itemID = GetItemInfoFromHyperlink(link)
+
+			-- Stop if error, it will try again on its own REAL soon
 			if itemID == nil then return end
 
 			-- Get owned number of reagents
@@ -4398,61 +4402,14 @@ function event:BAG_UPDATE_DELAYED()
 	end
 end
 
--- When a vendor window is opened
+-- Set the Vendor filter to 'All' if the option is enabled
 function event:MERCHANT_SHOW()
-	-- Set the Vendor filter to 'All' if the option is enabled
 	if userSettings["vendorAll"] == true then
 		RunNextFrame(function()
 			SetMerchantFilter(1)
 			MerchantFrame_Update()
 		end)
 	end
-
-	-- Set the vendor flag to true
-	app.Flag["vendor"] = true
-
-	-- When the player hovers over an item
-	local function OnTooltipSetItem(tooltip)
-		if app.Flag["vendor"] == true then
-			-- Get item info
-			local _, _, itemID = TooltipUtil.GetDisplayedItem(tooltip)
-
-			-- Stop if error, it will try again on its own REAL soon
-			if itemID == nil then return end
-
-			print(itemID)
-
-			-- Get the item's index
-			local index = 0
-			for i=1, GetMerchantNumItems(), 1 do
-				if GetMerchantItemID(i) == itemID then
-					index = i
-					break
-				end
-			end
-
-			-- If the item exists on the vendor
-			if index ~= 0 then
-				print("is on vendor")
-				-- Get the different currencies needed to purchase the item
-				for i=1, GetMerchantItemCostInfo(index), 1 do
-					local itemTexture, itemValue, itemLink, currencyName = GetMerchantItemCostItem(index, i)
-					if itemLink then
-						print(itemLink..": "..itemValue)
-					end
-					if currencyName then
-						print(currencyName..": "..itemValue)
-					end
-				end
-			end
-		end
-	end
-	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnTooltipSetItem)
-end
-
--- When a vendor window is closed
-function event:MERCHANT_CLOSED()
-	app.Flag["vendor"] = false
 end
 
 -- If placing a crafting order through PSL
