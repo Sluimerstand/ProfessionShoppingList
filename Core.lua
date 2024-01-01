@@ -2488,13 +2488,7 @@ function app.TooltipInfo()
 		-- Only run this if the setting is enabled
 		if userSettings["showTooltip"] == true then
 			-- Get item info from tooltip
-			local _, link = TooltipUtil.GetDisplayedItem(tooltip)
-
-			-- Don't do anything if no item link
-			if not link then return end
-
-			-- Get itemID
-			local itemID = GetItemInfoFromHyperlink(link)
+			local _, _, itemID = TooltipUtil.GetDisplayedItem(tooltip)
 
 			-- Stop if error, it will try again on its own REAL soon
 			if itemID == nil then return end
