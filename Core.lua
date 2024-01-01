@@ -4342,8 +4342,14 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 				-- Set timer to 7 days for the Alchemy sac transmutes
 				if spellID == 213256 or spellID == 251808 then
 					recipeCooldown = 7 * 24 * 60 * 60
-				-- Keep the actual spell coolcown for Dragonflight Alchemy experimentations
-				elseif spellID == 370743 or spellID == 370746 or spellID == 370747 or spellID == 370745 then
+				-- Keep the actual spell coolcown for Dragonflight Alchemy experimentations, and only show the last one done
+				elseif spellID == 370743 or spellID == 370745 or spellID == 370746 or spellID == 370747 then
+					local spells = {370743,  370745, 370746, 370747}
+					for k, v in pairs (spells) do
+						if v ~= spellID then
+							recipeCooldowns[v] = nil
+						end
+					end
 				-- Otherwise, if the cooldown exists, set it to line up with daily reset
 				elseif recipeCooldown and recipeCooldown >= 60 then
 					local days = math.floor( recipeCooldown / 86400 )	-- Count how many days we add to the time until daily reset
