@@ -63,7 +63,7 @@ function app.Print(...)
 end
 
 -- Pop-up window
-function app.Popup()
+function app.Popup(show, text)
 	-- Create popup frame
 	local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
 	f:SetPoint("CENTER")
@@ -75,7 +75,11 @@ function app.Popup()
 	})
 	f:SetBackdropColor(0, 0, 0, 1)
 	f:EnableMouse(true)
-	f:Show()
+	if show == true then
+		f:Show()
+	else
+		f:Hide()
+	end
 
 	-- Close button
 	local close = CreateFrame("Button", "", f, "UIPanelCloseButton")
@@ -83,6 +87,15 @@ function app.Popup()
 	close:SetScript("OnClick", function()
 		f:Hide()
 	end)
+
+	-- Text
+	local string = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	string:SetPoint("CENTER", f, "CENTER", 0, 0)
+	string:SetPoint("TOP", f, "TOP", 0, -25)
+	string:SetJustifyH("CENTER")
+	string:SetText(text)
+	f:SetHeight(string:GetStringHeight()+50)
+	f:SetWidth(string:GetStringWidth()+50)
 
 	return f
 end
@@ -128,6 +141,8 @@ function app.Initialise()
 	if userSettings["windowPosition"] == nil then userSettings["windowPosition"] = { ["left"] = 1295, ["bottom"] = 836, ["width"] = 200, ["height"] = 200, } end
 	if userSettings["pcwindowPosition"] == nil then userSettings["pcWindowPosition"] = userSettings["windowPosition"] end
 	if userSettings["alvinGUID"] == nil then userSettings["alvinGUID"] = "unknown" end
+	if userSettings["onetimeMessages"] == nil then userSettings["onetimeMessages"] = {} end
+	if userSettings["onetimeMessages"].vendorItems == nil then userSettings["onetimeMessages"].vendorItems = false end
 
 	-- Load personal recipes, if the setting is enabled
 	if userSettings["pcRecipesTracked"] == true then
@@ -459,7 +474,7 @@ function app.UpdateNumbers()
 		end
 	end
 
-	-- TODO: check enchant strings
+	-- TODO: check enchant strings and sort vendor items below recipe items
 	local customSortList = {
 		"|cffe6cc80",	-- Artifact
 		"|cffff8000",	-- Legendary
@@ -1327,8 +1342,6 @@ function app.UpdateRecipes()
 		app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB)
 		app.ReagentHeader:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS)
 	end
-
-	
 
 	local rowNo3 = 0
 	local showCooldowns = true
@@ -4492,15 +4505,11 @@ end
 -- When a vendor window is opened
 function event:MERCHANT_SHOW()
 	-- Notification popup
-	-- TODO: only show this once
-	local notification = app.Popup()
-	local text = notification:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	text:SetPoint("CENTER", notification, "CENTER", 0, 0)
-	text:SetPoint("TOP", notification, "TOP", 0, -25)
-	text:SetJustifyH("CENTER")
-	text:SetText("|cffFFFFFFYou can now track vendor items with "..app.NameLong.."|cffFFFFFF!\n|RAlt+click|cffFFFFFF any vendor item and "..app.NameShort.."|cffFFFFFF tracks the total costs.")
-	notification:SetHeight(text:GetStringHeight()+50)
-	notification:SetWidth(text:GetStringWidth()+50)
+	if userSettings["onetimeMessages"].vendorItems == false then
+		app.Popup(true, "|cffFFFFFFYou can now track vendor items with "..app.NameLong.."|cffFFFFFF!\n|RAlt+Click|cffFFFFFF any vendor item and "..app.NameShort.."|cffFFFFFF tracks the total costs.")
+
+		userSettings["onetimeMessages"].vendorItems = true
+	end
 
 	-- Set the Vendor filter to 'All' if the option is enabled
 	if userSettings["vendorAll"] == true then
