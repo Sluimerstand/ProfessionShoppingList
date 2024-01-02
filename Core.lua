@@ -149,22 +149,22 @@ function app.Initialise()
 		recipesTracked = pcRecipesTracked
 	end
 
-	-- Initialise some flag variables
-	-- TODO: convert to app.variable
+	-- Initialise some session variables
 	app.Hidden = CreateFrame("Frame")
-	app.UpdatedReagentWidth = 0
-	app.UpdatedCooldownWidth = 0
 	app.Flag = {}
+	app.Flag["changingRecipes"] = false
+	app.Flag["craftingOrderAssets"] = false
 	app.Flag["merchantAssets"] = false
-	reagentQuantities = {}
-	assetsTradeskillExist = false
-	assetsCraftingOrdersExist = false
-	isRecraft = false
-	changingMultipleRecipes = false
-	pslOrderRecipeID = 0
-	pslQuickOrderActive = 0
-	pslQuickOrderAttempts = 0
-	pslQuickOrderErrors = 0
+	app.Flag["quickOrder"] = 0
+	app.Flag["recraft"] = false
+	app.Flag["tradeskillAssets"] = false
+	app.OrderRecipeID = 0
+	app.QuickOrderAttempts = 0
+	app.QuickOrderErrors = 0
+	app.ReagentQuantities = {}
+	app.SelectedRecipeID = 0
+	app.UpdatedCooldownWidth = 0
+	app.UpdatedReagentWidth = 0
 end
 
 -- Convert and/or delete older SavedVariables
@@ -370,7 +370,7 @@ end
 -- Update numbers tracked
 function app.UpdateNumbers()
 	-- Update reagents tracked
-	for reagentID, amount in pairs(reagentQuantities) do
+	for reagentID, amount in pairs(app.ReagentQuantities) do
 		local itemLink, fileID
 
 		if not reagentCache[reagentID] then
@@ -474,7 +474,6 @@ function app.UpdateNumbers()
 		end
 	end
 
-	-- TODO: check enchant strings and sort vendor items below recipe items
 	local customSortList = {
 		"|cffe6cc80",	-- Artifact
 		"|cffff8000",	-- Legendary
@@ -573,28 +572,28 @@ function app.UpdateRecipes()
 	pcRecipesTracked = recipesTracked
 
 	-- Recalculate reagents tracked
-	if changingMultipleRecipes == false then
-		reagentQuantities = {}
+	if app.Flag["changingRecipes"] == false then
+		app.ReagentQuantities = {}
 
 		for recipeID, recipeInfo in pairs(recipesTracked) do
 			if type(recipeID) == "number" then
-				app.GetReagents(reagentQuantities, recipeID, recipeInfo.quantity, recipeInfo.recraft)
+				app.GetReagents(app.ReagentQuantities, recipeID, recipeInfo.quantity, recipeInfo.recraft)
 			elseif fakeRecipeLibrary[recipeID] then
 				-- Add gold costs
 				if fakeRecipeLibrary[recipeID].costCopper > 0 then
-					if reagentQuantities["gold"] == nil then reagentQuantities["gold"] = 0 end
-					reagentQuantities["gold"] = reagentQuantities["gold"] + ( fakeRecipeLibrary[recipeID].costCopper * recipesTracked[recipeID].quantity )
+					if app.ReagentQuantities["gold"] == nil then app.ReagentQuantities["gold"] = 0 end
+					app.ReagentQuantities["gold"] = app.ReagentQuantities["gold"] + ( fakeRecipeLibrary[recipeID].costCopper * recipesTracked[recipeID].quantity )
 				end
 				-- Add item costs
 				for reagentID, reagentAmount in pairs (fakeRecipeLibrary[recipeID].costItems) do
-					if reagentQuantities[reagentID] == nil then reagentQuantities[reagentID] = 0 end
-					reagentQuantities[reagentID] = reagentQuantities[reagentID] + ( reagentAmount * recipesTracked[recipeID].quantity )
+					if app.ReagentQuantities[reagentID] == nil then app.ReagentQuantities[reagentID] = 0 end
+					app.ReagentQuantities[reagentID] = app.ReagentQuantities[reagentID] + ( reagentAmount * recipesTracked[recipeID].quantity )
 				end
 				-- Add currency costs
 				for currencyID, currencyAmount in pairs (fakeRecipeLibrary[recipeID].costCurrency) do
 					local key = "currency:"..currencyID
-					if reagentQuantities[key] == nil then reagentQuantities[key] = 0 end
-					reagentQuantities[key] = reagentQuantities[key] + ( currencyAmount * recipesTracked[recipeID].quantity )
+					if app.ReagentQuantities[key] == nil then app.ReagentQuantities[key] = 0 end
+					app.ReagentQuantities[key] = app.ReagentQuantities[key] + ( currencyAmount * recipesTracked[recipeID].quantity )
 				end
 			end
 		end
@@ -886,7 +885,7 @@ function app.UpdateRecipes()
 	end)
 
 	reagentsSorted = {}
-	for k, v in pairs (reagentQuantities) do
+	for k, v in pairs (app.ReagentQuantities) do
 		if not reagentCache[k] then
 			C_Timer.After(1, function() app.UpdateRecipes() end)
 			do return end
@@ -930,7 +929,7 @@ function app.UpdateRecipes()
 			local function trackSubreagent(recipeID, itemID)
 				-- Define the amount of recipes to be tracked
 				local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-				local amount = math.max(0, math.ceil((reagentQuantities[itemID] - GetItemCount(itemID, true, false, true)) / quantityMade))
+				local amount = math.max(0, math.ceil((app.ReagentQuantities[itemID] - GetItemCount(itemID, true, false, true)) / quantityMade))
 				if recipesTracked[recipeID] then amount = math.max(0, (amount - recipesTracked[recipeID].quantity)) end
 
 				-- Track the recipe (don't track if 0)
@@ -1586,27 +1585,27 @@ function app.UpdateRecipes()
 	end)
 
 	-- Check if the Untrack button should be enabled
-	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID].quantity == 0 then
-		if assetsTradeskillExist == true then
+	if not recipesTracked[app.SelectedRecipeID] or recipesTracked[app.SelectedRecipeID].quantity == 0 then
+		if app.Flag["tradeskillAssets"] == true then
 			untrackProfessionButton:Disable()
 			untrackMakeOrderButton:Disable()
 		end
-		if assetsCraftingOrdersExist == true then
+		if app.Flag["craftingOrderAssets"] == true then
 			untrackPlaceOrderButton:Disable()
 		end
 	else
-		if assetsTradeskillExist == true then
+		if app.Flag["tradeskillAssets"] == true then
 			untrackProfessionButton:Enable()
 			untrackMakeOrderButton:Enable()
 		end
-		if assetsCraftingOrdersExist == true then
+		if app.Flag["craftingOrderAssets"] == true then
 			untrackPlaceOrderButton:Enable()
 		end
 	end
 
 	-- Check if the making crafting orders Untrack button should be enabled
-	if pslOrderRecipeID ~= 0 and assetsTradeskillExist == true then
-		if not recipesTracked[pslOrderRecipeID] or recipesTracked[pslOrderRecipeID].quantity == 0 then
+	if app.OrderRecipeID ~= 0 and app.Flag["tradeskillAssets"] == true then
+		if not recipesTracked[app.OrderRecipeID] or recipesTracked[app.OrderRecipeID].quantity == 0 then
 			untrackMakeOrderButton:Disable()
 		else
 			untrackMakeOrderButton:Enable()
@@ -1715,14 +1714,14 @@ function app.TrackRecipe(recipeID, recipeQuantity)
 	end
 
 	-- Track recipe
-	if not recipesTracked[recipeID] then recipesTracked[recipeID] = { quantity = 0, recraft = isRecraft, link = recipeLink } end
+	if not recipesTracked[recipeID] then recipesTracked[recipeID] = { quantity = 0, recraft = app.Flag["recraft"], link = recipeLink } end
 	recipesTracked[recipeID].quantity = recipesTracked[recipeID].quantity + recipeQuantity
 
 	-- Show windows
 	app.Show()	-- This also triggers the recipe update
 
 	-- Update the editbox
-	if assetsTradeskillExist == true then
+	if app.Flag["tradeskillAssets"] == true then
 		ebRecipeQuantityNo = recipesTracked[recipeID].quantity or 0
 		ebRecipeQuantity:SetText(ebRecipeQuantityNo)
 	end
@@ -1751,9 +1750,9 @@ function app.UntrackRecipe(recipeID, recipeQuantity)
 	app.UpdateRecipes()
 
 	-- Update the editbox
-	if assetsTradeskillExist == true then
-		if recipesTracked[pslSelectedRecipeID] then
-			ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID].quantity
+	if app.Flag["tradeskillAssets"] == true then
+		if recipesTracked[app.SelectedRecipeID] then
+			ebRecipeQuantityNo = recipesTracked[app.SelectedRecipeID].quantity
 		else
 			ebRecipeQuantityNo = 0
 		end
@@ -1877,7 +1876,7 @@ function app.CreateTradeskillAssets()
 		trackProfessionButton:SetPoint("TOPRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "TOPRIGHT", -9, -10)
 		trackProfessionButton:SetFrameStrata("HIGH")
 		trackProfessionButton:SetScript("OnClick", function()
-			app.TrackRecipe(pslSelectedRecipeID, 1)
+			app.TrackRecipe(app.SelectedRecipeID, 1)
 		end)
 	end
 	
@@ -1888,9 +1887,9 @@ function app.CreateTradeskillAssets()
 		newValue = math.floor(self:GetNumber())
 		-- If the value is positive, change the number of recipes tracked
 		if newValue >= 0 then
-			app.UntrackRecipe(pslSelectedRecipeID,0)
+			app.UntrackRecipe(app.SelectedRecipeID,0)
 			if newValue >0 then
-				app.TrackRecipe(pslSelectedRecipeID, newValue)
+				app.TrackRecipe(app.SelectedRecipeID, newValue)
 			end
 		end
 	end
@@ -1922,7 +1921,7 @@ function app.CreateTradeskillAssets()
 		untrackProfessionButton:SetPoint("TOPRIGHT", trackProfessionButton, "TOPLEFT", -38, 0)
 		untrackProfessionButton:SetFrameStrata("HIGH")
 		untrackProfessionButton:SetScript("OnClick", function()
-			app.UntrackRecipe(pslSelectedRecipeID, 1)
+			app.UntrackRecipe(app.SelectedRecipeID, 1)
 	
 			-- Show windows
 			app.Show()
@@ -2110,19 +2109,19 @@ function app.CreateTradeskillAssets()
 		trackMakeOrderButton:SetPoint("TOPRIGHT", ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "TOPRIGHT", -9, -10)
 		trackMakeOrderButton:SetFrameStrata("HIGH")
 		trackMakeOrderButton:SetScript("OnClick", function()
-			local oldIsRecraft = isRecraft
+			local oldIsRecraft = app.Flag["recraft"]
 			if ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.RecraftingOutputText:IsVisible() == true then
-				isRecraft = true
+				app.Flag["recraft"] = true
 			end
 
-			if pslOrderRecipeID == 0 then
-				app.TrackRecipe(pslSelectedRecipeID, 1)
+			if app.OrderRecipeID == 0 then
+				app.TrackRecipe(app.SelectedRecipeID, 1)
 			else
-				app.TrackRecipe(pslOrderRecipeID, 1)
+				app.TrackRecipe(app.OrderRecipeID, 1)
 			end
 
 			if ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.RecraftingOutputText:IsVisible() == true then
-				isRecraft = oldIsRecraft
+				app.Flag["recraft"] = oldIsRecraft
 			end
 
 			-- Show windows
@@ -2138,10 +2137,10 @@ function app.CreateTradeskillAssets()
 		untrackMakeOrderButton:SetPoint("TOPRIGHT", trackMakeOrderButton, "TOPLEFT", -4, 0)
 		untrackMakeOrderButton:SetFrameStrata("HIGH")
 		untrackMakeOrderButton:SetScript("OnClick", function()
-			if pslOrderRecipeID == 0 then
-				app.UntrackRecipe(pslSelectedRecipeID, 1)
+			if app.OrderRecipeID == 0 then
+				app.UntrackRecipe(app.SelectedRecipeID, 1)
 			else
-				app.UntrackRecipe(pslOrderRecipeID, 1)
+				app.UntrackRecipe(app.OrderRecipeID, 1)
 			end
 
 			-- Show windows
@@ -2150,7 +2149,7 @@ function app.CreateTradeskillAssets()
 	end
 
 	-- Set the flag for assets created to true
-	assetsTradeskillExist = true
+	app.Flag["tradeskillAssets"] = true
 end
 
 function app.CreateCraftingOrdersAssets()
@@ -2166,7 +2165,7 @@ function app.CreateCraftingOrdersAssets()
 		trackPlaceOrderButton:SetPoint("TOPLEFT", ProfessionsCustomerOrdersFrame.Form, "TOPLEFT", 12, -73)
 		trackPlaceOrderButton:SetFrameStrata("HIGH")
 		trackPlaceOrderButton:SetScript("OnClick", function()
-			app.TrackRecipe(pslSelectedRecipeID, 1)
+			app.TrackRecipe(app.SelectedRecipeID, 1)
 		end)
 	end
 
@@ -2178,7 +2177,7 @@ function app.CreateCraftingOrdersAssets()
 		untrackPlaceOrderButton:SetPoint("TOPLEFT", trackPlaceOrderButton, "TOPRIGHT", 0, 0)
 		untrackPlaceOrderButton:SetFrameStrata("HIGH")
 		untrackPlaceOrderButton:SetScript("OnClick", function()
-			app.UntrackRecipe(pslSelectedRecipeID, 1)
+			app.UntrackRecipe(app.SelectedRecipeID, 1)
 	
 			-- Show windows
 			app.Show()
@@ -2194,11 +2193,11 @@ function app.CreateCraftingOrdersAssets()
 		personalCharname:SetAutoFocus(false)
 		personalCharname:SetCursorPosition(0)
 		personalCharname:SetScript("OnEditFocusLost", function(self)
-			personalOrders[pslSelectedRecipeID] = tostring(personalCharname:GetText())
+			personalOrders[app.SelectedRecipeID] = tostring(personalCharname:GetText())
 			app.UpdateAssets()
 		end)
 		personalCharname:SetScript("OnEnterPressed", function(self)
-			personalOrders[pslSelectedRecipeID] = tostring(personalCharname:GetText())
+			personalOrders[app.SelectedRecipeID] = tostring(personalCharname:GetText())
 			self:ClearFocus()
 			app.UpdateAssets()
 		end)
@@ -2219,7 +2218,7 @@ function app.CreateCraftingOrdersAssets()
 		local craftingReagentInfo = {}
 
 		-- Signal that PSL is currently working on a quick order
-		pslQuickOrderActive = 1
+		app.Flag["quickOrder"] = 1
 
 		local function localReagentsOrder()
 			-- Cache reagent tier info
@@ -2270,7 +2269,7 @@ function app.CreateCraftingOrdersAssets()
 		-- Signal that PSL is currently working on a quick order with local reagents, if applicable
 		local next = next
 		if next(craftingReagentInfo) ~= nil and userSettings["useLocalReagents"] == true then
-			pslQuickOrderActive = 2
+			app.Flag["quickOrder"] = 2
 		end
 
 		-- Place the order
@@ -2311,7 +2310,7 @@ function app.CreateCraftingOrdersAssets()
 		personalOrderButton:SetPoint("RIGHT", personalCharname, "LEFT", -8, 0)
 		personalOrderButton:SetFrameStrata("HIGH")
 		personalOrderButton:SetScript("OnClick", function()
-			quickOrder(pslSelectedRecipeID)
+			quickOrder(app.SelectedRecipeID)
 		end)
 	end
 
@@ -2463,12 +2462,12 @@ function app.CreateCraftingOrdersAssets()
 	end
 
 	-- Set the flag for assets created to true
-	assetsCraftingOrdersExist = true
+	app.Flag["craftingOrderAssets"] = true
 end
 
 -- Update assets
 function app.UpdateAssets()
-	if assetsTradeskillExist == true then
+	if app.Flag["tradeskillAssets"] == true then
 		-- Enable tracking button for 1 = Item, 3 = Enchant
 		if pslRecipeType == 1 or pslRecipeType == 3 then
 			trackProfessionButton:Enable()
@@ -2476,14 +2475,14 @@ function app.UpdateAssets()
 		end
 
 		-- Disable tracking button for 2 = Salvage, recipes without reagents
-		if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).reagentSlotSchematics[1] == nil then
+		if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(app.SelectedRecipeID,false).reagentSlotSchematics[1] == nil then
 			trackProfessionButton:Disable()
 			untrackProfessionButton:Disable()
 			ebRecipeQuantity:Disable()
 		end
 
 		-- Enable tracking button for tracked recipes
-		if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID].quantity == 0 then
+		if not recipesTracked[app.SelectedRecipeID] or recipesTracked[app.SelectedRecipeID].quantity == 0 then
 			untrackProfessionButton:Disable()
 		else
 			untrackProfessionButton:Enable()
@@ -2491,8 +2490,8 @@ function app.UpdateAssets()
 
 		-- Update the quantity textbox
 		if ebRecipeQuantityNo ~= nil then
-			if recipesTracked[pslSelectedRecipeID] then
-				ebRecipeQuantityNo = recipesTracked[pslSelectedRecipeID].quantity
+			if recipesTracked[app.SelectedRecipeID] then
+				ebRecipeQuantityNo = recipesTracked[app.SelectedRecipeID].quantity
 			else
 				ebRecipeQuantityNo = 0
 			end
@@ -2545,50 +2544,50 @@ function app.UpdateAssets()
 
 	-- Enable tracking button for 1 = Item, 3 = Enchant
 	if pslRecipeType == 1 or pslRecipeType == 3 then
-		if assetsCraftingOrdersExist == true then
+		if app.Flag["craftingOrderAssets"] == true then
 			trackPlaceOrderButton:Enable()
 		end
-		if assetsTradeskillExist == true then
+		if app.Flag["tradeskillAssets"] == true then
 			trackMakeOrderButton:Enable()
 		end
 	end
 
 	-- Disable tracking button for 2 = Salvage, recipes without reagents
-	if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).reagentSlotSchematics[1] == nil then
-		if assetsCraftingOrdersExist == true then
+	if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(app.SelectedRecipeID,false).reagentSlotSchematics[1] == nil then
+		if app.Flag["craftingOrderAssets"] == true then
 			trackPlaceOrderButton:Disable()
 			untrackPlaceOrderButton:Disable()
 		end
-		if assetsTradeskillExist == true then
+		if app.Flag["tradeskillAssets"] == true then
 			trackMakeOrderButton:Disable()
 			untrackMakeOrderButton:Disable()
 		end
 	end
 
 	-- Enable tracking button for tracked recipes
-	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID].quantity == 0 then
-		if assetsCraftingOrdersExist == true then
+	if not recipesTracked[app.SelectedRecipeID] or recipesTracked[app.SelectedRecipeID].quantity == 0 then
+		if app.Flag["craftingOrderAssets"] == true then
 			untrackPlaceOrderButton:Disable()
 		end
-		if assetsTradeskillExist == true then
+		if app.Flag["tradeskillAssets"] == true then
 			untrackMakeOrderButton:Disable()
 		end
 	else
-		if assetsCraftingOrdersExist == true then
+		if app.Flag["craftingOrderAssets"] == true then
 			untrackPlaceOrderButton:Enable()
 		end
-		if assetsTradeskillExist == true then
+		if app.Flag["tradeskillAssets"] == true then
 			untrackMakeOrderButton:Enable()
 		end
 	end
 
 	-- Remove the personal order entry if the value is ""
-	if personalOrders[pslSelectedRecipeID] == "" then personalOrders[pslSelectedRecipeID] = nil end
+	if personalOrders[app.SelectedRecipeID] == "" then personalOrders[app.SelectedRecipeID] = nil end
 
 	-- Enable the quick order button if abilityID and target are known
-	if assetsCraftingOrdersExist == true then
-		if recipeLibrary[pslSelectedRecipeID] and type(recipeLibrary[pslSelectedRecipeID]) ~= "number" then
-			if recipeLibrary[pslSelectedRecipeID].abilityID ~= nil and personalOrders[pslSelectedRecipeID] ~= nil then
+	if app.Flag["craftingOrderAssets"] == true then
+		if recipeLibrary[app.SelectedRecipeID] and type(recipeLibrary[app.SelectedRecipeID]) ~= "number" then
+			if recipeLibrary[app.SelectedRecipeID].abilityID ~= nil and personalOrders[app.SelectedRecipeID] ~= nil then
 				personalOrderButton:Enable()
 			else
 				personalOrderButton:Disable()
@@ -2598,8 +2597,8 @@ function app.UpdateAssets()
 		end
 
 		-- Update the personal order name textbox
-		if personalOrders[pslSelectedRecipeID] then
-			personalCharname:SetText(personalOrders[pslSelectedRecipeID])
+		if personalOrders[app.SelectedRecipeID] then
+			personalCharname:SetText(personalOrders[app.SelectedRecipeID])
 		else
 			personalCharname:SetText("")
 		end
@@ -2643,13 +2642,13 @@ function app.TooltipInfo()
 			local reagentAmountNeed = 0
 			if itemID == reagentID1 then
 				reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
-				reagentAmountNeed = reagentQuantities[reagentID1]
+				reagentAmountNeed = app.ReagentQuantities[reagentID1]
 			elseif itemID == reagentID2 then
 				reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
-				reagentAmountNeed = reagentQuantities[reagentID2]
+				reagentAmountNeed = app.ReagentQuantities[reagentID2]
 			elseif itemID == reagentID3 then
 				reagentAmountHave = reagentAmountHave3
-				reagentAmountNeed = reagentQuantities[reagentID3]
+				reagentAmountNeed = app.ReagentQuantities[reagentID3]
 			end
 
 			-- Add the tooltip info
@@ -2671,11 +2670,11 @@ function app.Clear()
 	app.Window.ScrollFrame:SetVerticalScroll(0)
 
 	-- Disable remove button
-	if assetsTradeskillExist == true then
+	if app.Flag["tradeskillAssets"] == true then
 		untrackProfessionButton:Disable()
 		untrackMakeOrderButton:Disable()
 	end
-	if assetsCraftingOrdersExist == true then
+	if app.Flag["craftingOrderAssets"] == true then
 		untrackPlaceOrderButton:Disable()
 	end
 end
@@ -3310,9 +3309,9 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 					elseif achievementID == 18906 then
 						for i=1,numCriteria,1 do
 							-- Set the update handler to active, to prevent multiple list updates from freezing the game
-							changingMultipleRecipes = true
+							app.Flag["changingRecipes"] = true
 							-- Until the last one in the series
-							if i == numCriteria then changingMultipleRecipes = false end
+							if i == numCriteria then app.Flag["changingRecipes"] = false end
 
 							local _, criteriaType, completed, _, _, _, _, assetID = GetAchievementCriteriaInfo(achievementID, i)
 
@@ -3370,7 +3369,7 @@ function event:TRADE_SKILL_SHOW()
 		end
 	end
 
-	if assetsTradeskillExist == true then
+	if app.Flag["tradeskillAssets"] == true then
 		if userSettings["alvinGUID"] ~= "unknown" then
 			alvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..userSettings["alvinGUID"].."')")
 		else
@@ -3387,17 +3386,14 @@ end
 -- When a recipe is selected (sort of)
 function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 	if UnitAffectingCombat("player") == false then
-		-- Get selected recipe ID and type (global variables)
-		if pslSelectedRecipeID == nil then pslSelectedRecipeID = 0 end
-
 		-- Only set this number if it actually is a recipe
 		if C_TradeSkillUI.GetRecipeSchematic(spellID,false).reagentSlotSchematics[1] ~= nil then
-			pslSelectedRecipeID = spellID
+			app.SelectedRecipeID = spellID
 		else
-			pslSelectedRecipeID = 0
+			app.SelectedRecipeID = 0
 		end
 		
-		pslRecipeType = C_TradeSkillUI.GetRecipeSchematic(pslSelectedRecipeID,false).recipeType
+		pslRecipeType = C_TradeSkillUI.GetRecipeSchematic(app.SelectedRecipeID,false).recipeType
 
 		app.UpdateAssets()
 
@@ -3410,16 +3406,16 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 			end
 
 			-- Check if the SL rank editbox should be displayed
-			if app.slLegendaryRecipeIDs[pslSelectedRecipeID] then
+			if app.slLegendaryRecipeIDs[app.SelectedRecipeID] then
 				ebSLrankText:Show()
 				ebSLrank:Show()
-				ebSLrank:SetText(app.slLegendaryRecipeIDs[pslSelectedRecipeID].rank)
+				ebSLrank:SetText(app.slLegendaryRecipeIDs[app.SelectedRecipeID].rank)
 			else
 				ebSLrankText:Hide()
 				ebSLrank:Hide()
 			end
 		end
-		if assetsTradeskillExist == true then professionExtra() end
+		if app.Flag["tradeskillAssets"] == true then professionExtra() end
 
 		local function professionFeatures()
 			-- Show stuff depending on which profession is opened
@@ -4427,13 +4423,13 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 				lightforgeButton:Hide()
 			end
 		end
-		if assetsTradeskillExist == true then professionFeatures() end
+		if app.Flag["tradeskillAssets"] == true then professionFeatures() end
 	end
 end
 
 -- When closing the crafting orders window
 function event:CRAFTINGORDERS_HIDE_CUSTOMER()
-	isRecraft = false
+	app.Flag["recraft"] = false
 end
 	
 -- When a spell is succesfully cast by the player
@@ -4623,14 +4619,14 @@ end
 
 -- If placing a crafting order through PSL
 function event:CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE(result)
-	if pslQuickOrderActive >= 1 then
+	if app.Flag["quickOrder"] >= 1 then
 		-- Count a(nother) quick order attempt
-		pslQuickOrderAttempts = pslQuickOrderAttempts + 1
+		app.QuickOrderAttempts = app.QuickOrderAttempts + 1
 		
 		-- If this gives an error
 		if result ~= 0 then
 			-- Count a(nother) error for the quick order attempt
-			pslQuickOrderErrors = pslQuickOrderErrors + 1
+			app.QuickOrderErrors = app.QuickOrderErrors + 1
 
 			-- Hide the error frame
 			UIErrorsFrame:Hide()
@@ -4639,7 +4635,7 @@ function event:CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE(result)
 			C_Timer.After(1.0, function() UIErrorsFrame:Clear() UIErrorsFrame:Show() end)
 
 			-- If all 4 attempts fail, tell the user this
-			if pslQuickOrderErrors >= 4 then
+			if app.QuickOrderErrors >= 4 then
 				app.Print("Quick order failed. Sorry. :(")
 			end
 		end
@@ -4649,7 +4645,7 @@ function event:CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE(result)
 		end
 
 		-- Save this info as the last order done, unless it was afaileds order
-		if result ~= 29 or pslQuickOrderErrors >= 4 then personalOrders["last"] = pslSelectedRecipeID end
+		if result ~= 29 or app.QuickOrderErrors >= 4 then personalOrders["last"] = app.SelectedRecipeID end
 
 		-- Set the last used recipe name for the repeat order button title
 		local recipeName = "No last order found"
@@ -4668,32 +4664,32 @@ function event:CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE(result)
 		repeatOrderButton:SetWidth(repeatOrderButton:GetTextWidth()+20)
 
 		-- Reset all the numbers if we're done
-		if (pslQuickOrderActive == 1 and pslQuickOrderAttempts >= 1) or (pslQuickOrderActive == 2 and pslQuickOrderAttempts >= 4) then
-			pslQuickOrderActive = 0
-			pslQuickOrderAttempts = 0
-			pslQuickOrderErrors = 0
+		if (app.Flag["quickOrder"] == 1 and app.QuickOrderAttempts >= 1) or (app.Flag["quickOrder"] == 2 and app.QuickOrderAttempts >= 4) then
+			app.Flag["quickOrder"] = 0
+			app.QuickOrderAttempts = 0
+			app.QuickOrderErrors = 0
 		end
 	end
 end
 
 -- Save the order recipeID if the order has been started, because SPELL_LOAD_RESULT does not fire for it anymore
 function event:CRAFTINGORDERS_CLAIM_ORDER_RESPONSE()
-	pslOrderRecipeID = pslSelectedRecipeID
+	app.OrderRecipeID = app.SelectedRecipeID
 end
 
 -- Revert the above if the order is cancelled or fulfilled, since then SPELL_LOAD_RESULT fires again for it
 function event:CRAFTINGORDERS_RELEASE_ORDER_RESPONSE()
-	pslOrderRecipeID = 0
+	app.OrderRecipeID = 0
 end
 
 function event:CRAFTINGORDERS_FULFILL_ORDER_RESPONSE()
-	pslOrderRecipeID = 0
+	app.OrderRecipeID = 0
 end
 
 -- Replace the in-game tracking of shift+clicking a recipe with PSL's
 function event:TRACKED_RECIPE_UPDATE(recipeID, tracked)
 	if tracked == true then
-		app.TrackRecipe(pslSelectedRecipeID,1)
+		app.TrackRecipe(app.SelectedRecipeID,1)
 		C_TradeSkillUI.SetRecipeTracked(recipeID, false, false)
 	end
 end
@@ -4711,7 +4707,7 @@ function event:AUCTION_HOUSE_SHOW()
 			-- Reset the reagents list
 			auctionatorReagents = "PSL"
 
-			for reagentID, reagentAmount in pairs(reagentQuantities) do
+			for reagentID, reagentAmount in pairs(app.ReagentQuantities) do
 				-- Cache item
 				if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
 				
@@ -4795,19 +4791,19 @@ end
 
 -- When a recipe is selected (very for realsies)
 EventRegistry:RegisterCallback("ProfessionsRecipeListMixin.Event.OnRecipeSelected", function(_, recipeInfo)
-	if recipeInfo["isRecraft"] == true then isRecraft = true
-	elseif recipeInfo["isRecraft"] == false then isRecraft = false
+	if recipeInfo["isRecraft"] == true then app.Flag["recraft"] = true
+	elseif recipeInfo["isRecraft"] == false then app.Flag["recraft"] = false
 	end
 end)
 
 -- When opening the recrafting order window
 EventRegistry:RegisterCallback("ProfessionsCustomerOrders.RecraftCategorySelected", function()
-	isRecraft = true
+	app.Flag["recraft"] = true
 end)
 
 -- When selecting a non-recrafting order
 EventRegistry:RegisterCallback("ProfessionsCustomerOrders.RecipeSelected", function()
-	isRecraft = false
+	app.Flag["recraft"] = false
 end)
 
 -- When a PvP queue pops up
