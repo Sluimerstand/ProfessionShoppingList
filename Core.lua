@@ -647,8 +647,8 @@ function app.UpdateRecipes()
 		
 		local recipes1 = app.Window.Recipes:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		recipes1:SetPoint("LEFT", app.Window.Recipes)
-		recipes1:SetText("Recipes")
 		recipes1:SetScale(1.1)
+		app.RecipeHeader = recipes1
 	end
 
 	app.Window.Recipes:SetScript("OnClick", function(self)
@@ -826,8 +826,9 @@ function app.UpdateRecipes()
 		
 		local reagents1 = app.Window.Reagents:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		reagents1:SetPoint("LEFT", app.Window.Reagents)
-		reagents1:SetText("Reagents")
+		reagents1:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS)
 		reagents1:SetScale(1.1)
+		app.ReagentHeader = reagents1
 	end
 	if rowNo == 0 then
 		app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, -2)
@@ -1303,6 +1304,31 @@ function app.UpdateRecipes()
 
 		maxLength2 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength2)
 	end
+
+	-- Check what is being tracked
+	local trackRecipes = false
+	local trackItems = false
+	for k, v in pairs (recipesTracked) do
+		if type(k) == "number" then
+			trackRecipes = true
+		else
+			trackItems = true
+		end
+	end
+
+	-- Set the header title accordingly
+	if trackRecipes == true and trackItems == true then
+		app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB.." & "..ITEMS)
+		app.ReagentHeader:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS.." & Costs")
+	elseif trackRecipes == false and trackItems == true then
+		app.RecipeHeader:SetText(ITEMS)
+		app.ReagentHeader:SetText("Costs")
+	else
+		app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB)
+		app.ReagentHeader:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS)
+	end
+
+	
 
 	local rowNo3 = 0
 	local showCooldowns = true
