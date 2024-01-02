@@ -486,19 +486,19 @@ function app.UpdateNumbers()
 	}
 
 	local function customSort(a, b)
-		local indexA = 0
-		local indexB = 0
+		for _, v in ipairs(customSortList) do
+			local indexA = string.find(a.link, v, 1, true)
+			local indexB = string.find(b.link, v, 1, true)
 	
-		for i, v in ipairs(customSortList) do
-			if string.find(a.link, v, 1, true) == 1 then
-				indexA = i
-			end
-			if string.find(b.link, v, 1, true) == 1 then
-				indexB = i
+			if indexA == 1 and indexB ~= 1 then
+				return true
+			elseif indexA ~= 1 and indexB == 1 then
+				return false
 			end
 		end
 	
-		return indexA < indexB
+		-- If custom sort index is the same, compare alphabetically
+		return string.gsub(a.link, ".-(:%|h)", "") < string.gsub(b.link, ".-(:%|h)", "")
 	end
 
 	if recipeRow then
@@ -694,26 +694,45 @@ function app.UpdateRecipes()
 
 	-- Custom comparison function based on the beginning of the string (thanks ChatGPT)
 	local function customSort(a, b)
-		local indexA = 0
-		local indexB = 0
+		for _, v in ipairs(customSortList) do
+			local indexA = string.find(a.link, v, 1, true)
+			local indexB = string.find(b.link, v, 1, true)
 	
-		for i, v in ipairs(customSortList) do
-			if string.find(a.link, v, 1, true) == 1 then
-				indexA = i
-			end
-			if string.find(b.link, v, 1, true) == 1 then
-				indexB = i
+			if indexA == 1 and indexB ~= 1 then
+				return true
+			elseif indexA ~= 1 and indexB == 1 then
+				return false
 			end
 		end
 	
-		return indexA < indexB
+		-- If custom sort index is the same, compare alphabetically
+		return string.gsub(a.link, ".-(:%|h)", "") < string.gsub(b.link, ".-(:%|h)", "")
 	end
 
-	local recipesSorted = {}
+	-- Group and sort recipes and vendor items
+	local recipesSorted1 = {}
+	local recipesSorted2 = {}
+	
 	for k, v in pairs (recipesTracked) do
-		recipesSorted[#recipesSorted+1] = {recipeID = k, recraft = v.recraft, quantity = v.quantity, link = v.link}
+		if type(k) == "number" then
+			recipesSorted1[#recipesSorted1+1] = {recipeID = k, recraft = v.recraft, quantity = v.quantity, link = v.link}
+		else
+			recipesSorted2[#recipesSorted2+1] = {recipeID = k, recraft = v.recraft, quantity = v.quantity, link = v.link}
+		end
 	end
-	table.sort(recipesSorted, customSort)
+
+	table.sort(recipesSorted1, customSort)
+	table.sort(recipesSorted2, customSort)
+
+	-- Combine the sorted entries into a combined table
+	local recipesSorted = {}
+
+	for _, key in ipairs(recipesSorted1) do
+		table.insert(recipesSorted, key)
+	end
+	for _, key in ipairs(recipesSorted2) do
+		table.insert(recipesSorted, key)
+	end
 
 	for _i, recipeInfo in ipairs (recipesSorted) do
 		rowNo = rowNo + 1
@@ -874,7 +893,6 @@ function app.UpdateRecipes()
 		end
 		reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = reagentCache[k].icon, link = reagentCache[k].link}
 	end
-	table.sort(reagentsSorted, customSort)
 
 	for _, reagentInfo in ipairs (reagentsSorted) do
 		rowNo2 = rowNo2 + 1
