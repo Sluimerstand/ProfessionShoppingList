@@ -59,7 +59,32 @@ end
 
 -- Print with AddOn prefix
 function app.Print(...)
-	print("|cffC69B6DPSL|R:", ...)
+	print(app.NameShort..":", ...)
+end
+
+-- Pop-up window
+function app.Popup()
+	-- Create popup frame
+	local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+	f:SetPoint("CENTER")
+	f:SetBackdrop({
+		bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+		edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+		edgeSize = 16,
+		insets = { left = 4, right = 4, top = 4, bottom = 4 },
+	})
+	f:SetBackdropColor(0, 0, 0, 1)
+	f:EnableMouse(true)
+	f:Show()
+
+	-- Close button
+	local close = CreateFrame("Button", "", f, "UIPanelCloseButton")
+	close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
+	close:SetScript("OnClick", function()
+		f:Hide()
+	end)
+
+	return f
 end
 
 ------------------
@@ -75,6 +100,7 @@ function app.Initialise()
 	if not recipeCooldowns then recipeCooldowns = {} end
 	if not reagentTiers then reagentTiers = {} end
 	if not recipeLibrary then recipeLibrary = {} end
+	if not fakeRecipeLibrary then fakeRecipeLibrary = {} end
 	if not pcRecipesTracked then pcRecipesTracked = {} end
 	if not personalOrders then personalOrders = {} end
 
@@ -113,6 +139,8 @@ function app.Initialise()
 	app.Hidden = CreateFrame("Frame")
 	app.UpdatedReagentWidth = 0
 	app.UpdatedCooldownWidth = 0
+	app.Flag = {}
+	app.Flag["merchantAssets"] = false
 	reagentQuantities = {}
 	assetsTradeskillExist = false
 	assetsCraftingOrdersExist = false
@@ -351,55 +379,77 @@ function app.UpdateNumbers()
 			icon = reagentCache[reagentID].icon
 		end
 
-		-- Get needed/owned number of reagents
-		local reagentAmountHave1 = 0
-		local reagentAmountHave2 = 0
-		local reagentAmountHave3 = 0
-
-		reagentAmountHave1 = GetItemCount(reagentTiers[reagentID].one, true, false, true)
-		if reagentTiers[reagentID].two ~= 0 then
-			reagentAmountHave2 = GetItemCount(reagentTiers[reagentID].two, true, false, true)
-		end
-		if reagentTiers[reagentID].three ~= 0 then
-			reagentAmountHave3 = GetItemCount(reagentTiers[reagentID].three, true, false, true)
-		end
-
-		-- Calculate owned amount based on the quality of the item
-		local reagentAmountHave = 0
-		if reagentID == reagentTiers[reagentID].one then
-			reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
-		elseif reagentID == reagentTiers[reagentID].two then
-			reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
-		elseif reagentID == reagentTiers[reagentID].three then
-			reagentAmountHave = reagentAmountHave3
-		end
-
-		-- Make stuff grey and add a checkmark if 0 are needed
 		local itemAmount = ""
 		local itemIcon = reagentCache[reagentID].icon
-		if math.max(0,amount-reagentAmountHave) == 0 then
-			itemIcon = app.iconReady
-			itemAmount = "|cff9d9d9d"
-			itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|cff9d9d9d|") -- Poor
-			itemLink = string.gsub(itemLink, "|cffffffff|", "|cff9d9d9d|") -- Common
-			itemLink = string.gsub(itemLink, "|cff1eff00|", "|cff9d9d9d|") -- Uncommon
-			itemLink = string.gsub(itemLink, "|cff0070dd|", "|cff9d9d9d|") -- Rare
-			itemLink = string.gsub(itemLink, "|cffa335ee|", "|cff9d9d9d|") -- Epic
-			itemLink = string.gsub(itemLink, "|cffff8000|", "|cff9d9d9d|") -- Legendary
-			itemLink = string.gsub(itemLink, "|cffe6cc80|", "|cff9d9d9d|") -- Artifact
-		end
 
-		-- Set the displayed amount based on settings
-		if userSettings["showRemaining"] == false then
-			itemAmount = itemAmount..reagentAmountHave.."/"..amount
-		else
-			itemAmount = itemAmount..math.max(0,amount-reagentAmountHave)
+		if type(reagentID) == "number" then
+			-- Get needed/owned number of reagents
+			local reagentAmountHave1 = 0
+			local reagentAmountHave2 = 0
+			local reagentAmountHave3 = 0
+
+			reagentAmountHave1 = GetItemCount(reagentTiers[reagentID].one, true, false, true)
+			if reagentTiers[reagentID].two ~= 0 then
+				reagentAmountHave2 = GetItemCount(reagentTiers[reagentID].two, true, false, true)
+			end
+			if reagentTiers[reagentID].three ~= 0 then
+				reagentAmountHave3 = GetItemCount(reagentTiers[reagentID].three, true, false, true)
+			end
+
+			-- Calculate owned amount based on the quality of the item
+			local reagentAmountHave = 0
+			if reagentID == reagentTiers[reagentID].one then
+				reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
+			elseif reagentID == reagentTiers[reagentID].two then
+				reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
+			elseif reagentID == reagentTiers[reagentID].three then
+				reagentAmountHave = reagentAmountHave3
+			end
+
+			-- Make stuff grey and add a checkmark if 0 are needed
+			if math.max(0,amount-reagentAmountHave) == 0 then
+				itemIcon = app.iconReady
+				itemAmount = "|cff9d9d9d"
+				itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|cff9d9d9d|") -- Poor
+				itemLink = string.gsub(itemLink, "|cffffffff|", "|cff9d9d9d|") -- Common
+				itemLink = string.gsub(itemLink, "|cff1eff00|", "|cff9d9d9d|") -- Uncommon
+				itemLink = string.gsub(itemLink, "|cff0070dd|", "|cff9d9d9d|") -- Rare
+				itemLink = string.gsub(itemLink, "|cffa335ee|", "|cff9d9d9d|") -- Epic
+				itemLink = string.gsub(itemLink, "|cffff8000|", "|cff9d9d9d|") -- Legendary
+				itemLink = string.gsub(itemLink, "|cffe6cc80|", "|cff9d9d9d|") -- Artifact
+			end
+
+			-- Set the displayed amount based on settings
+			if userSettings["showRemaining"] == false then
+				itemAmount = itemAmount..reagentAmountHave.."/"..amount
+			else
+				itemAmount = itemAmount..math.max(0,amount-reagentAmountHave)
+			end
+		elseif reagentID == "gold" then
+			-- Set the color of both strings and the icon
+			itemIcon = reagentCache[reagentID].icon
+			local color = ""
+			if math.max(0,amount-GetMoney()) == 0 then
+				itemIcon = app.iconReady
+				color = "|cff9d9d9d"
+				itemLink = color..itemLink
+			end
+
+			-- Set the displayed amount based on settings
+			if userSettings["showRemaining"] == false then
+				itemAmount = color..GetCoinTextureString(amount)
+			else
+				itemAmount = color..GetCoinTextureString(math.max(0,amount-GetMoney()))
+			end
+		elseif string.match(reagentID, "currency") then
+			itemLink = "Currency I guess"
+			itemAmount = 1
 		end
 
 		-- Push the info to the windows
 		if reagentRow then
 			for i, row in pairs (reagentRow) do
-				if row:GetID() == reagentID then
+				if row:GetID() == reagentID or (reagentID == "gold" and row:GetID() == 0) then
 					row.icon:SetText("|T"..itemIcon..":0|t")
 					row.text1:SetText(itemLink)
 					row.text2:SetText(itemAmount)
@@ -512,7 +562,26 @@ function app.UpdateRecipes()
 		reagentQuantities = {}
 
 		for recipeID, recipeInfo in pairs(recipesTracked) do
-			app.GetReagents(reagentQuantities, recipeID, recipeInfo.quantity, recipeInfo.recraft)
+			if type(recipeID) == "number" then
+				app.GetReagents(reagentQuantities, recipeID, recipeInfo.quantity, recipeInfo.recraft)
+			elseif fakeRecipeLibrary[recipeID] then
+				-- Add gold costs
+				if fakeRecipeLibrary[recipeID].costCopper > 0 then
+					if reagentQuantities["gold"] == nil then reagentQuantities["gold"] = 0 end
+					reagentQuantities["gold"] = reagentQuantities["gold"] + ( fakeRecipeLibrary[recipeID].costCopper * recipesTracked[recipeID].quantity )
+				end
+				-- Add item costs
+				for reagentID, reagentAmount in pairs (fakeRecipeLibrary[recipeID].costItems) do
+					if reagentQuantities[reagentID] == nil then reagentQuantities[reagentID] = 0 end
+					reagentQuantities[reagentID] = reagentQuantities[reagentID] + ( reagentAmount * recipesTracked[recipeID].quantity )
+				end
+				-- Add currency costs
+				for currencyID, currencyAmount in pairs (fakeRecipeLibrary[recipeID].costCurrency) do
+					local key = "currency:"..currencyID
+					if reagentQuantities[key] == nil then reagentQuantities[key] = 0 end
+					reagentQuantities[key] = reagentQuantities[key] + ( currencyAmount * recipesTracked[recipeID].quantity )
+				end
+			end
 		end
 
 		-- Update numbers tracked
@@ -696,7 +765,9 @@ function app.UpdateRecipes()
 		recipeRow[rowNo] = row
 
 		local tradeskill = 999
-		if recipeLibrary[recipeInfo.recipeID] then
+		if fakeRecipeLibrary[recipeInfo.recipeID] then
+			tradeskill = fakeRecipeLibrary[recipeInfo.recipeID].tradeskillID
+		elseif recipeLibrary[recipeInfo.recipeID] then
        		tradeskill = recipeLibrary[recipeInfo.recipeID].tradeskillID or 999
 		end
 
@@ -1456,10 +1527,6 @@ function app.UpdateRecipes()
 	app.Window.Corner:SetScript("OnLeave", function()
 		cornerTooltip:Hide()
 	end)
-
-
-
-
 
 	-- Check if the Untrack button should be enabled
 	if not recipesTracked[pslSelectedRecipeID] or recipesTracked[pslSelectedRecipeID].quantity == 0 then
@@ -4396,13 +4463,108 @@ function event:BAG_UPDATE_DELAYED()
 	end
 end
 
--- Set the Vendor filter to 'All' if the option is enabled
+-- When a vendor window is opened
 function event:MERCHANT_SHOW()
+	-- Notification popup
+	-- TODO: only show this once
+	local notification = app.Popup()
+	local text = notification:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	text:SetPoint("CENTER", notification, "CENTER", 0, 0)
+	text:SetPoint("TOP", notification, "TOP", 0, -25)
+	text:SetJustifyH("CENTER")
+	text:SetText("|cffFFFFFFYou can now track vendor items with "..app.NameLong.."|cffFFFFFF!\n|RAlt+click|cffFFFFFF any vendor item and "..app.NameShort.."|cffFFFFFF tracks the total costs.")
+	notification:SetHeight(text:GetStringHeight()+50)
+	notification:SetWidth(text:GetStringWidth()+50)
+
+	-- Set the Vendor filter to 'All' if the option is enabled
 	if userSettings["vendorAll"] == true then
 		RunNextFrame(function()
 			SetMerchantFilter(1)
 			MerchantFrame_Update()
 		end)
+	end
+
+	-- When the user Alt+clicks a vendor item
+	local function TrackMerchantItem(index)
+		if IsAltKeyDown() == true then
+			-- Use the page number to get the proper vendor index
+			local page = string.match(MerchantPageText:GetText(), "%s(%d+)%s")
+			index = index + (page - 1) * 10
+			
+			-- Get merchant info
+			local merchant = MerchantFrameTitleText:GetText()
+
+			-- Get item info
+			local itemID = GetMerchantItemID(index)
+			local itemLink = GetMerchantItemLink(index)
+			local _, _, itemPrice = GetMerchantItemInfo(index)
+
+			-- Add this as a fake recipe
+			local key = merchant..":"..itemID
+			fakeRecipeLibrary[key] = {
+				["itemID"] = itemID,
+				["tradeskillID"] = 0,	-- Vendor item
+				["costCopper"] = 0,
+				["costItems"] = {},
+				["costCurrency"] = {},
+			}
+
+			if itemPrice then
+				fakeRecipeLibrary[key].costCopper = itemPrice
+				reagentCache["gold"] = { 
+					icon = app.iconProfession[0],
+					link = BONUS_ROLL_REWARD_MONEY,
+				}
+			end
+			-- Get the different currencies needed to purchase the item
+			for i=1, GetMerchantItemCostInfo(index), 1 do
+				local itemTexture, itemValue, itemLink, currencyName = GetMerchantItemCostItem(index, i)
+				if currencyName and itemLink then
+					local currencyID = C_CurrencyInfo.GetCurrencyIDFromLink(itemLink)
+
+					fakeRecipeLibrary[key].costCurrency[currencyID] = itemValue
+					reagentCache["currency:"..currencyID] = { 
+						icon = itemTexture,
+						link = currencyName,
+					}
+				elseif itemLink then
+					local itemID = GetItemInfoFromHyperlink(itemLink)
+					fakeRecipeLibrary[key].costItems[itemID] = itemValue
+					if not reagentTiers[itemID] then
+						reagentTiers[itemID] = {
+							one = itemID,
+							two = 0,
+							three = 0,
+						}
+					end
+				end
+				
+			end
+
+			-- Track the vendor item as a fake recipe
+			if not recipesTracked[key] then recipesTracked[key] = { quantity = 0, link = itemLink} end
+			recipesTracked[key].quantity = recipesTracked[key].quantity + 1
+
+			-- Show the window
+			app.Show()
+		end
+	end
+
+	-- Hook the script onto the merchant buttons (once)
+	if app.Flag["merchantAssets"] == false then
+		MerchantItem1ItemButton:HookScript("OnClick", function() TrackMerchantItem(1) end)
+		MerchantItem2ItemButton:HookScript("OnClick", function() TrackMerchantItem(2) end)
+		MerchantItem3ItemButton:HookScript("OnClick", function() TrackMerchantItem(3) end)
+		MerchantItem4ItemButton:HookScript("OnClick", function() TrackMerchantItem(4) end)
+		MerchantItem5ItemButton:HookScript("OnClick", function() TrackMerchantItem(5) end)
+		MerchantItem6ItemButton:HookScript("OnClick", function() TrackMerchantItem(6) end)
+		MerchantItem7ItemButton:HookScript("OnClick", function() TrackMerchantItem(7) end)
+		MerchantItem8ItemButton:HookScript("OnClick", function() TrackMerchantItem(8) end)
+		MerchantItem9ItemButton:HookScript("OnClick", function() TrackMerchantItem(9) end)
+		MerchantItem10ItemButton:HookScript("OnClick", function() TrackMerchantItem(10) end)
+
+		-- Set the flag to true so it doesn't trigger again
+		app.Flag["merchantAssets"] = true
 	end
 end
 

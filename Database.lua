@@ -6,11 +6,16 @@
 -- Initialisation
 local appName, app = ...	-- Returns the addon name and a unique table
 
+-- Used strings
+app.NameLong = "|R|cffC69B6DProfession Shopping List|R"
+app.NameShort = "|R|cffC69B6DPSL|R"
+
 -- Used textures
 app.iconWaiting = "Interface\\RaidFrame\\ReadyCheck-Waiting"
 app.iconReady = "Interface\\RaidFrame\\ReadyCheck-Ready"
 app.iconNotReady = "Interface\\RaidFrame\\ReadyCheck-NotReady"
 app.iconProfession = {}
+app.iconProfession[0] = "interface\\moneyframe\\ui-goldicon"    -- Vendor
 app.iconProfession[164] = "Interface\\Icons\\ui_profession_blacksmithing"
 app.iconProfession[165] = "Interface\\Icons\\ui_profession_leatherworking"
 app.iconProfession[171] = "Interface\\Icons\\ui_profession_alchemy"
