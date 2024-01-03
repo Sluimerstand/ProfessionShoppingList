@@ -2667,6 +2667,7 @@ function app.Clear()
 	recipesTracked = {}
 	reagentTiers = {}
 	reagentCache = {}
+	fakeRecipeLibrary = {}
 	app.UpdateRecipes()
 	app.Window.ScrollFrame:SetVerticalScroll(0)
 
