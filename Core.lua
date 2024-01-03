@@ -537,6 +537,7 @@ function app.UpdateNumbers()
 	end
 end
 
+-- Update cooldown numbers
 function app.UpdateCooldowns()
 	app.UpdatedCooldownWidth = 0
 	if cooldownRow then
@@ -675,7 +676,7 @@ function app.UpdateRecipes()
 		else
 			for _, child in ipairs(children) do child:Show() end
 			local offset = -2
-			if #reagentRow >= 1 then offset = -16*#reagentRow end
+			if #recipeRow >= 1 then offset = -16*#recipeRow end
 			app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, offset)
 			showRecipes = true
 		end
@@ -866,7 +867,7 @@ function app.UpdateRecipes()
 	if rowNo == 0 then
 		app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, -2)
 	else
-		app.Window.Reagents:SetPoint("TOPLEFT", recipeRow[rowNo], "BOTTOMLEFT", 0, -2)
+		app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, rowNo*-16)
 	end
 	app.Window.Reagents:SetScript("OnClick", function(self)
 		local children = {self:GetChildren()}
@@ -1548,7 +1549,7 @@ function app.UpdateRecipes()
 	app.Window.Corner:SetScript("OnDoubleClick", function (self, button)
 		local windowHeight = 62
 		local windowWidth = 0
-		if showCooldowns == false then
+		if userSettings["showRecipeCooldowns"] == false then
 			windowHeight = windowHeight - 16
 		elseif showCooldowns == true then
 			windowHeight = windowHeight + rowNo3 * 16
