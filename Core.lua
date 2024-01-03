@@ -442,7 +442,6 @@ function app.UpdateNumbers()
 			end
 		elseif reagentID == "gold" then
 			-- Set the color of both strings and the icon
-			itemIcon = reagentCache[reagentID].icon
 			local color = ""
 			if math.max(0,amount-GetMoney()) == 0 then
 				itemIcon = app.iconReady
@@ -456,19 +455,43 @@ function app.UpdateNumbers()
 			else
 				itemAmount = color..GetCoinTextureString(math.max(0,amount-GetMoney()))
 			end
-		elseif string.match(reagentID, "currency") then
-			itemLink = "Currency I guess"
-			itemAmount = 1
+		elseif string.find(reagentID, "currency") then
+			local number = string.gsub(reagentID, "currency:", "")
+			local quantity = C_CurrencyInfo.GetCurrencyInfo(tonumber(number)).quantity
+
+			-- Set the color of both strings and the icon
+			local color = ""
+			if math.max(0,amount-quantity) == 0 then
+				itemIcon = app.iconReady
+				color = "|cff9d9d9d"
+				itemLink = color..itemLink
+			end
+
+			-- Set the displayed amount based on settings
+			if userSettings["showRemaining"] == false then
+				itemAmount = color..quantity.."/"..amount
+			else
+				itemAmount = color..math.max(0,amount-quantity)
+			end
 		end
 
 		-- Push the info to the windows
 		if reagentRow then
 			for i, row in pairs (reagentRow) do
-				if row:GetID() == reagentID or (reagentID == "gold" and row:GetID() == 0) then
+				if row:GetID() == reagentID or (reagentID == "gold" and row.text1:GetText() == BONUS_ROLL_REWARD_MONEY) then
 					row.icon:SetText("|T"..itemIcon..":0|t")
 					row.text1:SetText(itemLink)
 					row.text2:SetText(itemAmount)
 					app.UpdatedReagentWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.UpdatedReagentWidth)
+				elseif string.find(reagentID, "currency") then
+					local number = string.gsub(reagentID, "currency:", "")
+					local name = C_CurrencyInfo.GetCurrencyInfo(tonumber(number)).name
+					if name == row.text1:GetText() then
+						row.icon:SetText("|T"..itemIcon..":0|t")
+						row.text1:SetText(itemLink)
+						row.text2:SetText(itemAmount)
+						app.UpdatedReagentWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.UpdatedReagentWidth)
+					end
 				end
 			end
 		end
@@ -2873,7 +2896,7 @@ function app.Settings()
 	cbShowRemaining:SetChecked(userSettings["showRemaining"])
 	cbShowRemaining:SetScript("OnClick", function(self)
 		userSettings["showRemaining"] = cbShowRemaining:GetChecked()
-		app.UpdateNumbers()
+		app.UpdateRecipes()
 	end)
 
 	local cbShowTooltip = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
