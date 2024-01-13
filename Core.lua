@@ -16,9 +16,9 @@ local api = app.api	-- Our "API" prefix
 -- WoW API Events
 local event = CreateFrame("Frame")
 event:SetScript("OnEvent", function(self, event, ...)
-    if self[event] then
-        self[event](self, ...)
-    end
+	if self[event] then
+		self[event](self, ...)
+	end
 end)
 event:RegisterEvent("ADDON_LOADED")
 event:RegisterEvent("AUCTION_HOUSE_SHOW")
@@ -104,7 +104,7 @@ end
 -- INITIAL LOAD --
 ------------------
 
--- Create SavedVariables, default user settings, and variable flags
+-- Create SavedVariables, default user settings, and session variables
 function app.Initialise()
 	-- Declare SavedVariables
 	if not userSettings then userSettings = {} end
@@ -763,9 +763,9 @@ function app.UpdateRecipes()
 		local row = CreateFrame("Button", nil, app.Window.Recipes)
 		row:SetSize(0,16)
 		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-        row:RegisterForDrag("LeftButton")
+		row:RegisterForDrag("LeftButton")
 		row:RegisterForClicks("AnyUp", "AnyDown")
-        row:SetScript("OnDragStart", function()
+		row:SetScript("OnDragStart", function()
 			app.Window:StartMoving()
 			GameTooltip:ClearLines()
 			GameTooltip:Hide()
@@ -825,15 +825,15 @@ function app.UpdateRecipes()
 		if fakeRecipeLibrary[recipeInfo.recipeID] then
 			tradeskill = fakeRecipeLibrary[recipeInfo.recipeID].tradeskillID
 		elseif recipeLibrary[recipeInfo.recipeID] then
-       		tradeskill = recipeLibrary[recipeInfo.recipeID].tradeskillID or 999
+	   		tradeskill = recipeLibrary[recipeInfo.recipeID].tradeskillID or 999
 		end
 
-        local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		icon1:SetPoint("LEFT", row)
-        icon1:SetScale(1.2)
+		icon1:SetScale(1.2)
 		icon1:SetText("|T"..app.iconProfession[tradeskill]..":0|t")
 
-        local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		text2:SetPoint("CENTER", icon1)
 		text2:SetPoint("RIGHT", app.Window.Child)
 		text2:SetJustifyH("RIGHT")
@@ -842,11 +842,11 @@ function app.UpdateRecipes()
 
 		local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
-        text1:SetPoint("RIGHT", text2, "LEFT")
+		text1:SetPoint("RIGHT", text2, "LEFT")
 		text1:SetTextColor(1, 1, 1)
 		text1:SetText(recipeInfo.link)
-        text1:SetJustifyH("LEFT")
-        text1:SetWordWrap(false)
+		text1:SetJustifyH("LEFT")
+		text1:SetWordWrap(false)
 
 		maxLength1 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength1)
 	end
@@ -923,8 +923,8 @@ function app.UpdateRecipes()
 		local row = CreateFrame("Button", nil, app.Window.Reagents, "", reagentInfo.reagentID)
 		row:SetSize(0,16)
 		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-        row:RegisterForDrag("LeftButton")
-        row:SetScript("OnDragStart", function()
+		row:RegisterForDrag("LeftButton")
+		row:SetScript("OnDragStart", function()
 			app.Window:StartMoving()
 			GameTooltip:ClearLines()
 			GameTooltip:Hide()
@@ -1335,13 +1335,13 @@ function app.UpdateRecipes()
 
 		reagentRow[rowNo2] = row
 
-        local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		icon1:SetPoint("LEFT", row)
-        icon1:SetScale(1.2)
+		icon1:SetScale(1.2)
 		icon1:SetText("|T"..reagentInfo.icon..":0|t")
 		row.icon = icon1
 
-        local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		text2:SetPoint("CENTER", icon1)
 		text2:SetPoint("RIGHT", app.Window.Child)
 		text2:SetJustifyH("RIGHT")
@@ -1351,11 +1351,11 @@ function app.UpdateRecipes()
 
 		local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
-        text1:SetPoint("RIGHT", text2, "LEFT")
+		text1:SetPoint("RIGHT", text2, "LEFT")
 		text1:SetTextColor(1, 1, 1)
 		text1:SetText(reagentInfo.link)
-        text1:SetJustifyH("LEFT")
-        text1:SetWordWrap(false)
+		text1:SetJustifyH("LEFT")
+		text1:SetWordWrap(false)
 		row.text1 = text1
 
 		maxLength2 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength2)
