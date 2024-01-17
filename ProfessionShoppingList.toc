@@ -1,4 +1,4 @@
-## Interface: 100200
+## Interface: 100205
 ## Title: Profession Shopping List
 ## Author: Sluimerstand
 ## IconTexture: Interface\AddOns\ProfessionShoppingList\assets\psl_icon.blp
