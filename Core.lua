@@ -202,6 +202,16 @@ function app.Legacy()
 		userSettings["recipeNoWidth"] = nil
 		userSettings["reagentWidth"] = nil
 		userSettings["reagentNoWidth"] = nil
+	
+	-- v10.2.5-002
+	local tempCooldowns = recipeCooldowns
+	recipeCooldowns = {}
+	for k, v in pairs (tempCooldowns) do
+		if not v.recipeID then
+			tempCooldowns[k].recipeID = k
+		end
+		recipeCooldowns[#recipeCooldowns+1] = v
+	end
 end
 
 -- Save the window position and size
@@ -566,8 +576,8 @@ function app.UpdateCooldowns()
 	if cooldownRow then
 		if #cooldownRow >= 1 then
 			for i, row in ipairs (cooldownRow) do
-				local recipeID = row:GetID()
-				local cooldownRemaining = recipeCooldowns[recipeID].start + recipeCooldowns[recipeID].cooldown - GetServerTime()
+				local rowID = row:GetID()
+				local cooldownRemaining = recipeCooldowns[rowID].start + recipeCooldowns[rowID].cooldown - GetServerTime()
 				local days, hours, minutes
 
 				days = math.floor(cooldownRemaining/(60*60*24))
@@ -1448,14 +1458,14 @@ function app.UpdateRecipes()
 	cooldownsSorted = {}
 	for k, v in pairs (recipeCooldowns) do
 		local timedone = v.start + v.cooldown
-		cooldownsSorted[#cooldownsSorted+1] = {recipeID = k, start = v.start, cooldown = v.cooldown, name = v.name, user = v.user, time = timedone}
+		cooldownsSorted[#cooldownsSorted+1] = {id = k, recipeID = v.recipeID, start = v.start, cooldown = v.cooldown, name = v.name, user = v.user, time = timedone}
 	end
 	table.sort(cooldownsSorted, function(a, b) return a.time > b.time end)
 
 	for _, cooldownInfo in pairs (cooldownsSorted) do
 		rowNo3 = rowNo3 + 1
 
-		local row = CreateFrame("Button", nil, app.Window.Cooldowns, "", cooldownInfo.recipeID)
+		local row = CreateFrame("Button", nil, app.Window.Cooldowns, "", cooldownInfo.id)
 		row:SetSize(0,16)
 		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
 		row:RegisterForDrag("LeftButton")
@@ -1512,7 +1522,7 @@ function app.UpdateRecipes()
 		end)
 		row:SetScript("OnClick", function(self, button)
 			if button == "RightButton" then
-				recipeCooldowns[cooldownInfo.recipeID] = nil
+				recipeCooldowns[cooldownInfo.id] = nil
 				app.UpdateRecipes()
 			end
 		end)
@@ -4486,7 +4496,11 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 					local spells = {370743,  370745, 370746, 370747}
 					for k, v in pairs (spells) do
 						if v ~= spellID then
-							recipeCooldowns[v] = nil
+							for k2, v2 in pairs (recipeCooldowns) do
+								if v2.recipeID == v then
+									recipeCooldowns[k2] = nil
+								end
+							end
 						end
 					end
 				-- Otherwise, if the cooldown exists, set it to line up with daily reset
@@ -4497,7 +4511,7 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 
 				-- If the spell cooldown exists
 				if recipeCooldown then
-					recipeCooldowns[spellID] = {name = recipeName, cooldown = recipeCooldown, start = recipeStart, user = character .. "-" .. realm}
+					recipeCooldowns[#recipeCooldowns+1] = {name = recipeName, recipeID = spellID, cooldown = recipeCooldown, start = recipeStart, user = character .. "-" .. realm}
 					app.UpdateRecipes()
 				end
 			end)
@@ -4781,7 +4795,7 @@ function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 	-- Only on initialLoad
 	if isInitialLogin == true then
 		-- Check all tracked recipe cooldowns
-		for recipeID, recipeInfo in pairs (recipeCooldowns) do
+		for _, recipeInfo in pairs (recipeCooldowns) do
 			-- Check the remaining cooldown
 			local cooldownRemaining = recipeInfo.start + recipeInfo.cooldown - GetServerTime()
 
