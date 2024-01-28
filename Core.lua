@@ -1596,6 +1596,9 @@ function app.UpdateRecipes()
 			windowHeight = windowHeight + rowNo * 16
 			windowWidth = math.max(windowWidth, maxLength1)
 		end
+		if showRecipes == false then
+			windowHeight = windowHeight + 2	-- Not sure why this is needed, but whatever
+		end
 		if windowHeight > 600 then windowHeight = 600 end
 		if windowWidth > 600 then windowWidth = 600 end
 		app.Window:SetHeight(math.max(140,windowHeight))
