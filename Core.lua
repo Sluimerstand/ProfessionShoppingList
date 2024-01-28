@@ -4511,7 +4511,19 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 
 				-- If the spell cooldown exists
 				if recipeCooldown then
-					recipeCooldowns[#recipeCooldowns+1] = {name = recipeName, recipeID = spellID, cooldown = recipeCooldown, start = recipeStart, user = character .. "-" .. realm}
+					-- Replace the existing entry if it exists
+					local cdExists = false
+					for k, v in ipairs(recipeCooldowns) do
+						if v.recipeID == spellID and v.user == character .. "-" .. realm then
+							recipeCooldowns[k] = {name = recipeName, recipeID = spellID, cooldown = recipeCooldown, start = recipeStart, user = character .. "-" .. realm}
+							cdExists = true
+						end
+					end
+					-- Otherwise, create a new entry
+					if cdExists == false then
+						recipeCooldowns[#recipeCooldowns+1] = {name = recipeName, recipeID = spellID, cooldown = recipeCooldown, start = recipeStart, user = character .. "-" .. realm}
+					end
+					-- And then update our window
 					app.UpdateRecipes()
 				end
 			end)
