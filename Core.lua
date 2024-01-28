@@ -171,26 +171,26 @@ end
 function app.Legacy()
 	-- v10.2.0-007
 		-- Convert recipeLinks to recipesTracked
-		for key, value in pairs (recipesTracked) do
+		for key, value in pairs(recipesTracked) do
 			if type(value) == "number" then
 				recipesTracked[key] = { quantity = value, recraft = false }
 			end
 		end
 
-		for key, value in pairs (pcRecipesTracked) do
+		for key, value in pairs(pcRecipesTracked) do
 			if type(value) == "number" then
 				pcRecipesTracked[key] = { quantity = value, recraft = false }
 			end
 		end
 
 		if recipeLinks then
-			for key, value in pairs (recipeLinks) do
+			for key, value in pairs(recipeLinks) do
 				recipesTracked[key].link = value
 			end
 		end
 
 		if pcRecipeLinks then
-			for key, value in pairs (pcRecipeLinks) do
+			for key, value in pairs(pcRecipeLinks) do
 				pcRecipesTracked[key].link = value
 			end
 		end
@@ -206,7 +206,7 @@ function app.Legacy()
 	-- v10.2.5-002
 	local tempCooldowns = recipeCooldowns
 	recipeCooldowns = {}
-	for k, v in pairs (tempCooldowns) do
+	for k, v in pairs(tempCooldowns) do
 		if not v.recipeID then
 			tempCooldowns[k].recipeID = k
 		end
@@ -487,7 +487,7 @@ function app.UpdateNumbers()
 
 		-- Push the info to the windows
 		if reagentRow then
-			for i, row in pairs (reagentRow) do
+			for i, row in pairs(reagentRow) do
 				if row:GetID() == reagentID or (reagentID == "gold" and row.text1:GetText() == BONUS_ROLL_REWARD_MONEY) then
 					row.icon:SetText("|T"..itemIcon..":0|t")
 					row.text1:SetText(itemLink)
@@ -535,7 +535,7 @@ function app.UpdateNumbers()
 
 	if recipeRow then
 		if #recipeRow >= 1 then
-			for i, row in ipairs (recipeRow) do
+			for i, row in ipairs(recipeRow) do
 				if i == 1 then
 					row:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT")
 					row:SetPoint("TOPRIGHT", app.Window.Recipes, "BOTTOMRIGHT")
@@ -551,12 +551,12 @@ function app.UpdateNumbers()
 	if reagentRow then
 		if #reagentRow >= 1 then
 			local reagentsSorted = {}
-			for _, row in pairs (reagentRow) do
+			for _, row in pairs(reagentRow) do
 				table.insert(reagentsSorted, {["row"] = row, ["link"] = row.text1:GetText()})
 			end
 			table.sort(reagentsSorted, customSort)
 
-			for i, info in ipairs (reagentsSorted) do
+			for i, info in ipairs(reagentsSorted) do
 				if i == 1 then
 					info.row:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT")
 					info.row:SetPoint("TOPRIGHT", app.Window.Reagents, "BOTTOMRIGHT")
@@ -575,7 +575,7 @@ function app.UpdateCooldowns()
 	app.UpdatedCooldownWidth = 0
 	if cooldownRow then
 		if #cooldownRow >= 1 then
-			for i, row in ipairs (cooldownRow) do
+			for i, row in ipairs(cooldownRow) do
 				local rowID = row:GetID()
 				local cooldownRemaining = recipeCooldowns[rowID].start + recipeCooldowns[rowID].cooldown - GetServerTime()
 				local days, hours, minutes
@@ -619,12 +619,12 @@ function app.UpdateRecipes()
 					app.ReagentQuantities["gold"] = app.ReagentQuantities["gold"] + ( fakeRecipeLibrary[recipeID].costCopper * recipesTracked[recipeID].quantity )
 				end
 				-- Add item costs
-				for reagentID, reagentAmount in pairs (fakeRecipeLibrary[recipeID].costItems) do
+				for reagentID, reagentAmount in pairs(fakeRecipeLibrary[recipeID].costItems) do
 					if app.ReagentQuantities[reagentID] == nil then app.ReagentQuantities[reagentID] = 0 end
 					app.ReagentQuantities[reagentID] = app.ReagentQuantities[reagentID] + ( reagentAmount * recipesTracked[recipeID].quantity )
 				end
 				-- Add currency costs
-				for currencyID, currencyAmount in pairs (fakeRecipeLibrary[recipeID].costCurrency) do
+				for currencyID, currencyAmount in pairs(fakeRecipeLibrary[recipeID].costCurrency) do
 					local key = "currency:"..currencyID
 					if app.ReagentQuantities[key] == nil then app.ReagentQuantities[key] = 0 end
 					app.ReagentQuantities[key] = app.ReagentQuantities[key] + ( currencyAmount * recipesTracked[recipeID].quantity )
@@ -643,19 +643,19 @@ function app.UpdateRecipes()
 	local maxLength3 = 0
 
 	if recipeRow then
-		for i, row in pairs (recipeRow) do
+		for i, row in pairs(recipeRow) do
 			row:SetParent(app.Hidden)
 			row:Hide()
 		end
 	end
 	if reagentRow then
-		for i, row in pairs (reagentRow) do
+		for i, row in pairs(reagentRow) do
 			row:SetParent(app.Hidden)
 			row:Hide()
 		end
 	end
 	if cooldownRow then
-		for i, row in pairs (cooldownRow) do
+		for i, row in pairs(cooldownRow) do
 			row:SetParent(app.Hidden)
 			row:Hide()
 		end
@@ -746,7 +746,7 @@ function app.UpdateRecipes()
 	local recipesSorted1 = {}
 	local recipesSorted2 = {}
 	
-	for k, v in pairs (recipesTracked) do
+	for k, v in pairs(recipesTracked) do
 		if type(k) == "number" then
 			recipesSorted1[#recipesSorted1+1] = {recipeID = k, recraft = v.recraft, quantity = v.quantity, link = v.link}
 		else
@@ -767,7 +767,7 @@ function app.UpdateRecipes()
 		table.insert(recipesSorted, key)
 	end
 
-	for _i, recipeInfo in ipairs (recipesSorted) do
+	for _i, recipeInfo in ipairs(recipesSorted) do
 		rowNo = rowNo + 1
 
 		local row = CreateFrame("Button", nil, app.Window.Recipes)
@@ -919,7 +919,7 @@ function app.UpdateRecipes()
 	end)
 
 	reagentsSorted = {}
-	for k, v in pairs (app.ReagentQuantities) do
+	for k, v in pairs(app.ReagentQuantities) do
 		if not reagentCache[k] then
 			C_Timer.After(1, function() app.UpdateRecipes() end)
 			do return end
@@ -927,7 +927,7 @@ function app.UpdateRecipes()
 		reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = reagentCache[k].icon, link = reagentCache[k].link}
 	end
 
-	for _, reagentInfo in ipairs (reagentsSorted) do
+	for _, reagentInfo in ipairs(reagentsSorted) do
 		rowNo2 = rowNo2 + 1
 
 		local row = CreateFrame("Button", nil, app.Window.Reagents, "", reagentInfo.reagentID)
@@ -1374,7 +1374,7 @@ function app.UpdateRecipes()
 	-- Check what is being tracked
 	local trackRecipes = false
 	local trackItems = false
-	for k, v in pairs (recipesTracked) do
+	for k, v in pairs(recipesTracked) do
 		if type(k) == "number" then
 			trackRecipes = true
 		else
@@ -1456,13 +1456,13 @@ function app.UpdateRecipes()
 	end)
 
 	cooldownsSorted = {}
-	for k, v in pairs (recipeCooldowns) do
+	for k, v in pairs(recipeCooldowns) do
 		local timedone = v.start + v.cooldown
 		cooldownsSorted[#cooldownsSorted+1] = {id = k, recipeID = v.recipeID, start = v.start, cooldown = v.cooldown, name = v.name, user = v.user, time = timedone}
 	end
 	table.sort(cooldownsSorted, function(a, b) return a.time > b.time end)
 
-	for _, cooldownInfo in pairs (cooldownsSorted) do
+	for _, cooldownInfo in pairs(cooldownsSorted) do
 		rowNo3 = rowNo3 + 1
 
 		local row = CreateFrame("Button", nil, app.Window.Cooldowns, "", cooldownInfo.id)
@@ -2265,7 +2265,7 @@ function app.CreateCraftingOrdersAssets()
 			-- Go through all the reagents for this recipe
 			local no1 = 1
 			local no2 = 1
-			for i, _ in ipairs (recipeInfo) do
+			for i, _ in ipairs(recipeInfo) do
 				if recipeInfo[i].reagentType == 1 then
 					-- Get the required quantity
 					local quantityNo = recipeInfo[i].quantityRequired
@@ -2312,21 +2312,21 @@ function app.CreateCraftingOrdersAssets()
 		-- If there are tiered reagents and the user wants to use local reagents, adjust the dataSlotIndex and try again in case the first one failed
 		local next = next
 		if next(craftingReagentInfo) ~= nil and userSettings["useLocalReagents"] == true then
-			for i, _ in ipairs (craftingReagentInfo) do
+			for i, _ in ipairs(craftingReagentInfo) do
 				craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
 			end
 
 			-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
 			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 		
-			for i, _ in ipairs (craftingReagentInfo) do
+			for i, _ in ipairs(craftingReagentInfo) do
 				craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
 			end
 
 			-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
 			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 		
-			for i, _ in ipairs (craftingReagentInfo) do
+			for i, _ in ipairs(craftingReagentInfo) do
 				craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
 			end
 
@@ -3380,7 +3380,7 @@ function event:TRADE_SKILL_SHOW()
 		app.CreateTradeskillAssets()
 	end
 	-- Register all recipes for this profession
-	for _, recipeID in pairs (C_TradeSkillUI.GetAllRecipeIDs()) do
+	for _, recipeID in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
 	-- If there is an output item
 	local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID
 		local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
@@ -3467,23 +3467,23 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 				local appendChildPathIDsForRoot -- Declare this one before the function itself, otherwise it can't find the function to refer to within itself apparently
 				appendChildPathIDsForRoot = function(t, pathID)
 					t[pathID] = 1
-					for _, childID in ipairs (C_ProfSpecs.GetChildrenForPath(pathID)) do
+					for _, childID in ipairs(C_ProfSpecs.GetChildrenForPath(pathID)) do
 						appendChildPathIDsForRoot(t, childID)
 					end
 				end
 
 				-- Get all profession specialisation paths
 				local pathIDs = {}
-				for _, specTabID in ipairs (C_ProfSpecs.GetSpecTabIDsForSkillLine(skillLineID)) do
+				for _, specTabID in ipairs(C_ProfSpecs.GetSpecTabIDsForSkillLine(skillLineID)) do
 					appendChildPathIDsForRoot(pathIDs, C_ProfSpecs.GetRootPathForTab(specTabID))
 				end
 
 				-- Get all perks
 				local perkCount = 0
 				local perkIDs = {}
-				for pathID, _ in pairs (pathIDs) do
+				for pathID, _ in pairs(pathIDs) do
 					local perks = C_ProfSpecs.GetPerksForPath(pathID)
-					for no, perk in pairs (perks) do
+					for no, perk in pairs(perks) do
 						perkCount = perkCount + 1
 						perkIDs[perkCount] = perk.perkID
 					end
@@ -3491,7 +3491,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 
 				-- Get perk info
 				local perksEarned = 0
-				for no, perk in pairs (perkIDs) do
+				for no, perk in pairs(perkIDs) do
 					if C_ProfSpecs.GetStateForPerk(perk, configID) == 2 then
 						perksEarned = perksEarned + 1
 					end
@@ -3500,7 +3500,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 				-- Get knowledge info
 				local knowledgeSpent = 0
 				local knowledgeMax = 0
-				for pathID, _ in pairs (pathIDs) do
+				for pathID, _ in pairs(pathIDs) do
 					local pathInfo = C_Traits.GetNodeInfo(C_ProfSpecs.GetConfigIDForSkillLine(skillLineID), pathID)
 					knowledgeSpent = knowledgeSpent + math.max(0,(pathInfo.activeRank - 1))
 					knowledgeMax = knowledgeMax + (pathInfo.maxRanks - 1)
@@ -3589,7 +3589,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 				local gatherQuestNumber = 0
 
 				if gatherQuests ~= nil then
-					for no, questID in pairs (gatherQuests) do
+					for no, questID in pairs(gatherQuests) do
 						if C_QuestLog.IsQuestFlaggedCompleted(questID) then
 							gatherQuestStatus = app.iconReady
 							gatherQuestNumber = 1
@@ -3604,7 +3604,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 				local craftQuestNumber = 0
 
 				if craftQuests ~= nil then
-					for no, questID in pairs (craftQuests) do
+					for no, questID in pairs(craftQuests) do
 						if C_QuestLog.IsQuestFlaggedCompleted(questID) then
 							craftQuestNumber = 1
 							craftQuestStatus = app.iconReady
@@ -3620,7 +3620,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 				local dropsNoTotal = 0
 
 				if drops ~= nil then
-					for _, dropInfo in ipairs (drops) do
+					for _, dropInfo in ipairs(drops) do
 						if C_QuestLog.IsQuestFlaggedCompleted(dropInfo.questID) then
 							dropsNoCurrent = dropsNoCurrent + 1
 						end
@@ -3639,7 +3639,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 				local shardStatus = app.iconNotReady
 				local shardNo = 0
 
-				for _, questID in pairs (shardQuests) do
+				for _, questID in pairs(shardQuests) do
 					if C_QuestLog.IsQuestFlaggedCompleted(questID) then
 						shardNo = shardNo + 1
 					end
@@ -3668,7 +3668,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 				local treasureNoTotal = 0
 
 				if treasures ~= nil then
-					for questID, itemID in pairs (treasures) do
+					for questID, itemID in pairs(treasures) do
 						if C_QuestLog.IsQuestFlaggedCompleted(questID) then
 							treasureNoCurrent = treasureNoCurrent + 1
 						end
@@ -3686,7 +3686,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 				local bookNoTotal = 0
 
 				if books ~= nil then
-					for _, bookInfo in ipairs (books) do
+					for _, bookInfo in ipairs(books) do
 						if C_QuestLog.IsQuestFlaggedCompleted(bookInfo.questID) then
 							bookNoCurrent = bookNoCurrent + 1
 						end
@@ -3716,7 +3716,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 					end
 
 					renownCount = 0
-					for key, info in ipairs (renownInfo) do
+					for key, info in ipairs(renownInfo) do
 						renownInfo[key].status = app.iconNotReady
 						if C_QuestLog.IsQuestFlaggedCompleted(renownInfo[key].questID) == true then
 							renownInfo[key].status = app.iconReady
@@ -3773,7 +3773,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 					knowledgePointTooltipText:SetText(oldText.."\n".."|T"..dropsStatus..":0|t "..dropsNoCurrent.."/"..dropsNoTotal.." Drops")
 
 					if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
-						for _, dropInfo in ipairs (drops) do
+						for _, dropInfo in ipairs(drops) do
 							oldText = knowledgePointTooltipText:GetText()
 
 							-- Cache item
@@ -3821,7 +3821,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 					knowledgePointTooltipText:SetText(oldText.."\n|T"..shardStatus..":0|t "..shardNo.."/4 "..itemLink)
 
 					if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
-						for no, questID in pairs (shardQuests) do
+						for no, questID in pairs(shardQuests) do
 							oldText = knowledgePointTooltipText:GetText()
 							local questTitle = C_QuestLog.GetTitleForQuestID(questID)
 
@@ -3857,7 +3857,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 						knowledgePointTooltipText:SetText(oldText.."\n".."|T"..treasureStatus..":0|t "..treasureNoCurrent.."/"..treasureNoTotal.." Treasures")
 
 						if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
-							for questID, itemID in pairs (treasures) do
+							for questID, itemID in pairs(treasures) do
 								oldText = knowledgePointTooltipText:GetText()
 
 								-- Cache item
@@ -3889,7 +3889,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 						knowledgePointTooltipText:SetText(oldText.."\n".."|T"..bookStatus..":0|t "..bookNoCurrent.."/"..bookNoTotal.." Books")
 
 						if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
-							for _, bookInfo in ipairs (books) do
+							for _, bookInfo in ipairs(books) do
 								oldText = knowledgePointTooltipText:GetText()
 
 								-- Cache item
@@ -3920,7 +3920,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 						oldText = knowledgePointTooltipText:GetText()
 						knowledgePointTooltipText:SetText(oldText.."\n".."|T"..renownStatus..":0|t "..renownCount.."/4 Renown")
 						if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
-							for key, info in ipairs (renownInfo) do
+							for key, info in ipairs(renownInfo) do
 
 								oldText = knowledgePointTooltipText:GetText()
 								knowledgePointTooltipText:SetText(oldText.."\n   ".."|T"..renownInfo[key].status..":0|t "..renownInfo[key].title.." ("..RENOWN_LEVEL_LABEL..renownInfo[key].level..")")
@@ -4494,9 +4494,9 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 				-- Keep the actual spell coolcown for Dragonflight Alchemy experimentations, and only show the last one done
 				elseif spellID == 370743 or spellID == 370745 or spellID == 370746 or spellID == 370747 then
 					local spells = {370743,  370745, 370746, 370747}
-					for k, v in pairs (spells) do
+					for k, v in pairs(spells) do
 						if v ~= spellID then
-							for k2, v2 in pairs (recipeCooldowns) do
+							for k2, v2 in pairs(recipeCooldowns) do
 								if v2.recipeID == v then
 									recipeCooldowns[k2] = nil
 								end
@@ -4807,7 +4807,7 @@ function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 	-- Only on initialLoad
 	if isInitialLogin == true then
 		-- Check all tracked recipe cooldowns
-		for _, recipeInfo in pairs (recipeCooldowns) do
+		for _, recipeInfo in pairs(recipeCooldowns) do
 			-- Check the remaining cooldown
 			local cooldownRemaining = recipeInfo.start + recipeInfo.cooldown - GetServerTime()
 
