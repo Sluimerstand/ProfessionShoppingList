@@ -4507,7 +4507,7 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 						end
 					end
 				-- Set timer for X days if the spell has charges, assuming daily cooldown
-				elseif charges then
+				elseif maxCharges > 0 then
 					recipeName = recipeName .. " (" .. charges .. "/" .. maxCharges .. ")"
 					cooldown = GetQuestResetTime()
 				-- Otherwise, if the cooldown exists, set it to line up with daily reset
@@ -4822,14 +4822,11 @@ function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 			if cooldownRemaining <= 0 then
 				-- Check charges if they exist
 				local cooldown, isDayCooldown, charges, maxCharges = C_TradeSkillUI.GetRecipeCooldown(recipeInfo.recipeID)
-				if charges then
-					-- And if they aren't fully charged up yet
-					if maxCharges > charges then
-						recipeInfo.start = GetServerTime()
-						recipeInfo.cooldown = GetQuestResetTime()
-						recipeInfo.name = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name .. " (" .. charges .. "/" .. maxCharges .. ")"
-						do return end	-- Don't show the recipe reminder if this is the case
-					end
+				if maxCharges > charges then
+					recipeInfo.start = GetServerTime()
+					recipeInfo.cooldown = GetQuestResetTime()
+					recipeInfo.name = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name .. " (" .. charges .. "/" .. maxCharges .. ")"
+					do return end	-- Don't show the recipe reminder if this is the case
 				end
 
 				-- If the option to show recipe cooldowns is enabled
