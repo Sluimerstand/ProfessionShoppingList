@@ -4488,12 +4488,12 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 
 				-- Get spell cooldown info
 				local recipeName = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name
-				local recipeCooldown = C_TradeSkillUI.GetRecipeCooldown(spellID)	-- For daily cooldowns, this returns the time until midnight. Only after a relog does it return the time until daily reset, when the recipe actually resets.
+				local cooldown, isDayCooldown, charges, maxCharges = C_TradeSkillUI.GetRecipeCooldown(spellID)	-- For daily cooldowns, this returns the time until midnight. Only after a relog does it return the time until daily reset, when the recipe actually resets.
 				local recipeStart = GetServerTime()
 
 				-- Set timer to 7 days for the Alchemy sac transmutes
 				if spellID == 213256 or spellID == 251808 then
-					recipeCooldown = 7 * 24 * 60 * 60
+					cooldown = 7 * 24 * 60 * 60
 				-- Keep the actual spell coolcown for Dragonflight Alchemy experimentations, and only show the last one done
 				elseif spellID == 370743 or spellID == 370745 or spellID == 370746 or spellID == 370747 then
 					local spells = {370743,  370745, 370746, 370747}
@@ -4506,25 +4506,29 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 							end
 						end
 					end
+				-- Set timer for X days if the spell has charges, assuming daily cooldown
+				elseif charges then
+					recipeName = recipeName .. " (" .. charges .. "/" .. maxCharges .. ")"
+					cooldown = GetQuestResetTime()
 				-- Otherwise, if the cooldown exists, set it to line up with daily reset
-				elseif recipeCooldown and recipeCooldown >= 60 then
-					local days = math.floor( recipeCooldown / 86400 )	-- Count how many days we add to the time until daily reset
-					recipeCooldown = GetQuestResetTime() + ( days * 86400 )
+				elseif cooldown and cooldown >= 60 then
+					local days = math.floor( cooldown / 86400 )	-- Count how many days we add to the time until daily reset
+					cooldown = GetQuestResetTime() + ( days * 86400 )
 				end
 
 				-- If the spell cooldown exists
-				if recipeCooldown then
+				if cooldown then
 					-- Replace the existing entry if it exists
 					local cdExists = false
 					for k, v in ipairs(recipeCooldowns) do
 						if v.recipeID == spellID and v.user == character .. "-" .. realm then
-							recipeCooldowns[k] = {name = recipeName, recipeID = spellID, cooldown = recipeCooldown, start = recipeStart, user = character .. "-" .. realm}
+							recipeCooldowns[k] = {name = recipeName, recipeID = spellID, cooldown = cooldown, start = recipeStart, user = character .. "-" .. realm}
 							cdExists = true
 						end
 					end
 					-- Otherwise, create a new entry
 					if cdExists == false then
-						recipeCooldowns[#recipeCooldowns+1] = {name = recipeName, recipeID = spellID, cooldown = recipeCooldown, start = recipeStart, user = character .. "-" .. realm}
+						recipeCooldowns[#recipeCooldowns+1] = {name = recipeName, recipeID = spellID, cooldown = cooldown, start = recipeStart, user = character .. "-" .. realm}
 					end
 					-- And then update our window
 					app.UpdateRecipes()
@@ -4816,6 +4820,18 @@ function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 
 			-- If the recipe is off cooldown
 			if cooldownRemaining <= 0 then
+				-- Check charges if they exist
+				local cooldown, isDayCooldown, charges, maxCharges = C_TradeSkillUI.GetRecipeCooldown(recipeInfo.recipeID)
+				if charges then
+					-- And if they aren't fully charged up yet
+					if maxCharges > charges then
+						recipeInfo.start = GetServerTime()
+						recipeInfo.cooldown = GetQuestResetTime()
+						recipeInfo.name = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name .. " (" .. charges .. "/" .. maxCharges .. ")"
+						do return end	-- Don't show the recipe reminder if this is the case
+					end
+				end
+
 				-- If the option to show recipe cooldowns is enabled
 				if userSettings["showRecipeCooldowns"] == true then
 					-- Show the reminder
