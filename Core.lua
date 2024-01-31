@@ -213,7 +213,6 @@ function app.Legacy()
 		recipeCooldowns[#recipeCooldowns+1] = v
 	end
 
-	--v10.2.5-003
 	for k, v in pairs(recipeCooldowns) do
 		if not v.charges then
 			v.charges = 0
