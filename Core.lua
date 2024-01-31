@@ -212,6 +212,14 @@ function app.Legacy()
 		end
 		recipeCooldowns[#recipeCooldowns+1] = v
 	end
+
+	--v10.2.5-003
+	for k, v in pairs(recipeCooldowns) do
+		if not v.charges then
+			v.charges = 0
+			v.maxCharges = 0
+		end
+	end
 end
 
 -- Save the window position and size
@@ -1458,7 +1466,7 @@ function app.UpdateRecipes()
 	cooldownsSorted = {}
 	for k, v in pairs(recipeCooldowns) do
 		local timedone = v.start + v.cooldown
-		cooldownsSorted[#cooldownsSorted+1] = {id = k, recipeID = v.recipeID, start = v.start, cooldown = v.cooldown, name = v.name, user = v.user, time = timedone}
+		cooldownsSorted[#cooldownsSorted+1] = {id = k, recipeID = v.recipeID, start = v.start, cooldown = v.cooldown, name = v.name, user = v.user, time = timedone, maxCharges = v.maxCharges, charges = v.charges}
 	end
 	table.sort(cooldownsSorted, function(a, b) return a.time > b.time end)
 
@@ -1571,7 +1579,11 @@ function app.UpdateRecipes()
 		text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
 		text1:SetPoint("RIGHT", text2, "LEFT")
 		text1:SetTextColor(1, 1, 1)
-		text1:SetText(cooldownInfo.name)
+		if cooldownInfo.maxCharges > 0 then
+			text1:SetText(cooldownInfo.name .. " (" .. cooldownInfo.charges .. "/" .. cooldownInfo.maxCharges .. ")")
+		else
+			text1:SetText(cooldownInfo.name)
+		end
 		text1:SetJustifyH("LEFT")
 		text1:SetWordWrap(false)
 		row.text1 = text1
@@ -4506,10 +4518,6 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 							end
 						end
 					end
-				-- Set timer for X days if the spell has charges, assuming daily cooldown
-				elseif maxCharges > 0 then
-					recipeName = recipeName .. " (" .. charges .. "/" .. maxCharges .. ")"
-					cooldown = GetQuestResetTime()
 				-- Otherwise, if the cooldown exists, set it to line up with daily reset
 				elseif cooldown and cooldown >= 60 then
 					local days = math.floor( cooldown / 86400 )	-- Count how many days we add to the time until daily reset
@@ -4522,13 +4530,13 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 					local cdExists = false
 					for k, v in ipairs(recipeCooldowns) do
 						if v.recipeID == spellID and v.user == character .. "-" .. realm then
-							recipeCooldowns[k] = {name = recipeName, recipeID = spellID, cooldown = cooldown, start = recipeStart, user = character .. "-" .. realm}
+							recipeCooldowns[k] = {name = recipeName, recipeID = spellID, cooldown = cooldown, start = recipeStart, user = character .. "-" .. realm, charges = charges, maxCharges = maxCharges}
 							cdExists = true
 						end
 					end
 					-- Otherwise, create a new entry
 					if cdExists == false then
-						recipeCooldowns[#recipeCooldowns+1] = {name = recipeName, recipeID = spellID, cooldown = cooldown, start = recipeStart, user = character .. "-" .. realm}
+						recipeCooldowns[#recipeCooldowns+1] = {name = recipeName, recipeID = spellID, cooldown = cooldown, start = recipeStart, user = character .. "-" .. realm, charges = charges, maxCharges = maxCharges}
 					end
 					-- And then update our window
 					app.UpdateRecipes()
@@ -4814,23 +4822,25 @@ function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 	-- Only on initialLoad
 	if isInitialLogin == true then
 		-- Check all tracked recipe cooldowns
-		for _, recipeInfo in pairs(recipeCooldowns) do
+		for k, recipeInfo in pairs(recipeCooldowns) do
 			-- Check the remaining cooldown
 			local cooldownRemaining = recipeInfo.start + recipeInfo.cooldown - GetServerTime()
 
 			-- If the recipe is off cooldown
 			if cooldownRemaining <= 0 then
-				-- Check charges if they exist
-				local cooldown, isDayCooldown, charges, maxCharges = C_TradeSkillUI.GetRecipeCooldown(recipeInfo.recipeID)
-				if maxCharges > charges then
-					recipeInfo.start = GetServerTime()
-					recipeInfo.cooldown = GetQuestResetTime()
-					recipeInfo.name = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name .. " (" .. charges .. "/" .. maxCharges .. ")"
-					do return end	-- Don't show the recipe reminder if this is the case
+				-- Check charges if they exist and return one
+				if recipeInfo.maxCharges > 0 and recipeInfo.maxCharges > recipeInfo.charges then
+					recipeCooldowns[k].charges = recipeCooldowns[k].charges + 1
+
+					-- And move the reset time if we're not at full charges yet
+					if recipeCooldowns[k].charges ~= recipeCooldowns[k].maxCharges then
+						recipeCooldowns[k].start = GetServerTime()
+						recipeCooldowns[k].cooldown = GetQuestResetTime()
+					end
 				end
 
-				-- If the option to show recipe cooldowns is enabled
-				if userSettings["showRecipeCooldowns"] == true then
+				-- If the option to show recipe cooldowns is enabled and all charges are full (or 0 = 0 for recipes without charges)
+				if userSettings["showRecipeCooldowns"] == true and recipeCooldowns[k].charges == recipeCooldowns[k].maxCharges then
 					-- Show the reminder
 					app.Print(recipeInfo.name .. " is ready to craft again on " .. recipeInfo.user .. ".")
 				end
