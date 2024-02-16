@@ -4754,7 +4754,7 @@ end
 -- Replace the in-game tracking of shift+clicking a recipe with PSL's
 function event:TRACKED_RECIPE_UPDATE(recipeID, tracked)
 	if tracked == true then
-		app.TrackRecipe(app.SelectedRecipeID,1)
+		app.TrackRecipe(recipeID,1)
 		C_TradeSkillUI.SetRecipeTracked(recipeID, false, false)
 	end
 end
