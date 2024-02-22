@@ -4602,7 +4602,7 @@ function event:MERCHANT_SHOW()
 	local function TrackMerchantItem(index)
 		if IsAltKeyDown() == true then
 			-- Use the page number to get the proper vendor index
-			local page = string.match(MerchantPageText:GetText(), "%s(%d+)%s")
+			local page = string.match(MerchantPageText:GetText(), "%d+")
 			index = index + (page - 1) * 10
 			
 			-- Get merchant info
