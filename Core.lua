@@ -83,7 +83,7 @@ function app.Popup(show, text)
 
 	-- Close button
 	local close = CreateFrame("Button", "", f, "UIPanelCloseButton")
-	close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
+	close:SetPoint("TOPRIGHT", f, "TOPRIGHT", 2, 2)
 	close:SetScript("OnClick", function()
 		f:Hide()
 	end)
@@ -279,7 +279,7 @@ function app.CreateWindow()
 
 	-- Close button
 	local close = CreateFrame("Button", "pslOptionCloseButton", app.Window, "UIPanelCloseButton")
-	close:SetPoint("TOPRIGHT", app.Window, "TOPRIGHT", -1, -1)
+	close:SetPoint("TOPRIGHT", app.Window, "TOPRIGHT", 2, 2)
 	close:SetScript("OnClick", function()
 		app.Window:Hide()
 	end)
