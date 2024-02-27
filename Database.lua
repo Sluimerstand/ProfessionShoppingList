@@ -232,3 +232,4 @@ app.nyiRecipes[46142] = true	-- Sunblessed Breastplate
 app.nyiRecipes[168851] = true	-- Miniature Flying Carpet
 app.nyiRecipes[169669] = true	-- Hexweave Cloth
 app.nyiRecipes[173415] = true	-- Murloc Chew Toy
+app.nyiRecipes[382977] = true   -- Pandaria Prospecting (not NYI, but returns Shadowed Alloy)
