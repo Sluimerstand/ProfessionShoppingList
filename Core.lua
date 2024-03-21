@@ -370,7 +370,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 				-- And when the item is cached
 				item:ContinueOnItemLoad(function()
 					-- Get item info
-					_, itemLink, _, _, _, _, _, _, _, fileID = GetItemInfo(reagentID)
+					_, itemLink, _, _, _, _, _, _, _, fileID = C_Item.GetItemInfo(reagentID)
 
 					-- Write the info to the cache
 					reagentCache[reagentID] = {link = itemLink, icon = fileID}
@@ -395,7 +395,7 @@ function app.UpdateNumbers()
 			if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
 
 			-- Get item info
-			_, itemLink, _, _, _, _, _, _, _, fileID = GetItemInfo(reagentID)
+			_, itemLink, _, _, _, _, _, _, _, fileID = C_Item.GetItemInfo(reagentID)
 
 			-- Try again if error
 			if itemLink == nil then
@@ -420,12 +420,12 @@ function app.UpdateNumbers()
 			local reagentAmountHave2 = 0
 			local reagentAmountHave3 = 0
 
-			reagentAmountHave1 = GetItemCount(reagentTiers[reagentID].one, true, false, true)
+			reagentAmountHave1 = C_Item.GetItemCount(reagentTiers[reagentID].one, true, false, true)
 			if reagentTiers[reagentID].two ~= 0 then
-				reagentAmountHave2 = GetItemCount(reagentTiers[reagentID].two, true, false, true)
+				reagentAmountHave2 = C_Item.GetItemCount(reagentTiers[reagentID].two, true, false, true)
 			end
 			if reagentTiers[reagentID].three ~= 0 then
-				reagentAmountHave3 = GetItemCount(reagentTiers[reagentID].three, true, false, true)
+				reagentAmountHave3 = C_Item.GetItemCount(reagentTiers[reagentID].three, true, false, true)
 			end
 
 			-- Calculate owned amount based on the quality of the item
@@ -970,7 +970,7 @@ function app.UpdateRecipes()
 			local function trackSubreagent(recipeID, itemID)
 				-- Define the amount of recipes to be tracked
 				local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-				local amount = math.max(0, math.ceil((app.ReagentQuantities[itemID] - GetItemCount(itemID, true, false, true)) / quantityMade))
+				local amount = math.max(0, math.ceil((app.ReagentQuantities[itemID] - C_Item.GetItemCount(itemID, true, false, true)) / quantityMade))
 				if recipesTracked[recipeID] then amount = math.max(0, (amount - recipesTracked[recipeID].quantity)) end
 
 				-- Track the recipe (don't track if 0)
@@ -1052,7 +1052,7 @@ function app.UpdateRecipes()
 							if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
 
 							-- Get item info
-							local itemName, itemLink = GetItemInfo(reagentID)
+							local itemName, itemLink = C_Item.GetItemInfo(reagentID)
 
 							-- Try again if error
 							if itemName == nil or itemLink == nil then
@@ -1105,7 +1105,7 @@ function app.UpdateRecipes()
 								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
 
 								-- Get item info
-								local itemName, itemLink = GetItemInfo(reagentID)
+								local itemName, itemLink = C_Item.GetItemInfo(reagentID)
 
 								-- Try again if error
 								if itemName == nil or itemLink == nil then
@@ -1159,7 +1159,7 @@ function app.UpdateRecipes()
 								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
 								
 								-- Get item info
-								local itemName, itemLink = GetItemInfo(reagentID)
+								local itemName, itemLink = C_Item.GetItemInfo(reagentID)
 
 								-- Try again if error
 								if itemName == nil or itemLink == nil then
@@ -1213,7 +1213,7 @@ function app.UpdateRecipes()
 								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
 
 								-- Get item info
-								local itemName, itemLink = GetItemInfo(reagentID)
+								local itemName, itemLink = C_Item.GetItemInfo(reagentID)
 
 								-- Try again if error
 								if itemName == nil or itemLink == nil then
@@ -1264,7 +1264,7 @@ function app.UpdateRecipes()
 								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
 
 								-- Get item info
-								local itemName, itemLink = GetItemInfo(reagentID)
+								local itemName, itemLink = C_Item.GetItemInfo(reagentID)
 
 								-- Try again if error
 								if itemName == nil or itemLink == nil then
@@ -1315,7 +1315,7 @@ function app.UpdateRecipes()
 								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
 
 								-- Get item info
-								local itemName, itemLink = GetItemInfo(reagentID)
+								local itemName, itemLink = C_Item.GetItemInfo(reagentID)
 
 								-- Try again if error
 								if itemName == nil or itemLink == nil then
@@ -1729,7 +1729,7 @@ function app.TrackRecipe(recipeID, recipeQuantity)
 			if not C_Item.IsItemDataCachedByID(itemID) then local item = Item:CreateFromItemID(itemID) end
 
 			-- Get item info
-			_, itemLink = GetItemInfo(itemID)
+			_, itemLink = C_Item.GetItemInfo(itemID)
 
 			-- Try again if error
 			if itemLink == nil then
@@ -2055,7 +2055,7 @@ function app.CreateTradeskillAssets()
 		thermalAnvilCharges:SetPoint("BOTTOMRIGHT", thermalAnvilButton, "BOTTOMRIGHT", 0, 0)
 		thermalAnvilCharges:SetJustifyH("RIGHT")
 		if not C_Item.IsItemDataCachedByID(87216) then local item = Item:CreateFromItemID(87216) end
-		local anvilCharges = GetItemCount(87216, false, true, false)
+		local anvilCharges = C_Item.GetItemCount(87216, false, true, false)
 		thermalAnvilCharges:SetText(anvilCharges)
 	end
 
@@ -2290,19 +2290,19 @@ function app.CreateCraftingOrdersAssets()
 					-- Add the info for tiered reagents to craftingReagentItems
 					if reagentTiers[reagentID].three ~= 0 then
 						-- Set it to the lowest quality we have enough of for this order
-						if GetItemCount(reagentTiers[reagentID].one, true, false, true) >= quantityNo then
+						if C_Item.GetItemCount(reagentTiers[reagentID].one, true, false, true) >= quantityNo then
 							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].one, dataSlotIndex = i, quantity = quantityNo}
 							no1 = no1 + 1
-						elseif GetItemCount(reagentTiers[reagentID].two, true, false, true) >= quantityNo then
+						elseif C_Item.GetItemCount(reagentTiers[reagentID].two, true, false, true) >= quantityNo then
 							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].two, dataSlotIndex = i, quantity = quantityNo}
 							no1 = no1 + 1
-						elseif GetItemCount(reagentTiers[reagentID].three, true, false, true) >= quantityNo then
+						elseif C_Item.GetItemCount(reagentTiers[reagentID].three, true, false, true) >= quantityNo then
 							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].three, dataSlotIndex = i, quantity = quantityNo}
 							no1 = no1 + 1
 						end
 					-- Add the info for non-tiered reagents to reagentItems
 					else
-						if GetItemCount(reagentID, true, false, true) >= quantityNo then
+						if C_Item.GetItemCount(reagentID, true, false, true) >= quantityNo then
 							reagentInfo[no2] = {itemID = reagentTiers[reagentID].one, quantity = quantityNo}
 							no2 = no2 + 1
 						end
@@ -2553,7 +2553,7 @@ function app.UpdateAssets()
 
 		-- Check how many thermal anvils the player has
 		if not C_Item.IsItemDataCachedByID(87216) then local item = Item:CreateFromItemID(87216) end
-		local anvilCount = GetItemCount(87216)
+		local anvilCount = C_Item.GetItemCount(87216)
 		-- (De)saturate based on that
 		if anvilCount >= 1 then
 			thermalAnvilButton:GetNormalTexture():SetDesaturated(false)
@@ -2561,7 +2561,7 @@ function app.UpdateAssets()
 			thermalAnvilButton:GetNormalTexture():SetDesaturated(true)
 		end
 		-- Update charges
-		local anvilCharges = GetItemCount(87216, false, true, false)
+		local anvilCharges = C_Item.GetItemCount(87216, false, true, false)
 		thermalAnvilCharges:SetText(anvilCharges)
 
 		-- Cooking Fire button cooldown
@@ -2674,15 +2674,15 @@ function app.TooltipInfo()
 
 			if reagentTiers[itemID] and reagentTiers[itemID].one ~= 0 then
 				reagentID1 = reagentTiers[itemID].one
-				reagentAmountHave1 = GetItemCount(reagentTiers[itemID].one, true, false, true)
+				reagentAmountHave1 = C_Item.GetItemCount(reagentTiers[itemID].one, true, false, true)
 			end
 			if reagentTiers[itemID] and reagentTiers[itemID].two ~= 0 then
 				reagentID2 = reagentTiers[itemID].two
-				reagentAmountHave2 = GetItemCount(reagentTiers[itemID].two, true, false, true)
+				reagentAmountHave2 = C_Item.GetItemCount(reagentTiers[itemID].two, true, false, true)
 			end
 			if reagentTiers[itemID] and reagentTiers[itemID].three ~= 0 then
 				reagentID3 = reagentTiers[itemID].three
-				reagentAmountHave3 = GetItemCount(reagentTiers[itemID].three, true, false, true)
+				reagentAmountHave3 = C_Item.GetItemCount(reagentTiers[itemID].three, true, false, true)
 			end
 
 			-- Calculate owned amount/needed based on item quality
@@ -3757,7 +3757,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 					-- Cache treatise item
 					if not C_Item.IsItemDataCachedByID(treatiseItem) then local item = Item:CreateFromItemID(treatiseItem) end
 					-- Get item link
-					local _, itemLink = GetItemInfo(treatiseItem)
+					local _, itemLink = C_Item.GetItemInfo(treatiseItem)
 					-- If link missing, try again
 					if itemLink == nil then
 						RunNextFrame(kpTooltip)
@@ -3793,7 +3793,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 							-- Cache item
 							if not C_Item.IsItemDataCachedByID(dropInfo.itemID) then local item = Item:CreateFromItemID(dropInfo.itemID) end
 							-- Get item info
-							local _, itemLink = GetItemInfo(dropInfo.itemID)
+							local _, itemLink = C_Item.GetItemInfo(dropInfo.itemID)
 							-- If links missing, try again
 							if itemLink == nil then
 								RunNextFrame(kpTooltip)
@@ -3824,7 +3824,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 					-- Cache dragon shard item
 					if not C_Item.IsItemDataCachedByID(191784) then local item = Item:CreateFromItemID(191784) end
 					-- Get item link
-					local _, itemLink = GetItemInfo(191784)
+					local _, itemLink = C_Item.GetItemInfo(191784)
 					-- If link missing, try again
 					if itemLink == nil then
 						RunNextFrame(kpTooltip)
@@ -3877,7 +3877,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 								-- Cache item
 								if not C_Item.IsItemDataCachedByID(itemID) then local item = Item:CreateFromItemID(itemID) end
 								-- Get item link
-								local _, itemLink = GetItemInfo(itemID)
+								local _, itemLink = C_Item.GetItemInfo(itemID)
 								-- If link missing, try again
 								if itemLink == nil then
 									RunNextFrame(kpTooltip)
@@ -3909,7 +3909,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 								-- Cache item
 								if not C_Item.IsItemDataCachedByID(bookInfo.itemID) then local item = Item:CreateFromItemID(bookInfo.itemID) end
 								-- Get item link
-								local _, itemLink = GetItemInfo(bookInfo.itemID)
+								local _, itemLink = C_Item.GetItemInfo(bookInfo.itemID)
 								-- If link missing, try again
 								if itemLink == nil then
 									RunNextFrame(kpTooltip)
@@ -4642,7 +4642,7 @@ function event:MERCHANT_SHOW()
 						link = currencyName,
 					}
 				elseif itemLink then
-					local itemID = GetItemInfoFromHyperlink(itemLink)
+					local itemID = C_Item.GetItemInfoFromHyperlink(itemLink)
 					fakeRecipeLibrary[key].costItems[itemID] = itemValue
 					if not reagentTiers[itemID] then
 						reagentTiers[itemID] = {
@@ -4777,7 +4777,7 @@ function event:AUCTION_HOUSE_SHOW()
 				if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
 				
 				-- Get item info
-				local itemName = GetItemInfo(reagentID)
+				local itemName = C_Item.GetItemInfo(reagentID)
 		
 				-- Try again if error
 				if itemName == nil then
