@@ -4642,7 +4642,7 @@ function event:MERCHANT_SHOW()
 						link = currencyName,
 					}
 				elseif itemLink then
-					local itemID = C_Item.GetItemInfoFromHyperlink(itemLink)
+					local itemID = GetItemInfoFromHyperlink(itemLink)
 					fakeRecipeLibrary[key].costItems[itemID] = itemValue
 					if not reagentTiers[itemID] then
 						reagentTiers[itemID] = {
