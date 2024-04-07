@@ -4598,12 +4598,18 @@ function event:MERCHANT_SHOW()
 		end)
 	end
 
+	-- This should default to 10 in normal UIs, set further below
+	local vendorPageSize = 0
+
 	-- When the user Alt+clicks a vendor item
 	local function TrackMerchantItem(index)
 		if IsAltKeyDown() == true then
-			-- Use the page number to get the proper vendor index
+			-- For some reason there are 12 item frames detected in the original UI, even though there are only 10
+			-- This means Krowi or Windtools won't work if the page size is set to 12, but I honestly don't know what else to do
+			if vendorPageSize == 12 then vendorPageSize = 10 end
+
 			local page = string.match(MerchantPageText:GetText(), "%d+")
-			index = index + (page - 1) * 10
+			index = index + (page - 1) * vendorPageSize
 			
 			-- Get merchant info
 			local merchant = MerchantFrameTitleText:GetText()
@@ -4666,16 +4672,14 @@ function event:MERCHANT_SHOW()
 
 	-- Hook the script onto the merchant buttons (once)
 	if app.Flag["merchantAssets"] == false then
-		MerchantItem1ItemButton:HookScript("OnClick", function() TrackMerchantItem(1) end)
-		MerchantItem2ItemButton:HookScript("OnClick", function() TrackMerchantItem(2) end)
-		MerchantItem3ItemButton:HookScript("OnClick", function() TrackMerchantItem(3) end)
-		MerchantItem4ItemButton:HookScript("OnClick", function() TrackMerchantItem(4) end)
-		MerchantItem5ItemButton:HookScript("OnClick", function() TrackMerchantItem(5) end)
-		MerchantItem6ItemButton:HookScript("OnClick", function() TrackMerchantItem(6) end)
-		MerchantItem7ItemButton:HookScript("OnClick", function() TrackMerchantItem(7) end)
-		MerchantItem8ItemButton:HookScript("OnClick", function() TrackMerchantItem(8) end)
-		MerchantItem9ItemButton:HookScript("OnClick", function() TrackMerchantItem(9) end)
-		MerchantItem10ItemButton:HookScript("OnClick", function() TrackMerchantItem(10) end)
+		for i = 1, 99 do	-- Works for AddOns that expand the vendor frame up to 99 slots
+			local itemButton = _G["MerchantItem"..i.."ItemButton"]
+			if itemButton then
+				itemButton:HookScript("OnClick", function() TrackMerchantItem(i) end)
+				-- Register how many items are on a single page
+				vendorPageSize = i
+			end
+		end
 
 		-- Set the flag to true so it doesn't trigger again
 		app.Flag["merchantAssets"] = true
