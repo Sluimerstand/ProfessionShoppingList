@@ -143,6 +143,7 @@ function app.Initialise()
 	if userSettings["alvinGUID"] == nil then userSettings["alvinGUID"] = "unknown" end
 	if userSettings["onetimeMessages"] == nil then userSettings["onetimeMessages"] = {} end
 	if userSettings["onetimeMessages"].vendorItems == nil then userSettings["onetimeMessages"].vendorItems = false end
+	if userSettings["quickOrderDuration"] == nil then userSettings["quickOrderDuration"] = 0 end
 
 	-- Load personal recipes, if the setting is enabled
 	if userSettings["pcRecipesTracked"] == true then
@@ -2321,7 +2322,7 @@ function app.CreateCraftingOrdersAssets()
 		end
 
 		-- Place the order
-		C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+		C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=userSettings["quickOrderDuration"], tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 		
 		-- If there are tiered reagents and the user wants to use local reagents, adjust the dataSlotIndex and try again in case the first one failed
 		local next = next
@@ -2331,21 +2332,21 @@ function app.CreateCraftingOrdersAssets()
 			end
 
 			-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
-			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=userSettings["quickOrderDuration"], tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 		
 			for i, _ in ipairs(craftingReagentInfo) do
 				craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
 			end
 
 			-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
-			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=userSettings["quickOrderDuration"], tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 		
 			for i, _ in ipairs(craftingReagentInfo) do
 				craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
 			end
 
 			-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
-			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=0, tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=userSettings["quickOrderDuration"], tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 		end
 	end
 
@@ -3235,7 +3236,7 @@ function app.Settings()
 	local SettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	SettingsText1:SetPoint("TOPLEFT", cbLootDefault, "BOTTOMLEFT", 3, -15)
 	SettingsText1:SetJustifyH("LEFT")
-	SettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl resetpos |cffFFFFFF- Reset the PSL window positions.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.\n|R/psl track |cff1B9C85recipeID quantity |R|cffFFFFFF- Track a recipe.\n|R/psl untrack |cff1B9C85recipeID quantity |R|cffFFFFFF- Untrack a recipe.\n|R/psl untrack |cff1B9C85recipeID |Rall |cffFFFFFF- Untrack all of a recipe.\n|R/psl |cff1B9C85[crafting achievement] |R |cffFFFFFF- Track the recipes needed for the linked achievement.")
+	SettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl resetpos |cffFFFFFF- Reset the PSL window positions.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.\n|R/psl track |cff1B9C85recipeID quantity |R|cffFFFFFF- Track a recipe.\n|R/psl untrack |cff1B9C85recipeID quantity |R|cffFFFFFF- Untrack a recipe.\n|R/psl untrack |cff1B9C85recipeID |Rall |cffFFFFFF- Untrack all of a recipe.\n|R/psl |cff1B9C85[crafting achievement] |R |cffFFFFFF- Track the recipes needed for the linked achievement.\n|R/psl duration |cff1B9C85number |R |cffFFFFFF- Set the default quick order duration.")
 
 	local SettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	SettingsText2:SetPoint("TOPLEFT", SettingsText1, "BOTTOMLEFT", 0, -15)
@@ -3324,6 +3325,21 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 					end
 				else
 					app.Print("Invalid parameters. Please enter a tracked recipe ID.")
+				end
+			-- Quick order duration
+			elseif command == 'duration' then
+				rest = tonumber(rest)
+				if rest == 0 or rest == 12 then
+					userSettings["quickOrderDuration"] = 0
+					app.Print("Quick order duration set to 12hr (short).")
+				elseif rest == 1 or rest == 24 then
+					userSettings["quickOrderDuration"] = 1
+					app.Print("Quick order duration set to 24hr (medium).")
+				elseif rest == 2 or rest == 48 then
+					userSettings["quickOrderDuration"] = 2
+					app.Print("Quick order duration set to 48hr (long).")
+				else
+					app.Print("Invalid parameter. Use a number: 0, 1, 2 (duration) or 12, 24, or 48 (hours) to set the default quick order duration.")
 				end
 			-- No command
 			elseif command == "" then
