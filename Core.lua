@@ -2403,7 +2403,7 @@ function app.CreateCraftingOrdersAssets()
 		cbUseLocalReagents:SetScript("OnClick", function(self)
 			userSettings["useLocalReagents"] = self:GetChecked()
 
-			if personalOrders["last"] ~= nil then
+			if personalOrders["last"] ~= nil and personalOrders["last"] ~= 0 then
 				local reagents = "false"
 				local recipient = personalOrders[personalOrders["last"]]
 				if userSettings["useLocalReagents"] == true then reagents = "true" end
@@ -2453,7 +2453,7 @@ function app.CreateCraftingOrdersAssets()
 		repeatOrderButton:SetPoint("BOTTOMLEFT", ProfessionsCustomerOrdersFrame, 170, 5)
 		repeatOrderButton:SetFrameStrata("HIGH")
 		repeatOrderButton:SetScript("OnClick", function()
-			if personalOrders["last"] ~= nil then
+			if personalOrders["last"] ~= nil and personalOrders["last"] ~= 0 then
 				quickOrder(personalOrders["last"])
 			else
 				app.Print("No last Quick Order found.")
@@ -2469,7 +2469,7 @@ function app.CreateCraftingOrdersAssets()
 		-- Set the last used recipe name for the repeat order button title
 		local recipeName = "No last Quick Order found"
 		-- Check for the name if there has been a last order
-		if personalOrders["last"] ~= nil then
+		if personalOrders["last"] ~= nil and personalOrders["last"] ~= 0 then
 			recipeName = C_TradeSkillUI.GetRecipeSchematic(personalOrders["last"], false).name
 		end
 		repeatOrderButton:SetText(recipeName)
@@ -2496,7 +2496,7 @@ function app.CreateCraftingOrdersAssets()
 		repeatOrderTooltipText = repeatOrderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		repeatOrderTooltipText:SetPoint("TOPLEFT", repeatOrderTooltip, "TOPLEFT", 10, -10)
 		repeatOrderTooltipText:SetJustifyH("LEFT")
-		if personalOrders["last"] ~= nil then
+		if personalOrders["last"] ~= nil and personalOrders["last"] ~= 0 then
 			local reagents = "false"
 			local recipient = personalOrders[personalOrders["last"]]
 			if userSettings["useLocalReagents"] == true then reagents = "true" end
@@ -4735,7 +4735,7 @@ function event:CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE(result)
 		-- Set the last used recipe name for the repeat order button title
 		local recipeName = "No last order found"
 		-- Check for the name if there has been a last order
-		if personalOrders["last"] ~= nil then
+		if personalOrders["last"] ~= nil and personalOrders["last"] ~= 0 then
 			recipeName = C_TradeSkillUI.GetRecipeSchematic(personalOrders["last"], false).name
 
 			local reagents = "false"
