@@ -4,7 +4,7 @@
 -- Raw information to refer to
 
 -- Initialisation
-local appName, app = ...	-- Returns the addon name and a unique table
+local appName, app = ...	-- Returns the AddOn name and a unique table
 
 -- Used strings
 app.NameLong = "|R|cffC69B6DProfession Shopping List|R"

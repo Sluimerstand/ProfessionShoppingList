@@ -16,3 +16,7 @@ libs\LibDBIcon-1.0\embeds.xml
 libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua
 Core.lua
 Database.lua
+modules\AuctionHouse.lua
+modules\CraftingOrders.lua
+modules\ProfessionKnowledge.lua
+modules\Tweaks.lua
