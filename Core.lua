@@ -4728,9 +4728,13 @@ function event:CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE(result)
 		if result == 29 then
 			app.Print("Can't create a quick order for items with mandatory reagents. Sorry. :(")
 		end
+		-- Separate error message if the target can't craft
+		if result == 40 then
+			app.Print("Target character cannot craft that item. Please enter a valid character name.")
+		end
 
-		-- Save this info as the last order done, unless it was afaileds order
-		if result ~= 29 or app.QuickOrderErrors >= 4 then personalOrders["last"] = app.SelectedRecipeID end
+		-- Save this info as the last order done, unless it was a failed order
+		if (result ~= 29 and result ~= 40) or app.QuickOrderErrors >= 4 then personalOrders["last"] = app.SelectedRecipeID end
 
 		-- Set the last used recipe name for the repeat order button title
 		local recipeName = "No last order found"
