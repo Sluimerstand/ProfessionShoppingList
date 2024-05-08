@@ -2864,12 +2864,7 @@ function app.Settings()
 	local SettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
 	SettingsText2:SetPoint("TOPLEFT", SettingsText1, "BOTTOMLEFT", 0, -15)
 	SettingsText2:SetJustifyH("LEFT")
-	SettingsText2:SetText("Mouse interactions:\nDrag|cffFFFFFF: Move the PSL windows.\n|RShift+click Recipe|cffFFFFFF: Link the recipe.\n|RCtrl+click Recipe|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click Recipe (# column)|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click Recipe (# column)|cffFFFFFF: Untrack all of the selected recipe.\n|RShift+click Reagent|cffFFFFFF: Link the reagent.\n|RCtrl+click Reagent|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)")
-
-	local SettingsText3 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	SettingsText3:SetPoint("TOPLEFT", SettingsText2, "BOTTOMLEFT", 0, -15)
-	SettingsText3:SetJustifyH("LEFT")
-	SettingsText3:SetText("Other features:\n|cffFFFFFF- Adds buttons for Cooking Fire, Chef's Hat, and Thermal Anvil.\n- Copy tracked reagents to the Auctionator import window.")
+	SettingsText2:SetText("Other features:\n|cffFFFFFF- Adds buttons for Cooking Fire, Chef's Hat, and Thermal Anvil.\n- Copy tracked reagents to the Auctionator import window.")
 end
 
 -- When the AddOn is fully loaded, actually run the components
