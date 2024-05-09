@@ -31,6 +31,8 @@ function app.InitialiseProfessionKnowledge()
 	if userSettings["showKnowledgeNotPerks"] == nil then userSettings["showKnowledgeNotPerks"] = false end
 	if userSettings["knowledgeHideDone"] == nil then userSettings["knowledgeHideDone"] = false end
 	if userSettings["knowledgeAlwaysShowDetails"] == nil then userSettings["knowledgeAlwaysShowDetails"] = false end
+
+	app.Flag["knowledgeAssets"] = false
 end
 
 -----------------------
@@ -83,6 +85,8 @@ function app.CreateProfessionKnowledgeAssets()
 		knowledgePointTooltipText:SetPoint("TOPLEFT", knowledgePointTooltip, "TOPLEFT", 10, -10)
 		knowledgePointTooltipText:SetJustifyH("LEFT")
 	end
+
+	app.Flag["knowledgeAssets"] = true
 end
 
 -- Populate knowledge tracker
@@ -1069,6 +1073,7 @@ end
 function event:ADDON_LOADED(addOnName, containsBindings)
 	if addOnName == appName then
 		app.InitialiseProfessionKnowledge()
+		
 	end
 end
 
@@ -1081,7 +1086,7 @@ end
 
 -- When a recipe is selected (also used to determine professionID, which TRADE_SKILL_SHOW() is too quick for)
 function event:SPELL_DATA_LOAD_RESULT(spellID, success)
-	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
+	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true and app.Flag["knowledgeAssets"] == true then
 		app.KnowledgeTracker()
 	end
 end
