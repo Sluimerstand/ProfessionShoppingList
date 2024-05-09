@@ -813,7 +813,10 @@ function app.UpdateRecipes()
 				-- If Control is held also
 				elseif IsControlKeyDown() == true then
 					-- Open recipe if it is learned
-					if selectedRecipeID ~= 0 and C_TradeSkillUI.IsRecipeProfessionLearned(selectedRecipeID) == true then C_TradeSkillUI.OpenRecipe(selectedRecipeID) end
+					if selectedRecipeID ~= 0 and C_TradeSkillUI.IsRecipeProfessionLearned(selectedRecipeID) == true then
+						C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
+						C_TradeSkillUI.OpenRecipe(selectedRecipeID)
+					end
 				end
 			end
 		end)
@@ -2328,7 +2331,7 @@ function app.TooltipInfo()
 			-- Add the tooltip info
 			if (itemID == reagentID1 or itemID == reagentID2 or itemID == reagentID3) and reagentAmountNeed ~= 0 and reagentAmountNeed ~= nil then
 				tooltip:AddLine(" ")
-				tooltip:AddLine("PSL: "..reagentAmountHave.."/"..reagentAmountNeed.." ("..math.max(0,reagentAmountNeed-reagentAmountHave).." more needed)")
+				tooltip:AddLine(app.NameShort..": "..reagentAmountHave.."/"..reagentAmountNeed.." ("..math.max(0,reagentAmountNeed-reagentAmountHave).." more needed)")
 			end
 		end
 	end
