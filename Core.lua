@@ -1897,6 +1897,8 @@ function app.CreateTradeskillAssets()
 	-- Hide and disable existing tracking buttons
 	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckBox:SetAlpha(0)
 	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckBox:EnableMouse(false)
+	ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.TrackRecipeCheckBox:SetAlpha(0)
+	ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.TrackRecipeCheckBox:EnableMouse(false)
 
 	-- Create the profession UI track button
 	if not trackProfessionButton then
