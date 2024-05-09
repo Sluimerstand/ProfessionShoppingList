@@ -55,11 +55,8 @@ function app.CreateCraftingOrdersAssets()
 
 	-- Create the place crafting orders UI Track button
 	if not trackPlaceOrderButton then
-		trackPlaceOrderButton = CreateFrame("Button", nil, ProfessionsCustomerOrdersFrame.Form, "UIPanelButtonTemplate")
-		trackPlaceOrderButton:SetText("Track")
-		trackPlaceOrderButton:SetWidth(60)
+		trackPlaceOrderButton = app.Button(ProfessionsCustomerOrdersFrame.Form, "Track")
 		trackPlaceOrderButton:SetPoint("TOPLEFT", ProfessionsCustomerOrdersFrame.Form, "TOPLEFT", 12, -73)
-		trackPlaceOrderButton:SetFrameStrata("HIGH")
 		trackPlaceOrderButton:SetScript("OnClick", function()
 			app.TrackRecipe(app.SelectedRecipeID, 1)
 		end)
@@ -67,11 +64,8 @@ function app.CreateCraftingOrdersAssets()
 
 	-- Create the place crafting orders UI untrack button
 	if not untrackPlaceOrderButton then
-		untrackPlaceOrderButton = CreateFrame("Button", nil, ProfessionsCustomerOrdersFrame.Form, "UIPanelButtonTemplate")
-		untrackPlaceOrderButton:SetText("Untrack")
-		untrackPlaceOrderButton:SetWidth(70)
-		untrackPlaceOrderButton:SetPoint("TOPLEFT", trackPlaceOrderButton, "TOPRIGHT", 0, 0)
-		untrackPlaceOrderButton:SetFrameStrata("HIGH")
+		untrackPlaceOrderButton = app.Button(ProfessionsCustomerOrdersFrame.Form, "Untrack")
+		untrackPlaceOrderButton:SetPoint("TOPLEFT", trackPlaceOrderButton, "TOPRIGHT", 2, 0)
 		untrackPlaceOrderButton:SetScript("OnClick", function()
 			app.UntrackRecipe(app.SelectedRecipeID, 1)
 	
@@ -199,12 +193,9 @@ function app.CreateCraftingOrdersAssets()
 
 	-- Create the place crafting orders personal order button
 	if not personalOrderButton then
-		personalOrderButton = CreateFrame("Button", nil, ProfessionsCustomerOrdersFrame.Form, "UIPanelButtonTemplate")
-		personalOrderButton:SetText("Quick Order")
-		personalOrderButton:SetWidth(90)
+		personalOrderButton = app.Button(ProfessionsCustomerOrdersFrame.Form, "Quick Order")
 		personalOrderButton:SetPoint("CENTER", personalCharname, "CENTER", 0, 0)
 		personalOrderButton:SetPoint("RIGHT", personalCharname, "LEFT", -8, 0)
-		personalOrderButton:SetFrameStrata("HIGH")
 		personalOrderButton:SetScript("OnClick", function()
 			quickOrder(app.SelectedRecipeID)
 		end)
@@ -296,9 +287,8 @@ function app.CreateCraftingOrdersAssets()
 
 	-- Create the repeat last crafting order button
 	if not repeatOrderButton then
-		repeatOrderButton = CreateFrame("Button", nil, ProfessionsCustomerOrdersFrame, "UIPanelButtonTemplate")
+		repeatOrderButton = app.Button(ProfessionsCustomerOrdersFrame, "")
 		repeatOrderButton:SetPoint("BOTTOMLEFT", ProfessionsCustomerOrdersFrame, 170, 5)
-		repeatOrderButton:SetFrameStrata("HIGH")
 		repeatOrderButton:SetScript("OnClick", function()
 			if personalOrders["last"] ~= nil and personalOrders["last"] ~= 0 then
 				quickOrder(personalOrders["last"])

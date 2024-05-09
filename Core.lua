@@ -91,6 +91,16 @@ function app.Popup(show, text)
 	return f
 end
 
+-- Button
+function app.Button(parent, text)
+	local f = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+	f:SetText(text)
+	f:SetWidth(f:GetTextWidth()+20)
+	f:SetFrameStrata("HIGH")
+
+	return f
+end
+
 ------------------
 -- INITIAL LOAD --
 ------------------
@@ -1053,9 +1063,7 @@ function app.UpdateRecipes()
 					end
 
 					-- Button #1
-					pslOptionButton1 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-					pslOptionButton1:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).name)
-					pslOptionButton1:SetWidth(200)
+					pslOptionButton1 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).name)
 					pslOptionButton1:SetPoint("BOTTOM", pslOption1, "TOP", 0, 5)
 					pslOptionButton1:SetPoint("CENTER", pslOption1, "CENTER", 0, 0)
 					pslOptionButton1:SetScript("OnClick", function()
@@ -1106,9 +1114,7 @@ function app.UpdateRecipes()
 						end
 
 						-- Button #2
-						pslOptionButton2 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-						pslOptionButton2:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).name)
-						pslOptionButton2:SetWidth(200)
+						pslOptionButton2 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).name)
 						pslOptionButton2:SetPoint("BOTTOM", pslOption2, "TOP", 0, 5)
 						pslOptionButton2:SetPoint("CENTER", pslOption2, "CENTER", 0, 0)
 						pslOptionButton2:SetScript("OnClick", function()
@@ -1160,9 +1166,7 @@ function app.UpdateRecipes()
 						end
 
 						-- Button #3
-						pslOptionButton3 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-						pslOptionButton3:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).name)
-						pslOptionButton3:SetWidth(200)
+						pslOptionButton3 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).name)
 						pslOptionButton3:SetPoint("BOTTOM", pslOption3, "TOP", 0, 5)
 						pslOptionButton3:SetPoint("CENTER", pslOption3, "CENTER", 0, 0)
 						pslOptionButton3:SetScript("OnClick", function()
@@ -1214,9 +1218,7 @@ function app.UpdateRecipes()
 						end
 
 						-- Button #4
-						pslOptionButton4 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-						pslOptionButton4:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).name)
-						pslOptionButton4:SetWidth(200)
+						pslOptionButton4 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).name)
 						pslOptionButton4:SetPoint("BOTTOM", pslOption4, "TOP", 0, 5)
 						pslOptionButton4:SetPoint("CENTER", pslOption4, "CENTER", 0, 0)
 						pslOptionButton4:SetScript("OnClick", function()
@@ -1265,9 +1267,7 @@ function app.UpdateRecipes()
 						end
 
 						-- Button #5
-						pslOptionButton5 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-						pslOptionButton5:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).name)
-						pslOptionButton5:SetWidth(200)
+						pslOptionButton5 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).name)
 						pslOptionButton5:SetPoint("BOTTOM", pslOption5, "TOP", 0, 5)
 						pslOptionButton5:SetPoint("CENTER", pslOption5, "CENTER", 0, 0)
 						pslOptionButton5:SetScript("OnClick", function()
@@ -1316,9 +1316,7 @@ function app.UpdateRecipes()
 						end
 
 						-- Button #6
-						pslOptionButton6 = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-						pslOptionButton6:SetText(C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).name)
-						pslOptionButton6:SetWidth(200)
+						pslOptionButton6 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).name)
 						pslOptionButton6:SetPoint("BOTTOM", pslOption6, "TOP", 0, 5)
 						pslOptionButton6:SetPoint("CENTER", pslOption6, "CENTER", 0, 0)
 						pslOptionButton6:SetScript("OnClick", function()
@@ -1905,11 +1903,8 @@ function app.CreateTradeskillAssets()
 
 	-- Create the profession UI track button
 	if not trackProfessionButton then
-		trackProfessionButton = CreateFrame("Button", nil, ProfessionsFrame.CraftingPage, "UIPanelButtonTemplate")
-		trackProfessionButton:SetText("Track")
-		trackProfessionButton:SetWidth(60)
+		trackProfessionButton = app.Button(ProfessionsFrame.CraftingPage, "Track")
 		trackProfessionButton:SetPoint("TOPRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "TOPRIGHT", -9, -10)
-		trackProfessionButton:SetFrameStrata("HIGH")
 		trackProfessionButton:SetScript("OnClick", function()
 			app.TrackRecipe(app.SelectedRecipeID, 1)
 		end)
@@ -1950,10 +1945,9 @@ function app.CreateTradeskillAssets()
 
 	-- Create the profession UI untrack button
 	if not untrackProfessionButton then
-		untrackProfessionButton = CreateFrame("Button", nil, ProfessionsFrame.CraftingPage, "UIPanelButtonTemplate")
-		untrackProfessionButton:SetText("Untrack")
-		untrackProfessionButton:SetWidth(70)
-		untrackProfessionButton:SetPoint("TOPRIGHT", trackProfessionButton, "TOPLEFT", -38, 0)
+		untrackProfessionButton = app.Button(ProfessionsFrame.CraftingPage, "Untrack")
+		untrackProfessionButton:SetPoint("TOP", trackProfessionButton, "TOP", 0, 0)
+		untrackProfessionButton:SetPoint("RIGHT", ebRecipeQuantity, "LEFT", -8, 0)
 		untrackProfessionButton:SetFrameStrata("HIGH")
 		untrackProfessionButton:SetScript("OnClick", function()
 			app.UntrackRecipe(app.SelectedRecipeID, 1)
@@ -2093,11 +2087,8 @@ function app.CreateTradeskillAssets()
 
 	-- Create the fulfil crafting orders UI Track button
 	if not trackMakeOrderButton then
-		trackMakeOrderButton = CreateFrame("Button", nil, ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "UIPanelButtonTemplate")
-		trackMakeOrderButton:SetText("Track")
-		trackMakeOrderButton:SetWidth(60)
+		trackMakeOrderButton = app.Button(ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "Track")
 		trackMakeOrderButton:SetPoint("TOPRIGHT", ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "TOPRIGHT", -9, -10)
-		trackMakeOrderButton:SetFrameStrata("HIGH")
 		trackMakeOrderButton:SetScript("OnClick", function()
 			local oldIsRecraft = app.Flag["recraft"]
 			if ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.RecraftingOutputText:IsVisible() == true then
@@ -2121,11 +2112,8 @@ function app.CreateTradeskillAssets()
 
 	-- Create the fulfil crafting orders UI untrack button
 	if not untrackMakeOrderButton then
-		untrackMakeOrderButton = CreateFrame("Button", nil, ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "UIPanelButtonTemplate")
-		untrackMakeOrderButton:SetText("Untrack")
-		untrackMakeOrderButton:SetWidth(70)
+		untrackMakeOrderButton = app.Button(ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "Untrack")
 		untrackMakeOrderButton:SetPoint("TOPRIGHT", trackMakeOrderButton, "TOPLEFT", -4, 0)
-		untrackMakeOrderButton:SetFrameStrata("HIGH")
 		untrackMakeOrderButton:SetScript("OnClick", function()
 			if app.OrderRecipeID == 0 then
 				app.UntrackRecipe(app.SelectedRecipeID, 1)
