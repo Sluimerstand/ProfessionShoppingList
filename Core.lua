@@ -1575,7 +1575,7 @@ function app.UpdateRecipes()
 	app.Window.Corner:SetScript("OnDoubleClick", function (self, button)
 		local windowHeight = 62
 		local windowWidth = 0
-		if userSettings["showRecipeCooldowns"] == false then
+		if next(recipeCooldowns) == nil or userSettings["showRecipeCooldowns"] == false then
 			windowHeight = windowHeight - 16
 		elseif showCooldowns == true then
 			windowHeight = windowHeight + rowNo3 * 16
