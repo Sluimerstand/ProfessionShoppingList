@@ -50,8 +50,8 @@ function app.CreateProfessionKnowledgeAssets()
 
 		-- Bar
 		knowledgePointTracker.Bar = CreateFrame("StatusBar", nil, knowledgePointTracker)
-		knowledgePointTracker.Bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-		knowledgePointTracker.Bar:SetStatusBarColor(1, .5, 0)
+		knowledgePointTracker.Bar:SetStatusBarTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\profbars\\generic.blp")
+		
 		knowledgePointTracker.Bar:SetPoint("TOPLEFT", 5, -5)
 		knowledgePointTracker.Bar:SetPoint("BOTTOMRIGHT", -5, 5)
 		Mixin(knowledgePointTracker.Bar, SmoothStatusBarMixin)
@@ -140,7 +140,7 @@ function app.KnowledgeTracker()
 			knowledgeMax = knowledgeMax + (pathInfo.maxRanks - 1)
 		end
 
-		-- Set text and progress, then show bar
+		-- Set text, background, and progress, then show bar
 		if userSettings["showKnowledgeNotPerks"] == true then
 			knowledgePointTracker.Text:SetText(knowledgeSpent.."/"..knowledgeMax.." knowledge spent")
 			knowledgePointTracker.Bar:SetMinMaxSmoothedValue(0, knowledgeMax)
@@ -150,6 +150,7 @@ function app.KnowledgeTracker()
 			knowledgePointTracker.Bar:SetMinMaxSmoothedValue(0, perkCount)
 			knowledgePointTracker.Bar:SetSmoothedValue(perksEarned)
 		end
+		knowledgePointTracker.Bar:SetStatusBarTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\profbars\\"..professionID..".blp")
 		knowledgePointTracker:Show()
 		knowledgePointTracker:SetPropagateKeyboardInput(true) -- So keyboard presses can be done
 	end
@@ -569,16 +570,6 @@ function app.KnowledgeTracker()
 		-- Set the tooltip size to fit its contents
 		knowledgePointTooltip:SetHeight(knowledgePointTooltipText:GetStringHeight()+20)
 		knowledgePointTooltip:SetWidth(knowledgePointTooltipText:GetStringWidth()+20)
-
-		-- Make progress bar green if everything is done
-		local minValue, maxValue = knowledgePointTracker.Bar:GetMinMaxValues() 
-		local currentValue = knowledgePointTracker.Bar:GetValue()
-
-		if progress == true or maxValue == currentValue then
-			knowledgePointTracker.Bar:SetStatusBarColor(0, 1, 0)
-		else
-			knowledgePointTracker.Bar:SetStatusBarColor(1, .5, 0)
-		end
 	end
 
 	-- Refresh and show the tooltip on mouse-over

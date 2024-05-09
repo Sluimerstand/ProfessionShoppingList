@@ -96,6 +96,13 @@ function app.Button(parent, text)
 	local f = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
 	f:SetText(text)
 	f:SetWidth(f:GetTextWidth()+20)
+	-- f:SetNormalTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\ui-panel-button-up.blp")
+	-- f:GetNormalTexture():SetTexCoord(0.0078125, 0.6171875, 0.03125, 0.6875)
+	-- f:SetPushedTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\ui-panel-button-down.blp")
+	-- f:GetPushedTexture():SetTexCoord(0.0078125, 0.6171875, 0.03125, 0.6875)
+	-- f:SetHighlightTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\ui-panel-button-highlight.blp")
+	-- f:GetHighlightTexture():SetTexCoord(0.0078125, 0.6171875, 0.03125, 0.6875)
+	-- TODO: Slice Mode? Maybe I can make this work
 	f:SetFrameStrata("HIGH")
 
 	return f
