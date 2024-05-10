@@ -48,6 +48,11 @@ function app.Dump(table)
 	print(dumpTable(table))
 end
 
+-- App colour
+function app.Color(string)
+	return "|R|cffC69B6D"..string.."|R"
+end
+
 -- Print with AddOn prefix
 function app.Print(...)
 	print(app.NameShort..":", ...)
@@ -91,20 +96,29 @@ function app.Popup(show, text)
 	return f
 end
 
+-- Border
+function app.Border(parent, a, b, c, d)
+	local border = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+	border:SetPoint("TOPLEFT", parent, a or 0, b or 0)
+	border:SetPoint("BOTTOMRIGHT", parent, c or 0, d or 0)
+	border:SetBackdrop({
+		bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+		edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+		edgeSize = 14,
+		insets = { left = 4, right = 4, top = 4, bottom = 4 },
+	})
+	border:SetBackdropColor(0, 0, 0, 0)
+	border:SetBackdropBorderColor(0.776, 0.608, 0.427)
+end
+
 -- Button
 function app.Button(parent, text)
 	local f = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
 	f:SetText(text)
 	f:SetWidth(f:GetTextWidth()+20)
-	-- f:SetNormalTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\ui-panel-button-up.blp")
-	-- f:GetNormalTexture():SetTexCoord(0.0078125, 0.6171875, 0.03125, 0.6875)
-	-- f:SetPushedTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\ui-panel-button-down.blp")
-	-- f:GetPushedTexture():SetTexCoord(0.0078125, 0.6171875, 0.03125, 0.6875)
-	-- f:SetHighlightTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\ui-panel-button-highlight.blp")
-	-- f:GetHighlightTexture():SetTexCoord(0.0078125, 0.6171875, 0.03125, 0.6875)
-	-- TODO: Slice Mode? Maybe I can make this work
-	f:SetFrameStrata("HIGH")
+	--f:SetFrameStrata("HIGH")
 
+	app.Border(f, 0, 0, 0, -1)
 	return f
 end
 
@@ -1991,6 +2005,7 @@ function app.CreateTradeskillAssets()
 		ebRecipeQuantity:SetScript("OnEscapePressed", function(self, newValue)
 			self:SetText(ebRecipeQuantityNo)
 		end)
+		app.Border(ebRecipeQuantity, -6, 1, 2, -2)
 	end
 
 	-- Create the profession UI untrack button
@@ -2016,6 +2031,7 @@ function app.CreateTradeskillAssets()
 		ebSLrank:SetAutoFocus(false)
 		ebSLrank:SetCursorPosition(0)
 		ebSLrank:Hide()
+		app.Border(ebSLrank, -6, 1, 2, -2)
 	end
 	if not ebSLrankText then
 		ebSLrankText = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -2039,7 +2055,7 @@ function app.CreateTradeskillAssets()
 		cookingFireButton:SetAttribute("spell1", 818)
 		cookingFireButton:SetAttribute("unit1", "player")
 		cookingFireButton:SetAttribute("spell2", 818)
-
+		app.Border(cookingFireButton, -1, 2, 2, -1)
 		cookingFireCooldown = CreateFrame("Cooldown", "CookingFireCooldown", cookingFireButton, "CooldownFrameTemplate")
 		cookingFireCooldown:SetAllPoints(cookingFireButton)
 		cookingFireCooldown:SetSwipeColor(1, 1, 1)
@@ -2058,6 +2074,7 @@ function app.CreateTradeskillAssets()
 		chefsHatButton:RegisterForClicks("AnyDown", "AnyUp")
 		chefsHatButton:SetAttribute("type1", "toy")
 		chefsHatButton:SetAttribute("toy", 134020)
+		app.Border(chefsHatButton, -1, 2, 2, -1)
 
 		chefsHatCooldown = CreateFrame("Cooldown", "ChefsHatCooldown", chefsHatButton, "CooldownFrameTemplate")
 		chefsHatCooldown:SetAllPoints(chefsHatButton)
@@ -2077,6 +2094,7 @@ function app.CreateTradeskillAssets()
 		thermalAnvilButton:RegisterForClicks("AnyDown", "AnyUp")
 		thermalAnvilButton:SetAttribute("type1", "macro")
 		thermalAnvilButton:SetAttribute("macrotext1", "/use item:87216")
+		app.Border(thermalAnvilButton, -1, 2, 2, -1)
 
 		thermalAnvilCooldown = CreateFrame("Cooldown", "ThermalAnvilCooldown", thermalAnvilButton, "CooldownFrameTemplate")
 		thermalAnvilCooldown:SetAllPoints(thermalAnvilButton)
@@ -2102,6 +2120,7 @@ function app.CreateTradeskillAssets()
 		alvinButton:SetFrameStrata("HIGH")
 		alvinButton:RegisterForClicks("AnyDown", "AnyUp")
 		alvinButton:SetAttribute("type1", "macro")
+		app.Border(alvinButton, -1, 2, 2, -1)
 
 		alvinCooldown = CreateFrame("Cooldown", "AlvinCooldown", alvinButton, "CooldownFrameTemplate")
 		alvinCooldown:SetAllPoints(alvinButton)
@@ -2121,6 +2140,7 @@ function app.CreateTradeskillAssets()
 		lightforgeButton:SetAttribute("type", "spell")
 		lightforgeButton:SetAttribute("spell", 259930)
 		lightforgeButton:Hide()
+		app.Border(lightforgeButton, -1, 2, 2, -1)
 
 		lightforgeCooldown = CreateFrame("Cooldown", "LightforgeCooldown", lightforgeButton, "CooldownFrameTemplate")
 		lightforgeCooldown:SetAllPoints(lightforgeButton)
@@ -2132,7 +2152,7 @@ function app.CreateTradeskillAssets()
 		millingDragonflight = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		millingDragonflight:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 30, 30)
 		millingDragonflight:SetJustifyH("LEFT")
-		millingDragonflight:SetText("|cffFFFFFFFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nBlazing Pigment: Saxifrage\nShimmering Pigment: Hochenblume")
+		millingDragonflight:SetText(app.Color("Milling information").."\n|cffFFFFFFFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nBlazing Pigment: Saxifrage\nShimmering Pigment: Hochenblume")
 	end
 
 	-- Create the fulfil crafting orders UI Track button
@@ -2411,7 +2431,7 @@ end
 function ProfessionShoppingList_Enter(self, button)
 	GameTooltip:ClearLines()
 	GameTooltip:SetOwner(type(self) ~= "string" and self or button, "ANCHOR_LEFT")
-	GameTooltip:AddLine("|cffFFFFFFProfession Shopping List|R\n|cff9D9D9DLeft-click:|R Toggle the windows.\n|cff9D9D9DRight-click:|R Show the settings.")
+	GameTooltip:AddLine(app.NameLong.."\n|cff9D9D9DLMB:|R Toggle the windows.\n|cff9D9D9DRMB:|R Show the settings.")
 	GameTooltip:Show()
 end
 
@@ -2442,7 +2462,7 @@ function app.Settings()
 		
 		OnTooltipShow = function(tooltip)
 			if not tooltip or not tooltip.AddLine then return end
-			tooltip:AddLine("|cffFFFFFFProfession Shopping List|R\n|cff9D9D9DLeft-click:|R Toggle the windows.\n|cff9D9D9DRight-click:|R Show the settings.")
+			tooltip:AddLine(app.NameLong.."\n|cff9D9D9DLMB:|R Toggle the windows.\n|cff9D9D9DRMB:|R Show the settings.")
 		end,
 	})
 						
@@ -3176,7 +3196,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 		end
 	end
 end
-	
+
 -- When a spell is succesfully cast by the player
 function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 	if UnitAffectingCombat("player") == false and unitTarget == "player" then

@@ -100,6 +100,7 @@ function app.CreateCraftingOrdersAssets()
 		personalCharname:SetScript("OnLeave", function()
 			personalOrderTooltip:Hide()
 		end)
+		app.Border(personalCharname, -6, 1, 2, -2)
 	end
 
 	local function quickOrder(recipeID)

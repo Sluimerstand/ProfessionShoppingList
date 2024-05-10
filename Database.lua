@@ -7,8 +7,8 @@
 local appName, app = ...	-- Returns the AddOn name and a unique table
 
 -- Used strings
-app.NameLong = "|R|cffC69B6DProfession Shopping List|R"
-app.NameShort = "|R|cffC69B6DPSL|R"
+app.NameLong = app.Color("Profession Shopping List")
+app.NameShort = app.Color("PSL")
 
 -- Used textures
 app.iconWaiting = "Interface\\RaidFrame\\ReadyCheck-Waiting"
