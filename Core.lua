@@ -283,6 +283,31 @@ function app.CreateWindow()
 		app.Window:Hide()
 	end)
 
+	-- Clear button
+	app.ClearButton = CreateFrame("Button", "pslOptionClearButton", app.Window, "UIPanelCloseButton")
+	app.ClearButton:SetPoint("TOPRIGHT", close, "TOPLEFT", -2, 0)
+	app.ClearButton:SetNormalTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-clear.blp")
+	app.ClearButton:GetNormalTexture():SetTexCoord(39/256, 75/256, 1/128, 38/128)
+	app.ClearButton:SetDisabledTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-clear.blp")
+	app.ClearButton:GetDisabledTexture():SetTexCoord(39/256, 75/256, 41/128, 78/128)
+	app.ClearButton:SetPushedTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-clear.blp")
+	app.ClearButton:GetPushedTexture():SetTexCoord(39/256, 75/256, 81/128, 118/128)
+	app.ClearButton:SetScript("OnClick", function()
+		StaticPopupDialogs["CLEAR_RECIPES"] = {
+			text = app.NameLong.."\nDo you want to clear all recipes?",
+			button1 = YES,
+			button2 = NO,
+			OnAccept = function()
+			app.Clear()
+			end,
+			timeout = 0,
+			whileDead = true,
+			hideOnEscape = true,
+			showAlert = true,
+		}
+		StaticPopup_Show("CLEAR_RECIPES", "Interface\\AddOns\\ProfessionShoppingList\assets\\psl_icon.blp")
+	end)
+
 	-- ScrollFrame inside the popup frame
 	local scrollFrame = CreateFrame("ScrollFrame", nil, app.Window, "ScrollFrameTemplate")
 	scrollFrame:SetPoint("TOPLEFT", app.Window, 7, -6)
@@ -573,6 +598,14 @@ function app.UpdateNumbers()
 				end
 			end
 		end
+	end
+
+	-- Enable or disable the clear button when appropriate
+	local next = next
+	if next(recipesTracked) == nil then
+		app.ClearButton:Disable()
+	else
+		app.ClearButton:Enable()
 	end
 end
 
