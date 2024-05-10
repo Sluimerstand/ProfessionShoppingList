@@ -1414,13 +1414,17 @@ function app.UpdateRecipes()
 
 	-- Set the header title accordingly
 	if trackRecipes == true and trackItems == true then
-		app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB.." & "..ITEMS)
+		app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB.." & "..ITEMS.." ("..#recipeRow..")")
 		app.ReagentHeader:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS.." & Costs")
 	elseif trackRecipes == false and trackItems == true then
-		app.RecipeHeader:SetText(ITEMS)
+		app.RecipeHeader:SetText(ITEMS.." ("..#recipeRow..")")
 		app.ReagentHeader:SetText("Costs")
 	else
-		app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB)
+		if #recipeRow == 0 then
+			app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB)
+		else
+			app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB.." ("..#recipeRow..")")
+		end
 		app.ReagentHeader:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS)
 	end
 
