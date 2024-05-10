@@ -505,7 +505,13 @@ function app.UpdateNumbers()
 			if math.max(0,amount-quantity) == 0 then
 				itemIcon = app.iconReady
 				color = "|cff9d9d9d"
-				itemLink = color..itemLink
+				itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|cff9d9d9d|") -- Poor
+				itemLink = string.gsub(itemLink, "|cffffffff|", "|cff9d9d9d|") -- Common
+				itemLink = string.gsub(itemLink, "|cff1eff00|", "|cff9d9d9d|") -- Uncommon
+				itemLink = string.gsub(itemLink, "|cff0070dd|", "|cff9d9d9d|") -- Rare
+				itemLink = string.gsub(itemLink, "|cffa335ee|", "|cff9d9d9d|") -- Epic
+				itemLink = string.gsub(itemLink, "|cffff8000|", "|cff9d9d9d|") -- Legendary
+				itemLink = string.gsub(itemLink, "|cffe6cc80|", "|cff9d9d9d|") -- Artifact
 			end
 
 			-- Set the displayed amount based on settings
@@ -526,7 +532,7 @@ function app.UpdateNumbers()
 					app.UpdatedReagentWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.UpdatedReagentWidth)
 				elseif string.find(reagentID, "currency") then
 					local number = string.gsub(reagentID, "currency:", "")
-					local name = C_CurrencyInfo.GetCurrencyInfo(tonumber(number)).name
+					local name = C_CurrencyInfo.GetCurrencyLink(tonumber(number))
 					if name == row.text1:GetText() then
 						row.icon:SetText("|T"..itemIcon..":0|t")
 						row.text1:SetText(itemLink)
@@ -3327,7 +3333,7 @@ function event:MERCHANT_SHOW()
 					fakeRecipeLibrary[key].costCurrency[currencyID] = itemValue
 					reagentCache["currency:"..currencyID] = { 
 						icon = itemTexture,
-						link = currencyName,
+						link = C_CurrencyInfo.GetCurrencyLink(currencyID),
 					}
 				elseif itemLink then
 					local itemID = GetItemInfoFromHyperlink(itemLink)
