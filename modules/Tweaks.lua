@@ -21,13 +21,19 @@ event:RegisterEvent("ADDON_LOADED")
 event:RegisterEvent("LFG_PROPOSAL_SHOW")
 event:RegisterEvent("MERCHANT_SHOW")
 event:RegisterEvent("PET_BATTLE_QUEUE_PROPOSE_MATCH")
+event:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 ------------------
 -- INITIAL LOAD --
 ------------------
 
--- Create SavedVariables, default user settings, and session variables
+-- Create default user settings
 function app.InitialiseTweaks()
+	-- Backpack
+	if userSettings["backpackCount"] == nil then userSettings["backpackCount"] = true end
+	if userSettings["backpackCleanup"] == nil then userSettings["backpackCleanup"] = "default" end
+	if userSettings["backpackLoot"] == nil then userSettings["backpackLoot"] = "default" end
+	-- Other Tweaks
 	if userSettings["vendorAll"] == nil then userSettings["vendorAll"] = true end
 	if userSettings["queueSound"] == nil then userSettings["queueSound"] = false end
 	if userSettings["underminePrices"] == nil then userSettings["underminePrices"] = false end
@@ -40,6 +46,25 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 		app.UnderminePrices()
 		app.HideOribos()
 		app.SettingsTweaks()
+	end
+end
+
+----------------------
+-- BACKPACK SORTING --
+----------------------
+
+function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
+	-- Enforce backpack sorting options
+	if userSettings["backpackCleanup"] == 1 then
+		C_Container.SetSortBagsRightToLeft(false)
+	elseif userSettings["backpackCleanup"] == 2 then
+		C_Container.SetSortBagsRightToLeft(true)
+	end
+	
+	if userSettings["backpackCleanup"] == 1 then
+		C_Container.SetInsertItemsLeftToRight(true)
+	elseif userSettings["backpackCleanup"] == 2 then
+		C_Container.SetInsertItemsLeftToRight(false)
 	end
 end
 
@@ -153,7 +178,6 @@ function app.UnderminePrices()
 end
 
 local LibBattlePetTooltipLine = LibStub("LibBattlePetTooltipLine-1-0")	-- Load this library
-
 hooksecurefunc("BattlePetToolTip_Show", function(...)
 	-- Only run this if the setting is enabled
 	if userSettings["underminePrices"] == true then
@@ -234,66 +258,86 @@ end
 --------------
 
 function app.SettingsTweaks()
-	-- Add subcategory
-	local scrollFrame = CreateFrame("ScrollFrame", nil, self, "ScrollFrameTemplate")
-	scrollFrame:Hide()	-- I'm fairly sure this isn't how you're supposed to prevent the subcategories from showing initially, but it works!
-	scrollFrame.ScrollBar:ClearPoint("RIGHT")
-	scrollFrame.ScrollBar:SetPoint("RIGHT", -36, 0)
+	local category, layout = Settings.RegisterVerticalLayoutSubcategory(app.Category, "Tweaks")
+	Settings.RegisterAddOnCategory(category)
 
-	local scrollChild = CreateFrame("Frame")
-	scrollFrame:SetScrollChild(scrollChild)
-	scrollChild:SetWidth(1)    -- This is automatically defined, so long as the attribute exists at all
-	scrollChild:SetHeight(1)    -- This is automatically defined, so long as the attribute exists at all
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(BAG_NAME_BACKPACK))
 
-	local subcategory = scrollFrame
-	subcategory.name = "Tweaks"
-	subcategory.parent = "Profession Shopping List"
-	InterfaceOptions_AddCategory(subcategory)
+	local variable, name, tooltip = "backpackCount", "Split reagent bag count", "Shows the free slots of your regular bags and your reagent bag separately on top of the backpack icon."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
+	Settings.SetOnValueChangedCallback(variable, function()
+		-- Get number of free bag slots
+		local freeSlots1 = C_Container.GetContainerNumFreeSlots(0) + C_Container.GetContainerNumFreeSlots(1) + C_Container.GetContainerNumFreeSlots(2) + C_Container.GetContainerNumFreeSlots(3) + C_Container.GetContainerNumFreeSlots(4)
+		local freeSlots2 = C_Container.GetContainerNumFreeSlots(5)
 
-	-- Category: Tweaks
-	local titleOtherFeatures = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	titleOtherFeatures:SetPoint("TOPLEFT", 0, 0)
-	titleOtherFeatures:SetJustifyH("LEFT")
-	titleOtherFeatures:SetScale(1.2)
-	titleOtherFeatures:SetText("Tweaks")
-
-	local cbShowRecipeCooldowns = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbShowRecipeCooldowns.Text:SetText("Recipe cooldown reminders")
-	cbShowRecipeCooldowns.Text:SetTextColor(1, 1, 1, 1)
-	cbShowRecipeCooldowns.Text:SetScale(1.2)
-	cbShowRecipeCooldowns:SetPoint("TOPLEFT", titleOtherFeatures, "BOTTOMLEFT", 0, 0)
-	cbShowRecipeCooldowns:SetChecked(userSettings["showRecipeCooldowns"])
-	cbShowRecipeCooldowns:SetScript("OnClick", function(self)
-		userSettings["showRecipeCooldowns"] = cbShowRecipeCooldowns:GetChecked()
+		-- If the setting for split reagent bag count is enabled and the player has a reagent bag
+		if userSettings["backpackCount"] == true and C_Container.GetContainerNumSlots(5) ~= 0 then
+			print("true")
+			-- Replace the bag count text
+			MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 .. "+" .. freeSlots2 .. ")")
+		else
+			print("false")
+			-- Reset the bag count text
+			MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 + freeSlots2 .. ")")
+		end
 	end)
 
-	local cbVendorAll = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbVendorAll.Text:SetText("Always set vendor filter to 'All'")
-	cbVendorAll.Text:SetTextColor(1, 1, 1, 1)
-	cbVendorAll.Text:SetScale(1.2)
-	cbVendorAll:SetPoint("TOPLEFT", cbShowRecipeCooldowns, "BOTTOMLEFT", 0, 0)
-	cbVendorAll:SetChecked(userSettings["vendorAll"])
-	cbVendorAll:SetScript("OnClick", function(self)
-		userSettings["vendorAll"] = cbVendorAll:GetChecked()
+	local variable, name, tooltip = "backpackCleanup", "Clean up bags", "Let ".. app.NameLong.." enforce cleanup sorting direction.\n- Default means "..app.NameShort.." won't touch the game's default behaviour;\n- The other options let "..app.NameShort.." enforce that particular setting."
+	local function GetOptions()
+		local container = Settings.CreateControlTextContainer()
+		container:Add(0, "Default")
+		container:Add(1, "Left-to-Right")
+		container:Add(2, "Right-to-Left")
+		return container:GetData()
+	end
+	local defaultValue = 0
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, userSettings[variable])
+	Settings.CreateDropDown(category, setting, GetOptions, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
+	Settings.SetOnValueChangedCallback(variable, function()
+		if userSettings["backpackCleanup"] == 1 then
+			C_Container.SetSortBagsRightToLeft(false)
+		elseif userSettings["backpackCleanup"] == 2 then
+			C_Container.SetSortBagsRightToLeft(true)
+		end
 	end)
 
-	local cbQueueSounds = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbQueueSounds.Text:SetText("Play sound when any queue pops")
-	cbQueueSounds.Text:SetTextColor(1, 1, 1, 1)
-	cbQueueSounds.Text:SetScale(1.2)
-	cbQueueSounds:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 0, 0)
-	cbQueueSounds:SetChecked(userSettings["queueSound"])
-	cbQueueSounds:SetScript("OnClick", function(self)
-		userSettings["queueSound"] = cbQueueSounds:GetChecked()
+	local variable, name, tooltip = "backpackLoot", "Loot order", "Let ".. app.NameLong.." enforce loot sorting direction.\n- Default means "..app.NameShort.." won't touch the game's default behaviour;\n- The other options let "..app.NameShort.." enforce that particular setting."
+	local function GetOptions()
+		local container = Settings.CreateControlTextContainer()
+		container:Add(0, "Default")
+		container:Add(1, "Left-to-Right")
+		container:Add(2, "Right-to-Left")
+		return container:GetData()
+	end
+	local defaultValue = 0
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, userSettings[variable])
+	Settings.CreateDropDown(category, setting, GetOptions, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
+	Settings.SetOnValueChangedCallback(variable, function()
+		if userSettings["backpackLoot"] == 1 then
+			C_Container.SetInsertItemsLeftToRight(true)
+		elseif userSettings["backpackLoot"] == 2 then
+			C_Container.SetInsertItemsLeftToRight(false)
+		end
 	end)
 
-	local cbUnderminePrices = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbUnderminePrices.Text:SetText("Use custom style for Oribos Exchange addon")
-	cbUnderminePrices.Text:SetTextColor(1, 1, 1, 1)
-	cbUnderminePrices.Text:SetScale(1.2)
-	cbUnderminePrices:SetPoint("TOPLEFT", cbQueueSounds, "BOTTOMLEFT", 0, 0)
-	cbUnderminePrices:SetChecked(userSettings["underminePrices"])
-	cbUnderminePrices:SetScript("OnClick", function(self)
-		userSettings["underminePrices"] = cbUnderminePrices:GetChecked()
-	end)
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Other Tweaks"))
+
+	local variable, name, tooltip = "vendorAll", "Disable vendor filter", "Automatically set all vendor filters to 'All' to display items normally not shown to your class."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
+
+	local variable, name, tooltip = "queueSound", "Play queue sound", "Play the Deadly Boss Mods style queue sound when any queue pops, including battlegrounds and pet battles."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
+
+	local variable, name, tooltip = "underminePrices", "Fix Oribos Exchange tooltip", "Let "..app.NameLong.." simplify and fix the tooltip provided by the Oribos Exchange AddOn:\n- Rounds to the nearest gold;\n- Fixes recipe prices;\n- Fixes profession window prices;\n- Shows battle pet prices inside the existing tooltip."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 end

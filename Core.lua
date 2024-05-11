@@ -140,20 +140,18 @@ function app.InitialiseCore()
 	if not personalOrders then personalOrders = {} end
 
 	-- Enable default user settings
-	-- TODO: Order by visual settings
 	if userSettings["hide"] == nil then userSettings["hide"] = false end
-	if userSettings["removeCraft"] == nil then userSettings["removeCraft"] = true end
-	if userSettings["showRemaining"] == nil then userSettings["showRemaining"] = false end
-	if userSettings["showTooltip"] == nil then userSettings["showTooltip"] = true end
-	if userSettings["reagentQuality"] == nil then userSettings["reagentQuality"] = 1 end
-	if userSettings["closeWhenDone"] == nil then userSettings["closeWhenDone"] = false end
-	if userSettings["pcWindows"] == nil then userSettings["pcWindows"] = false end
+	if userSettings["minimapIcon"] == nil then userSettings["minimapIcon"] = true end
 	if userSettings["pcRecipesTracked"] == nil then userSettings["pcRecipesTracked"] = false end
-	if userSettings["headerTooltip"] == nil then userSettings["headerTooltip"] = true end
+	if userSettings["pcWindows"] == nil then userSettings["pcWindows"] = false end
+	-- Tracking Window
 	if userSettings["showRecipeCooldowns"] == nil then userSettings["showRecipeCooldowns"] = true end
-	if userSettings["backpackCount"] == nil then userSettings["backpackCount"] = true end
-	if userSettings["backpackCleanup"] == nil then userSettings["backpackCleanup"] = "default" end
-	if userSettings["backpackLoot"] == nil then userSettings["backpackLoot"] = "default" end
+	if userSettings["showRemaining"] == nil then userSettings["showRemaining"] = false end
+	if userSettings["reagentQuality"] == nil then userSettings["reagentQuality"] = 1 end
+	if userSettings["removeCraft"] == nil then userSettings["removeCraft"] = true end
+	if userSettings["closeWhenDone"] == nil then userSettings["closeWhenDone"] = false end
+	if userSettings["showTooltip"] == nil then userSettings["showTooltip"] = true end
+	-- Hidden	
 	if userSettings["windowPosition"] == nil then userSettings["windowPosition"] = { ["left"] = 1295, ["bottom"] = 836, ["width"] = 200, ["height"] = 200, } end
 	if userSettings["pcwindowPosition"] == nil then userSettings["pcWindowPosition"] = userSettings["windowPosition"] end
 	if userSettings["alvinGUID"] == nil then userSettings["alvinGUID"] = "unknown" end
@@ -230,6 +228,17 @@ function app.Legacy()
 			v.maxCharges = 0
 		end
 	end
+
+	-- v10.2.7-003
+	if userSettings["backpackCleanup"] == "default" then userSettings["backpackCleanup"] = 0 end
+	if userSettings["backpackCleanup"] == "ltor" then userSettings["backpackCleanup"] = 1 end
+	if userSettings["backpackCleanup"] == "rtol" then userSettings["backpackCleanup"] = 2 end
+
+	if userSettings["backpackLoot"] == "default" then userSettings["backpackLoot"] = 0 end
+	if userSettings["backpackLoot"] == "ltor" then userSettings["backpackLoot"] = 1 end
+	if userSettings["backpackLoot"] == "rtol" then userSettings["backpackLoot"] = 2 end
+
+	userSettings["headerTooltip"] = nil
 end
 
 -- Save the window position and size
@@ -2423,7 +2432,7 @@ end
 
 -- Open settings
 function app.OpenSettings()
-	InterfaceOptionsFrame_OpenToCategory("Profession Shopping List")
+	Settings.OpenToCategory(app.Category:GetID())
 end
 
 function ProfessionShoppingList_Click(self, button)
@@ -2447,15 +2456,10 @@ end
 
 -- Settings and minimap icon
 function app.Settings()
-	-- Initialise the Settings page so the Minimap button can go there
-	local settings = CreateFrame("Frame")
-	settings.name = "Profession Shopping List"
-	InterfaceOptions_AddCategory(settings)
-
-	-- Initialise the minimap button before the settings button is made, so it can toggle it
+	-- Minimap button
 	local miniButton = LibStub("LibDataBroker-1.1"):NewDataObject("ProfessionShoppingList", {
 		type = "data source",
-		text = "Profession Shopping List",
+		text = app.NameLong,
 		icon = "Interface\\AddOns\\ProfessionShoppingList\\assets\\psl_icon",
 		
 		OnClick = function(self, button)
@@ -2475,375 +2479,136 @@ function app.Settings()
 	local icon = LibStub("LibDBIcon-1.0", true)
 	icon:Register("ProfessionShoppingList", miniButton, userSettings)
 
-	if userSettings["hide"] == true then 
-		icon:Hide("ProfessionShoppingList")
-	else
+	if userSettings["minimapIcon"] == true then
+		userSettings["hide"] = false
 		icon:Show("ProfessionShoppingList")
+	else
+		userSettings["hide"] = true
+		icon:Hide("ProfessionShoppingList")
 	end
 
-	-- Settings frame
-	local scrollFrame = CreateFrame("ScrollFrame", nil, settings, "ScrollFrameTemplate")
-	scrollFrame:SetPoint("TOPLEFT", 0, 0)
-	scrollFrame:SetPoint("BOTTOMRIGHT", -25, 0)	-- Allow space for the scrollbar
+	-- Settings page
+	function app.SettingChanged(_, setting, value)
+		local variable = setting:GetVariable()
+		userSettings[variable] = value
+	end
 
-	local scrollChild = CreateFrame("Frame")
-	scrollFrame:SetScrollChild(scrollChild)
-	scrollChild:SetWidth(1)	-- This is automatically defined, so long as the attribute exists at all
-	scrollChild:SetHeight(1)	-- This is automatically defined, so long as the attribute exists at all
+	local category, layout = Settings.RegisterVerticalLayoutCategory(app.NameLong)
+	Settings.RegisterAddOnCategory(category)
+	app.Category = category
 
-	-- Settings
-	-- TODO: functions for checkboxes, sliders, header and include cb:SetHitRectInsets(0,0 - cb.Text:GetWidth(),0,0);
-	local title = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormalLarge")
-	title:SetPoint("TOPLEFT", 0, 0)
-	title:SetText("Profession Shopping List")
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(GetAddOnMetadata("ProfessionShoppingList", "Version")))
 
-	local addonVersion = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormalLarge")
-	addonVersion:SetPoint("TOPRIGHT", scrollChild, "TOPLEFT", 638, 0)
-	addonVersion:SetText(GetAddOnMetadata("ProfessionShoppingList", "Version"))
-
-	-- General
-	local cbMinimapButton = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbMinimapButton.Text:SetText("Minimap button")
-	cbMinimapButton.Text:SetTextColor(1, 1, 1, 1)
-	cbMinimapButton.Text:SetScale(1.2)
-	cbMinimapButton:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -10)
-	cbMinimapButton:SetChecked(not userSettings["hide"])
-	cbMinimapButton:SetScript("OnClick", function(self)
-		userSettings["hide"] = not self:GetChecked()
-		if userSettings["hide"] == true then
-			icon:Hide("ProfessionShoppingList")
-		else
+	local variable, name, tooltip = "minimapIcon", "Show minimap icon", "Show the minimap icon. If you disable this, "..app.NameLong.." is still available from the AddOn Compartment."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
+	Settings.SetOnValueChangedCallback(variable, function()
+		if userSettings["minimapIcon"] == true then
+			userSettings["hide"] = false
 			icon:Show("ProfessionShoppingList")
-		end
-	end)
-
-	local cbHeaderTooltip = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbHeaderTooltip.Text:SetText("Header tooltip")
-	cbHeaderTooltip.Text:SetTextColor(1, 1, 1, 1)
-	cbHeaderTooltip.Text:SetScale(1.2)
-	cbHeaderTooltip:SetPoint("TOPLEFT", cbMinimapButton, "BOTTOMLEFT", 0, 0)
-	cbHeaderTooltip:SetChecked(userSettings["headerTooltip"])
-	cbHeaderTooltip:SetScript("OnClick", function(self)
-		userSettings["headerTooltip"] = cbHeaderTooltip:GetChecked()
-	end)
-
-	local cbPcWindowPosition = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbPcWindowPosition.Text:SetText("Save window positions per character")
-	cbPcWindowPosition.Text:SetTextColor(1, 1, 1, 1)
-	cbPcWindowPosition.Text:SetScale(1.2)
-	cbPcWindowPosition:SetPoint("TOPLEFT", cbMinimapButton, "TOPLEFT", 240, 0)
-	cbPcWindowPosition:SetChecked(userSettings["pcWindows"])
-	cbPcWindowPosition:SetScript("OnClick", function(self)
-		userSettings["pcWindows"] = self:GetChecked()
-	end)
-
-	local cbPcRecipesTracked = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbPcRecipesTracked.Text:SetText("Track recipes per character")
-	cbPcRecipesTracked.Text:SetTextColor(1, 1, 1, 1)
-	cbPcRecipesTracked.Text:SetScale(1.2)
-	cbPcRecipesTracked:SetPoint("TOPLEFT", cbPcWindowPosition, "BOTTOMLEFT", 0, 0)
-	cbPcRecipesTracked:SetChecked(userSettings["pcRecipesTracked"])
-	cbPcRecipesTracked:SetScript("OnClick", function(self)
-		userSettings["pcRecipesTracked"] = cbPcRecipesTracked:GetChecked()
-		app.UpdateRecipes()
-	end)
-
-	-- Category: List and tracking
-	local titleListSettings = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	titleListSettings:SetPoint("TOPLEFT", cbHeaderTooltip, "BOTTOMLEFT", 0, -10)
-	titleListSettings:SetJustifyH("LEFT")
-	titleListSettings:SetScale(1.2)
-	titleListSettings:SetText("List and tracking")
-
-	local cbCloseWhenDoneCheck	-- Declare it here, so we can reference it for all the option dependencies
-
-	local cbRemoveCraft = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbRemoveCraft.Text:SetText("Untrack on crafting")
-	cbRemoveCraft.Text:SetTextColor(1, 1, 1, 1)
-	cbRemoveCraft.Text:SetScale(1.2)
-	cbRemoveCraft:SetPoint("TOPLEFT", titleListSettings, "BOTTOMLEFT", 0, 0)
-	cbRemoveCraft:SetChecked(userSettings["removeCraft"])
-	cbRemoveCraft:SetScript("OnClick", function(self)
-		userSettings["removeCraft"] = cbRemoveCraft:GetChecked()
-		cbCloseWhenDoneCheck()
-	end)
-
-	local cbCloseWhenDone = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbCloseWhenDone.Text:SetText("Close windows when done")
-	cbCloseWhenDone.Text:SetScale(1.2)
-	cbCloseWhenDone:SetPoint("TOPLEFT", cbRemoveCraft, "BOTTOMLEFT", 15, 0)
-	cbCloseWhenDone:SetChecked(userSettings["closeWhenDone"])
-	cbCloseWhenDone:SetScript("OnClick", function(self)
-		userSettings["closeWhenDone"] = cbCloseWhenDone:GetChecked()
-	end)
-
-	-- Disable this option when the dependency option is unchecked
-	cbCloseWhenDoneCheck = function()
-		if userSettings["removeCraft"] == true then
-			cbCloseWhenDone:Enable()
-			cbCloseWhenDone.Text:SetTextColor(1, 1, 1, 1)
 		else
-			cbCloseWhenDone:Disable()
-			cbCloseWhenDone.Text:SetTextColor(.62, .62, .62, 1)
+			userSettings["hide"] = true
+			icon:Hide("ProfessionShoppingList")
 		end
-	end
-	cbCloseWhenDoneCheck()
+	end)
 
-	local cbShowRemaining = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbShowRemaining.Text:SetText("Show remaining reagents, not total")
-	cbShowRemaining.Text:SetTextColor(1, 1, 1, 1)
-	cbShowRemaining.Text:SetScale(1.2)
-	cbShowRemaining:SetPoint("TOPLEFT", cbCloseWhenDone, "BOTTOMLEFT", -15, 0)
-	cbShowRemaining:SetChecked(userSettings["showRemaining"])
-	cbShowRemaining:SetScript("OnClick", function(self)
-		userSettings["showRemaining"] = cbShowRemaining:GetChecked()
+	local variable, name, tooltip = "pcRecipesTracked", "Track recipes per character", "Track recipes per character, instead of account-wide."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
+	Settings.SetOnValueChangedCallback(variable, function()
 		app.UpdateRecipes()
 	end)
 
-	local cbShowTooltip = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbShowTooltip.Text:SetText("Show tooltip information")
-	cbShowTooltip.Text:SetTextColor(1, 1, 1, 1)
-	cbShowTooltip.Text:SetScale(1.2)
-	cbShowTooltip:SetPoint("TOPLEFT", cbShowRemaining, "BOTTOMLEFT", 0, 0)
-	cbShowTooltip:SetChecked(userSettings["showTooltip"])
-	cbShowTooltip:SetScript("OnClick", function(self)
-		userSettings["showTooltip"] = cbShowTooltip:GetChecked()
+	local variable, name, tooltip = "pcWindows", "Window position per character", "Save the window position per character, instead of account-wide."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
+
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Tracking Window"))
+
+	local variable, name, tooltip = "showRecipeCooldowns", "Track recipe cooldowns", "Enable the tracking of recipe cooldowns. These will show in the tracking window, and in chat upon login if ready."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
+
+	local variable, name, tooltip = "showRemaining", "Show remaining reagents", "Only show how many reagents you still need in the tracking window, instead of have/need."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
+	Settings.SetOnValueChangedCallback(variable, function()
+		app.UpdateRecipes()
 	end)
 
-	local slReagentQuality = CreateFrame("Slider", nil, scrollChild, "UISliderTemplateWithLabels")
-	slReagentQuality:SetPoint("TOPLEFT", cbShowTooltip, "BOTTOMLEFT", 5, -15)
-	slReagentQuality:SetOrientation("HORIZONTAL")
-	slReagentQuality:SetWidth(150)
-	slReagentQuality:SetHeight(17)
-	slReagentQuality:SetMinMaxValues(1,3)
-	slReagentQuality:SetValueStep(1)
-	slReagentQuality:SetObeyStepOnDrag(true)
-	slReagentQuality.Low:SetText("|A:Professions-ChatIcon-Quality-Tier1:17:15::1|a")
-	slReagentQuality.High:SetText("|A:Professions-ChatIcon-Quality-Tier3:17:15::1|a")
-	slReagentQuality.Text:SetText("Minimum reagent quality")
-	slReagentQuality:SetValue(userSettings["reagentQuality"])
-	slReagentQuality.Label = slReagentQuality:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-	slReagentQuality.Label:SetPoint("TOP", slReagentQuality, "BOTTOM", 0, 0)
-	slReagentQuality.Label:SetText("Min: |A:Professions-ChatIcon-Quality-Tier"..slReagentQuality:GetValue()..":17:15::1|a")
-	slReagentQuality:SetScript("OnValueChanged", function(self, newValue)
-		userSettings["reagentQuality"] = newValue
-		self:SetValue(userSettings["reagentQuality"])
-		self.Label:SetText("Min: |A:Professions-ChatIcon-Quality-Tier"..slReagentQuality:GetValue()..":17:15::1|a")
+	local variable, name, tooltip = "reagentQuality", "Minimum reagent quality", "Set the minimum quality reagents have to be before "..app.NameLong.." includes them in the item count."
+	local function GetOptions()
+		local container = Settings.CreateControlTextContainer()
+		container:Add(1, "|A:Professions-ChatIcon-Quality-Tier1:17:15::1|a Tier 1")
+		container:Add(2, "|A:Professions-ChatIcon-Quality-Tier2:17:15::1|a Tier 2")
+		container:Add(3, "|A:Professions-ChatIcon-Quality-Tier3:17:15::1|a Tier 3")
+		return container:GetData()
+	end
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, userSettings[variable])
+	Settings.CreateDropDown(category, setting, GetOptions, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
+	Settings.SetOnValueChangedCallback(variable, function()
 		app.UpdateNumbers()
 	end)
 
-	-- Category: Backpack
-	local titleBackpack = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	titleBackpack:SetPoint("TOPLEFT", slReagentQuality, "BOTTOMLEFT", -5, -25)
-	titleBackpack:SetPoint("TOP", cbKnowledgeAlwaysShowDetails, "BOTTOM", 0, -5)
-	titleBackpack:SetJustifyH("LEFT")
-	titleBackpack:SetScale(1.2)
-	titleBackpack:SetText("Backpack")
+	-- local cbVariable, cbName, cbTooltip = "removeCraft", "Untrack on craft", "Remove one of a tracked recipe when you successfully craft it."
+	-- local cbSetting = Settings.RegisterAddOnSetting(category, cbName, cbVariable, Settings.VarType.Boolean, userSettings[variable])
+	-- Settings.SetOnValueChangedCallback(cbVariable, app.SettingChanged)
+	-- local ddVariable, ddName, ddTooltip = "closeWhenDone", "Close window when done", ""
+	-- local ddSetting = Settings.RegisterAddOnSetting(category, ddName, ddVariable, Settings.VarType.Boolean, userSettings[variable])
+	-- Settings.SetOnValueChangedCallback(ddVariable, app.SettingChanged)
+	-- local function GetOptionData(options)
+	-- 	local container = Settings.CreateControlTextContainer()
+	-- 	container:Add(false, "Keep window open when done", "Default behaviour.")
+	-- 	container:Add(true, "Close window when done", "Close the tracking window after crafting the last tracked recipe.")
+	-- 	return container:GetData()
+	-- end
+	-- local initializer = CreateSettingsCheckBoxDropDownInitializer(
+	-- 	cbSetting, cbName, cbTooltip,
+	-- 	ddSetting, GetOptionData, ddName, ddTooltip)
+	-- layout:AddInitializer(initializer)
 
-	local cbBackpackCount = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbBackpackCount.Text:SetText("Split reagent bag count")
-	cbBackpackCount.Text:SetTextColor(1, 1, 1, 1)
-	cbBackpackCount.Text:SetScale(1.2)
-	cbBackpackCount:SetPoint("TOPLEFT", titleBackpack, "BOTTOMLEFT", 0, 0)
-	cbBackpackCount:SetChecked(userSettings["backpackCount"])
-	cbBackpackCount:SetScript("OnClick", function(self)
-		userSettings["backpackCount"] = cbBackpackCount:GetChecked()
+	local variable, name, tooltip = "removeCraft", "Untrack on craft", "Remove one of a tracked recipe when you successfully craft it."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local parentSetting = Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
-		-- Get number of free bag slots
-		local freeSlots1 = C_Container.GetContainerNumFreeSlots(0) + C_Container.GetContainerNumFreeSlots(1) + C_Container.GetContainerNumFreeSlots(2) + C_Container.GetContainerNumFreeSlots(3) + C_Container.GetContainerNumFreeSlots(4)
-		local freeSlots2 = C_Container.GetContainerNumFreeSlots(5)
+	local variable, name, tooltip = "closeWhenDone", "Close window when done", "Close the tracking window after crafting the last tracked recipe."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local subSetting = Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
+	subSetting:SetParentInitializer(parentSetting, function() return userSettings["removeCraft"] end)
 
-		-- If the setting for split reagent bag count is enabled and the player has a reagent bag
-		if userSettings["backpackCount"] == true and C_Container.GetContainerNumSlots(5) ~= 0 then
-			-- Replace the bag count text
-			MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 .. "+" .. freeSlots2 .. ")")
-		else
-			-- Reset the bag count text
-			MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 + freeSlots2 .. ")")
-		end
-	end)
+	local variable, name, tooltip = "showTooltip", "Show tooltip", "Show how many of a reagent you have/need on the item's tooltip."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
-		-- Cleanup and Loot order tooltip
-		local orderTooltip = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
-		orderTooltip:SetPoint("TOPLEFT", cbBackpackCount, "BOTTOMLEFT", 0, 0)
-		orderTooltip:SetFrameStrata("TOOLTIP")
-		orderTooltip:SetBackdrop({
-			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-			edgeSize = 16,
-			insets = { left = 4, right = 4, top = 4, bottom = 4 },
-		})
-		orderTooltip:SetBackdropColor(0, 0, 0, 0.9)
-		orderTooltip:EnableMouse(false)
-		orderTooltip:SetMovable(false)
-		orderTooltip:Hide()
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Information"))
 
-		orderTooltipText = orderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		orderTooltipText:SetPoint("TOPLEFT", orderTooltip, "TOPLEFT", 10, -10)
-		orderTooltipText:SetJustifyH("LEFT")
-		orderTooltipText:SetText("Default means PSL will not adjust this hidden game setting.\nThe other options let PSL enforce that particular setting.")
-
-		-- Set the tooltip size to fit its contents
-		orderTooltip:SetHeight(orderTooltipText:GetStringHeight()+20)
-		orderTooltip:SetWidth(orderTooltipText:GetStringWidth()+20)
-
-	local textCleanUpBags = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	textCleanUpBags:SetPoint("TOPLEFT", cbBackpackCount, "BOTTOMLEFT", 3, 0)
-	textCleanUpBags:SetJustifyH("LEFT")
-	textCleanUpBags:SetText("|cffFFFFFFClean Up Bags")
-	textCleanUpBags:EnableMouse(true)
-	textCleanUpBags:SetScript("OnEnter", function(self)
-		orderTooltip:Show()
-	end)
-	textCleanUpBags:SetScript("OnLeave", function(self)
-		orderTooltip:Hide()
-	end)
-
-	local cbCleanupDefault = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	local cbCleanupLtoR = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	local cbCleanupRtoL = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-
-		-- Radio button
-		local function cbCleanupToggle(state)
-			-- Grab user setting if we're not toggling but just loading
-			if not state then state = userSettings["backpackCleanup"] end
-
-			-- Set the user setting (either doesn't change, or gets set to what the user clicked)
-			userSettings["backpackCleanup"] = state
-
-			-- Make the checkboxes act like radio buttons
-			if state == "default" then
-				cbCleanupDefault:SetChecked(true)
-				cbCleanupLtoR:SetChecked(false)
-				cbCleanupRtoL:SetChecked(false)
-			elseif state == "ltor" then
-				cbCleanupDefault:SetChecked(false)
-				cbCleanupLtoR:SetChecked(true)
-				cbCleanupRtoL:SetChecked(false)
-
-				-- Enforce the setting
-				C_Container.SetSortBagsRightToLeft(false)
-			elseif state == "rtol" then
-				cbCleanupDefault:SetChecked(false)
-				cbCleanupLtoR:SetChecked(false)
-				cbCleanupRtoL:SetChecked(true)
-
-				-- Enforce the setting
-				C_Container.SetSortBagsRightToLeft(true)
-			end
-		end
-		cbCleanupToggle()
-
-	cbCleanupDefault.Text:SetText("Default")
-	cbCleanupDefault.tooltip = "Test."
-	cbCleanupDefault.Text:SetTextColor(1, 1, 1, 1)
-	cbCleanupDefault.Text:SetScale(1.2)
-	cbCleanupDefault:SetPoint("TOPLEFT", textCleanUpBags, "BOTTOMLEFT", -3, 0)
-	cbCleanupDefault:SetScript("OnClick", function(self)
-		cbCleanupToggle("default")
-	end)
-
-	cbCleanupLtoR.Text:SetText("Left-to-Right")
-	cbCleanupLtoR.Text:SetTextColor(1, 1, 1, 1)
-	cbCleanupLtoR.Text:SetScale(1.2)
-	cbCleanupLtoR:SetPoint("LEFT", cbCleanupDefault.Text, "RIGHT", 3, 0)
-	cbCleanupLtoR:SetPoint("TOP", cbCleanupDefault, "TOP", 0, 0)
-	cbCleanupLtoR:SetScript("OnClick", function(self)
-		cbCleanupToggle("ltor")
-	end)
-
-	cbCleanupRtoL.Text:SetText("Right-to-Left")
-	cbCleanupRtoL.Text:SetTextColor(1, 1, 1, 1)
-	cbCleanupRtoL.Text:SetScale(1.2)
-	cbCleanupRtoL:SetPoint("LEFT", cbCleanupLtoR.Text, "RIGHT", 3, 0)
-	cbCleanupRtoL:SetPoint("TOP", cbCleanupLtoR, "TOP", 0, 0)
-	cbCleanupRtoL:SetScript("OnClick", function(self)
-		cbCleanupToggle("rtol")
-	end)
-
-	local textLootOrder = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	textLootOrder:SetPoint("TOPLEFT", cbCleanupDefault, "BOTTOMLEFT", 3, 0)
-	textLootOrder:SetJustifyH("LEFT")
-	textLootOrder:SetText("|cffFFFFFFLoot Order")
-	textLootOrder:EnableMouse(true)
-	textLootOrder:SetScript("OnEnter", function(self)
-		orderTooltip:Show()
-	end)
-	textLootOrder:SetScript("OnLeave", function(self)
-		orderTooltip:Hide()
-	end)
-
-	local cbLootDefault = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	local cbLootLtoR = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	local cbLootRtoL = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-
-	-- Radio button
-	local function cbLootToggle(state)
-		-- Grab user setting if we're not toggling but just loading
-		if not state then state = userSettings["backpackLoot"] end
-
-		-- Set the user setting (either doesn't change, or gets set to what the user clicked)
-		userSettings["backpackLoot"] = state
-
-		-- Make the checkboxes act like radio buttons
-		if state == "default" then
-			cbLootDefault:SetChecked(true)
-			cbLootLtoR:SetChecked(false)
-			cbLootRtoL:SetChecked(false)
-		elseif state == "ltor" then
-			cbLootDefault:SetChecked(false)
-			cbLootLtoR:SetChecked(true)
-			cbLootRtoL:SetChecked(false)
-
-			-- Enforce the setting
-			C_Container.SetInsertItemsLeftToRight(true)
-		elseif state == "rtol" then
-			cbLootDefault:SetChecked(false)
-			cbLootLtoR:SetChecked(false)
-			cbLootRtoL:SetChecked(true)
-
-			-- Enforce the setting
-			C_Container.SetInsertItemsLeftToRight(false)
-		end
+	local variable, name, tooltip = "", "Slash commands", "Type these in chat to use them!"
+	local function GetOptions()
+		local container = Settings.CreateControlTextContainer()
+		container:Add(1, "/psl", "Toggle the tracking window.")
+		container:Add(2, "/psl resetpos", "Reset the tracking window position.")
+		container:Add(3, "/psl settings", "Go to the settings, which is here! :D")
+		container:Add(4, "/psl clear", "Clear all tracked recipes.")
+		container:Add(5, "/psl track |cff1B9C85recipeID quantity|R", "Track a recipe.")
+		container:Add(6, "/psl untrack |cff1B9C85recipeID quantity|R", "Untrack a recipe.")
+		container:Add(7, "/psl untrack |cff1B9C85recipeID |Rall", "Untrack all of a recipe.")
+		container:Add(8, "/psl |cff1B9C85[crafting achievement]|R", "Track the recipes needed for the linked achievement.")
+		container:Add(8, "/psl duration |cff1B9C85number|R", "Set the default quick order duration.")
+		return container:GetData()
 	end
-	cbLootToggle()
-
-	cbLootDefault.Text:SetText("Default")
-	cbLootDefault.Text:SetTextColor(1, 1, 1, 1)
-	cbLootDefault.Text:SetScale(1.2)
-	cbLootDefault:SetPoint("TOPLEFT", textLootOrder, "BOTTOMLEFT", -3, 0)
-	cbLootDefault:SetScript("OnClick", function(self)
-		cbLootToggle("default")
-	end)
-
-	cbLootLtoR.Text:SetText("Left-to-Right")
-	cbLootLtoR.Text:SetTextColor(1, 1, 1, 1)
-	cbLootLtoR.Text:SetScale(1.2)
-	cbLootLtoR:SetPoint("LEFT", cbLootDefault.Text, "RIGHT", 3, 0)
-	cbLootLtoR:SetPoint("TOP", cbLootDefault, "TOP", 0, 0)
-	cbLootLtoR:SetScript("OnClick", function(self)
-		cbLootToggle("ltor")
-	end)
-
-	cbLootRtoL.Text:SetText("Right-to-Left")
-	cbLootRtoL.Text:SetTextColor(1, 1, 1, 1)
-	cbLootRtoL.Text:SetScale(1.2)
-	cbLootRtoL:SetPoint("LEFT", cbLootLtoR.Text, "RIGHT", 3, 0)
-	cbLootRtoL:SetPoint("TOP", cbLootLtoR, "TOP", 0, 0)
-	cbLootRtoL:SetScript("OnClick", function(self)
-		cbLootToggle("rtol")
-	end)
-
-	-- Extra text
-	local SettingsText1 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	SettingsText1:SetPoint("TOPLEFT", cbLootDefault, "BOTTOMLEFT", 3, -15)
-	SettingsText1:SetJustifyH("LEFT")
-	SettingsText1:SetText("Chat commands:\n/psl |cffFFFFFF- Toggle the PSL windows.\n|R/psl resetpos |cffFFFFFF- Reset the PSL window positions.\n|R/psl settings |cffFFFFFF- Open the PSL settings.\n|R/psl clear |cffFFFFFF- Clear all tracked recipes.\n|R/psl track |cff1B9C85recipeID quantity |R|cffFFFFFF- Track a recipe.\n|R/psl untrack |cff1B9C85recipeID quantity |R|cffFFFFFF- Untrack a recipe.\n|R/psl untrack |cff1B9C85recipeID |Rall |cffFFFFFF- Untrack all of a recipe.\n|R/psl |cff1B9C85[crafting achievement] |R |cffFFFFFF- Track the recipes needed for the linked achievement.\n|R/psl duration |cff1B9C85number |R |cffFFFFFF- Set the default quick order duration.")
-
-	local SettingsText2 = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	SettingsText2:SetPoint("TOPLEFT", SettingsText1, "BOTTOMLEFT", 0, -15)
-	SettingsText2:SetJustifyH("LEFT")
-	SettingsText2:SetText("Other features:\n|cffFFFFFF- Adds buttons for Cooking Fire, Chef's Hat, and Thermal Anvil.\n- Copy tracked reagents to the Auctionator import window.")
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, "")
+	Settings.CreateDropDown(category, setting, GetOptions, tooltip)
+	
+	--initializer:AddSearchTags
 end
 
 -- When the AddOn is fully loaded, actually run the components

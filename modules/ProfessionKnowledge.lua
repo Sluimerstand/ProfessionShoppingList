@@ -25,7 +25,7 @@ event:RegisterEvent("TRADE_SKILL_SHOW")
 -- INITIAL LOAD --
 ------------------
 
--- Create SavedVariables, default user settings, and session variables
+-- Create default user settings and session variables
 function app.InitialiseProfessionKnowledge()
 	-- Enable default user settings
 	if userSettings["showKnowledgeNotPerks"] == nil then userSettings["showKnowledgeNotPerks"] = false end
@@ -1092,56 +1092,23 @@ end
 --------------
 
 function app.SettingsKnowledgeTracker()
-	-- Add subcategory
-	local scrollFrame = CreateFrame("ScrollFrame", nil, self, "ScrollFrameTemplate")
-	scrollFrame:Hide()	-- I'm fairly sure this isn't how you're supposed to prevent the subcategories from showing initially, but it works!
-	scrollFrame.ScrollBar:ClearPoint("RIGHT")
-	scrollFrame.ScrollBar:SetPoint("RIGHT", -36, 0)
+	local category, layout = Settings.RegisterVerticalLayoutSubcategory(app.Category, "Profession Knowledge")
+	Settings.RegisterAddOnCategory(category)
 
-	local scrollChild = CreateFrame("Frame")
-	scrollFrame:SetScrollChild(scrollChild)
-	scrollChild:SetWidth(1)    -- This is automatically defined, so long as the attribute exists at all
-	scrollChild:SetHeight(1)    -- This is automatically defined, so long as the attribute exists at all
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Knowledge Tracker"))
 
-	local subcategory = scrollFrame
-	subcategory.name = "Knowledge Tracker"
-	subcategory.parent = "Profession Shopping List"
-	InterfaceOptions_AddCategory(subcategory)
+	local variable, name, tooltip = "showKnowledgeNotPerks", "Count knowledge, not perks", "Show the amount of knowledge points spent, instead of the amount of perks (nodes) unlocked."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
-	-- Category: Knowledge Tracker
-	local titleKnowledgeTracker = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	titleKnowledgeTracker:SetPoint("TOPLEFT", 0, 0)
-	titleKnowledgeTracker:SetJustifyH("LEFT")
-	titleKnowledgeTracker:SetScale(1.2)
-	titleKnowledgeTracker:SetText("Knowledge tracker")
+	local variable, name, tooltip = "knowledgeHideDone", "Hide unique done knowledge", "Hide knowledge that can only be collected once when it has been collected."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
-	local cbShowKnowledgeNotPerks = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbShowKnowledgeNotPerks.Text:SetText("Show knowledge, not perks")
-	cbShowKnowledgeNotPerks.Text:SetTextColor(1, 1, 1, 1)
-	cbShowKnowledgeNotPerks.Text:SetScale(1.2)
-	cbShowKnowledgeNotPerks:SetPoint("TOPLEFT", titleKnowledgeTracker, "BOTTOMLEFT", 0, 0)
-	cbShowKnowledgeNotPerks:SetChecked(userSettings["showKnowledgeNotPerks"])
-	cbShowKnowledgeNotPerks:SetScript("OnClick", function(self)
-		userSettings["showKnowledgeNotPerks"] = cbShowKnowledgeNotPerks:GetChecked()
-	end)
-
-	local cbKnowledgeHideDone = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbKnowledgeHideDone.Text:SetText("Hide one-time knowledge if done")
-	cbKnowledgeHideDone.Text:SetTextColor(1, 1, 1, 1)
-	cbKnowledgeHideDone.Text:SetScale(1.2)
-	cbKnowledgeHideDone:SetPoint("TOPLEFT", cbShowKnowledgeNotPerks, "BOTTOMLEFT", 0, 0)
-	cbKnowledgeHideDone:SetChecked(userSettings["knowledgeHideDone"])
-	cbKnowledgeHideDone:SetScript("OnClick", function(self)
-		userSettings["knowledgeHideDone"] = cbKnowledgeHideDone:GetChecked()
-	end)
-
-	local cbKnowledgeAlwaysShowDetails = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbKnowledgeAlwaysShowDetails.Text:SetText("Always show details")
-	cbKnowledgeAlwaysShowDetails.Text:SetTextColor(1, 1, 1, 1)
-	cbKnowledgeAlwaysShowDetails.Text:SetScale(1.2)
-	cbKnowledgeAlwaysShowDetails:SetPoint("TOPLEFT", cbKnowledgeHideDone, "BOTTOMLEFT", 0, 0)
-	cbKnowledgeAlwaysShowDetails:SetChecked(userSettings["knowledgeAlwaysShowDetails"])
-	cbKnowledgeAlwaysShowDetails:SetScript("OnClick", function(self)
-		userSettings["knowledgeAlwaysShowDetails"] = cbKnowledgeAlwaysShowDetails:GetChecked()
-	end)
+	local variable, name, tooltip = "knowledgeAlwaysShowDetails", "Always show details", "The tooltip will always show all details, instead of only when holding a modifier key."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 end

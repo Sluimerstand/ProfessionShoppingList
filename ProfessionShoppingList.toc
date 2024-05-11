@@ -19,5 +19,5 @@ Core.lua
 Database.lua
 modules\AuctionHouse.lua
 modules\CraftingOrders.lua
-modules\KnowledgeTracker.lua
+modules\ProfessionKnowledge.lua
 modules\Tweaks.lua
