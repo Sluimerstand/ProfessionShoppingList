@@ -2344,11 +2344,18 @@ end
 -- Tooltip information
 function app.TooltipInfo()
 	local function OnTooltipSetItem(tooltip)
+		-- Get item info from the last processed tooltip and the primary tooltip
+		local _, _, itemID = TooltipUtil.GetDisplayedItem(tooltip)
+		local _, _, primaryItemID = TooltipUtil.GetDisplayedItem(GameTooltip)
+
+		-- If the last processed tooltip is the same as the primary tooltip (aka, not a compare tooltip)
+		if itemID == primaryItemID then
+			-- Only then send it to the global variable (for usage in vendor tracking)
+			app.TooltipItemID = itemID
+		end
+
 		-- Only run this if the setting is enabled
 		if userSettings["showTooltip"] == true then
-			-- Get item info from tooltip
-			local _, _, itemID = TooltipUtil.GetDisplayedItem(tooltip)
-
 			-- Stop if error, it will try again on its own REAL soon
 			if itemID == nil then return end
 
@@ -3307,26 +3314,26 @@ function event:MERCHANT_SHOW()
 		userSettings["onetimeMessages"].vendorItems = true
 	end
 
-	-- This should default to 10 in normal UIs, set further below
-	local vendorPageSize = 0
-
 	-- When the user Alt+clicks a vendor item
-	local function TrackMerchantItem(index)
+	local function TrackMerchantItem()
 		if IsAltKeyDown() == true then
-			-- For some reason there are 12 item frames detected in the original UI, even though there are only 10
-			-- This means Krowi or Windtools won't work if the page size is set to 12, but I honestly don't know what else to do
-			if vendorPageSize == 12 then vendorPageSize = 10 end
-
-			local page = string.match(MerchantPageText:GetText(), "%d+")
-			index = index + (page - 1) * vendorPageSize
-			
 			-- Get merchant info
 			local merchant = MerchantFrameTitleText:GetText()
 
-			-- Get item info
-			local itemID = GetMerchantItemID(index)
-			local itemLink = GetMerchantItemLink(index)
-			local _, _, itemPrice = GetMerchantItemInfo(index)
+			-- Get item info from tooltip
+			local itemID = app.TooltipItemID
+
+			-- Get the item index for this vendor
+			local vendorIndex = 0
+			for index = 1, GetMerchantNumItems() do
+				if GetMerchantItemID(index) == itemID then vendorIndex = index end
+			end
+
+			-- Stop the function if the vendor does not have the item that is being Alt+clicked
+			if vendorIndex == 0 then do return end end
+
+			local itemLink = GetMerchantItemLink(vendorIndex)
+			local _, _, itemPrice = GetMerchantItemInfo(vendorIndex)
 
 			-- Add this as a fake recipe
 			local key = merchant..":"..itemID
@@ -3345,9 +3352,10 @@ function event:MERCHANT_SHOW()
 					link = BONUS_ROLL_REWARD_MONEY,
 				}
 			end
+
 			-- Get the different currencies needed to purchase the item
-			for i=1, GetMerchantItemCostInfo(index), 1 do
-				local itemTexture, itemValue, itemLink, currencyName = GetMerchantItemCostItem(index, i)
+			for i=1, GetMerchantItemCostInfo(vendorIndex), 1 do
+				local itemTexture, itemValue, itemLink, currencyName = GetMerchantItemCostItem(vendorIndex, i)
 				if currencyName and itemLink then
 					local currencyID = C_CurrencyInfo.GetCurrencyIDFromLink(itemLink)
 
@@ -3384,9 +3392,7 @@ function event:MERCHANT_SHOW()
 		for i = 1, 99 do	-- Works for AddOns that expand the vendor frame up to 99 slots
 			local itemButton = _G["MerchantItem"..i.."ItemButton"]
 			if itemButton then
-				itemButton:HookScript("OnClick", function() TrackMerchantItem(i) end)
-				-- Register how many items are on a single page
-				vendorPageSize = i
+				itemButton:HookScript("OnClick", function() TrackMerchantItem() end)
 			end
 		end
 
