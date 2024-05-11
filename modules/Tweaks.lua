@@ -151,6 +151,52 @@ function app.UnderminePrices()
 	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnTooltipSetItem)
 end
 
+local LibBattlePetTooltipLine = LibStub("LibBattlePetTooltipLine-1-0")	-- Load this library
+
+hooksecurefunc("BattlePetToolTip_Show", function(...)
+	-- Only run this if the setting is enabled
+	if userSettings["underminePrices"] == true then
+		-- If Oribos Exchange is loaded
+		local loaded, finished = IsAddOnLoaded("OribosExchange")
+		if finished == true then
+			local speciesID1, level, breedQuality, maxHealth, power, speed, bracketName = ...
+
+			-- Make itemLink if it grabs the proper pet
+			local itemLink = "|cff0070dd|Hbattlepet:"..speciesID1..":"..level..":"..breedQuality..":"..maxHealth..":"..power..":"..speed.."|h"..bracketName.."|h|r"
+
+			-- Stop if error, it will try again on its own REAL soon
+			if itemLink == nil then return end
+
+			-- Grab pricing information
+			local oeData = {}
+			OEMarketInfo(itemLink,oeData)
+
+			if oeData['market'] ~= nil then
+				marketPrice = oeData['market']
+			end
+			if oeData['region'] ~= nil then
+				regionPrice = oeData['region']
+			end
+
+			-- Process the pricing information
+			if marketPrice + regionPrice > 0 then
+				-- Round up to the nearest full gold value
+				marketPrice = math.ceil(marketPrice / 10000) * 10000
+				regionPrice = math.ceil(regionPrice / 10000) * 10000
+
+				-- Set the tooltip information
+				LibBattlePetTooltipLine:AddDoubleLine(BattlePetTooltip, " ", " ")
+				if marketPrice > 0 then
+					LibBattlePetTooltipLine:AddDoubleLine(BattlePetTooltip, GetNormalizedRealmName(), GetMoneyString(marketPrice, true))
+				end
+				if regionPrice > 0 then
+					LibBattlePetTooltipLine:AddDoubleLine(BattlePetTooltip, GetCurrentRegionName().." Region", GetMoneyString(regionPrice, true))
+				end
+			end
+		end
+	end
+end)
+
 function app.HideOribos()
 	-- Only run this if the setting is enabled
 	if userSettings["underminePrices"] == true then
