@@ -35,6 +35,13 @@ function app.InitialiseProfessionKnowledge()
 	app.Flag["knowledgeAssets"] = false
 end
 
+-- When the AddOn is fully loaded
+function event:ADDON_LOADED(addOnName, containsBindings)
+	if addOnName == appName then
+		app.InitialiseProfessionKnowledge()
+	end
+end
+
 -----------------------
 -- KNOWLEDGE TRACKER --
 -----------------------
@@ -1062,18 +1069,6 @@ function app.KnowledgeTracker()
 		end
 	else
 		knowledgePointTracker:Hide()
-	end
-end
-
-----------------------
--- EVENT COMPONENTS --
-----------------------
-
--- When the AddOn is fully loaded
-function event:ADDON_LOADED(addOnName, containsBindings)
-	if addOnName == appName then
-		app.InitialiseProfessionKnowledge()
-		
 	end
 end
 

@@ -145,7 +145,6 @@ function app.InitialiseCore()
 	if userSettings["removeCraft"] == nil then userSettings["removeCraft"] = true end
 	if userSettings["showRemaining"] == nil then userSettings["showRemaining"] = false end
 	if userSettings["showTooltip"] == nil then userSettings["showTooltip"] = true end
-	if userSettings["vendorAll"] == nil then userSettings["vendorAll"] = true end
 	if userSettings["reagentQuality"] == nil then userSettings["reagentQuality"] = 1 end
 	if userSettings["closeWhenDone"] == nil then userSettings["closeWhenDone"] = false end
 	if userSettings["pcWindows"] == nil then userSettings["pcWindows"] = false end
@@ -153,7 +152,6 @@ function app.InitialiseCore()
 	if userSettings["headerTooltip"] == nil then userSettings["headerTooltip"] = true end
 	if userSettings["showRecipeCooldowns"] == nil then userSettings["showRecipeCooldowns"] = true end
 	if userSettings["backpackCount"] == nil then userSettings["backpackCount"] = true end
-	if userSettings["queueSound"] == nil then userSettings["queueSound"] = false end
 	if userSettings["backpackCleanup"] == nil then userSettings["backpackCleanup"] = "default" end
 	if userSettings["backpackLoot"] == nil then userSettings["backpackLoot"] = "default" end
 	if userSettings["windowPosition"] == nil then userSettings["windowPosition"] = { ["left"] = 1295, ["bottom"] = 836, ["width"] = 200, ["height"] = 200, } end
@@ -2722,6 +2720,16 @@ function app.Settings()
 	cbQueueSounds:SetChecked(userSettings["queueSound"])
 	cbQueueSounds:SetScript("OnClick", function(self)
 		userSettings["queueSound"] = cbQueueSounds:GetChecked()
+	end)
+
+	local cbUnderminePrices = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbUnderminePrices.Text:SetText("Use custom style for Oribos Exchange addon")
+	cbUnderminePrices.Text:SetTextColor(1, 1, 1, 1)
+	cbUnderminePrices.Text:SetScale(1.2)
+	cbUnderminePrices:SetPoint("TOPLEFT", cbQueueSounds, "BOTTOMLEFT", 0, 0)
+	cbUnderminePrices:SetChecked(userSettings["underminePrices"])
+	cbUnderminePrices:SetScript("OnClick", function(self)
+		userSettings["underminePrices"] = cbUnderminePrices:GetChecked()
 	end)
 
 	-- Category: Backpack

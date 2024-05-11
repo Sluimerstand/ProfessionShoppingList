@@ -17,9 +17,30 @@ event:SetScript("OnEvent", function(self, event, ...)
 		self[event](self, ...)
 	end
 end)
+event:RegisterEvent("ADDON_LOADED")
 event:RegisterEvent("LFG_PROPOSAL_SHOW")
 event:RegisterEvent("MERCHANT_SHOW")
 event:RegisterEvent("PET_BATTLE_QUEUE_PROPOSE_MATCH")
+
+------------------
+-- INITIAL LOAD --
+------------------
+
+-- Create SavedVariables, default user settings, and session variables
+function app.InitialiseTweaks()
+	if userSettings["vendorAll"] == nil then userSettings["vendorAll"] = true end
+	if userSettings["queueSound"] == nil then userSettings["queueSound"] = false end
+	if userSettings["underminePrices"] == nil then userSettings["underminePrices"] = false end
+end
+
+-- When the AddOn is fully loaded, actually run the components
+function event:ADDON_LOADED(addOnName, containsBindings)
+	if addOnName == appName then
+		app.InitialiseTweaks()
+		app.UnderminePrices()
+		app.HideOribos()
+	end
+end
 
 -----------------
 -- QUEUE SOUND --
@@ -66,4 +87,97 @@ end
 -- When a vendor window is opened
 function event:MERCHANT_SHOW()
 	app.MerchantFilter()
+end
+
+----------------------
+-- UNDERMINE PRICES --
+----------------------
+
+function app.UnderminePrices()
+	local function OnTooltipSetItem(tooltip)
+		-- Get item info from the last processed tooltip and the primary tooltip
+		local _, unreliableItemLink, itemID = TooltipUtil.GetDisplayedItem(tooltip)
+
+		-- Stop if error, it will try again on its own REAL soon
+		if itemID == nil then return end
+
+		-- Also grab the itemLink from the itemID, rather than the itemLink provided above, because uhhhh shit is wack
+		local _, itemLink = C_Item.GetItemInfo(itemID)
+
+		-- Only run this if the setting is enabled
+		if userSettings["underminePrices"] == true then
+			-- If Oribos Exchange is loaded
+			local loaded, finished = IsAddOnLoaded("OribosExchange")
+			if finished == true then
+				-- Grab the pricing information
+				local marketPrice = 0
+				local regionPrice = 0
+
+				-- Check both links for pricing data
+				local oeData = {}
+				OEMarketInfo(itemLink,oeData)
+				if oeData['market'] == nil and oeData['region'] == nil then
+					OEMarketInfo(unreliableItemLink,oeData)
+				end
+				
+				if oeData['market'] ~= nil then
+					marketPrice = oeData['market']
+				end
+				if oeData['region'] ~= nil then
+					regionPrice = oeData['region']
+				end
+
+				-- Process the pricing information
+				if marketPrice + regionPrice > 0 then
+					-- Round up to the nearest full gold value
+					local function round(number)
+						return math.ceil(number / 10000) * 10000
+					end
+					marketPrice = round(marketPrice)
+					regionPrice = round(regionPrice)
+
+					-- Set the tooltip information
+					tooltip:AddLine(" ")	-- Blank line
+					if marketPrice > 0 then
+						tooltip:AddDoubleLine(GetNormalizedRealmName(),GetMoneyString(marketPrice, true))
+					end
+					if regionPrice > 0 then
+						tooltip:AddDoubleLine(GetCurrentRegionName().." Region",GetMoneyString(regionPrice, true))
+					end
+				end
+			end
+		end
+	end
+	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnTooltipSetItem)
+end
+
+function app.HideOribos()
+	-- Only run this if the setting is enabled
+	if userSettings["underminePrices"] == true then
+		-- If Oribos Exchange is loaded
+		local loaded, finished = IsAddOnLoaded("OribosExchange")
+		if finished == true then
+			-- Disable the original tooltip
+			OETooltip(false)
+
+			-- And hide the warning about it (thanks ChatGPT)
+			local function ChatFrame_AddMessageOverride(self, message, ...)
+				if message and message:find("Tooltip prices disabled. Run |cFFFFFF78/oetooltip on|r to enable.") then
+					-- Modify the message to prevent the error, we can't send an empty string due to LS Glass
+					message = "|cff000000" .. " " .. "|R"
+				end
+				-- Add the message to the ChatFrame
+				self:ChatFrame_AddMessageOriginal(message, ...)
+			end
+
+			-- Hook the ChatFrame's AddMessage method
+			for i = 1, NUM_CHAT_WINDOWS do
+				local frame = _G["ChatFrame"..i]
+				if frame then
+					frame.ChatFrame_AddMessageOriginal = frame.AddMessage
+					frame.AddMessage = ChatFrame_AddMessageOverride
+				end
+			end
+		end
+	end
 end
