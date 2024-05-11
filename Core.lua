@@ -2491,22 +2491,6 @@ function app.Settings()
 	scrollChild:SetWidth(1)	-- This is automatically defined, so long as the attribute exists at all
 	scrollChild:SetHeight(1)	-- This is automatically defined, so long as the attribute exists at all
 
-	-- -- Subcategory
-	-- local scrollFrame2 = CreateFrame("ScrollFrame", nil, self, "ScrollFrameTemplate")
-	-- scrollFrame2:Hide()	-- I'm fairly sure this isn't how you're supposed to prevent the subcategories from showing initially, but it works!
-	-- scrollFrame2.ScrollBar:ClearPoint("RIGHT")
-	-- scrollFrame2.ScrollBar:SetPoint("RIGHT", -36, 0)
-
-	-- local scrollChild2 = CreateFrame("Frame")
-	-- scrollFrame2:SetScrollChild(scrollChild2)
-	-- scrollChild2:SetWidth(1)    -- This is automatically defined, so long as the attribute exists at all
-	-- scrollChild2:SetHeight(1)    -- This is automatically defined, so long as the attribute exists at all
-
-	-- local subcategory1 = scrollFrame2
-	-- subcategory1.name = "Hello"
-	-- subcategory1.parent = "Profession Shopping List"
-	-- InterfaceOptions_AddCategory(subcategory1)
-
 	-- Settings
 	-- TODO: functions for checkboxes, sliders, header and include cb:SetHitRectInsets(0,0 - cb.Text:GetWidth(),0,0);
 	local title = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormalLarge")
@@ -2648,93 +2632,9 @@ function app.Settings()
 		app.UpdateNumbers()
 	end)
 
-	-- Category: Knowledge Tracker
-	local titleKnowledgeTracker = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	titleKnowledgeTracker:SetPoint("TOPLEFT", slReagentQuality, "BOTTOMLEFT", -5, -25)
-	titleKnowledgeTracker:SetJustifyH("LEFT")
-	titleKnowledgeTracker:SetScale(1.2)
-	titleKnowledgeTracker:SetText("Knowledge tracker")
-
-	local cbShowKnowledgeNotPerks = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbShowKnowledgeNotPerks.Text:SetText("Show knowledge, not perks")
-	cbShowKnowledgeNotPerks.Text:SetTextColor(1, 1, 1, 1)
-	cbShowKnowledgeNotPerks.Text:SetScale(1.2)
-	cbShowKnowledgeNotPerks:SetPoint("TOPLEFT", titleKnowledgeTracker, "BOTTOMLEFT", 0, 0)
-	cbShowKnowledgeNotPerks:SetChecked(userSettings["showKnowledgeNotPerks"])
-	cbShowKnowledgeNotPerks:SetScript("OnClick", function(self)
-		userSettings["showKnowledgeNotPerks"] = cbShowKnowledgeNotPerks:GetChecked()
-	end)
-
-	local cbKnowledgeHideDone = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbKnowledgeHideDone.Text:SetText("Hide one-time knowledge if done")
-	cbKnowledgeHideDone.Text:SetTextColor(1, 1, 1, 1)
-	cbKnowledgeHideDone.Text:SetScale(1.2)
-	cbKnowledgeHideDone:SetPoint("TOPLEFT", cbShowKnowledgeNotPerks, "BOTTOMLEFT", 0, 0)
-	cbKnowledgeHideDone:SetChecked(userSettings["knowledgeHideDone"])
-	cbKnowledgeHideDone:SetScript("OnClick", function(self)
-		userSettings["knowledgeHideDone"] = cbKnowledgeHideDone:GetChecked()
-	end)
-
-	local cbKnowledgeAlwaysShowDetails = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbKnowledgeAlwaysShowDetails.Text:SetText("Always show details")
-	cbKnowledgeAlwaysShowDetails.Text:SetTextColor(1, 1, 1, 1)
-	cbKnowledgeAlwaysShowDetails.Text:SetScale(1.2)
-	cbKnowledgeAlwaysShowDetails:SetPoint("TOPLEFT", cbKnowledgeHideDone, "BOTTOMLEFT", 0, 0)
-	cbKnowledgeAlwaysShowDetails:SetChecked(userSettings["knowledgeAlwaysShowDetails"])
-	cbKnowledgeAlwaysShowDetails:SetScript("OnClick", function(self)
-		userSettings["knowledgeAlwaysShowDetails"] = cbKnowledgeAlwaysShowDetails:GetChecked()
-	end)
-
-	-- Category: Other features
-	local titleOtherFeatures = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	titleOtherFeatures:SetPoint("TOPLEFT", titleKnowledgeTracker, "TOPLEFT", 240, -0)
-	titleOtherFeatures:SetJustifyH("LEFT")
-	titleOtherFeatures:SetScale(1.2)
-	titleOtherFeatures:SetText("Other features")
-
-	local cbShowRecipeCooldowns = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbShowRecipeCooldowns.Text:SetText("Recipe cooldown reminders")
-	cbShowRecipeCooldowns.Text:SetTextColor(1, 1, 1, 1)
-	cbShowRecipeCooldowns.Text:SetScale(1.2)
-	cbShowRecipeCooldowns:SetPoint("TOPLEFT", titleOtherFeatures, "BOTTOMLEFT", 0, 0)
-	cbShowRecipeCooldowns:SetChecked(userSettings["showRecipeCooldowns"])
-	cbShowRecipeCooldowns:SetScript("OnClick", function(self)
-		userSettings["showRecipeCooldowns"] = cbShowRecipeCooldowns:GetChecked()
-	end)
-
-	local cbVendorAll = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbVendorAll.Text:SetText("Always set vendor filter to 'All'")
-	cbVendorAll.Text:SetTextColor(1, 1, 1, 1)
-	cbVendorAll.Text:SetScale(1.2)
-	cbVendorAll:SetPoint("TOPLEFT", cbShowRecipeCooldowns, "BOTTOMLEFT", 0, 0)
-	cbVendorAll:SetChecked(userSettings["vendorAll"])
-	cbVendorAll:SetScript("OnClick", function(self)
-		userSettings["vendorAll"] = cbVendorAll:GetChecked()
-	end)
-
-	local cbQueueSounds = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbQueueSounds.Text:SetText("Play sound when any queue pops")
-	cbQueueSounds.Text:SetTextColor(1, 1, 1, 1)
-	cbQueueSounds.Text:SetScale(1.2)
-	cbQueueSounds:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 0, 0)
-	cbQueueSounds:SetChecked(userSettings["queueSound"])
-	cbQueueSounds:SetScript("OnClick", function(self)
-		userSettings["queueSound"] = cbQueueSounds:GetChecked()
-	end)
-
-	local cbUnderminePrices = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
-	cbUnderminePrices.Text:SetText("Use custom style for Oribos Exchange addon")
-	cbUnderminePrices.Text:SetTextColor(1, 1, 1, 1)
-	cbUnderminePrices.Text:SetScale(1.2)
-	cbUnderminePrices:SetPoint("TOPLEFT", cbQueueSounds, "BOTTOMLEFT", 0, 0)
-	cbUnderminePrices:SetChecked(userSettings["underminePrices"])
-	cbUnderminePrices:SetScript("OnClick", function(self)
-		userSettings["underminePrices"] = cbUnderminePrices:GetChecked()
-	end)
-
 	-- Category: Backpack
 	local titleBackpack = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	titleBackpack:SetPoint("LEFT", titleKnowledgeTracker, "LEFT", 0, 0)
+	titleBackpack:SetPoint("TOPLEFT", slReagentQuality, "BOTTOMLEFT", -5, -25)
 	titleBackpack:SetPoint("TOP", cbKnowledgeAlwaysShowDetails, "BOTTOM", 0, -5)
 	titleBackpack:SetJustifyH("LEFT")
 	titleBackpack:SetScale(1.2)

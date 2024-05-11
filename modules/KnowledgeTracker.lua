@@ -39,6 +39,7 @@ end
 function event:ADDON_LOADED(addOnName, containsBindings)
 	if addOnName == appName then
 		app.InitialiseProfessionKnowledge()
+		app.SettingsKnowledgeTracker()
 	end
 end
 
@@ -1084,4 +1085,63 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true and app.Flag["knowledgeAssets"] == true then
 		app.KnowledgeTracker()
 	end
+end
+
+--------------
+-- SETTINGS --
+--------------
+
+function app.SettingsKnowledgeTracker()
+	-- Add subcategory
+	local scrollFrame = CreateFrame("ScrollFrame", nil, self, "ScrollFrameTemplate")
+	scrollFrame:Hide()	-- I'm fairly sure this isn't how you're supposed to prevent the subcategories from showing initially, but it works!
+	scrollFrame.ScrollBar:ClearPoint("RIGHT")
+	scrollFrame.ScrollBar:SetPoint("RIGHT", -36, 0)
+
+	local scrollChild = CreateFrame("Frame")
+	scrollFrame:SetScrollChild(scrollChild)
+	scrollChild:SetWidth(1)    -- This is automatically defined, so long as the attribute exists at all
+	scrollChild:SetHeight(1)    -- This is automatically defined, so long as the attribute exists at all
+
+	local subcategory = scrollFrame
+	subcategory.name = "Knowledge Tracker"
+	subcategory.parent = "Profession Shopping List"
+	InterfaceOptions_AddCategory(subcategory)
+
+	-- Category: Knowledge Tracker
+	local titleKnowledgeTracker = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	titleKnowledgeTracker:SetPoint("TOPLEFT", 0, 0)
+	titleKnowledgeTracker:SetJustifyH("LEFT")
+	titleKnowledgeTracker:SetScale(1.2)
+	titleKnowledgeTracker:SetText("Knowledge tracker")
+
+	local cbShowKnowledgeNotPerks = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbShowKnowledgeNotPerks.Text:SetText("Show knowledge, not perks")
+	cbShowKnowledgeNotPerks.Text:SetTextColor(1, 1, 1, 1)
+	cbShowKnowledgeNotPerks.Text:SetScale(1.2)
+	cbShowKnowledgeNotPerks:SetPoint("TOPLEFT", titleKnowledgeTracker, "BOTTOMLEFT", 0, 0)
+	cbShowKnowledgeNotPerks:SetChecked(userSettings["showKnowledgeNotPerks"])
+	cbShowKnowledgeNotPerks:SetScript("OnClick", function(self)
+		userSettings["showKnowledgeNotPerks"] = cbShowKnowledgeNotPerks:GetChecked()
+	end)
+
+	local cbKnowledgeHideDone = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbKnowledgeHideDone.Text:SetText("Hide one-time knowledge if done")
+	cbKnowledgeHideDone.Text:SetTextColor(1, 1, 1, 1)
+	cbKnowledgeHideDone.Text:SetScale(1.2)
+	cbKnowledgeHideDone:SetPoint("TOPLEFT", cbShowKnowledgeNotPerks, "BOTTOMLEFT", 0, 0)
+	cbKnowledgeHideDone:SetChecked(userSettings["knowledgeHideDone"])
+	cbKnowledgeHideDone:SetScript("OnClick", function(self)
+		userSettings["knowledgeHideDone"] = cbKnowledgeHideDone:GetChecked()
+	end)
+
+	local cbKnowledgeAlwaysShowDetails = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbKnowledgeAlwaysShowDetails.Text:SetText("Always show details")
+	cbKnowledgeAlwaysShowDetails.Text:SetTextColor(1, 1, 1, 1)
+	cbKnowledgeAlwaysShowDetails.Text:SetScale(1.2)
+	cbKnowledgeAlwaysShowDetails:SetPoint("TOPLEFT", cbKnowledgeHideDone, "BOTTOMLEFT", 0, 0)
+	cbKnowledgeAlwaysShowDetails:SetChecked(userSettings["knowledgeAlwaysShowDetails"])
+	cbKnowledgeAlwaysShowDetails:SetScript("OnClick", function(self)
+		userSettings["knowledgeAlwaysShowDetails"] = cbKnowledgeAlwaysShowDetails:GetChecked()
+	end)
 end

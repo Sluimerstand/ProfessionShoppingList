@@ -39,6 +39,7 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 		app.InitialiseTweaks()
 		app.UnderminePrices()
 		app.HideOribos()
+		app.SettingsTweaks()
 	end
 end
 
@@ -226,4 +227,73 @@ function app.HideOribos()
 			end
 		end
 	end
+end
+
+--------------
+-- SETTINGS --
+--------------
+
+function app.SettingsTweaks()
+	-- Add subcategory
+	local scrollFrame = CreateFrame("ScrollFrame", nil, self, "ScrollFrameTemplate")
+	scrollFrame:Hide()	-- I'm fairly sure this isn't how you're supposed to prevent the subcategories from showing initially, but it works!
+	scrollFrame.ScrollBar:ClearPoint("RIGHT")
+	scrollFrame.ScrollBar:SetPoint("RIGHT", -36, 0)
+
+	local scrollChild = CreateFrame("Frame")
+	scrollFrame:SetScrollChild(scrollChild)
+	scrollChild:SetWidth(1)    -- This is automatically defined, so long as the attribute exists at all
+	scrollChild:SetHeight(1)    -- This is automatically defined, so long as the attribute exists at all
+
+	local subcategory = scrollFrame
+	subcategory.name = "Tweaks"
+	subcategory.parent = "Profession Shopping List"
+	InterfaceOptions_AddCategory(subcategory)
+
+	-- Category: Tweaks
+	local titleOtherFeatures = scrollChild:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	titleOtherFeatures:SetPoint("TOPLEFT", 0, 0)
+	titleOtherFeatures:SetJustifyH("LEFT")
+	titleOtherFeatures:SetScale(1.2)
+	titleOtherFeatures:SetText("Tweaks")
+
+	local cbShowRecipeCooldowns = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbShowRecipeCooldowns.Text:SetText("Recipe cooldown reminders")
+	cbShowRecipeCooldowns.Text:SetTextColor(1, 1, 1, 1)
+	cbShowRecipeCooldowns.Text:SetScale(1.2)
+	cbShowRecipeCooldowns:SetPoint("TOPLEFT", titleOtherFeatures, "BOTTOMLEFT", 0, 0)
+	cbShowRecipeCooldowns:SetChecked(userSettings["showRecipeCooldowns"])
+	cbShowRecipeCooldowns:SetScript("OnClick", function(self)
+		userSettings["showRecipeCooldowns"] = cbShowRecipeCooldowns:GetChecked()
+	end)
+
+	local cbVendorAll = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbVendorAll.Text:SetText("Always set vendor filter to 'All'")
+	cbVendorAll.Text:SetTextColor(1, 1, 1, 1)
+	cbVendorAll.Text:SetScale(1.2)
+	cbVendorAll:SetPoint("TOPLEFT", cbShowRecipeCooldowns, "BOTTOMLEFT", 0, 0)
+	cbVendorAll:SetChecked(userSettings["vendorAll"])
+	cbVendorAll:SetScript("OnClick", function(self)
+		userSettings["vendorAll"] = cbVendorAll:GetChecked()
+	end)
+
+	local cbQueueSounds = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbQueueSounds.Text:SetText("Play sound when any queue pops")
+	cbQueueSounds.Text:SetTextColor(1, 1, 1, 1)
+	cbQueueSounds.Text:SetScale(1.2)
+	cbQueueSounds:SetPoint("TOPLEFT", cbVendorAll, "BOTTOMLEFT", 0, 0)
+	cbQueueSounds:SetChecked(userSettings["queueSound"])
+	cbQueueSounds:SetScript("OnClick", function(self)
+		userSettings["queueSound"] = cbQueueSounds:GetChecked()
+	end)
+
+	local cbUnderminePrices = CreateFrame("CheckButton", nil, scrollChild, "InterfaceOptionsCheckButtonTemplate")
+	cbUnderminePrices.Text:SetText("Use custom style for Oribos Exchange addon")
+	cbUnderminePrices.Text:SetTextColor(1, 1, 1, 1)
+	cbUnderminePrices.Text:SetScale(1.2)
+	cbUnderminePrices:SetPoint("TOPLEFT", cbQueueSounds, "BOTTOMLEFT", 0, 0)
+	cbUnderminePrices:SetChecked(userSettings["underminePrices"])
+	cbUnderminePrices:SetScript("OnClick", function(self)
+		userSettings["underminePrices"] = cbUnderminePrices:GetChecked()
+	end)
 end
