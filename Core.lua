@@ -2473,6 +2473,9 @@ function app.Settings()
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
+	Settings.SetOnValueChangedCallback(variable, function()
+		app.UpdateRecipes()
+	end)
 
 	local variable, name, tooltip = "showRemaining", "Show remaining reagents", "Only show how many reagents you still need in the tracking window, instead of have/need."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
@@ -2494,7 +2497,7 @@ function app.Settings()
 	Settings.CreateDropDown(category, setting, GetOptions, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
-		app.UpdateNumbers()
+		app.UpdateRecipes()
 	end)
 
 	-- -- Checkbox + dependency dropdown
@@ -2526,7 +2529,7 @@ function app.Settings()
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	subSetting:SetParentInitializer(parentSetting, function() return userSettings["removeCraft"] end)
 
-	local variable, name, tooltip = "showTooltip", "Show tooltip", "Show how many of a reagent you have/need on the item's tooltip."
+	local variable, name, tooltip = "showTooltip", "Show tooltip information", "Show how many of a reagent you have/need on the item's tooltip."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)

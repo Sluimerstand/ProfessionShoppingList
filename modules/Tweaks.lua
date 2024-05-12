@@ -233,7 +233,8 @@ function app.HideOribos()
 
 			-- And hide the warning about it (thanks ChatGPT)
 			local function ChatFrame_AddMessageOverride(self, message, ...)
-				if message and message:find("Tooltip prices disabled. Run |cFFFFFF78/oetooltip on|r to enable.") then
+				-- Check if the message contains the specific string and hasn't been modified yet
+				if message and not message:find("|cff000000") and message:find("Tooltip prices disabled. Run |cFFFFFF78/oetooltip on|r to enable.") then
 					-- Modify the message to prevent the error, we can't send an empty string due to LS Glass
 					message = "|cff000000" .. " " .. "|R"
 				end
@@ -340,4 +341,7 @@ function app.SettingsTweaks()
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
+	Settings.SetOnValueChangedCallback(variable, function()
+		app.HideOribos()
+	end)
 end

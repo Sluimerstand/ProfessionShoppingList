@@ -577,7 +577,7 @@ function app.KnowledgeTracker()
 		end
 		
 		oldText = knowledgePointTooltipText:GetText()
-		if IsModifierKeyDown() == false and userSettings["knowledgeAlwaysShowDetails"] == false then knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000Hold Alt, Ctrl, or Shift to show details.") end
+		if IsModifierKeyDown() == false and userSettings["knowledgeAlwaysShowDetails"] == false then knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000Press Alt, Ctrl, or Shift to show details.") end
 
 		-- Set the tooltip size to fit its contents
 		knowledgePointTooltip:SetHeight(knowledgePointTooltipText:GetStringHeight()+20)
