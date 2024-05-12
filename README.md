@@ -1,45 +1,37 @@
 # Profession Shopping List
-A World of Warcraft AddOn that adds a shopping list for tracked recipes.
+A World of Warcraft AddOn. Download locations: [CurseForge](https://www.curseforge.com/wow/addons/profession-shopping-list) | [Wago.io](https://addons.wago.io/addons/psl)
 
-Profession Shopping List is an AddOn that allows you to track recipes, and shows you the materials you need to craft them.
-It does not replace the profession windows, it only adds a few buttons and a tracking window.
+# Description
+**Profession Shopping List** allows you to track recipes, and it shows you the materials you need to craft them. It also tracks recipe cooldowns.
 
-[CurseForge page](https://www.curseforge.com/wow/addons/profession-shopping-list) | [Wago.io page](https://addons.wago.io/addons/psl)
+![](https://media.forgecdn.net/attachments/description/498475/description_2221bf7d-a25f-455c-be98-a583840ca8eb.png)
 
-**If you are experiencing issues**
-- Use `/psl clear`. Some new versions come with logic changes, and then it is necessary to clear the tracked recipes once.
-- If the issues remain, or you have other feedback, feel free to join the [All The Things Discord](https://discord.gg/allthethings) and ask in the #profession-shopping-list Retail channel, or create a [ticket on GitHub](https://github.com/Sluimerstand/ProfessionShoppingList/issues). :)
+When viewing your profession knowledge, see at a glance how many perks you have unlocked and where you can still earn profession knowledge.
 
-**Chat commands**
+![](https://media.forgecdn.net/attachments/description/498475/description_b3b81beb-3caf-4992-a802-be1b7123df4e.png)
 
-- /psl - Toggle the tracking windows
-- /psl resetpos - Reset the tracking window positions
-- /psl settings - Open the settings window
-- /psl clear - Clear all tracked recipes
-- /psl track [recipeID] [quantity] - Track a recipe
-- /psl untrack [recipeID] [quantity] - Untrack a recipe
-- /psl untrack [recipeID] all - Untrack all of a recipe
-- /psl [crafting achievement] - Track all recipes needed for the linked achievement
+Quickly send work orders to your alts with the Quick Order preset, and repeat your last work order sent with the click of a button.
 
-**Mouse interactions**
+![](https://media.forgecdn.net/attachments/description/498475/description_63b8d23a-a163-4674-a515-57d060a53c71.png)
 
-- Drag: Move the tracking windows
-- Shift+click Recipe: Link the recipe
-- Ctrl+click Recipe: Open the selected recipe
-- Right-click Recipe: Untrack 1 of the selected recipe
-- Ctrl+right-click Recipe: Untrack all of the selected recipe
-- Shift+click Reagent: Link the reagent
-- Ctrl+click Reagent: Add recipe for the selected subreagent, if it exists
-- Right-click Cooldown: Untrack the cooldown
+Easily track profession achievements and let Profession Shopping List grab the necessary recipes for you.
 
-**Other features**
+![](https://media.forgecdn.net/attachments/description/498475/description_5e7b3f4d-5d1f-4cf8-afa7-a0d49ae8ba3d.png)
 
-- Untrack recipes after crafting them
-- Tooltip information for tracked reagents
-- Recipe cooldown reminders
-- Copy tracked reagents to the Auctionator import window
-- Buttons for Cooking Fire, Chef's Hat, Thermal Anvil, Forge of Light, and Alvin the Anvil
-- Quick order button, to instantly create personal crafting orders
-- Profession Knowledge tracker
-- Automatically set vendors' filter to 'All'
-- Split bag count to accommodate the reagent bag
+Includes handy buttons for your professions, such as portable anvils or the cooking fire.
+
+![](https://media.forgecdn.net/attachments/description/498475/description_6ad0619e-e7b5-4572-a793-ccacd3e462ee.png)
+
+Also lets you track the cost of vendor items. Say goodbye to scribbling on a notepad.
+
+![](https://media.forgecdn.net/attachments/description/498475/description_98cccb19-e982-44c7-9b27-99ae5906c085.png)
+
+A full list of features and slash commands can be found in-game by reading the tooltips on the tracking window and viewing the AddOn's settings.
+
+## If you are experiencing issues
+
+- Use `/psl clear`. Sometimes stuff gets stuck, or old data needs to be cleared;
+- If the issues persist or you have other feedback, feel free to join the [All The Things Discord](https://discord.gg/allthethings) and ask in the `#profession-shopping-list` Retail channel, or create a [ticket on GitHub](https://github.com/Sluimerstand/ProfessionShoppingList/issues). :)
+
+## Support me, if you want 👉👈😳
+[![](https://i.imgur.com/RrUREm1.png)](https://ko-fi.com/sluimerstand)
