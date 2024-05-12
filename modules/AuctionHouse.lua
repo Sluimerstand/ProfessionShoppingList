@@ -66,6 +66,12 @@ function app.CreateAuctionatorButton()
 			Auctionator.API.v1.CreateShoppingList(app.Name, "PSL", searchStrings)
 		end)
 	end)
+	app.AuctionatorButton:SetScript("OnEnter", function()
+		app.WindowTooltipShow(app.AuctionatorButtonTooltip)
+	end)
+	app.AuctionatorButton:SetScript("OnLeave", function()
+		app.AuctionatorButtonTooltip:Hide()
+	end)
 
 	-- Only show the button if Auctionator is enabled and loaded
 	local loaded, finished = IsAddOnLoaded("Auctionator")

@@ -61,37 +61,37 @@ end
 -- Pop-up window
 function app.Popup(show, text)
 	-- Create popup frame
-	local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-	f:SetPoint("CENTER")
-	f:SetBackdrop({
+	local frame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+	frame:SetPoint("CENTER")
+	frame:SetBackdrop({
 		bgFile = "Interface/Tooltips/UI-Tooltip-Background",
 		edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 		edgeSize = 16,
 		insets = { left = 4, right = 4, top = 4, bottom = 4 },
 	})
-	f:SetBackdropColor(0, 0, 0, 1)
-	f:EnableMouse(true)
+	frame:SetBackdropColor(0, 0, 0, 1)
+	frame:EnableMouse(true)
 	if show == true then
-		f:Show()
+		frame:Show()
 	else
-		f:Hide()
+		frame:Hide()
 	end
 
 	-- Close button
-	local close = CreateFrame("Button", "", f, "UIPanelCloseButton")
-	close:SetPoint("TOPRIGHT", f, "TOPRIGHT", 2, 2)
+	local close = CreateFrame("Button", "", frame, "UIPanelCloseButton")
+	close:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 2, 2)
 	close:SetScript("OnClick", function()
-		f:Hide()
+		frame:Hide()
 	end)
 
 	-- Text
-	local string = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	string:SetPoint("CENTER", f, "CENTER", 0, 0)
-	string:SetPoint("TOP", f, "TOP", 0, -25)
+	local string = frame:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	string:SetPoint("CENTER", frame, "CENTER", 0, 0)
+	string:SetPoint("TOP", frame, "TOP", 0, -25)
 	string:SetJustifyH("CENTER")
 	string:SetText(text)
-	f:SetHeight(string:GetStringHeight()+50)
-	f:SetWidth(string:GetStringWidth()+50)
+	frame:SetHeight(string:GetStringHeight()+50)
+	frame:SetWidth(string:GetStringWidth()+50)
 
 	return f
 end
@@ -113,13 +113,53 @@ end
 
 -- Button
 function app.Button(parent, text)
-	local f = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-	f:SetText(text)
-	f:SetWidth(f:GetTextWidth()+20)
-	--f:SetFrameStrata("HIGH")
+	local frame = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+	frame:SetText(text)
+	frame:SetWidth(frame:GetTextWidth()+20)
 
-	app.Border(f, 0, 0, 0, -1)
-	return f
+	app.Border(frame, 0, 0, 0, -1)
+	return frame
+end
+
+-- Window tooltip body
+function app.WindowTooltip(text)
+	-- Tooltip
+	local frame = CreateFrame("Frame", nil, app.Window, "BackdropTemplate")
+	frame:SetFrameStrata("TOOLTIP")
+	frame:SetBackdrop({
+		bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+		edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+		edgeSize = 16,
+		insets = { left = 4, right = 4, top = 4, bottom = 4 },
+	})
+	frame:SetBackdropColor(0, 0, 0, 0.9)
+	frame:EnableMouse(false)
+	frame:SetMovable(false)
+	frame:Hide()
+
+	local string = frame:CreateFontString("ARTWORK", nil, "GameFontNormal")
+	string:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -10)
+	string:SetJustifyH("LEFT")
+	string:SetText(text)
+
+	-- Set the tooltip size to fit its contents
+	frame:SetHeight(string:GetStringHeight()+20)
+	frame:SetWidth(string:GetStringWidth()+20)
+
+	return frame
+end
+
+-- Window tooltip show/hide
+function app.WindowTooltipShow(frame)
+	-- Set the tooltip to either the left or right, depending on where the window is placed
+	if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+		frame:ClearAllPoints()
+		frame:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
+	else
+		frame:ClearAllPoints()
+		frame:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
+	end
+	frame:Show()
 end
 
 ------------------
@@ -304,6 +344,12 @@ function app.CreateWindow()
 	close:SetScript("OnClick", function()
 		app.Window:Hide()
 	end)
+	close:SetScript("OnEnter", function()
+		app.WindowTooltipShow(app.CloseButtonTooltip)
+	end)
+	close:SetScript("OnLeave", function()
+		app.CloseButtonTooltip:Hide()
+	end)
 
 	-- Clear button
 	app.ClearButton = CreateFrame("Button", "pslOptionClearButton", app.Window, "UIPanelCloseButton")
@@ -328,6 +374,12 @@ function app.CreateWindow()
 			showAlert = true,
 		}
 		StaticPopup_Show("CLEAR_RECIPES", "Interface\\AddOns\\ProfessionShoppingList\assets\\psl_icon.blp")
+	end)
+	app.ClearButton:SetScript("OnEnter", function()
+		app.WindowTooltipShow(app.ClearButtonTooltip)
+	end)
+	app.ClearButton:SetScript("OnLeave", function()
+		app.ClearButtonTooltip:Hide()
 	end)
 
 	-- ScrollFrame inside the popup frame
@@ -746,18 +798,10 @@ function app.UpdateRecipes()
 		end)
 		app.Window.Recipes:SetScript("OnDragStop", function() app.SaveWindow() end)
 		app.Window.Recipes:SetScript("OnEnter", function()
-			-- Set the tooltip to either the left or right, depending on where the window is placed
-			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-				recipeHeaderTooltip:ClearAllPoints()
-				recipeHeaderTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
-			else
-				recipeHeaderTooltip:ClearAllPoints()
-				recipeHeaderTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
-			end
-			recipeHeaderTooltip:Show()
+			app.WindowTooltipShow(app.RecipesHeaderTooltip)
 		end)
 		app.Window.Recipes:SetScript("OnLeave", function()
-			recipeHeaderTooltip:Hide()
+			app.RecipesHeaderTooltip:Hide()
 		end)
 		
 		local recipes1 = app.Window.Recipes:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -947,18 +991,10 @@ function app.UpdateRecipes()
 		end)
 		app.Window.Reagents:SetScript("OnDragStop", function() app.SaveWindow() end)
 		app.Window.Reagents:SetScript("OnEnter", function()
-			-- Set the tooltip to either the left or right, depending on where the window is placed
-			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-				reagentHeaderTooltip:ClearAllPoints()
-				reagentHeaderTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
-			else
-				reagentHeaderTooltip:ClearAllPoints()
-				reagentHeaderTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
-			end
-			reagentHeaderTooltip:Show()
+			app.WindowTooltipShow(app.ReagentsHeaderTooltip)
 		end)
 		app.Window.Reagents:SetScript("OnLeave", function()
-			reagentHeaderTooltip:Hide()
+			app.ReagentsHeaderTooltip:Hide()
 		end)
 		
 		local reagents1 = app.Window.Reagents:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -1473,18 +1509,10 @@ function app.UpdateRecipes()
 		end)
 		app.Window.Cooldowns:SetScript("OnDragStop", function() app.SaveWindow() end)
 		app.Window.Cooldowns:SetScript("OnEnter", function()
-			-- Set the tooltip to either the left or right, depending on where the window is placed
-			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-				cooldownHeaderTooltip:ClearAllPoints()
-				cooldownHeaderTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
-			else
-				cooldownHeaderTooltip:ClearAllPoints()
-				cooldownHeaderTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
-			end
-			cooldownHeaderTooltip:Show()
+			app.WindowTooltipShow(app.CooldownsHeaderTooltip)
 		end)
 		app.Window.Cooldowns:SetScript("OnLeave", function()
-			cooldownHeaderTooltip:Hide()
+			app.CooldownsHeaderTooltip:Hide()
 		end)
 		
 		local cooldowns1 = app.Window.Cooldowns:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -1673,18 +1701,10 @@ function app.UpdateRecipes()
 		app.SaveWindow()
 	end)
 	app.Window.Corner:SetScript("OnEnter", function()
-		-- Set the tooltip to either the left or right, depending on where the window is placed
-		if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-			cornerTooltip:ClearAllPoints()
-			cornerTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
-		else
-			cornerTooltip:ClearAllPoints()
-			cornerTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
-		end
-		cornerTooltip:Show()
+		app.WindowTooltipShow(app.CornerButtonTooltip)
 	end)
 	app.Window.Corner:SetScript("OnLeave", function()
-		cornerTooltip:Hide()
+		app.CornerButtonTooltip:Hide()
 	end)
 
 	-- Check if the Untrack button should be enabled
@@ -1866,104 +1886,25 @@ end
 -- Create assets
 function app.CreateGeneralAssets()
 	-- Create Recipes header tooltip
-	if not recipeHeaderTooltip then
-		recipeHeaderTooltip = CreateFrame("Frame", nil, app.Window, "BackdropTemplate")
-		recipeHeaderTooltip:SetFrameStrata("TOOLTIP")
-		recipeHeaderTooltip:SetBackdrop({
-			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-			edgeSize = 16,
-			insets = { left = 4, right = 4, top = 4, bottom = 4 },
-		})
-		recipeHeaderTooltip:SetBackdropColor(0, 0, 0, 0.9)
-		recipeHeaderTooltip:EnableMouse(false)
-		recipeHeaderTooltip:SetMovable(false)
-		recipeHeaderTooltip:Hide()
-
-		recipeHeaderTooltipText = recipeHeaderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		recipeHeaderTooltipText:SetPoint("TOPLEFT", recipeHeaderTooltip, "TOPLEFT", 10, -10)
-		recipeHeaderTooltipText:SetJustifyH("LEFT")
-		recipeHeaderTooltipText:SetText("Shift+click|cffFFFFFF: Link the recipe.\n|RCtrl+click|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click|cffFFFFFF: Untrack all of the selected recipe.")
-
-		-- Set the tooltip size to fit its contents
-		recipeHeaderTooltip:SetHeight(recipeHeaderTooltipText:GetStringHeight()+20)
-		recipeHeaderTooltip:SetWidth(recipeHeaderTooltipText:GetStringWidth()+20)
-	end
+	app.RecipesHeaderTooltip = app.WindowTooltip("Shift+click|cffFFFFFF: Link the recipe.\n|RCtrl+click|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click|cffFFFFFF: Untrack all of the selected recipe.")
 
 	-- Create Reagents header tooltip
-	if not reagentHeaderTooltip then
-		reagentHeaderTooltip = CreateFrame("Frame", nil, app.Window, "BackdropTemplate")
-		reagentHeaderTooltip:SetFrameStrata("TOOLTIP")
-		reagentHeaderTooltip:SetBackdrop({
-			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-			edgeSize = 16,
-			insets = { left = 4, right = 4, top = 4, bottom = 4 },
-		})
-		reagentHeaderTooltip:SetBackdropColor(0, 0, 0, 0.9)
-		reagentHeaderTooltip:EnableMouse(false)
-		reagentHeaderTooltip:SetMovable(false)
-		reagentHeaderTooltip:Hide()
-
-		reagentHeaderTooltipText = reagentHeaderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		reagentHeaderTooltipText:SetPoint("TOPLEFT", reagentHeaderTooltip, "TOPLEFT", 10, -10)
-		reagentHeaderTooltipText:SetJustifyH("LEFT")
-		reagentHeaderTooltipText:SetText("Shift+click|cffFFFFFF: Link the reagent.\n|RCtrl+click|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)\nThe reagents listed here can also be imported to a new Auctionator shopping list.")
-
-		-- Set the tooltip size to fit its contents
-		reagentHeaderTooltip:SetHeight(reagentHeaderTooltipText:GetStringHeight()+20)
-		reagentHeaderTooltip:SetWidth(reagentHeaderTooltipText:GetStringWidth()+20)
-	end
+	app.ReagentsHeaderTooltip = app.WindowTooltip("Shift+click|cffFFFFFF: Link the reagent.\n|RCtrl+click|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)\nThe reagents listed here can also be imported to a new Auctionator shopping list.")
 
 	-- Create Cooldowns header tooltip
-	if not cooldownHeaderTooltip then
-		cooldownHeaderTooltip = CreateFrame("Frame", nil, app.Window, "BackdropTemplate")
-		cooldownHeaderTooltip:SetFrameStrata("TOOLTIP")
-		cooldownHeaderTooltip:SetBackdrop({
-			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-			edgeSize = 16,
-			insets = { left = 4, right = 4, top = 4, bottom = 4 },
-		})
-		cooldownHeaderTooltip:SetBackdropColor(0, 0, 0, 0.9)
-		cooldownHeaderTooltip:EnableMouse(false)
-		cooldownHeaderTooltip:SetMovable(false)
-		cooldownHeaderTooltip:Hide()
+	app.CooldownsHeaderTooltip = app.WindowTooltip("Right+click|cffFFFFFF: Remove the cooldown reminder.")
 
-		cooldownHeaderTooltipText = cooldownHeaderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		cooldownHeaderTooltipText:SetPoint("TOPLEFT", cooldownHeaderTooltip, "TOPLEFT", 10, -10)
-		cooldownHeaderTooltipText:SetJustifyH("LEFT")
-		cooldownHeaderTooltipText:SetText("Right+click|cffFFFFFF: Remove the cooldown reminder.")
+	-- Create Close button tooltip
+	app.CloseButtonTooltip = app.WindowTooltip("Close the window.")
 
-		-- Set the tooltip size to fit its contents
-		cooldownHeaderTooltip:SetHeight(cooldownHeaderTooltipText:GetStringHeight()+20)
-		cooldownHeaderTooltip:SetWidth(cooldownHeaderTooltipText:GetStringWidth()+20)
-	end
+	-- Create Clear button tooltip
+	app.ClearButtonTooltip = app.WindowTooltip("Clear all tracked recipes.")
 
-	-- Create window corner tooltip
-	if not cornerTooltip then
-		cornerTooltip = CreateFrame("Frame", nil, app.Window, "BackdropTemplate")
-		cornerTooltip:SetFrameStrata("TOOLTIP")
-		cornerTooltip:SetBackdrop({
-			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-			edgeSize = 16,
-			insets = { left = 4, right = 4, top = 4, bottom = 4 },
-		})
-		cornerTooltip:SetBackdropColor(0, 0, 0, 0.9)
-		cornerTooltip:EnableMouse(false)
-		cornerTooltip:SetMovable(false)
-		cornerTooltip:Hide()
+	-- Create Auctionator button tooltip
+	app.AuctionatorButtonTooltip = app.WindowTooltip("Create an Auctionator shopping list.\nAlso initiates a search if you have the Shopping tab open at the Auction House.")
 
-		cornerTooltipText = cornerTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		cornerTooltipText:SetPoint("TOPLEFT", cornerTooltip, "TOPLEFT", 10, -10)
-		cornerTooltipText:SetJustifyH("LEFT")
-		cornerTooltipText:SetText("Double-click|cffFFFFFF: Autosize to fit the window.")
-
-		-- Set the tooltip size to fit its contents
-		cornerTooltip:SetHeight(cornerTooltipText:GetStringHeight()+20)
-		cornerTooltip:SetWidth(cornerTooltipText:GetStringWidth()+20)
-	end
+	-- Create corner button tooltip
+	app.CornerButtonTooltip = app.WindowTooltip("Double-click|cffFFFFFF: Autosize to fit the window.")
 end
 
 function app.CreateTradeskillAssets()
