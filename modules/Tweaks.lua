@@ -284,7 +284,7 @@ function app.SettingsTweaks()
 		end
 	end)
 
-	local variable, name, tooltip = "backpackCleanup", "Clean up bags", "Let ".. app.NameLong.." enforce cleanup sorting direction.\n- Default means "..app.NameShort.." won't touch the game's default behaviour;\n- The other options let "..app.NameShort.." enforce that particular setting."
+	local variable, name, tooltip = "backpackCleanup", "Clean up bags", "Let ".. app.NameShort.." enforce cleanup sorting direction.\n- Default means "..app.NameShort.." won't touch the game's default behaviour;\n- The other options let "..app.NameShort.." enforce that particular setting."
 	local function GetOptions()
 		local container = Settings.CreateControlTextContainer()
 		container:Add(0, "Default")
@@ -304,7 +304,7 @@ function app.SettingsTweaks()
 		end
 	end)
 
-	local variable, name, tooltip = "backpackLoot", "Loot order", "Let ".. app.NameLong.." enforce loot sorting direction.\n- Default means "..app.NameShort.." won't touch the game's default behaviour;\n- The other options let "..app.NameShort.." enforce that particular setting."
+	local variable, name, tooltip = "backpackLoot", "Loot order", "Let ".. app.NameShort.." enforce loot sorting direction.\n- Default means "..app.NameShort.." won't touch the game's default behaviour;\n- The other options let "..app.NameShort.." enforce that particular setting."
 	local function GetOptions()
 		local container = Settings.CreateControlTextContainer()
 		container:Add(0, "Default")
@@ -326,7 +326,7 @@ function app.SettingsTweaks()
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Other Tweaks"))
 
-	local variable, name, tooltip = "vendorAll", "Disable vendor filter", "Automatically set all vendor filters to 'All' to display items normally not shown to your class."
+	local variable, name, tooltip = "vendorAll", "Disable vendor filter", "Automatically set all vendor filters to |cffFFFFFFAll|R to display items normally not shown to your class."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
@@ -336,7 +336,7 @@ function app.SettingsTweaks()
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
-	local variable, name, tooltip = "underminePrices", "Fix Oribos Exchange tooltip", "Let "..app.NameLong.." simplify and fix the tooltip provided by the Oribos Exchange AddOn:\n- Rounds to the nearest gold;\n- Fixes recipe prices;\n- Fixes profession window prices;\n- Shows battle pet prices inside the existing tooltip."
+	local variable, name, tooltip = "underminePrices", "Fix Oribos Exchange tooltip", "Let "..app.NameShort.." simplify and fix the tooltip provided by the Oribos Exchange AddOn:\n- Round to the nearest gold;\n- Fix recipe prices;\n- Fix profession window prices;\n- Show battle pet prices inside the existing tooltip."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)

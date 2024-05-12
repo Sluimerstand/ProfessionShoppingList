@@ -49,7 +49,7 @@ function app.Dump(table)
 end
 
 -- App colour
-function app.Color(string)
+function app.Colour(string)
 	return "|R|cffC69B6D"..string.."|R"
 end
 
@@ -504,29 +504,29 @@ function app.UpdateNumbers()
 				itemAmount = itemAmount..math.max(0,amount-reagentAmountHave)
 			end
 		elseif reagentID == "gold" then
-			-- Set the color of both strings and the icon
-			local color = ""
+			-- Set the colour of both strings and the icon
+			local colour = ""
 			if math.max(0,amount-GetMoney()) == 0 then
 				itemIcon = app.iconReady
-				color = "|cff9d9d9d"
-				itemLink = color..itemLink
+				colour = "|cff9d9d9d"
+				itemLink = colour..itemLink
 			end
 
 			-- Set the displayed amount based on settings
 			if userSettings["showRemaining"] == false then
-				itemAmount = color..GetCoinTextureString(amount)
+				itemAmount = colour..GetCoinTextureString(amount)
 			else
-				itemAmount = color..GetCoinTextureString(math.max(0,amount-GetMoney()))
+				itemAmount = colour..GetCoinTextureString(math.max(0,amount-GetMoney()))
 			end
 		elseif string.find(reagentID, "currency") then
 			local number = string.gsub(reagentID, "currency:", "")
 			local quantity = C_CurrencyInfo.GetCurrencyInfo(tonumber(number)).quantity
 
-			-- Set the color of both strings and the icon
-			local color = ""
+			-- Set the colour of both strings and the icon
+			local colour = ""
 			if math.max(0,amount-quantity) == 0 then
 				itemIcon = app.iconReady
-				color = "|cff9d9d9d"
+				colour = "|cff9d9d9d"
 				itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|cff9d9d9d|") -- Poor
 				itemLink = string.gsub(itemLink, "|cffffffff|", "|cff9d9d9d|") -- Common
 				itemLink = string.gsub(itemLink, "|cff1eff00|", "|cff9d9d9d|") -- Uncommon
@@ -538,9 +538,9 @@ function app.UpdateNumbers()
 
 			-- Set the displayed amount based on settings
 			if userSettings["showRemaining"] == false then
-				itemAmount = color..quantity.."/"..amount
+				itemAmount = colour..quantity.."/"..amount
 			else
-				itemAmount = color..math.max(0,amount-quantity)
+				itemAmount = colour..math.max(0,amount-quantity)
 			end
 		end
 
@@ -2160,7 +2160,7 @@ function app.CreateTradeskillAssets()
 		millingDragonflight = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		millingDragonflight:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 30, 30)
 		millingDragonflight:SetJustifyH("LEFT")
-		millingDragonflight:SetText(app.Color("Milling information").."\n|cffFFFFFFFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nBlazing Pigment: Saxifrage\nShimmering Pigment: Hochenblume")
+		millingDragonflight:SetText(app.Colour("Milling information").."\n|cffFFFFFFFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nBlazing Pigment: Saxifrage\nShimmering Pigment: Hochenblume")
 	end
 
 	-- Create the fulfil crafting orders UI Track button
@@ -2499,7 +2499,7 @@ function app.Settings()
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(GetAddOnMetadata("ProfessionShoppingList", "Version")))
 
-	local variable, name, tooltip = "minimapIcon", "Show minimap icon", "Show the minimap icon. If you disable this, "..app.NameLong.." is still available from the AddOn Compartment."
+	local variable, name, tooltip = "minimapIcon", "Show minimap icon", "Show the minimap icon. If you disable this, "..app.NameShort.." is still available from the AddOn Compartment."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
@@ -2541,7 +2541,7 @@ function app.Settings()
 		app.UpdateRecipes()
 	end)
 
-	local variable, name, tooltip = "reagentQuality", "Minimum reagent quality", "Set the minimum quality reagents have to be before "..app.NameLong.." includes them in the item count."
+	local variable, name, tooltip = "reagentQuality", "Minimum reagent quality", "Set the minimum quality reagents need to be before "..app.NameShort.." includes them in the item count."
 	local function GetOptions()
 		local container = Settings.CreateControlTextContainer()
 		container:Add(1, "|A:Professions-ChatIcon-Quality-Tier1:17:15::1|a Tier 1")
@@ -2556,6 +2556,7 @@ function app.Settings()
 		app.UpdateNumbers()
 	end)
 
+	-- -- Checkbox + dependency dropdown
 	-- local cbVariable, cbName, cbTooltip = "removeCraft", "Untrack on craft", "Remove one of a tracked recipe when you successfully craft it."
 	-- local cbSetting = Settings.RegisterAddOnSetting(category, cbName, cbVariable, Settings.VarType.Boolean, userSettings[variable])
 	-- Settings.SetOnValueChangedCallback(cbVariable, app.SettingChanged)
@@ -2596,13 +2597,13 @@ function app.Settings()
 		local container = Settings.CreateControlTextContainer()
 		container:Add(1, "/psl", "Toggle the tracking window.")
 		container:Add(2, "/psl resetpos", "Reset the tracking window position.")
-		container:Add(3, "/psl settings", "Go to the settings, which is here! :D")
+		container:Add(3, "/psl settings", "Go to the settings.")
 		container:Add(4, "/psl clear", "Clear all tracked recipes.")
 		container:Add(5, "/psl track |cff1B9C85recipeID quantity|R", "Track a recipe.")
 		container:Add(6, "/psl untrack |cff1B9C85recipeID quantity|R", "Untrack a recipe.")
 		container:Add(7, "/psl untrack |cff1B9C85recipeID |Rall", "Untrack all of a recipe.")
 		container:Add(8, "/psl |cff1B9C85[crafting achievement]|R", "Track the recipes needed for the linked achievement.")
-		container:Add(8, "/psl duration |cff1B9C85number|R", "Set the default quick order duration.")
+		container:Add(9, "/psl duration |cff1B9C85number|R", "Set the default quick order duration.")
 		return container:GetData()
 	end
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, "")
@@ -2628,7 +2629,6 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 		refreshCooldowns()
 
 		-- Slash commands
-		-- TODO: Figure out a way to split this across multiple files/functions
 		SLASH_PSL1 = "/psl";
 		function SlashCmdList.PSL(msg, editBox)
 			-- Split message into command and rest

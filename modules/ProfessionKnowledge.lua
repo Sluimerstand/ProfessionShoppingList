@@ -1102,7 +1102,7 @@ function app.SettingsKnowledgeTracker()
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
-	local variable, name, tooltip = "knowledgeHideDone", "Hide unique done knowledge", "Hide knowledge that can only be collected once when it has been collected."
+	local variable, name, tooltip = "knowledgeHideDone", "Hide unique done knowledge", "Hide knowledge that can only be collected once, when it has been collected."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
