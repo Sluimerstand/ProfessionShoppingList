@@ -7,6 +7,7 @@
 local appName, app = ...	-- Returns the AddOn name and a unique table
 
 -- Used strings
+app.Name = "Profession Shopping List"
 app.NameLong = app.Colour("Profession Shopping List")
 app.NameShort = app.Colour("PSL")
 
