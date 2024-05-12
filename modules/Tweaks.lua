@@ -31,8 +31,8 @@ event:RegisterEvent("PLAYER_ENTERING_WORLD")
 function app.InitialiseTweaks()
 	-- Backpack
 	if userSettings["backpackCount"] == nil then userSettings["backpackCount"] = true end
-	if userSettings["backpackCleanup"] == nil then userSettings["backpackCleanup"] = "default" end
-	if userSettings["backpackLoot"] == nil then userSettings["backpackLoot"] = "default" end
+	if userSettings["backpackCleanup"] == nil then userSettings["backpackCleanup"] = 0 end
+	if userSettings["backpackLoot"] == nil then userSettings["backpackLoot"] = 0 end
 	-- Other Tweaks
 	if userSettings["vendorAll"] == nil then userSettings["vendorAll"] = true end
 	if userSettings["queueSound"] == nil then userSettings["queueSound"] = false end
