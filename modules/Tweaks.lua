@@ -61,9 +61,9 @@ function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 		C_Container.SetSortBagsRightToLeft(true)
 	end
 	
-	if userSettings["backpackCleanup"] == 1 then
+	if userSettings["backpackLoot"] == 1 then
 		C_Container.SetInsertItemsLeftToRight(true)
-	elseif userSettings["backpackCleanup"] == 2 then
+	elseif userSettings["backpackLoot"] == 2 then
 		C_Container.SetInsertItemsLeftToRight(false)
 	end
 end
@@ -303,6 +303,7 @@ function app.SettingsTweaks()
 		elseif userSettings["backpackCleanup"] == 2 then
 			C_Container.SetSortBagsRightToLeft(true)
 		end
+		
 	end)
 
 	local variable, name, tooltip = "backpackLoot", "Loot order", "Let ".. app.NameShort.." enforce loot sorting direction.\n- Default means "..app.NameShort.." won't touch the game's default behaviour;\n- The other options let "..app.NameShort.." enforce that particular setting."
