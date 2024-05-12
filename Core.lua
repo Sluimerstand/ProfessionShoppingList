@@ -2483,6 +2483,7 @@ function app.Settings()
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
 		app.UpdateRecipes()
+		app.UpdateNumbers()	-- Toggling this setting seems buggy? This fixes it. :)
 	end)
 
 	local variable, name, tooltip = "reagentQuality", "Minimum reagent quality", "Set the minimum quality reagents need to be before "..app.NameShort.." includes them in the item count."
