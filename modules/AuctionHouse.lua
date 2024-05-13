@@ -56,10 +56,11 @@ function app.CreateAuctionatorButton()
 							do return end
 						end
 
-						-- Set reagent quality if applicable
+						-- Set reagent quality to 3 if applicable and the user has this set, otherwise don't specify quality
+						-- This is because tier 2 reagents are often cheaper than tier 1 reagents
 						local reagentQuality = ""
-						if reagentTiers[reagentID].two ~= 0 then
-							reagentQuality = userSettings["reagentQuality"]
+						if reagentTiers[reagentID].two ~= 0 and userSettings["reagentQuality"] == 3 then
+							reagentQuality = 3
 						end
 
 						-- Get have/need
