@@ -2482,8 +2482,7 @@ function app.Settings()
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
-		app.UpdateRecipes()
-		app.UpdateNumbers()	-- Toggling this setting seems buggy? This fixes it. :)
+		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
 	end)
 
 	local variable, name, tooltip = "reagentQuality", "Minimum reagent quality", "Set the minimum quality reagents need to be before "..app.NameShort.." includes them in the item count."
@@ -2498,7 +2497,7 @@ function app.Settings()
 	Settings.CreateDropDown(category, setting, GetOptions, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
-		app.UpdateRecipes()
+		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
 	end)
 
 	-- -- Checkbox + dependency dropdown
