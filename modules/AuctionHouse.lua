@@ -42,26 +42,35 @@ function app.CreateAuctionatorButton()
 				local searchStrings = {}
 
 				for reagentID, reagentAmount in pairs(app.ReagentQuantities) do
-					-- Cache item
-					if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
-					
-					-- Get item info
-					local itemName = C_Item.GetItemInfo(reagentID)
-			
-					-- Try again if error
-					if itemName == nil then
-						RunNextFrame(makeShoppingList)
-						do return end
-					end
+					-- Ignore tracked gold and currency costs
+					if type(reagentID) == "number" then
+						-- Cache item
+						if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+						
+						-- Get item info
+						local itemName = C_Item.GetItemInfo(reagentID)
+				
+						-- Try again if error
+						if itemName == nil then
+							RunNextFrame(makeShoppingList)
+							do return end
+						end
 
-					-- Set reagent quality if applicable
-					local reagentQuality = ""
-					if reagentTiers[reagentID].two ~= 0 then
-						reagentQuality = userSettings["reagentQuality"]
-					end
+						-- Set reagent quality if applicable
+						local reagentQuality = ""
+						if reagentTiers[reagentID].two ~= 0 then
+							reagentQuality = userSettings["reagentQuality"]
+						end
 
-					-- Put the items in the temporary variable
-					table.insert(searchStrings, Auctionator.API.v1.ConvertToSearchString(app.Name, { searchString = itemName, isExact = true, categoryKey = "", tier = reagentQuality, quantity = reagentAmount}))
+						-- Get have/need
+						local reagentCount = C_Item.GetItemCount(reagentID, true, false, true)
+						reagentCount = math.max(0, reagentAmount - reagentCount)
+
+						-- Put the items in the temporary variable
+						if reagentCount > 0 then
+							table.insert(searchStrings, Auctionator.API.v1.ConvertToSearchString(app.Name, { searchString = itemName, isExact = true, categoryKey = "", tier = reagentQuality, quantity = reagentCount}))
+						end
+					end
 				end
 
 				Auctionator.API.v1.CreateShoppingList(app.Name, "PSL", searchStrings)
