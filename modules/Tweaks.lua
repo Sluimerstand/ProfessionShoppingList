@@ -143,7 +143,11 @@ function app.UnderminePrices()
 				local oeData = {}
 				OEMarketInfo(itemLink,oeData)
 				if oeData['market'] == nil and oeData['region'] == nil then
-					OEMarketInfo(unreliableItemLink,oeData)
+					-- Unless the item is BoP (BoP recipes for example)
+					local bindType = select(14, C_Item.GetItemInfo(itemID))
+					if bindType ~= 1 then
+						OEMarketInfo(unreliableItemLink,oeData)
+					end
 				end
 				
 				if oeData['market'] ~= nil then
