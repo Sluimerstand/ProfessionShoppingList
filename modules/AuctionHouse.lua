@@ -38,32 +38,35 @@ function app.CreateAuctionatorButton()
 		app.UpdateRecipes()
 		-- Add a delay because I have no idea how to optimise my AddOn
 		C_Timer.After(0.5, function()
-			local searchStrings = {}
+			local function makeShoppingList()
+				local searchStrings = {}
 
-			for reagentID, reagentAmount in pairs(app.ReagentQuantities) do
-				-- Cache item
-				if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
-				
-				-- Get item info
-				local itemName = C_Item.GetItemInfo(reagentID)
-		
-				-- Try again if error
-				if itemName == nil then
-					RunNextFrame(getReagentNames)
-					do return end
+				for reagentID, reagentAmount in pairs(app.ReagentQuantities) do
+					-- Cache item
+					if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+					
+					-- Get item info
+					local itemName = C_Item.GetItemInfo(reagentID)
+			
+					-- Try again if error
+					if itemName == nil then
+						RunNextFrame(makeShoppingList)
+						do return end
+					end
+
+					-- Set reagent quality if applicable
+					local reagentQuality = ""
+					if reagentTiers[reagentID].two ~= 0 then
+						reagentQuality = userSettings["reagentQuality"]
+					end
+
+					-- Put the items in the temporary variable
+					table.insert(searchStrings, Auctionator.API.v1.ConvertToSearchString(app.Name, { searchString = itemName, isExact = true, categoryKey = "", tier = reagentQuality, quantity = reagentAmount}))
 				end
 
-				-- Set reagent quality if applicable
-				local reagentQuality = ""
-				if reagentTiers[reagentID].two ~= 0 then
-					reagentQuality = userSettings["reagentQuality"]
-				end
-
-				-- Put the items in the temporary variable
-				table.insert(searchStrings, Auctionator.API.v1.ConvertToSearchString(app.Name, { searchString = itemName, isExact = true, categoryKey = "", tier = reagentQuality, quantity = reagentAmount}))
+				Auctionator.API.v1.CreateShoppingList(app.Name, "PSL", searchStrings)
 			end
-
-			Auctionator.API.v1.CreateShoppingList(app.Name, "PSL", searchStrings)
+			makeShoppingList()
 		end)
 	end)
 	app.AuctionatorButton:SetScript("OnEnter", function()
