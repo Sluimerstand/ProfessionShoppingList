@@ -28,9 +28,9 @@ event:RegisterEvent("TRADE_SKILL_SHOW")
 -- Create default user settings and session variables
 function app.InitialiseProfessionKnowledge()
 	-- Enable default user settings
-	if userSettings["showKnowledgeNotPerks"] == nil then userSettings["showKnowledgeNotPerks"] = false end
-	if userSettings["knowledgeHideDone"] == nil then userSettings["knowledgeHideDone"] = false end
-	if userSettings["knowledgeAlwaysShowDetails"] == nil then userSettings["knowledgeAlwaysShowDetails"] = false end
+	if ProfessionShoppingList_Settings["showKnowledgeNotPerks"] == nil then ProfessionShoppingList_Settings["showKnowledgeNotPerks"] = false end
+	if ProfessionShoppingList_Settings["knowledgeHideDone"] == nil then ProfessionShoppingList_Settings["knowledgeHideDone"] = false end
+	if ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == nil then ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] = false end
 
 	app.Flag["knowledgeAssets"] = false
 end
@@ -153,7 +153,7 @@ function app.KnowledgeTracker()
 		end
 
 		-- Set text, background, and progress, then show bar
-		if userSettings["showKnowledgeNotPerks"] == true then
+		if ProfessionShoppingList_Settings["showKnowledgeNotPerks"] == true then
 			knowledgePointTracker.Text:SetText(knowledgeSpent.."/"..knowledgeMax.." knowledge spent")
 			knowledgePointTracker.Bar:SetMinMaxSmoothedValue(0, knowledgeMax)
 			knowledgePointTracker.Bar:SetSmoothedValue(knowledgeSpent)
@@ -419,7 +419,7 @@ function app.KnowledgeTracker()
 			oldText = knowledgePointTooltipText:GetText()
 			knowledgePointTooltipText:SetText(oldText.."\n".."|T"..dropsStatus..":0|t "..dropsNoCurrent.."/"..dropsNoTotal.." Drops")
 
-			if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
+			if IsModifierKeyDown() == true or ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
 				for _, dropInfo in ipairs(drops) do
 					oldText = knowledgePointTooltipText:GetText()
 
@@ -443,7 +443,7 @@ function app.KnowledgeTracker()
 		end
 
 		-- One-time knowledge (text)
-		if userSettings["knowledgeHideDone"] == true and shardNo == 4 and hiddenNumber == 1 and (treasureNoCurrent == treasureNoTotal or treasures == nil) and (bookNoCurrent == bookNoTotal) then
+		if ProfessionShoppingList_Settings["knowledgeHideDone"] == true and shardNo == 4 and hiddenNumber == 1 and (treasureNoCurrent == treasureNoTotal or treasures == nil) and (bookNoCurrent == bookNoTotal) then
 			-- Do not show this
 		else
 			oldText = knowledgePointTooltipText:GetText()
@@ -451,7 +451,7 @@ function app.KnowledgeTracker()
 		end
 		
 		-- Dragon Shard of Knowledge
-		if userSettings["knowledgeHideDone"] == true and shardNo == 4 then
+		if ProfessionShoppingList_Settings["knowledgeHideDone"] == true and shardNo == 4 then
 			-- Don't show this
 		else
 			-- Cache dragon shard item
@@ -467,7 +467,7 @@ function app.KnowledgeTracker()
 			oldText = knowledgePointTooltipText:GetText()
 			knowledgePointTooltipText:SetText(oldText.."\n|T"..shardStatus..":0|t "..shardNo.."/4 "..itemLink)
 
-			if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
+			if IsModifierKeyDown() == true or ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
 				for no, questID in pairs(shardQuests) do
 					oldText = knowledgePointTooltipText:GetText()
 					local questTitle = C_QuestLog.GetTitleForQuestID(questID)
@@ -488,7 +488,7 @@ function app.KnowledgeTracker()
 		end
 
 		-- Hidden profession master
-		if userSettings["knowledgeHideDone"] == true and hiddenNumber == 1 then
+		if ProfessionShoppingList_Settings["knowledgeHideDone"] == true and hiddenNumber == 1 then
 			-- Don't show this
 		else
 			oldText = knowledgePointTooltipText:GetText()
@@ -497,13 +497,13 @@ function app.KnowledgeTracker()
 
 		-- Treasures
 		if treasures ~= nil then
-			if userSettings["knowledgeHideDone"] == true and treasureNoCurrent == treasureNoTotal then
+			if ProfessionShoppingList_Settings["knowledgeHideDone"] == true and treasureNoCurrent == treasureNoTotal then
 				-- Don't show this
 			else
 				oldText = knowledgePointTooltipText:GetText()
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..treasureStatus..":0|t "..treasureNoCurrent.."/"..treasureNoTotal.." Treasures")
 
-				if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
+				if IsModifierKeyDown() == true or ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
 					for questID, itemID in pairs(treasures) do
 						oldText = knowledgePointTooltipText:GetText()
 
@@ -529,13 +529,13 @@ function app.KnowledgeTracker()
 
 		-- Books
 		if books ~= nil then
-			if userSettings["knowledgeHideDone"] == true and bookNoCurrent == bookNoTotal then
+			if ProfessionShoppingList_Settings["knowledgeHideDone"] == true and bookNoCurrent == bookNoTotal then
 				-- Don't show this
 			else
 				oldText = knowledgePointTooltipText:GetText()
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..bookStatus..":0|t "..bookNoCurrent.."/"..bookNoTotal.." Books")
 
-				if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
+				if IsModifierKeyDown() == true or ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
 					for _, bookInfo in ipairs(books) do
 						oldText = knowledgePointTooltipText:GetText()
 
@@ -561,12 +561,12 @@ function app.KnowledgeTracker()
 
 		-- Renown
 		if renown ~= nil then
-			if userSettings["knowledgeHideDone"] == true and renownCount == 4 then
+			if ProfessionShoppingList_Settings["knowledgeHideDone"] == true and renownCount == 4 then
 				-- Don't show this
 			else
 				oldText = knowledgePointTooltipText:GetText()
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..renownStatus..":0|t "..renownCount.."/4 Renown")
-				if IsModifierKeyDown() == true or userSettings["knowledgeAlwaysShowDetails"] == true then
+				if IsModifierKeyDown() == true or ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
 					for key, info in ipairs(renownInfo) do
 
 						oldText = knowledgePointTooltipText:GetText()
@@ -577,7 +577,7 @@ function app.KnowledgeTracker()
 		end
 		
 		oldText = knowledgePointTooltipText:GetText()
-		if IsModifierKeyDown() == false and userSettings["knowledgeAlwaysShowDetails"] == false then knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000Press Alt, Ctrl, or Shift to show details.") end
+		if IsModifierKeyDown() == false and ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == false then knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000Press Alt, Ctrl, or Shift to show details.") end
 
 		-- Set the tooltip size to fit its contents
 		knowledgePointTooltip:SetHeight(knowledgePointTooltipText:GetStringHeight()+20)
@@ -1098,17 +1098,17 @@ function app.SettingsKnowledgeTracker()
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Knowledge Tracker"))
 
 	local variable, name, tooltip = "showKnowledgeNotPerks", "Count knowledge, not perks", "Show the amount of knowledge points spent, instead of the amount of perks (nodes) unlocked."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	local variable, name, tooltip = "knowledgeHideDone", "Hide unique done knowledge", "Hide knowledge that can only be collected once, when it has been collected."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	local variable, name, tooltip = "knowledgeAlwaysShowDetails", "Always show details", "The tooltip will always show all details, instead of only when holding a modifier key."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 end

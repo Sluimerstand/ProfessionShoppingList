@@ -30,13 +30,13 @@ event:RegisterEvent("PLAYER_ENTERING_WORLD")
 -- Create default user settings
 function app.InitialiseTweaks()
 	-- Backpack
-	if userSettings["backpackCount"] == nil then userSettings["backpackCount"] = true end
-	if userSettings["backpackCleanup"] == nil then userSettings["backpackCleanup"] = 0 end
-	if userSettings["backpackLoot"] == nil then userSettings["backpackLoot"] = 0 end
+	if ProfessionShoppingList_Settings["backpackCount"] == nil then ProfessionShoppingList_Settings["backpackCount"] = true end
+	if ProfessionShoppingList_Settings["backpackCleanup"] == nil then ProfessionShoppingList_Settings["backpackCleanup"] = 0 end
+	if ProfessionShoppingList_Settings["backpackLoot"] == nil then ProfessionShoppingList_Settings["backpackLoot"] = 0 end
 	-- Other Tweaks
-	if userSettings["vendorAll"] == nil then userSettings["vendorAll"] = true end
-	if userSettings["queueSound"] == nil then userSettings["queueSound"] = false end
-	if userSettings["underminePrices"] == nil then userSettings["underminePrices"] = false end
+	if ProfessionShoppingList_Settings["vendorAll"] == nil then ProfessionShoppingList_Settings["vendorAll"] = true end
+	if ProfessionShoppingList_Settings["queueSound"] == nil then ProfessionShoppingList_Settings["queueSound"] = false end
+	if ProfessionShoppingList_Settings["underminePrices"] == nil then ProfessionShoppingList_Settings["underminePrices"] = false end
 end
 
 -- When the AddOn is fully loaded, actually run the components
@@ -55,15 +55,15 @@ end
 
 function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 	-- Enforce backpack sorting options
-	if userSettings["backpackCleanup"] == 1 then
+	if ProfessionShoppingList_Settings["backpackCleanup"] == 1 then
 		C_Container.SetSortBagsRightToLeft(false)
-	elseif userSettings["backpackCleanup"] == 2 then
+	elseif ProfessionShoppingList_Settings["backpackCleanup"] == 2 then
 		C_Container.SetSortBagsRightToLeft(true)
 	end
 	
-	if userSettings["backpackLoot"] == 1 then
+	if ProfessionShoppingList_Settings["backpackLoot"] == 1 then
 		C_Container.SetInsertItemsLeftToRight(true)
-	elseif userSettings["backpackLoot"] == 2 then
+	elseif ProfessionShoppingList_Settings["backpackLoot"] == 2 then
 		C_Container.SetInsertItemsLeftToRight(false)
 	end
 end
@@ -75,7 +75,7 @@ end
 -- Play the DBM-style queue sound
 function app.QueueSound()
 	-- If the setting is enabled
-	if userSettings["queueSound"] == true then
+	if ProfessionShoppingList_Settings["queueSound"] == true then
 		PlaySoundFile(567478, "Master")
 	end
 end
@@ -102,7 +102,7 @@ end)
 -- Set the Vendor filter to 'All'
 function app.MerchantFilter()
 	-- If the setting is enabled
-	if userSettings["vendorAll"] == true then
+	if ProfessionShoppingList_Settings["vendorAll"] == true then
 		RunNextFrame(function()
 			SetMerchantFilter(1)
 			MerchantFrame_Update()
@@ -131,7 +131,7 @@ function app.UnderminePrices()
 		local _, itemLink = C_Item.GetItemInfo(itemID)
 
 		-- Only run this if the setting is enabled
-		if userSettings["underminePrices"] == true then
+		if ProfessionShoppingList_Settings["underminePrices"] == true then
 			-- If Oribos Exchange is loaded
 			local loaded, finished = IsAddOnLoaded("OribosExchange")
 			if finished == true then
@@ -184,7 +184,7 @@ end
 local LibBattlePetTooltipLine = LibStub("LibBattlePetTooltipLine-1-0")	-- Load this library
 hooksecurefunc("BattlePetToolTip_Show", function(...)
 	-- Only run this if the setting is enabled
-	if userSettings["underminePrices"] == true then
+	if ProfessionShoppingList_Settings["underminePrices"] == true then
 		-- If Oribos Exchange is loaded
 		local loaded, finished = IsAddOnLoaded("OribosExchange")
 		if finished == true then
@@ -228,7 +228,7 @@ end)
 
 function app.HideOribos()
 	-- Only run this if the setting is enabled
-	if userSettings["underminePrices"] == true then
+	if ProfessionShoppingList_Settings["underminePrices"] == true then
 		-- If Oribos Exchange is loaded
 		local loaded, finished = IsAddOnLoaded("OribosExchange")
 		if finished == true then
@@ -269,7 +269,7 @@ function app.SettingsTweaks()
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(BAG_NAME_BACKPACK))
 
 	local variable, name, tooltip = "backpackCount", "Split reagent bag count", "Shows the free slots of your regular bags and your reagent bag separately on top of the backpack icon."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
@@ -278,7 +278,7 @@ function app.SettingsTweaks()
 		local freeSlots2 = C_Container.GetContainerNumFreeSlots(5)
 
 		-- If the setting for split reagent bag count is enabled and the player has a reagent bag
-		if userSettings["backpackCount"] == true and C_Container.GetContainerNumSlots(5) ~= 0 then
+		if ProfessionShoppingList_Settings["backpackCount"] == true and C_Container.GetContainerNumSlots(5) ~= 0 then
 			print("true")
 			-- Replace the bag count text
 			MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 .. "+" .. freeSlots2 .. ")")
@@ -298,13 +298,13 @@ function app.SettingsTweaks()
 		return container:GetData()
 	end
 	local defaultValue = 0
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, ProfessionShoppingList_Settings[variable])
 	Settings.CreateDropDown(category, setting, GetOptions, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
-		if userSettings["backpackCleanup"] == 1 then
+		if ProfessionShoppingList_Settings["backpackCleanup"] == 1 then
 			C_Container.SetSortBagsRightToLeft(false)
-		elseif userSettings["backpackCleanup"] == 2 then
+		elseif ProfessionShoppingList_Settings["backpackCleanup"] == 2 then
 			C_Container.SetSortBagsRightToLeft(true)
 		end
 		
@@ -319,13 +319,13 @@ function app.SettingsTweaks()
 		return container:GetData()
 	end
 	local defaultValue = 0
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, ProfessionShoppingList_Settings[variable])
 	Settings.CreateDropDown(category, setting, GetOptions, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
-		if userSettings["backpackLoot"] == 1 then
+		if ProfessionShoppingList_Settings["backpackLoot"] == 1 then
 			C_Container.SetInsertItemsLeftToRight(true)
-		elseif userSettings["backpackLoot"] == 2 then
+		elseif ProfessionShoppingList_Settings["backpackLoot"] == 2 then
 			C_Container.SetInsertItemsLeftToRight(false)
 		end
 	end)
@@ -333,17 +333,17 @@ function app.SettingsTweaks()
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Other Tweaks"))
 
 	local variable, name, tooltip = "vendorAll", "Disable vendor filter", "Automatically set all vendor filters to |cffFFFFFFAll|R to display items normally not shown to your class."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	local variable, name, tooltip = "queueSound", "Play queue sound", "Play the Deadly Boss Mods style queue sound when any queue pops, including battlegrounds and pet battles."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	local variable, name, tooltip = "underminePrices", "Fix Oribos Exchange tooltip", "Let "..app.NameShort.." simplify and fix the tooltip provided by the Oribos Exchange AddOn:\n- Round to the nearest gold;\n- Fix recipe prices;\n- Fix profession window prices;\n- Show battle pet prices inside the existing tooltip."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()

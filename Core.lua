@@ -152,7 +152,7 @@ end
 -- Window tooltip show/hide
 function app.WindowTooltipShow(frame)
 	-- Set the tooltip to either the left or right, depending on where the window is placed
-	if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+	if GetScreenWidth()/2-ProfessionShoppingList_Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
 		frame:ClearAllPoints()
 		frame:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
 	else
@@ -169,38 +169,45 @@ end
 -- Create SavedVariables, default user settings, and session variables
 function app.InitialiseCore()
 	-- Declare SavedVariables
-	if not userSettings then userSettings = {} end
-	if not recipesTracked then recipesTracked = {} end
-	if not reagentCache then reagentCache = {} end
-	if not recipeCooldowns then recipeCooldowns = {} end
-	if not reagentTiers then reagentTiers = {} end
-	if not recipeLibrary then recipeLibrary = {} end
-	if not fakeRecipeLibrary then fakeRecipeLibrary = {} end
-	if not pcRecipesTracked then pcRecipesTracked = {} end
-	if not personalOrders then personalOrders = {} end
+	if not ProfessionShoppingList_Settings then ProfessionShoppingList_Settings = {} end
+
+	if not ProfessionShoppingList_Data then ProfessionShoppingList_Data = {} end
+	if not ProfessionShoppingList_Data.Recipes then ProfessionShoppingList_Data.Recipes = {} end
+	if not ProfessionShoppingList_Data.Cooldowns then ProfessionShoppingList_Data.Cooldowns = {} end
+
+	if not ProfessionShoppingList_Library then ProfessionShoppingList_Library = {} end
+
+	if not ProfessionShoppingList_Cache then ProfessionShoppingList_Cache = {} end
+	if not ProfessionShoppingList_Cache.ReagentTiers then ProfessionShoppingList_Cache.ReagentTiers = {} end
+	if not ProfessionShoppingList_Cache.ReagentCache then ProfessionShoppingList_Cache.ReagentCache = {} end
+	if not ProfessionShoppingList_Cache.FakeRecipes then ProfessionShoppingList_Cache.FakeRecipes = {} end
+	
+	if not ProfessionShoppingList_CharacterData then ProfessionShoppingList_CharacterData = {} end
+	if not ProfessionShoppingList_CharacterData.Recipes then ProfessionShoppingList_CharacterData.Recipes = {} end
+	if not ProfessionShoppingList_CharacterData.Orders then ProfessionShoppingList_CharacterData.Orders = {} end
 
 	-- Enable default user settings
-	if userSettings["hide"] == nil then userSettings["hide"] = false end
-	if userSettings["minimapIcon"] == nil then userSettings["minimapIcon"] = true end
-	if userSettings["pcRecipesTracked"] == nil then userSettings["pcRecipesTracked"] = false end
-	if userSettings["pcWindows"] == nil then userSettings["pcWindows"] = false end
+	if ProfessionShoppingList_Settings["hide"] == nil then ProfessionShoppingList_Settings["hide"] = false end
+	if ProfessionShoppingList_Settings["minimapIcon"] == nil then ProfessionShoppingList_Settings["minimapIcon"] = true end
+	if ProfessionShoppingList_Settings["pcRecipes"] == nil then ProfessionShoppingList_Settings["pcRecipes"] = false end
+	if ProfessionShoppingList_Settings["pcWindows"] == nil then ProfessionShoppingList_Settings["pcWindows"] = false end
 	-- Tracking Window
-	if userSettings["showRecipeCooldowns"] == nil then userSettings["showRecipeCooldowns"] = true end
-	if userSettings["showRemaining"] == nil then userSettings["showRemaining"] = false end
-	if userSettings["reagentQuality"] == nil then userSettings["reagentQuality"] = 1 end
-	if userSettings["removeCraft"] == nil then userSettings["removeCraft"] = true end
-	if userSettings["closeWhenDone"] == nil then userSettings["closeWhenDone"] = false end
-	if userSettings["showTooltip"] == nil then userSettings["showTooltip"] = true end
+	if ProfessionShoppingList_Settings["showRecipeCooldowns"] == nil then ProfessionShoppingList_Settings["showRecipeCooldowns"] = true end
+	if ProfessionShoppingList_Settings["showRemaining"] == nil then ProfessionShoppingList_Settings["showRemaining"] = false end
+	if ProfessionShoppingList_Settings["reagentQuality"] == nil then ProfessionShoppingList_Settings["reagentQuality"] = 1 end
+	if ProfessionShoppingList_Settings["removeCraft"] == nil then ProfessionShoppingList_Settings["removeCraft"] = true end
+	if ProfessionShoppingList_Settings["closeWhenDone"] == nil then ProfessionShoppingList_Settings["closeWhenDone"] = false end
+	if ProfessionShoppingList_Settings["showTooltip"] == nil then ProfessionShoppingList_Settings["showTooltip"] = true end
 	-- Hidden	
-	if userSettings["windowPosition"] == nil then userSettings["windowPosition"] = { ["left"] = 1295, ["bottom"] = 836, ["width"] = 200, ["height"] = 200, } end
-	if userSettings["pcwindowPosition"] == nil then userSettings["pcWindowPosition"] = userSettings["windowPosition"] end
-	if userSettings["alvinGUID"] == nil then userSettings["alvinGUID"] = "unknown" end
-	if userSettings["onetimeMessages"] == nil then userSettings["onetimeMessages"] = {} end
-	if userSettings["onetimeMessages"].vendorItems == nil then userSettings["onetimeMessages"].vendorItems = false end
+	if ProfessionShoppingList_Settings["windowPosition"] == nil then ProfessionShoppingList_Settings["windowPosition"] = { ["left"] = 1295, ["bottom"] = 836, ["width"] = 200, ["height"] = 200, } end
+	if ProfessionShoppingList_Settings["pcWindowPosition"] == nil then ProfessionShoppingList_Settings["pcWindowPosition"] = ProfessionShoppingList_Settings["windowPosition"] end
+	if ProfessionShoppingList_Settings["alvinGUID"] == nil then ProfessionShoppingList_Settings["alvinGUID"] = "unknown" end
+	if ProfessionShoppingList_Settings["onetimeMessages"] == nil then ProfessionShoppingList_Settings["onetimeMessages"] = {} end
+	if ProfessionShoppingList_Settings["onetimeMessages"].vendorItems == nil then ProfessionShoppingList_Settings["onetimeMessages"].vendorItems = false end
 
 	-- Load personal recipes, if the setting is enabled
-	if userSettings["pcRecipesTracked"] == true then
-		recipesTracked = pcRecipesTracked
+	if ProfessionShoppingList_Settings["pcRecipes"] == true then
+		ProfessionShoppingList_Data.Recipes = ProfessionShoppingList_CharacterData.Recipes
 	end
 
 	-- Initialise some session variables
@@ -220,15 +227,19 @@ end
 function app.Legacy()
 	-- v10.2.0-007
 		-- Convert recipeLinks to recipesTracked
-		for key, value in pairs(recipesTracked) do
-			if type(value) == "number" then
-				recipesTracked[key] = { quantity = value, recraft = false }
+		if recipesTracked then
+			for key, value in pairs(recipesTracked) do
+				if type(value) == "number" then
+					recipesTracked[key] = { quantity = value, recraft = false }
+				end
 			end
 		end
 
-		for key, value in pairs(pcRecipesTracked) do
-			if type(value) == "number" then
-				pcRecipesTracked[key] = { quantity = value, recraft = false }
+		if pcRecipesTracked then
+			for key, value in pairs(pcRecipesTracked) do
+				if type(value) == "number" then
+					pcRecipesTracked[key] = { quantity = value, recraft = false }
+				end
 			end
 		end
 
@@ -245,40 +256,61 @@ function app.Legacy()
 		end
 
 		-- Delete old window position and size
-		userSettings["recipeRows"] = nil
-		userSettings["reagentRows"] = nil
-		userSettings["recipeWidth"] = nil
-		userSettings["recipeNoWidth"] = nil
-		userSettings["reagentWidth"] = nil
-		userSettings["reagentNoWidth"] = nil
+		if userSettings then
+			userSettings["recipeRows"] = nil
+			userSettings["reagentRows"] = nil
+			userSettings["recipeWidth"] = nil
+			userSettings["recipeNoWidth"] = nil
+			userSettings["reagentWidth"] = nil
+			userSettings["reagentNoWidth"] = nil
+		end
 	
 	-- v10.2.5-002
-	local tempCooldowns = recipeCooldowns
-	recipeCooldowns = {}
-	for k, v in pairs(tempCooldowns) do
-		if not v.recipeID then
-			tempCooldowns[k].recipeID = k
+	if recipeCooldowns then
+		local tempCooldowns = recipeCooldowns
+		recipeCooldowns = {}
+		for k, v in pairs(tempCooldowns) do
+			if not v.recipeID then
+				tempCooldowns[k].recipeID = k
+			end
+			recipeCooldowns[#recipeCooldowns+1] = v
 		end
-		recipeCooldowns[#recipeCooldowns+1] = v
-	end
 
-	for k, v in pairs(recipeCooldowns) do
-		if not v.charges then
-			v.charges = 0
-			v.maxCharges = 0
+		for k, v in pairs(recipeCooldowns) do
+			if not v.charges then
+				v.charges = 0
+				v.maxCharges = 0
+			end
 		end
 	end
 
 	-- v10.2.7-003
-	if userSettings["backpackCleanup"] == "default" then userSettings["backpackCleanup"] = 0 end
-	if userSettings["backpackCleanup"] == "ltor" then userSettings["backpackCleanup"] = 1 end
-	if userSettings["backpackCleanup"] == "rtol" then userSettings["backpackCleanup"] = 2 end
+	if userSettings then
+		if userSettings["backpackCleanup"] == "default" then userSettings["backpackCleanup"] = 0 end
+		if userSettings["backpackCleanup"] == "ltor" then userSettings["backpackCleanup"] = 1 end
+		if userSettings["backpackCleanup"] == "rtol" then userSettings["backpackCleanup"] = 2 end
 
-	if userSettings["backpackLoot"] == "default" then userSettings["backpackLoot"] = 0 end
-	if userSettings["backpackLoot"] == "ltor" then userSettings["backpackLoot"] = 1 end
-	if userSettings["backpackLoot"] == "rtol" then userSettings["backpackLoot"] = 2 end
+		if userSettings["backpackLoot"] == "default" then userSettings["backpackLoot"] = 0 end
+		if userSettings["backpackLoot"] == "ltor" then userSettings["backpackLoot"] = 1 end
+		if userSettings["backpackLoot"] == "rtol" then userSettings["backpackLoot"] = 2 end
 
-	userSettings["headerTooltip"] = nil
+		userSettings["headerTooltip"] = nil
+	end
+
+	-- v10.2.7-006
+	if userSettings then ProfessionShoppingList_Settings = userSettings end
+
+	if recipesTracked then ProfessionShoppingList_Data.Recipes = recipesTracked end
+	if recipeCooldowns then ProfessionShoppingList_Data.Cooldowns = recipeCooldowns end
+
+	if recipeLibrary then ProfessionShoppingList_Library = recipeLibrary end
+
+	if reagentTiers then ProfessionShoppingList_Cache.ReagentTiers = reagentTiers end
+	if reagentCache then ProfessionShoppingList_Cache.ReagentCache = reagentCache end
+	if fakeRecipeLibrary then ProfessionShoppingList_Cache.FakeRecipes = fakeRecipeLibrary end
+
+	if pcRecipesTracked then ProfessionShoppingList_CharacterData.Recipes = pcRecipesTracked end
+	if personalOrders then ProfessionShoppingList_CharacterData.Orders = personalOrders end
 end
 
 -- Save the window position and size
@@ -292,8 +324,8 @@ function app.SaveWindow()
 	local width, height = app.Window:GetSize()
 
 	-- Save the window position and size
-	userSettings["windowPosition"] = { ["left"] = left, ["bottom"] = bottom, ["width"] = width, ["height"] = height, }
-	userSettings["pcWindowPosition"] = userSettings["windowPosition"]
+	ProfessionShoppingList_Settings["windowPosition"] = { ["left"] = left, ["bottom"] = bottom, ["width"] = width, ["height"] = height, }
+	ProfessionShoppingList_Settings["pcWindowPosition"] = ProfessionShoppingList_Settings["windowPosition"]
 end
 
 -- Create the main window
@@ -420,7 +452,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 	end
 
 	-- Check which quality to use
-	local reagentQuality = qualityTier or userSettings["reagentQuality"]
+	local reagentQuality = qualityTier or ProfessionShoppingList_Settings["reagentQuality"]
 
 	-- For every reagent, do
 	for numReagent, reagentInfo in pairs(reagentsTable) do
@@ -443,14 +475,14 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 				reagentID3 = reagentInfo.reagents[3].itemID
 			end
 
-			-- Add the different reagent tiers into reagentTiers so they can be queried later
+			-- Add the different reagent tiers into ProfessionShoppingList_Cache.ReagentTiers so they can be queried later
 			-- No need to check if they already exist, we can just overwrite it
-			reagentTiers[reagentID1] = {one = reagentID1, two = reagentID2, three = reagentID3}
-			reagentTiers[reagentID2] = {one = reagentID1, two = reagentID2, three = reagentID3}
-			reagentTiers[reagentID3] = {one = reagentID1, two = reagentID2, three = reagentID3}
+			ProfessionShoppingList_Cache.ReagentTiers[reagentID1] = {one = reagentID1, two = reagentID2, three = reagentID3}
+			ProfessionShoppingList_Cache.ReagentTiers[reagentID2] = {one = reagentID1, two = reagentID2, three = reagentID3}
+			ProfessionShoppingList_Cache.ReagentTiers[reagentID3] = {one = reagentID1, two = reagentID2, three = reagentID3}
 
-			-- Remove reagentTiers[0]
-			if reagentTiers[0] then reagentTiers[0] = nil end
+			-- Remove ProfessionShoppingList_Cache.ReagentTiers[0]
+			if ProfessionShoppingList_Cache.ReagentTiers[0] then ProfessionShoppingList_Cache.ReagentTiers[0] = nil end
 
 			-- Check which quality reagent to use
 			if reagentQuality == 3 and reagentID3 ~= 0 then
@@ -462,7 +494,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 			end
 
 			-- Add the reagentID to the reagent cache
-			if not reagentCache[reagentID] then
+			if not ProfessionShoppingList_Cache.Reagents[reagentID] then
 				local item = Item:CreateFromItemID(reagentID)
 			
 				-- And when the item is cached
@@ -471,7 +503,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 					_, itemLink, _, _, _, _, _, _, _, fileID = C_Item.GetItemInfo(reagentID)
 
 					-- Write the info to the cache
-					reagentCache[reagentID] = {link = itemLink, icon = fileID}
+					ProfessionShoppingList_Cache.Reagents[reagentID] = {link = itemLink, icon = fileID}
 				end)
 			end
 
@@ -488,7 +520,7 @@ function app.UpdateNumbers()
 	for reagentID, amount in pairs(app.ReagentQuantities) do
 		local itemLink, fileID
 
-		if not reagentCache[reagentID] then
+		if not ProfessionShoppingList_Cache.Reagents[reagentID] then
 			-- Cache item
 			if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
 
@@ -502,15 +534,15 @@ function app.UpdateNumbers()
 			end
 
 			-- Write the info to the cache
-			reagentCache[reagentID] = {link = itemLink, icon = fileID}
+			ProfessionShoppingList_Cache.Reagents[reagentID] = {link = itemLink, icon = fileID}
 		else
 			-- Read the info from the cache
-			itemLink = reagentCache[reagentID].link
-			icon = reagentCache[reagentID].icon
+			itemLink = ProfessionShoppingList_Cache.Reagents[reagentID].link
+			icon = ProfessionShoppingList_Cache.Reagents[reagentID].icon
 		end
 
 		local itemAmount = ""
-		local itemIcon = reagentCache[reagentID].icon
+		local itemIcon = ProfessionShoppingList_Cache.Reagents[reagentID].icon
 
 		if type(reagentID) == "number" then
 			-- Get needed/owned number of reagents
@@ -518,21 +550,21 @@ function app.UpdateNumbers()
 			local reagentAmountHave2 = 0
 			local reagentAmountHave3 = 0
 
-			reagentAmountHave1 = C_Item.GetItemCount(reagentTiers[reagentID].one, true, false, true)
-			if reagentTiers[reagentID].two ~= 0 then
-				reagentAmountHave2 = C_Item.GetItemCount(reagentTiers[reagentID].two, true, false, true)
+			reagentAmountHave1 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true)
+			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 then
+				reagentAmountHave2 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true)
 			end
-			if reagentTiers[reagentID].three ~= 0 then
-				reagentAmountHave3 = C_Item.GetItemCount(reagentTiers[reagentID].three, true, false, true)
+			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three ~= 0 then
+				reagentAmountHave3 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true)
 			end
 
 			-- Calculate owned amount based on the quality of the item
 			local reagentAmountHave = 0
-			if reagentID == reagentTiers[reagentID].one then
+			if reagentID == ProfessionShoppingList_Cache.ReagentTiers[reagentID].one then
 				reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
-			elseif reagentID == reagentTiers[reagentID].two then
+			elseif reagentID == ProfessionShoppingList_Cache.ReagentTiers[reagentID].two then
 				reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
-			elseif reagentID == reagentTiers[reagentID].three then
+			elseif reagentID == ProfessionShoppingList_Cache.ReagentTiers[reagentID].three then
 				reagentAmountHave = reagentAmountHave3
 			end
 
@@ -550,7 +582,7 @@ function app.UpdateNumbers()
 			end
 
 			-- Set the displayed amount based on settings
-			if userSettings["showRemaining"] == false then
+			if ProfessionShoppingList_Settings["showRemaining"] == false then
 				itemAmount = itemAmount..reagentAmountHave.."/"..amount
 			else
 				itemAmount = itemAmount..math.max(0,amount-reagentAmountHave)
@@ -565,7 +597,7 @@ function app.UpdateNumbers()
 			end
 
 			-- Set the displayed amount based on settings
-			if userSettings["showRemaining"] == false then
+			if ProfessionShoppingList_Settings["showRemaining"] == false then
 				itemAmount = colour..GetCoinTextureString(amount)
 			else
 				itemAmount = colour..GetCoinTextureString(math.max(0,amount-GetMoney()))
@@ -589,7 +621,7 @@ function app.UpdateNumbers()
 			end
 
 			-- Set the displayed amount based on settings
-			if userSettings["showRemaining"] == false then
+			if ProfessionShoppingList_Settings["showRemaining"] == false then
 				itemAmount = colour..quantity.."/"..amount
 			else
 				itemAmount = colour..math.max(0,amount-quantity)
@@ -682,7 +714,7 @@ function app.UpdateNumbers()
 
 	-- Enable or disable the clear button when appropriate
 	local next = next
-	if next(recipesTracked) == nil then
+	if next(ProfessionShoppingList_Data.Recipes) == nil then
 		app.ClearButton:Disable()
 	else
 		app.ClearButton:Enable()
@@ -696,7 +728,7 @@ function app.UpdateCooldowns()
 		if #cooldownRow >= 1 then
 			for i, row in ipairs(cooldownRow) do
 				local rowID = row:GetID()
-				local cooldownRemaining = recipeCooldowns[rowID].start + recipeCooldowns[rowID].cooldown - GetServerTime()
+				local cooldownRemaining = ProfessionShoppingList_Data.Cooldowns[rowID].start + ProfessionShoppingList_Data.Cooldowns[rowID].cooldown - GetServerTime()
 				local days, hours, minutes
 
 				days = math.floor(cooldownRemaining/(60*60*24))
@@ -722,31 +754,31 @@ end
 -- Update recipes and reagents tracked
 function app.UpdateRecipes()
 	-- Set personal recipes to be the same as global recipes
-	pcRecipesTracked = recipesTracked
+	ProfessionShoppingList_CharacterData.Recipes = ProfessionShoppingList_Data.Recipes
 
 	-- Recalculate reagents tracked
 	if app.Flag["changingRecipes"] == false then
 		app.ReagentQuantities = {}
 
-		for recipeID, recipeInfo in pairs(recipesTracked) do
+		for recipeID, recipeInfo in pairs(ProfessionShoppingList_Data.Recipes) do
 			if type(recipeID) == "number" then
 				app.GetReagents(app.ReagentQuantities, recipeID, recipeInfo.quantity, recipeInfo.recraft)
-			elseif fakeRecipeLibrary[recipeID] then
+			elseif ProfessionShoppingList_Cache.FakeRecipes[recipeID] then
 				-- Add gold costs
-				if fakeRecipeLibrary[recipeID].costCopper > 0 then
+				if ProfessionShoppingList_Cache.FakeRecipes[recipeID].costCopper > 0 then
 					if app.ReagentQuantities["gold"] == nil then app.ReagentQuantities["gold"] = 0 end
-					app.ReagentQuantities["gold"] = app.ReagentQuantities["gold"] + ( fakeRecipeLibrary[recipeID].costCopper * recipesTracked[recipeID].quantity )
+					app.ReagentQuantities["gold"] = app.ReagentQuantities["gold"] + ( ProfessionShoppingList_Cache.FakeRecipes[recipeID].costCopper * ProfessionShoppingList_Data.Recipes[recipeID].quantity )
 				end
 				-- Add item costs
-				for reagentID, reagentAmount in pairs(fakeRecipeLibrary[recipeID].costItems) do
+				for reagentID, reagentAmount in pairs(ProfessionShoppingList_Cache.FakeRecipes[recipeID].costItems) do
 					if app.ReagentQuantities[reagentID] == nil then app.ReagentQuantities[reagentID] = 0 end
-					app.ReagentQuantities[reagentID] = app.ReagentQuantities[reagentID] + ( reagentAmount * recipesTracked[recipeID].quantity )
+					app.ReagentQuantities[reagentID] = app.ReagentQuantities[reagentID] + ( reagentAmount * ProfessionShoppingList_Data.Recipes[recipeID].quantity )
 				end
 				-- Add currency costs
-				for currencyID, currencyAmount in pairs(fakeRecipeLibrary[recipeID].costCurrency) do
+				for currencyID, currencyAmount in pairs(ProfessionShoppingList_Cache.FakeRecipes[recipeID].costCurrency) do
 					local key = "currency:"..currencyID
 					if app.ReagentQuantities[key] == nil then app.ReagentQuantities[key] = 0 end
-					app.ReagentQuantities[key] = app.ReagentQuantities[key] + ( currencyAmount * recipesTracked[recipeID].quantity )
+					app.ReagentQuantities[key] = app.ReagentQuantities[key] + ( currencyAmount * ProfessionShoppingList_Data.Recipes[recipeID].quantity )
 				end
 			end
 		end
@@ -857,7 +889,7 @@ function app.UpdateRecipes()
 	local recipesSorted1 = {}
 	local recipesSorted2 = {}
 	
-	for k, v in pairs(recipesTracked) do
+	for k, v in pairs(ProfessionShoppingList_Data.Recipes) do
 		if type(k) == "number" then
 			recipesSorted1[#recipesSorted1+1] = {recipeID = k, recraft = v.recraft, quantity = v.quantity, link = v.link}
 		else
@@ -897,7 +929,7 @@ function app.UpdateRecipes()
 			GameTooltip:ClearLines()
 
 			-- Set the tooltip to either the left or right, depending on where the window is placed
-			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+			if GetScreenWidth()/2-ProfessionShoppingList_Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
 				GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
 				GameTooltip:SetPoint("LEFT", app.Window, "RIGHT")
 			else
@@ -946,10 +978,10 @@ function app.UpdateRecipes()
 		recipeRow[rowNo] = row
 
 		local tradeskill = 999
-		if fakeRecipeLibrary[recipeInfo.recipeID] then
-			tradeskill = fakeRecipeLibrary[recipeInfo.recipeID].tradeskillID
-		elseif recipeLibrary[recipeInfo.recipeID] then
-	   		tradeskill = recipeLibrary[recipeInfo.recipeID].tradeskillID or 999
+		if ProfessionShoppingList_Cache.FakeRecipes[recipeInfo.recipeID] then
+			tradeskill = ProfessionShoppingList_Cache.FakeRecipes[recipeInfo.recipeID].tradeskillID
+		elseif ProfessionShoppingList_Library[recipeInfo.recipeID] then
+	   		tradeskill = ProfessionShoppingList_Library[recipeInfo.recipeID].tradeskillID or 999
 		end
 
 		local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -1026,11 +1058,11 @@ function app.UpdateRecipes()
 
 	reagentsSorted = {}
 	for k, v in pairs(app.ReagentQuantities) do
-		if not reagentCache[k] then
+		if not ProfessionShoppingList_Cache.Reagents[k] then
 			C_Timer.After(1, function() app.UpdateRecipes() end)
 			do return end
 		end
-		reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = reagentCache[k].icon, link = reagentCache[k].link}
+		reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = ProfessionShoppingList_Cache.Reagents[k].icon, link = ProfessionShoppingList_Cache.Reagents[k].link}
 	end
 
 	for _, reagentInfo in ipairs(reagentsSorted) do
@@ -1051,7 +1083,7 @@ function app.UpdateRecipes()
 			GameTooltip:ClearLines()
 			
 			-- Set the tooltip to either the left or right, depending on where the window is placed
-			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+			if GetScreenWidth()/2-ProfessionShoppingList_Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
 				GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
 				GameTooltip:SetPoint("LEFT", app.Window, "RIGHT")
 			else
@@ -1070,7 +1102,7 @@ function app.UpdateRecipes()
 				-- Define the amount of recipes to be tracked
 				local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
 				local amount = math.max(0, math.ceil((app.ReagentQuantities[itemID] - C_Item.GetItemCount(itemID, true, false, true)) / quantityMade))
-				if recipesTracked[recipeID] then amount = math.max(0, (amount - recipesTracked[recipeID].quantity)) end
+				if ProfessionShoppingList_Data.Recipes[recipeID] then amount = math.max(0, (amount - ProfessionShoppingList_Data.Recipes[recipeID].quantity)) end
 
 				-- Track the recipe (don't track if 0)
 				if amount > 0 then app.TrackRecipe(recipeID, amount) end
@@ -1080,14 +1112,14 @@ function app.UpdateRecipes()
 			if button == "LeftButton" and IsControlKeyDown() == true then
 				-- Get itemIDs
 				local itemID = reagentInfo.reagentID
-				if reagentTiers[itemID] then itemID = reagentTiers[itemID].one end
+				if ProfessionShoppingList_Cache.ReagentTiers[itemID] then itemID = ProfessionShoppingList_Cache.ReagentTiers[itemID].one end
 
 				-- Get possible recipeIDs
 				local recipeIDs = {}
 				local no = 0
 
-				for recipe, recipeInfo in pairs(recipeLibrary) do
-					if type(recipeInfo) ~= "number" then	-- Because of old recipeLibrary
+				for recipe, recipeInfo in pairs(ProfessionShoppingList_Library) do
+					if type(recipeInfo) ~= "number" then	-- Because of old ProfessionShoppingList_Library
 						if recipeInfo.itemID == itemID and not app.nyiRecipes[recipe] then
 							no = no + 1
 							recipeIDs[no] = recipe
@@ -1468,7 +1500,7 @@ function app.UpdateRecipes()
 	-- Check what is being tracked
 	local trackRecipes = false
 	local trackItems = false
-	for k, v in pairs(recipesTracked) do
+	for k, v in pairs(ProfessionShoppingList_Data.Recipes) do
 		if type(k) == "number" then
 			trackRecipes = true
 		else
@@ -1522,7 +1554,7 @@ function app.UpdateRecipes()
 	end
 
 	local next = next
-	if next(recipeCooldowns) == nil or userSettings["showRecipeCooldowns"] == false then
+	if next(ProfessionShoppingList_Data.Cooldowns) == nil or ProfessionShoppingList_Settings["showRecipeCooldowns"] == false then
 		app.Window.Cooldowns:Hide()
 		showCooldowns = false
 	else
@@ -1546,7 +1578,7 @@ function app.UpdateRecipes()
 	end)
 
 	cooldownsSorted = {}
-	for k, v in pairs(recipeCooldowns) do
+	for k, v in pairs(ProfessionShoppingList_Data.Cooldowns) do
 		local timedone = v.start + v.cooldown
 		cooldownsSorted[#cooldownsSorted+1] = {id = k, recipeID = v.recipeID, start = v.start, cooldown = v.cooldown, name = v.name, user = v.user, time = timedone, maxCharges = v.maxCharges, charges = v.charges}
 	end
@@ -1595,7 +1627,7 @@ function app.UpdateRecipes()
 			cooldownTooltip:SetWidth(cooldownTooltipText:GetStringWidth()+20)
 
 			-- Set the tooltip to either the left or right, depending on where the window is placed
-			if GetScreenWidth()/2-userSettings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+			if GetScreenWidth()/2-ProfessionShoppingList_Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
 				cooldownTooltip:ClearAllPoints()
 				cooldownTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
 			else
@@ -1612,7 +1644,7 @@ function app.UpdateRecipes()
 		end)
 		row:SetScript("OnClick", function(self, button)
 			if button == "RightButton" then
-				recipeCooldowns[cooldownInfo.id] = nil
+				ProfessionShoppingList_Data.Cooldowns[cooldownInfo.id] = nil
 				app.UpdateRecipes()
 			end
 		end)
@@ -1626,7 +1658,7 @@ function app.UpdateRecipes()
 			row:SetPoint("TOPRIGHT", cooldownRow[rowNo3-1], "BOTTOMRIGHT")
 		end
 
-		local tradeskill = recipeLibrary[cooldownInfo.recipeID].tradeskillID or 999
+		local tradeskill = ProfessionShoppingList_Library[cooldownInfo.recipeID].tradeskillID or 999
 
 		local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		icon1:SetPoint("LEFT", row)
@@ -1676,7 +1708,7 @@ function app.UpdateRecipes()
 	app.Window.Corner:SetScript("OnDoubleClick", function (self, button)
 		local windowHeight = 62
 		local windowWidth = 0
-		if next(recipeCooldowns) == nil or userSettings["showRecipeCooldowns"] == false then
+		if next(ProfessionShoppingList_Data.Cooldowns) == nil or ProfessionShoppingList_Settings["showRecipeCooldowns"] == false then
 			windowHeight = windowHeight - 16
 		elseif showCooldowns == true then
 			windowHeight = windowHeight + rowNo3 * 16
@@ -1690,7 +1722,7 @@ function app.UpdateRecipes()
 			windowHeight = windowHeight + rowNo * 16
 			windowWidth = math.max(windowWidth, maxLength1)
 		end
-		if showRecipes == false or #recipesTracked < 1 then
+		if showRecipes == false or #ProfessionShoppingList_Data.Recipes < 1 then
 			windowHeight = windowHeight + 2	-- Not sure why this is needed, but whatever
 		end
 		if windowHeight > 600 then windowHeight = 600 end
@@ -1708,7 +1740,7 @@ function app.UpdateRecipes()
 	end)
 
 	-- Check if the Untrack button should be enabled
-	if not recipesTracked[app.SelectedRecipeID] or recipesTracked[app.SelectedRecipeID].quantity == 0 then
+	if not ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID] or ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID].quantity == 0 then
 		if app.Flag["tradeskillAssets"] == true then
 			untrackProfessionButton:Disable()
 			untrackMakeOrderButton:Disable()
@@ -1728,7 +1760,7 @@ function app.UpdateRecipes()
 
 	-- Check if the making crafting orders Untrack button should be enabled
 	if app.OrderRecipeID ~= 0 and app.Flag["tradeskillAssets"] == true then
-		if not recipesTracked[app.OrderRecipeID] or recipesTracked[app.OrderRecipeID].quantity == 0 then
+		if not ProfessionShoppingList_Data.Recipes[app.OrderRecipeID] or ProfessionShoppingList_Data.Recipes[app.OrderRecipeID].quantity == 0 then
 			untrackMakeOrderButton:Disable()
 		else
 			untrackMakeOrderButton:Enable()
@@ -1742,12 +1774,12 @@ end
 function app.Show()
 	-- Set window to its proper position and size
 	app.Window:ClearAllPoints()
-	if userSettings["pcWindows"] == true then
-		app.Window:SetSize(userSettings["pcWindowPosition"].width, userSettings["pcWindowPosition"].height)
-		app.Window:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", userSettings["pcWindowPosition"].left, userSettings["pcWindowPosition"].bottom)
+	if ProfessionShoppingList_Settings["pcWindows"] == true then
+		app.Window:SetSize(ProfessionShoppingList_Settings["pcWindowPosition"].width, ProfessionShoppingList_Settings["pcWindowPosition"].height)
+		app.Window:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", ProfessionShoppingList_Settings["pcWindowPosition"].left, ProfessionShoppingList_Settings["pcWindowPosition"].bottom)
 	else
-		app.Window:SetSize(userSettings["windowPosition"].width, userSettings["windowPosition"].height)
-		app.Window:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", userSettings["windowPosition"].left, userSettings["windowPosition"].bottom)
+		app.Window:SetSize(ProfessionShoppingList_Settings["windowPosition"].width, ProfessionShoppingList_Settings["windowPosition"].height)
+		app.Window:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", ProfessionShoppingList_Settings["windowPosition"].left, ProfessionShoppingList_Settings["windowPosition"].bottom)
 	end
 
 	-- Show the windows
@@ -1837,45 +1869,45 @@ function app.TrackRecipe(recipeID, recipeQuantity)
 	end
 
 	-- Track recipe
-	if not recipesTracked[recipeID] then recipesTracked[recipeID] = { quantity = 0, recraft = app.Flag["recraft"], link = recipeLink } end
-	recipesTracked[recipeID].quantity = recipesTracked[recipeID].quantity + recipeQuantity
+	if not ProfessionShoppingList_Data.Recipes[recipeID] then ProfessionShoppingList_Data.Recipes[recipeID] = { quantity = 0, recraft = app.Flag["recraft"], link = recipeLink } end
+	ProfessionShoppingList_Data.Recipes[recipeID].quantity = ProfessionShoppingList_Data.Recipes[recipeID].quantity + recipeQuantity
 
 	-- Show windows
 	app.Show()	-- This also triggers the recipe update
 
 	-- Update the editbox
 	if app.Flag["tradeskillAssets"] == true then
-		ebRecipeQuantityNo = recipesTracked[recipeID].quantity or 0
+		ebRecipeQuantityNo = ProfessionShoppingList_Data.Recipes[recipeID].quantity or 0
 		ebRecipeQuantity:SetText(ebRecipeQuantityNo)
 	end
 end
 
 -- Untrack recipe
 function app.UntrackRecipe(recipeID, recipeQuantity)
-	if recipesTracked[recipeID] ~= nil then
+	if ProfessionShoppingList_Data.Recipes[recipeID] ~= nil then
 		-- Clear all recipes if quantity was set to 0
-		if recipeQuantity == 0 then recipesTracked[recipeID].quantity = 0 end
+		if recipeQuantity == 0 then ProfessionShoppingList_Data.Recipes[recipeID].quantity = 0 end
 
 		-- Untrack recipe
-		recipesTracked[recipeID].quantity = recipesTracked[recipeID].quantity - recipeQuantity
+		ProfessionShoppingList_Data.Recipes[recipeID].quantity = ProfessionShoppingList_Data.Recipes[recipeID].quantity - recipeQuantity
 
 		-- Set numbers to nil if it doesn't exist anymore
-		if recipesTracked[recipeID].quantity <= 0 then
-			recipesTracked[recipeID] = nil
+		if ProfessionShoppingList_Data.Recipes[recipeID].quantity <= 0 then
+			ProfessionShoppingList_Data.Recipes[recipeID] = nil
 		end
 	end
 
 	-- Clear the cache if no recipes are tracked anymore
 	local next = next
-	if next(recipesTracked) == nil then app.Clear() end
+	if next(ProfessionShoppingList_Data.Recipes) == nil then app.Clear() end
 
 	-- Update numbers
 	app.UpdateRecipes()
 
 	-- Update the editbox
 	if app.Flag["tradeskillAssets"] == true then
-		if recipesTracked[app.SelectedRecipeID] then
-			ebRecipeQuantityNo = recipesTracked[app.SelectedRecipeID].quantity
+		if ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID] then
+			ebRecipeQuantityNo = ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID].quantity
 		else
 			ebRecipeQuantityNo = 0
 		end
@@ -2166,7 +2198,7 @@ function app.UpdateAssets()
 		end
 
 		-- Enable tracking button for tracked recipes
-		if not recipesTracked[app.SelectedRecipeID] or recipesTracked[app.SelectedRecipeID].quantity == 0 then
+		if not ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID] or ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID].quantity == 0 then
 			untrackProfessionButton:Disable()
 		else
 			untrackProfessionButton:Enable()
@@ -2174,8 +2206,8 @@ function app.UpdateAssets()
 
 		-- Update the quantity textbox
 		if ebRecipeQuantityNo ~= nil then
-			if recipesTracked[app.SelectedRecipeID] then
-				ebRecipeQuantityNo = recipesTracked[app.SelectedRecipeID].quantity
+			if ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID] then
+				ebRecipeQuantityNo = ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID].quantity
 			else
 				ebRecipeQuantityNo = 0
 			end
@@ -2213,7 +2245,7 @@ function app.UpdateAssets()
 		thermalAnvilCooldown:SetCooldown(start, duration)
 
 		-- Make the Alvin the Anvil button not desaturated if it can be used
-		if C_PetJournal.PetIsSummonable(userSettings["alvinGUID"]) == true then
+		if C_PetJournal.PetIsSummonable(ProfessionShoppingList_Settings["alvinGUID"]) == true then
 			alvinButton:GetNormalTexture():SetDesaturated(false)
 		end
 
@@ -2249,7 +2281,7 @@ function app.UpdateAssets()
 	end
 
 	-- Enable tracking button for tracked recipes
-	if not recipesTracked[app.SelectedRecipeID] or recipesTracked[app.SelectedRecipeID].quantity == 0 then
+	if not ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID] or ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID].quantity == 0 then
 		if app.Flag["craftingOrderAssets"] == true then
 			untrackPlaceOrderButton:Disable()
 		end
@@ -2266,12 +2298,12 @@ function app.UpdateAssets()
 	end
 
 	-- Remove the personal order entry if the value is ""
-	if personalOrders[app.SelectedRecipeID] == "" then personalOrders[app.SelectedRecipeID] = nil end
+	if ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID] == "" then ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID] = nil end
 
 	-- Enable the quick order button if abilityID and target are known
 	if app.Flag["craftingOrderAssets"] == true then
-		if recipeLibrary[app.SelectedRecipeID] and type(recipeLibrary[app.SelectedRecipeID]) ~= "number" then
-			if recipeLibrary[app.SelectedRecipeID].abilityID ~= nil and personalOrders[app.SelectedRecipeID] ~= nil then
+		if ProfessionShoppingList_Library[app.SelectedRecipeID] and type(ProfessionShoppingList_Library[app.SelectedRecipeID]) ~= "number" then
+			if ProfessionShoppingList_Library[app.SelectedRecipeID].abilityID ~= nil and ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID] ~= nil then
 				personalOrderButton:Enable()
 			else
 				personalOrderButton:Disable()
@@ -2281,8 +2313,8 @@ function app.UpdateAssets()
 		end
 
 		-- Update the personal order name textbox
-		if personalOrders[app.SelectedRecipeID] then
-			personalCharname:SetText(personalOrders[app.SelectedRecipeID])
+		if ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID] then
+			personalCharname:SetText(ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID])
 		else
 			personalCharname:SetText("")
 		end
@@ -2303,7 +2335,7 @@ function app.TooltipInfo()
 		end
 
 		-- Only run this if the setting is enabled
-		if userSettings["showTooltip"] == true then
+		if ProfessionShoppingList_Settings["showTooltip"] == true then
 			-- Stop if error, it will try again on its own REAL soon
 			if itemID == nil then return end
 
@@ -2315,17 +2347,17 @@ function app.TooltipInfo()
 			local reagentAmountHave2 = 0
 			local reagentAmountHave3 = 0
 
-			if reagentTiers[itemID] and reagentTiers[itemID].one ~= 0 then
-				reagentID1 = reagentTiers[itemID].one
-				reagentAmountHave1 = C_Item.GetItemCount(reagentTiers[itemID].one, true, false, true)
+			if ProfessionShoppingList_Cache.ReagentTiers[itemID] and ProfessionShoppingList_Cache.ReagentTiers[itemID].one ~= 0 then
+				reagentID1 = ProfessionShoppingList_Cache.ReagentTiers[itemID].one
+				reagentAmountHave1 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].one, true, false, true)
 			end
-			if reagentTiers[itemID] and reagentTiers[itemID].two ~= 0 then
-				reagentID2 = reagentTiers[itemID].two
-				reagentAmountHave2 = C_Item.GetItemCount(reagentTiers[itemID].two, true, false, true)
+			if ProfessionShoppingList_Cache.ReagentTiers[itemID] and ProfessionShoppingList_Cache.ReagentTiers[itemID].two ~= 0 then
+				reagentID2 = ProfessionShoppingList_Cache.ReagentTiers[itemID].two
+				reagentAmountHave2 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].two, true, false, true)
 			end
-			if reagentTiers[itemID] and reagentTiers[itemID].three ~= 0 then
-				reagentID3 = reagentTiers[itemID].three
-				reagentAmountHave3 = C_Item.GetItemCount(reagentTiers[itemID].three, true, false, true)
+			if ProfessionShoppingList_Cache.ReagentTiers[itemID] and ProfessionShoppingList_Cache.ReagentTiers[itemID].three ~= 0 then
+				reagentID3 = ProfessionShoppingList_Cache.ReagentTiers[itemID].three
+				reagentAmountHave3 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].three, true, false, true)
 			end
 
 			-- Calculate owned amount/needed based on item quality
@@ -2354,10 +2386,10 @@ end
 
 -- Clear everything except the recipe cache
 function app.Clear()
-	recipesTracked = {}
-	reagentTiers = {}
-	reagentCache = {}
-	fakeRecipeLibrary = {}
+	ProfessionShoppingList_Data.Recipes = {}
+	ProfessionShoppingList_Cache.ReagentTiers = {}
+	ProfessionShoppingList_Cache.Reagents = {}
+	ProfessionShoppingList_Cache.FakeRecipes = {}
 	app.UpdateRecipes()
 	app.Window.ScrollFrame:SetVerticalScroll(0)
 
@@ -2418,20 +2450,20 @@ function app.Settings()
 	})
 						
 	local icon = LibStub("LibDBIcon-1.0", true)
-	icon:Register("ProfessionShoppingList", miniButton, userSettings)
+	icon:Register("ProfessionShoppingList", miniButton, ProfessionShoppingList_Settings)
 
-	if userSettings["minimapIcon"] == true then
-		userSettings["hide"] = false
+	if ProfessionShoppingList_Settings["minimapIcon"] == true then
+		ProfessionShoppingList_Settings["hide"] = false
 		icon:Show("ProfessionShoppingList")
 	else
-		userSettings["hide"] = true
+		ProfessionShoppingList_Settings["hide"] = true
 		icon:Hide("ProfessionShoppingList")
 	end
 
 	-- Settings page
 	function app.SettingChanged(_, setting, value)
 		local variable = setting:GetVariable()
-		userSettings[variable] = value
+		ProfessionShoppingList_Settings[variable] = value
 	end
 
 	local category, layout = Settings.RegisterVerticalLayoutCategory(app.NameLong)
@@ -2441,21 +2473,21 @@ function app.Settings()
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(GetAddOnMetadata("ProfessionShoppingList", "Version")))
 
 	local variable, name, tooltip = "minimapIcon", "Show minimap icon", "Show the minimap icon. If you disable this, "..app.NameShort.." is still available from the AddOn Compartment."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
-		if userSettings["minimapIcon"] == true then
-			userSettings["hide"] = false
+		if ProfessionShoppingList_Settings["minimapIcon"] == true then
+			ProfessionShoppingList_Settings["hide"] = false
 			icon:Show("ProfessionShoppingList")
 		else
-			userSettings["hide"] = true
+			ProfessionShoppingList_Settings["hide"] = true
 			icon:Hide("ProfessionShoppingList")
 		end
 	end)
 
-	local variable, name, tooltip = "pcRecipesTracked", "Track recipes per character", "Track recipes per character, instead of account-wide."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local variable, name, tooltip = "ProfessionShoppingList_CharacterData.Recipes", "Track recipes per character", "Track recipes per character, instead of account-wide."
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
@@ -2463,14 +2495,14 @@ function app.Settings()
 	end)
 
 	local variable, name, tooltip = "pcWindows", "Window position per character", "Save the window position per character, instead of account-wide."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Tracking Window"))
 
 	local variable, name, tooltip = "showRecipeCooldowns", "Track recipe cooldowns", "Enable the tracking of recipe cooldowns. These will show in the tracking window, and in chat upon login if ready."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
@@ -2478,7 +2510,7 @@ function app.Settings()
 	end)
 
 	local variable, name, tooltip = "showRemaining", "Show remaining reagents", "Only show how many reagents you still need in the tracking window, instead of have/need."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
@@ -2493,44 +2525,26 @@ function app.Settings()
 		container:Add(3, "|A:Professions-ChatIcon-Quality-Tier3:17:15::1|a Tier 3")
 		return container:GetData()
 	end
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, ProfessionShoppingList_Settings[variable])
 	Settings.CreateDropDown(category, setting, GetOptions, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
 		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
 	end)
 
-	-- -- Checkbox + dependency dropdown
-	-- local cbVariable, cbName, cbTooltip = "removeCraft", "Untrack on craft", "Remove one of a tracked recipe when you successfully craft it."
-	-- local cbSetting = Settings.RegisterAddOnSetting(category, cbName, cbVariable, Settings.VarType.Boolean, userSettings[variable])
-	-- Settings.SetOnValueChangedCallback(cbVariable, app.SettingChanged)
-	-- local ddVariable, ddName, ddTooltip = "closeWhenDone", "Close window when done", ""
-	-- local ddSetting = Settings.RegisterAddOnSetting(category, ddName, ddVariable, Settings.VarType.Boolean, userSettings[variable])
-	-- Settings.SetOnValueChangedCallback(ddVariable, app.SettingChanged)
-	-- local function GetOptionData(options)
-	-- 	local container = Settings.CreateControlTextContainer()
-	-- 	container:Add(false, "Keep window open when done", "Default behaviour.")
-	-- 	container:Add(true, "Close window when done", "Close the tracking window after crafting the last tracked recipe.")
-	-- 	return container:GetData()
-	-- end
-	-- local initializer = CreateSettingsCheckBoxDropDownInitializer(
-	-- 	cbSetting, cbName, cbTooltip,
-	-- 	ddSetting, GetOptionData, ddName, ddTooltip)
-	-- layout:AddInitializer(initializer)
-
 	local variable, name, tooltip = "removeCraft", "Untrack on craft", "Remove one of a tracked recipe when you successfully craft it."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	local parentSetting = Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	local variable, name, tooltip = "closeWhenDone", "Close window when done", "Close the tracking window after crafting the last tracked recipe."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	local subSetting = Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
-	subSetting:SetParentInitializer(parentSetting, function() return userSettings["removeCraft"] end)
+	subSetting:SetParentInitializer(parentSetting, function() return ProfessionShoppingList_Settings["removeCraft"] end)
 
 	local variable, name, tooltip = "showTooltip", "Show tooltip information", "Show how many of a reagent you have/need on the item's tooltip."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, userSettings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
@@ -2587,8 +2601,8 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 			-- Reset window positions
 			elseif command == "resetpos" then
 				-- Set the window size and position back to default
-				userSettings["windowPosition"] = { ["left"] = GetScreenWidth()/2-100, ["bottom"] = GetScreenHeight()/2-100, ["width"] = 200, ["height"] = 200, }
-				userSettings["pcWindowPosition"] = userSettings["windowPosition"]
+				ProfessionShoppingList_Settings["windowPosition"] = { ["left"] = GetScreenWidth()/2-100, ["bottom"] = GetScreenHeight()/2-100, ["width"] = 200, ["height"] = 200, }
+				ProfessionShoppingList_Settings["pcWindowPosition"] = ProfessionShoppingList_Settings["windowPosition"]
 
 				-- Show the window, which will also run setting its size and position
 				app.Show()
@@ -2600,7 +2614,7 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 				recipeQuantity = tonumber(part2)
 
 				-- Only run if the recipeID is cached and the quantity is an actual number
-				if recipeLibrary[recipeID] then
+				if ProfessionShoppingList_Library[recipeID] then
 					if type(recipeQuantity) == "number" and recipeQuantity ~= 0 then
 						app.TrackRecipe(recipeID, recipeQuantity)
 					else
@@ -2616,13 +2630,13 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 				recipeQuantity = tonumber(part2)
 
 				-- Only run if the recipeID is tracked and the quantity is an actual number (with a maximum of the amount of recipes tracked)
-				if recipesTracked[recipeID] then
+				if ProfessionShoppingList_Data.Recipes[recipeID] then
 					if part2 == "all" then
 						app.UntrackRecipe(recipeID, 0)
 
 						-- Show windows
 						app.Show()
-					elseif type(recipeQuantity) == "number" and recipeQuantity ~= 0 and recipeQuantity <= recipesTracked[recipeID].quantity then
+					elseif type(recipeQuantity) == "number" and recipeQuantity ~= 0 and recipeQuantity <= ProfessionShoppingList_Data.Recipes[recipeID].quantity then
 						app.UntrackRecipe(recipeID, recipeQuantity)
 
 						-- Show windows
@@ -2637,13 +2651,13 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 			elseif command == 'duration' then
 				rest = tonumber(rest)
 				if rest == 0 or rest == 12 then
-					userSettings["quickOrderDuration"] = 0
+					ProfessionShoppingList_Settings["quickOrderDuration"] = 0
 					app.Print("Quick order duration set to 12hr (short).")
 				elseif rest == 1 or rest == 24 then
-					userSettings["quickOrderDuration"] = 1
+					ProfessionShoppingList_Settings["quickOrderDuration"] = 1
 					app.Print("Quick order duration set to 24hr (medium).")
 				elseif rest == 2 or rest == 48 then
-					userSettings["quickOrderDuration"] = 2
+					ProfessionShoppingList_Settings["quickOrderDuration"] = 2
 					app.Print("Quick order duration set to 48hr (long).")
 				else
 					app.Print("Invalid parameter. Use a number: 0, 1, 2 (duration) or 12, 24, or 48 (hours) to set the default quick order duration.")
@@ -2725,9 +2739,9 @@ function event:TRADE_SKILL_SHOW()
 		local ability = C_TradeSkillUI.GetRecipeInfo(recipeID).skillLineAbilityID
 		-- Register the output item, the recipe's abilityID, and the recipe's profession
 		if item ~= nil then
-			recipeLibrary[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill}
+			ProfessionShoppingList_Library[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill}
 		else
-			recipeLibrary[recipeID] = {itemID = 0, abilityID = ability, tradeskillID = tradeskill}
+			ProfessionShoppingList_Library[recipeID] = {itemID = 0, abilityID = ability, tradeskillID = tradeskill}
 		end
 	end
 
@@ -2735,7 +2749,7 @@ function event:TRADE_SKILL_SHOW()
 	for i=1, 9999 do
 		local petID, speciesID = C_PetJournal.GetPetInfoByIndex(i)
 		if speciesID == 3274 then
-			if petID then userSettings["alvinGUID"] = petID end
+			if petID then ProfessionShoppingList_Settings["alvinGUID"] = petID end
 			break
 		elseif speciesID == nil then
 			break
@@ -2743,8 +2757,8 @@ function event:TRADE_SKILL_SHOW()
 	end
 
 	if app.Flag["tradeskillAssets"] == true then
-		if userSettings["alvinGUID"] ~= "unknown" then
-			alvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..userSettings["alvinGUID"].."')")
+		if ProfessionShoppingList_Settings["alvinGUID"] ~= "unknown" then
+			alvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..ProfessionShoppingList_Settings["alvinGUID"].."')")
 		else
 			alvinButton:SetAttribute("macrotext1", "")
 		end
@@ -2831,7 +2845,7 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 		end
 	
 		-- Run only when the spell cast is a known recipe
-		if recipeLibrary[spellID] then
+		if ProfessionShoppingList_Library[spellID] then
 			-- With a delay due to how quickly that info is updated after UNIT_SPELLCAST_SUCCEEDED
 			C_Timer.After(0.1, function()
 				-- Get character info
@@ -2851,9 +2865,9 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 					local spells = {370743,  370745, 370746, 370747}
 					for k, v in pairs(spells) do
 						if v ~= spellID then
-							for k2, v2 in pairs(recipeCooldowns) do
+							for k2, v2 in pairs(ProfessionShoppingList_Data.Cooldowns) do
 								if v2.recipeID == v then
-									recipeCooldowns[k2] = nil
+									ProfessionShoppingList_Data.Cooldowns[k2] = nil
 								end
 							end
 						end
@@ -2868,15 +2882,15 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 				if cooldown then
 					-- Replace the existing entry if it exists
 					local cdExists = false
-					for k, v in ipairs(recipeCooldowns) do
+					for k, v in ipairs(ProfessionShoppingList_Data.Cooldowns) do
 						if v.recipeID == spellID and v.user == character .. "-" .. realm then
-							recipeCooldowns[k] = {name = recipeName, recipeID = spellID, cooldown = cooldown, start = recipeStart, user = character .. "-" .. realm, charges = charges, maxCharges = maxCharges}
+							ProfessionShoppingList_Data.Cooldowns[k] = {name = recipeName, recipeID = spellID, cooldown = cooldown, start = recipeStart, user = character .. "-" .. realm, charges = charges, maxCharges = maxCharges}
 							cdExists = true
 						end
 					end
 					-- Otherwise, create a new entry
 					if cdExists == false then
-						recipeCooldowns[#recipeCooldowns+1] = {name = recipeName, recipeID = spellID, cooldown = cooldown, start = recipeStart, user = character .. "-" .. realm, charges = charges, maxCharges = maxCharges}
+						ProfessionShoppingList_Data.Cooldowns[#ProfessionShoppingList_Data.Cooldowns+1] = {name = recipeName, recipeID = spellID, cooldown = cooldown, start = recipeStart, user = character .. "-" .. realm, charges = charges, maxCharges = maxCharges}
 					end
 					-- And then update our window
 					app.UpdateRecipes()
@@ -2885,13 +2899,13 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 		end
 
 		-- Run only when crafting a tracked recipe, and if the remove craft option is enabled
-		if recipesTracked[spellID] and userSettings["removeCraft"] == true then
+		if ProfessionShoppingList_Data.Recipes[spellID] and ProfessionShoppingList_Settings["removeCraft"] == true then
 			-- Remove 1 tracked recipe when it has been crafted (if the option is enabled)
 			app.UntrackRecipe(spellID, 1)
 			
 			-- Close windows if no recipes are left and the option is enabled
 			local next = next
-			if next(recipesTracked) == nil then
+			if next(ProfessionShoppingList_Data.Recipes) == nil then
 				app.Window:Hide()
 			end
 		end
@@ -2903,12 +2917,12 @@ function event:BAG_UPDATE_DELAYED()
 	if UnitAffectingCombat("player") == false then
 		-- If any recipes are tracked
 		local next = next
-		if next(recipesTracked) ~= nil then
+		if next(ProfessionShoppingList_Data.Recipes) ~= nil then
 			app.UpdateNumbers()
 		end
 
 		-- If the setting for split reagent bag count is enabled
-		if userSettings["backpackCount"] == true then
+		if ProfessionShoppingList_Settings["backpackCount"] == true then
 			-- Get number of free bag slots
 			local freeSlots1 = C_Container.GetContainerNumFreeSlots(0) + C_Container.GetContainerNumFreeSlots(1) + C_Container.GetContainerNumFreeSlots(2) + C_Container.GetContainerNumFreeSlots(3) + C_Container.GetContainerNumFreeSlots(4)
 			local freeSlots2 = C_Container.GetContainerNumFreeSlots(5)
@@ -2925,10 +2939,10 @@ end
 -- When a vendor window is opened
 function event:MERCHANT_SHOW()
 	-- Notification popup
-	if userSettings["onetimeMessages"].vendorItems == false then
+	if ProfessionShoppingList_Settings["onetimeMessages"].vendorItems == false then
 		app.Popup(true, "|cffFFFFFFYou can now track vendor items with "..app.NameLong.."|cffFFFFFF!\n|RAlt+Click|cffFFFFFF any vendor item and "..app.NameShort.."|cffFFFFFF tracks the total costs.")
 
-		userSettings["onetimeMessages"].vendorItems = true
+		ProfessionShoppingList_Settings["onetimeMessages"].vendorItems = true
 	end
 
 	-- When the user Alt+clicks a vendor item
@@ -2954,7 +2968,7 @@ function event:MERCHANT_SHOW()
 
 			-- Add this as a fake recipe
 			local key = merchant..":"..itemID
-			fakeRecipeLibrary[key] = {
+			ProfessionShoppingList_Cache.FakeRecipes[key] = {
 				["itemID"] = itemID,
 				["tradeskillID"] = 0,	-- Vendor item
 				["costCopper"] = 0,
@@ -2963,8 +2977,8 @@ function event:MERCHANT_SHOW()
 			}
 
 			if itemPrice then
-				fakeRecipeLibrary[key].costCopper = itemPrice
-				reagentCache["gold"] = { 
+				ProfessionShoppingList_Cache.FakeRecipes[key].costCopper = itemPrice
+				ProfessionShoppingList_Cache.Reagents["gold"] = { 
 					icon = app.iconProfession[0],
 					link = BONUS_ROLL_REWARD_MONEY,
 				}
@@ -2976,16 +2990,16 @@ function event:MERCHANT_SHOW()
 				if currencyName and itemLink then
 					local currencyID = C_CurrencyInfo.GetCurrencyIDFromLink(itemLink)
 
-					fakeRecipeLibrary[key].costCurrency[currencyID] = itemValue
-					reagentCache["currency:"..currencyID] = { 
+					ProfessionShoppingList_Cache.FakeRecipes[key].costCurrency[currencyID] = itemValue
+					ProfessionShoppingList_Cache.Reagents["currency:"..currencyID] = { 
 						icon = itemTexture,
 						link = C_CurrencyInfo.GetCurrencyLink(currencyID),
 					}
 				elseif itemLink then
 					local itemID = GetItemInfoFromHyperlink(itemLink)
-					fakeRecipeLibrary[key].costItems[itemID] = itemValue
-					if not reagentTiers[itemID] then
-						reagentTiers[itemID] = {
+					ProfessionShoppingList_Cache.FakeRecipes[key].costItems[itemID] = itemValue
+					if not ProfessionShoppingList_Cache.ReagentTiers[itemID] then
+						ProfessionShoppingList_Cache.ReagentTiers[itemID] = {
 							one = itemID,
 							two = 0,
 							three = 0,
@@ -2996,8 +3010,8 @@ function event:MERCHANT_SHOW()
 			end
 
 			-- Track the vendor item as a fake recipe
-			if not recipesTracked[key] then recipesTracked[key] = { quantity = 0, link = itemLink} end
-			recipesTracked[key].quantity = recipesTracked[key].quantity + 1
+			if not ProfessionShoppingList_Data.Recipes[key] then ProfessionShoppingList_Data.Recipes[key] = { quantity = 0, link = itemLink} end
+			ProfessionShoppingList_Data.Recipes[key].quantity = ProfessionShoppingList_Data.Recipes[key].quantity + 1
 
 			-- Show the window
 			app.Show()
@@ -3031,7 +3045,7 @@ function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 	-- Only on initialLoad
 	if isInitialLogin == true then
 		-- Check all tracked recipe cooldowns
-		for k, recipeInfo in pairs(recipeCooldowns) do
+		for k, recipeInfo in pairs(ProfessionShoppingList_Data.Cooldowns) do
 			-- Check the remaining cooldown
 			local cooldownRemaining = recipeInfo.start + recipeInfo.cooldown - GetServerTime()
 
@@ -3039,17 +3053,17 @@ function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 			if cooldownRemaining <= 0 then
 				-- Check charges if they exist and return one
 				if recipeInfo.maxCharges > 0 and recipeInfo.maxCharges > recipeInfo.charges then
-					recipeCooldowns[k].charges = recipeCooldowns[k].charges + 1
+					ProfessionShoppingList_Data.Cooldowns[k].charges = ProfessionShoppingList_Data.Cooldowns[k].charges + 1
 
 					-- And move the reset time if we're not at full charges yet
-					if recipeCooldowns[k].charges ~= recipeCooldowns[k].maxCharges then
-						recipeCooldowns[k].start = GetServerTime()
-						recipeCooldowns[k].cooldown = GetQuestResetTime()
+					if ProfessionShoppingList_Data.Cooldowns[k].charges ~= ProfessionShoppingList_Data.Cooldowns[k].maxCharges then
+						ProfessionShoppingList_Data.Cooldowns[k].start = GetServerTime()
+						ProfessionShoppingList_Data.Cooldowns[k].cooldown = GetQuestResetTime()
 					end
 				end
 
 				-- If the option to show recipe cooldowns is enabled and all charges are full (or 0 = 0 for recipes without charges)
-				if userSettings["showRecipeCooldowns"] == true and recipeCooldowns[k].charges == recipeCooldowns[k].maxCharges then
+				if ProfessionShoppingList_Settings["showRecipeCooldowns"] == true and ProfessionShoppingList_Data.Cooldowns[k].charges == ProfessionShoppingList_Data.Cooldowns[k].maxCharges then
 					-- Show the reminder
 					app.Print(recipeInfo.name .. " is ready to craft again on " .. recipeInfo.user .. ".")
 				end

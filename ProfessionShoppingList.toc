@@ -9,8 +9,8 @@
 ## X-Curse-Project-ID: 498475
 ## X-Wago-ID: Xb6X71Np
 
-## SavedVariables: userSettings, recipesTracked, recipeCooldowns, reagentTiers, reagentCache, recipeLibrary, fakeRecipeLibrary
-## SavedVariablesPerCharacter: pcRecipesTracked, personalOrders
+## SavedVariables: ProfessionShoppingList_Settings, ProfessionShoppingList_Data, ProfessionShoppingList_Library, ProfessionShoppingList_Cache
+## SavedVariablesPerCharacter: ProfessionShoppingList_CharacterData
 
 libs\LibDBIcon-1.0\embeds.xml
 libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua

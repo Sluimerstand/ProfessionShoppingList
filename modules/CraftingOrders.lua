@@ -31,13 +31,9 @@ event:RegisterEvent("CRAFTINGORDERS_SHOW_CUSTOMER")
 
 -- Create SavedVariables, default user settings, and session variables
 function app.InitialiseCraftingOrders()
-	-- Declare SavedVariables
-	if not userSettings then userSettings = {} end
-	if not personalOrders then personalOrders = {} end
-
 	-- Enable default user settings
-	if userSettings["useLocalReagents"] == nil then userSettings["useLocalReagents"] = false end
-	if userSettings["quickOrderDuration"] == nil then userSettings["quickOrderDuration"] = 0 end
+	if ProfessionShoppingList_Settings["useLocalReagents"] == nil then ProfessionShoppingList_Settings["useLocalReagents"] = false end
+	if ProfessionShoppingList_Settings["quickOrderDuration"] == nil then ProfessionShoppingList_Settings["quickOrderDuration"] = 0 end
 
 	-- Initialise some session variables
 	app.Flag["craftingOrderAssets"] = false
@@ -83,11 +79,11 @@ function app.CreateCraftingOrdersAssets()
 		personalCharname:SetAutoFocus(false)
 		personalCharname:SetCursorPosition(0)
 		personalCharname:SetScript("OnEditFocusLost", function(self)
-			personalOrders[app.SelectedRecipeID] = tostring(personalCharname:GetText())
+			ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID] = tostring(personalCharname:GetText())
 			app.UpdateAssets()
 		end)
 		personalCharname:SetScript("OnEnterPressed", function(self)
-			personalOrders[app.SelectedRecipeID] = tostring(personalCharname:GetText())
+			ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID] = tostring(personalCharname:GetText())
 			self:ClearFocus()
 			app.UpdateAssets()
 		end)
@@ -131,22 +127,22 @@ function app.CreateCraftingOrdersAssets()
 					local reagentID = recipeInfo[i].reagents[1].itemID
 
 					-- Add the info for tiered reagents to craftingReagentItems
-					if reagentTiers[reagentID].three ~= 0 then
+					if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three ~= 0 then
 						-- Set it to the lowest quality we have enough of for this order
-						if C_Item.GetItemCount(reagentTiers[reagentID].one, true, false, true) >= quantityNo then
-							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].one, dataSlotIndex = i, quantity = quantityNo}
+						if C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true) >= quantityNo then
+							craftingReagentInfo[no1] = {itemID = ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, dataSlotIndex = i, quantity = quantityNo}
 							no1 = no1 + 1
-						elseif C_Item.GetItemCount(reagentTiers[reagentID].two, true, false, true) >= quantityNo then
-							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].two, dataSlotIndex = i, quantity = quantityNo}
+						elseif C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true) >= quantityNo then
+							craftingReagentInfo[no1] = {itemID = ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, dataSlotIndex = i, quantity = quantityNo}
 							no1 = no1 + 1
-						elseif C_Item.GetItemCount(reagentTiers[reagentID].three, true, false, true) >= quantityNo then
-							craftingReagentInfo[no1] = {itemID = reagentTiers[reagentID].three, dataSlotIndex = i, quantity = quantityNo}
+						elseif C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true) >= quantityNo then
+							craftingReagentInfo[no1] = {itemID = ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, dataSlotIndex = i, quantity = quantityNo}
 							no1 = no1 + 1
 						end
 					-- Add the info for non-tiered reagents to reagentItems
 					else
 						if C_Item.GetItemCount(reagentID, true, false, true) >= quantityNo then
-							reagentInfo[no2] = {itemID = reagentTiers[reagentID].one, quantity = quantityNo}
+							reagentInfo[no2] = {itemID = ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, quantity = quantityNo}
 							no2 = no2 + 1
 						end
 					end
@@ -155,40 +151,40 @@ function app.CreateCraftingOrdersAssets()
 		end
 
 		-- Only add the reagentInfo if the option is enabled
-		if userSettings["useLocalReagents"] == true then localReagentsOrder() end
+		if ProfessionShoppingList_Settings["useLocalReagents"] == true then localReagentsOrder() end
 
 		-- Signal that PSL is currently working on a quick order with local reagents, if applicable
 		local next = next
-		if next(craftingReagentInfo) ~= nil and userSettings["useLocalReagents"] == true then
+		if next(craftingReagentInfo) ~= nil and ProfessionShoppingList_Settings["useLocalReagents"] == true then
 			app.Flag["quickOrder"] = 2
 		end
 
 		-- Place the order
-		C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=userSettings["quickOrderDuration"], tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+		C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=ProfessionShoppingList_Library[recipeID].abilityID, orderType=2, orderDuration=ProfessionShoppingList_Settings["quickOrderDuration"], tipAmount=100, customerNotes="", orderTarget=ProfessionShoppingList_CharacterData.Orders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 		
 		-- If there are tiered reagents and the user wants to use local reagents, adjust the dataSlotIndex and try again in case the first one failed
 		local next = next
-		if next(craftingReagentInfo) ~= nil and userSettings["useLocalReagents"] == true then
+		if next(craftingReagentInfo) ~= nil and ProfessionShoppingList_Settings["useLocalReagents"] == true then
 			for i, _ in ipairs(craftingReagentInfo) do
 				craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
 			end
 
 			-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
-			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=userSettings["quickOrderDuration"], tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=ProfessionShoppingList_Library[recipeID].abilityID, orderType=2, orderDuration=ProfessionShoppingList_Settings["quickOrderDuration"], tipAmount=100, customerNotes="", orderTarget=ProfessionShoppingList_CharacterData.Orders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 		
 			for i, _ in ipairs(craftingReagentInfo) do
 				craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
 			end
 
 			-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
-			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=userSettings["quickOrderDuration"], tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=ProfessionShoppingList_Library[recipeID].abilityID, orderType=2, orderDuration=ProfessionShoppingList_Settings["quickOrderDuration"], tipAmount=100, customerNotes="", orderTarget=ProfessionShoppingList_CharacterData.Orders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 		
 			for i, _ in ipairs(craftingReagentInfo) do
 				craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
 			end
 
 			-- Place the alternative order (only one can succeed, worst case scenario it'll fail again)
-			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=recipeLibrary[recipeID].abilityID, orderType=2, orderDuration=userSettings["quickOrderDuration"], tipAmount=100, customerNotes="", orderTarget=personalOrders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
+			C_CraftingOrders.PlaceNewOrder({ skillLineAbilityID=ProfessionShoppingList_Library[recipeID].abilityID, orderType=2, orderDuration=ProfessionShoppingList_Settings["quickOrderDuration"], tipAmount=100, customerNotes="", orderTarget=ProfessionShoppingList_CharacterData.Orders[recipeID], reagentItems=reagentInfo, craftingReagentItems=craftingReagentInfo })
 		end
 	end
 
@@ -238,14 +234,14 @@ function app.CreateCraftingOrdersAssets()
 		cbUseLocalReagents.Text:SetScale(1.2)
 		cbUseLocalReagents:SetPoint("BOTTOMLEFT", personalOrderButton, "TOPLEFT", 0, 0)
 		cbUseLocalReagents:SetFrameStrata("HIGH")
-		cbUseLocalReagents:SetChecked(userSettings["useLocalReagents"])
+		cbUseLocalReagents:SetChecked(ProfessionShoppingList_Settings["useLocalReagents"])
 		cbUseLocalReagents:SetScript("OnClick", function(self)
-			userSettings["useLocalReagents"] = self:GetChecked()
+			ProfessionShoppingList_Settings["useLocalReagents"] = self:GetChecked()
 
-			if personalOrders["last"] ~= nil and personalOrders["last"] ~= 0 then
+			if ProfessionShoppingList_CharacterData.Orders["last"] ~= nil and ProfessionShoppingList_CharacterData.Orders["last"] ~= 0 then
 				local reagents = "false"
-				local recipient = personalOrders[personalOrders["last"]]
-				if userSettings["useLocalReagents"] == true then reagents = "true" end
+				local recipient = ProfessionShoppingList_CharacterData.Orders[ProfessionShoppingList_CharacterData.Orders["last"]]
+				if ProfessionShoppingList_Settings["useLocalReagents"] == true then reagents = "true" end
 				repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.\nRecipient: "..recipient.."\nUse local reagents: "..reagents)
 				repeatOrderTooltip:SetHeight(repeatOrderTooltipText:GetStringHeight()+20)
 				repeatOrderTooltip:SetWidth(repeatOrderTooltipText:GetStringWidth()+20)
@@ -291,8 +287,8 @@ function app.CreateCraftingOrdersAssets()
 		repeatOrderButton = app.Button(ProfessionsCustomerOrdersFrame, "")
 		repeatOrderButton:SetPoint("BOTTOMLEFT", ProfessionsCustomerOrdersFrame, 170, 5)
 		repeatOrderButton:SetScript("OnClick", function()
-			if personalOrders["last"] ~= nil and personalOrders["last"] ~= 0 then
-				quickOrder(personalOrders["last"])
+			if ProfessionShoppingList_CharacterData.Orders["last"] ~= nil and ProfessionShoppingList_CharacterData.Orders["last"] ~= 0 then
+				quickOrder(ProfessionShoppingList_CharacterData.Orders["last"])
 			else
 				app.Print("No last Quick Order found.")
 			end
@@ -307,8 +303,8 @@ function app.CreateCraftingOrdersAssets()
 		-- Set the last used recipe name for the repeat order button title
 		local recipeName = "No last Quick Order found"
 		-- Check for the name if there has been a last order
-		if personalOrders["last"] ~= nil and personalOrders["last"] ~= 0 then
-			recipeName = C_TradeSkillUI.GetRecipeSchematic(personalOrders["last"], false).name
+		if ProfessionShoppingList_CharacterData.Orders["last"] ~= nil and ProfessionShoppingList_CharacterData.Orders["last"] ~= 0 then
+			recipeName = C_TradeSkillUI.GetRecipeSchematic(ProfessionShoppingList_CharacterData.Orders["last"], false).name
 		end
 		repeatOrderButton:SetText(recipeName)
 		repeatOrderButton:SetWidth(repeatOrderButton:GetTextWidth()+20)
@@ -334,10 +330,10 @@ function app.CreateCraftingOrdersAssets()
 		repeatOrderTooltipText = repeatOrderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		repeatOrderTooltipText:SetPoint("TOPLEFT", repeatOrderTooltip, "TOPLEFT", 10, -10)
 		repeatOrderTooltipText:SetJustifyH("LEFT")
-		if personalOrders["last"] ~= nil and personalOrders["last"] ~= 0 then
+		if ProfessionShoppingList_CharacterData.Orders["last"] ~= nil and ProfessionShoppingList_CharacterData.Orders["last"] ~= 0 then
 			local reagents = "false"
-			local recipient = personalOrders[personalOrders["last"]]
-			if userSettings["useLocalReagents"] == true then reagents = "true" end
+			local recipient = ProfessionShoppingList_CharacterData.Orders[ProfessionShoppingList_CharacterData.Orders["last"]]
+			if ProfessionShoppingList_Settings["useLocalReagents"] == true then reagents = "true" end
 			repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.\nRecipient: "..recipient.."\nUse local reagents: "..reagents)
 		else
 			repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.")
@@ -423,17 +419,17 @@ function event:CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE(result)
 		end
 
 		-- Save this info as the last order done, unless it was a failed order
-		if (result ~= 29 and result ~= 40) or app.QuickOrderErrors >= 4 then personalOrders["last"] = app.SelectedRecipeID end
+		if (result ~= 29 and result ~= 40) or app.QuickOrderErrors >= 4 then ProfessionShoppingList_CharacterData.Orders["last"] = app.SelectedRecipeID end
 
 		-- Set the last used recipe name for the repeat order button title
 		local recipeName = "No last order found"
 		-- Check for the name if there has been a last order
-		if personalOrders["last"] ~= nil and personalOrders["last"] ~= 0 then
-			recipeName = C_TradeSkillUI.GetRecipeSchematic(personalOrders["last"], false).name
+		if ProfessionShoppingList_CharacterData.Orders["last"] ~= nil and ProfessionShoppingList_CharacterData.Orders["last"] ~= 0 then
+			recipeName = C_TradeSkillUI.GetRecipeSchematic(ProfessionShoppingList_CharacterData.Orders["last"], false).name
 
 			local reagents = "false"
-			local recipient = personalOrders[personalOrders["last"]]
-			if userSettings["useLocalReagents"] == true then reagents = "true" end
+			local recipient = ProfessionShoppingList_CharacterData.Orders[ProfessionShoppingList_CharacterData.Orders["last"]]
+			if ProfessionShoppingList_Settings["useLocalReagents"] == true then reagents = "true" end
 			repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.\nRecipient: "..recipient.."\nUse local reagents: "..reagents)
 			repeatOrderTooltip:SetHeight(repeatOrderTooltipText:GetStringHeight()+20)
 			repeatOrderTooltip:SetWidth(repeatOrderTooltipText:GetStringWidth()+20)
