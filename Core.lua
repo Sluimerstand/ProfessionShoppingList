@@ -179,7 +179,7 @@ function app.InitialiseCore()
 
 	if not ProfessionShoppingList_Cache then ProfessionShoppingList_Cache = {} end
 	if not ProfessionShoppingList_Cache.ReagentTiers then ProfessionShoppingList_Cache.ReagentTiers = {} end
-	if not ProfessionShoppingList_Cache.ReagentCache then ProfessionShoppingList_Cache.ReagentCache = {} end
+	if not ProfessionShoppingList_Cache.Reagents then ProfessionShoppingList_Cache.Reagents = {} end
 	if not ProfessionShoppingList_Cache.FakeRecipes then ProfessionShoppingList_Cache.FakeRecipes = {} end
 	
 	if not ProfessionShoppingList_CharacterData then ProfessionShoppingList_CharacterData = {} end
@@ -306,7 +306,7 @@ function app.Legacy()
 	if recipeLibrary then ProfessionShoppingList_Library = recipeLibrary end
 
 	if reagentTiers then ProfessionShoppingList_Cache.ReagentTiers = reagentTiers end
-	if reagentCache then ProfessionShoppingList_Cache.ReagentCache = reagentCache end
+	if reagentCache then ProfessionShoppingList_Cache.Reagents = reagentCache end
 	if fakeRecipeLibrary then ProfessionShoppingList_Cache.FakeRecipes = fakeRecipeLibrary end
 
 	if pcRecipesTracked then ProfessionShoppingList_CharacterData.Recipes = pcRecipesTracked end
