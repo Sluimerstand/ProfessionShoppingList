@@ -93,7 +93,7 @@ function app.Popup(show, text)
 	frame:SetHeight(string:GetStringHeight()+50)
 	frame:SetWidth(string:GetStringWidth()+50)
 
-	return f
+	return frame
 end
 
 -- Border
