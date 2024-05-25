@@ -199,6 +199,8 @@ hooksecurefunc("BattlePetToolTip_Show", function(...)
 			-- Grab pricing information
 			local oeData = {}
 			OEMarketInfo(itemLink,oeData)
+			local marketPrice = 0
+			local regionPrice = 0
 
 			if oeData['market'] ~= nil then
 				marketPrice = oeData['market']
