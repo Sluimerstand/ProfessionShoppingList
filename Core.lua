@@ -3037,6 +3037,7 @@ function event:TRACKED_RECIPE_UPDATE(recipeID, tracked)
 	if tracked == true then
 		app.TrackRecipe(recipeID,1)
 		C_TradeSkillUI.SetRecipeTracked(recipeID, false, false)
+		C_TradeSkillUI.SetRecipeTracked(recipeID, false, true)
 	end
 end
 
