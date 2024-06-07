@@ -133,7 +133,7 @@ function app.UnderminePrices()
 		-- Only run this if the setting is enabled
 		if ProfessionShoppingList_Settings["underminePrices"] == true then
 			-- If Oribos Exchange is loaded
-			local loaded, finished = IsAddOnLoaded("OribosExchange")
+			local loaded, finished = C_AddOns.IsAddOnLoaded("OribosExchange")
 			if finished == true then
 				-- Grab the pricing information
 				local marketPrice = 0
@@ -186,7 +186,7 @@ hooksecurefunc("BattlePetToolTip_Show", function(...)
 	-- Only run this if the setting is enabled
 	if ProfessionShoppingList_Settings["underminePrices"] == true then
 		-- If Oribos Exchange is loaded
-		local loaded, finished = IsAddOnLoaded("OribosExchange")
+		local loaded, finished = C_AddOns.IsAddOnLoaded("OribosExchange")
 		if finished == true then
 			local speciesID1, level, breedQuality, maxHealth, power, speed, bracketName = ...
 
@@ -232,7 +232,7 @@ function app.HideOribos()
 	-- Only run this if the setting is enabled
 	if ProfessionShoppingList_Settings["underminePrices"] == true then
 		-- If Oribos Exchange is loaded
-		local loaded, finished = IsAddOnLoaded("OribosExchange")
+		local loaded, finished = C_AddOns.IsAddOnLoaded("OribosExchange")
 		if finished == true then
 			-- Disable the original tooltip
 			OETooltip(false)

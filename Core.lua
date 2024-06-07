@@ -2470,7 +2470,7 @@ function app.Settings()
 	Settings.RegisterAddOnCategory(category)
 	app.Category = category
 
-	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(GetAddOnMetadata("ProfessionShoppingList", "Version")))
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(C_AddOns.GetAddOnMetadata("ProfessionShoppingList", "Version")))
 
 	local variable, name, tooltip = "minimapIcon", "Show minimap icon", "Show the minimap icon. If you disable this, "..app.NameShort.." is still available from the AddOn Compartment."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
