@@ -1099,16 +1099,16 @@ function app.SettingsKnowledgeTracker()
 
 	local variable, name, tooltip = "showKnowledgeNotPerks", "Count knowledge, not perks", "Show the amount of knowledge points spent, instead of the amount of perks (nodes) unlocked."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
-	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	local variable, name, tooltip = "knowledgeHideDone", "Hide unique done knowledge", "Hide knowledge that can only be collected once, when it has been collected."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
-	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	local variable, name, tooltip = "knowledgeAlwaysShowDetails", "Always show details", "The tooltip will always show all details, instead of only when holding a modifier key."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
-	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 end
