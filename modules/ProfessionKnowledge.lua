@@ -349,8 +349,8 @@ function app.KnowledgeTracker()
 			renownStatus = app.iconNotReady
 
 			renownInfo = {}
-			local title1 = GetFactionInfoByID(renown[1].factionID)
-			local title2 = GetFactionInfoByID(renown[2].factionID)
+			local title1 = C_Reputation.GetFactionDataByID(renown[1].factionID)
+			local title2 = C_Reputation.GetFactionDataByID(renown[2].factionID)
 			renownInfo[1] = { locked = C_MajorFactions.GetRenownLevels(renown[1].factionID)[14].locked, questID = renown[1].questID1, title = title1, level = 14 }
 			renownInfo[2] = { locked = C_MajorFactions.GetRenownLevels(renown[1].factionID)[24].locked, questID = renown[1].questID2, title = title1, level = 24 }
 			renownInfo[3] = { locked = C_MajorFactions.GetRenownLevels(renown[2].factionID)[14].locked, questID = renown[2].questID1, title = title2, level = 14 }

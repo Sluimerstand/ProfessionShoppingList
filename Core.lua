@@ -2233,16 +2233,17 @@ function app.UpdateAssets()
 		thermalAnvilCharges:SetText(anvilCharges)
 
 		-- Cooking Fire button cooldown
-		local start, duration = GetSpellCooldown(818)
-		CookingFireCooldown:SetCooldown(start, duration)
+		local startTime = C_Spell.GetSpellCooldown(818).startTime
+		local duration = C_Spell.GetSpellCooldown(818).duration
+		CookingFireCooldown:SetCooldown(startTime, duration)
 
 		-- Chef's Hat button cooldown
-		start, duration = GetItemCooldown(134020)
-		ChefsHatCooldown:SetCooldown(start, duration)
+		startTime, duration = C_Item.GetItemCooldown(134020)
+		ChefsHatCooldown:SetCooldown(startTime, duration)
 
 		-- Thermal Anvil button cooldown
-		start, duration = GetItemCooldown(87216)
-		thermalAnvilCooldown:SetCooldown(start, duration)
+		startTime, duration = C_Item.GetItemCooldown(87216)
+		thermalAnvilCooldown:SetCooldown(startTime, duration)
 
 		-- Make the Alvin the Anvil button not desaturated if it can be used
 		if C_PetJournal.PetIsSummonable(ProfessionShoppingList_Settings["alvinGUID"]) == true then
@@ -2250,12 +2251,14 @@ function app.UpdateAssets()
 		end
 
 		-- Alvin button cooldown
-		start, duration = GetSpellCooldown(61304)	-- Global spell cooldown
-		alvinCooldown:SetCooldown(start, duration)
+		startTime = C_Spell.GetSpellCooldown(61304).startTime
+		duration = C_Spell.GetSpellCooldown(61304).duration
+		alvinCooldown:SetCooldown(startTime, duration)
 
 		-- Lightforge cooldown
-		start, duration = GetSpellCooldown(259930)
-		lightforgeCooldown:SetCooldown(start, duration)
+		startTime = C_Spell.GetSpellCooldown(259930).startTime
+		duration = C_Spell.GetSpellCooldown(259930).duration
+		lightforgeCooldown:SetCooldown(startTime, duration)
 	end
 
 	-- Enable tracking button for 1 = Item, 3 = Enchant
