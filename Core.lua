@@ -398,14 +398,15 @@ function app.CreateWindow()
 			button1 = YES,
 			button2 = NO,
 			OnAccept = function()
-			app.Clear()
+				app.Clear()
 			end,
 			timeout = 0,
 			whileDead = true,
 			hideOnEscape = true,
 			showAlert = true,
+			hasItemFrame = true,
 		}
-		StaticPopup_Show("CLEAR_RECIPES", "Interface\\AddOns\\ProfessionShoppingList\assets\\psl_icon.blp")
+		StaticPopup_Show("CLEAR_RECIPES")
 	end)
 	app.ClearButton:SetScript("OnEnter", function()
 		app.WindowTooltipShow(app.ClearButtonTooltip)
@@ -628,7 +629,7 @@ function app.UpdateNumbers()
 			end
 		end
 
-		-- Push the info to the windows
+		-- Push the info to the window
 		if reagentRow then
 			for i, row in pairs(reagentRow) do
 				if row:GetID() == reagentID or (reagentID == "gold" and row.text1:GetText() == BONUS_ROLL_REWARD_MONEY) then
@@ -956,7 +957,7 @@ function app.UpdateRecipes()
 					app.UntrackRecipe(selectedRecipeID, 1)
 				end
 
-				-- Show windows
+				-- Show window
 				app.Show()
 			-- Left-click on recipe
 			elseif button == "LeftButton" then
@@ -1770,7 +1771,7 @@ function app.UpdateRecipes()
 	app.UpdateNumbers()
 end
 
--- Show windows and update numbers
+-- Show window and update numbers
 function app.Show()
 	-- Set window to its proper position and size
 	app.Window:ClearAllPoints()
@@ -1782,16 +1783,16 @@ function app.Show()
 		app.Window:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", ProfessionShoppingList_Settings["windowPosition"].left, ProfessionShoppingList_Settings["windowPosition"].bottom)
 	end
 
-	-- Show the windows
+	-- Show the window
 	app.Window:Show()
 
 	-- Update numbers
 	app.UpdateRecipes()
 end
 
--- Toggle windows
+-- Toggle window
 function app.Toggle()
-	-- Toggle tracking windows
+	-- Toggle tracking window
 	if app.Window:IsShown() then
 		app.Window:Hide()
 	else
@@ -1872,7 +1873,7 @@ function app.TrackRecipe(recipeID, recipeQuantity)
 	if not ProfessionShoppingList_Data.Recipes[recipeID] then ProfessionShoppingList_Data.Recipes[recipeID] = { quantity = 0, recraft = app.Flag["recraft"], link = recipeLink } end
 	ProfessionShoppingList_Data.Recipes[recipeID].quantity = ProfessionShoppingList_Data.Recipes[recipeID].quantity + recipeQuantity
 
-	-- Show windows
+	-- Show window
 	app.Show()	-- This also triggers the recipe update
 
 	-- Update the editbox
@@ -1998,7 +1999,7 @@ function app.CreateTradeskillAssets()
 		untrackProfessionButton:SetScript("OnClick", function()
 			app.UntrackRecipe(app.SelectedRecipeID, 1)
 	
-			-- Show windows
+			-- Show window
 			app.Show()
 		end)
 	end
@@ -2156,7 +2157,7 @@ function app.CreateTradeskillAssets()
 				app.Flag["recraft"] = oldIsRecraft
 			end
 
-			-- Show windows
+			-- Show window
 			app.Show()
 		end)
 	end
@@ -2172,7 +2173,7 @@ function app.CreateTradeskillAssets()
 				app.UntrackRecipe(app.OrderRecipeID, 1)
 			end
 
-			-- Show windows
+			-- Show window
 			app.Show()
 		end)
 	end
@@ -2419,7 +2420,7 @@ end
 function ProfessionShoppingList_Enter(self, button)
 	GameTooltip:ClearLines()
 	GameTooltip:SetOwner(type(self) ~= "string" and self or button, "ANCHOR_LEFT")
-	GameTooltip:AddLine(app.NameLong.."\n|cff9D9D9DLMB:|R Toggle the windows.\n|cff9D9D9DRMB:|R Show the settings.")
+	GameTooltip:AddLine(app.NameLong.."\n|cff9D9D9DLMB:|R Toggle the window.\n|cff9D9D9DRMB:|R Show the settings.")
 	GameTooltip:Show()
 end
 
@@ -2445,7 +2446,7 @@ function app.Settings()
 		
 		OnTooltipShow = function(tooltip)
 			if not tooltip or not tooltip.AddLine then return end
-			tooltip:AddLine(app.NameLong.."\n|cff9D9D9DLMB:|R Toggle the windows.\n|cff9D9D9DRMB:|R Show the settings.")
+			tooltip:AddLine(app.NameLong.."\n|cff9D9D9DLMB:|R Toggle the window.\n|cff9D9D9DRMB:|R Show the settings.")
 		end,
 	})
 						
@@ -2634,12 +2635,12 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 					if part2 == "all" then
 						app.UntrackRecipe(recipeID, 0)
 
-						-- Show windows
+						-- Show window
 						app.Show()
 					elseif type(recipeQuantity) == "number" and recipeQuantity ~= 0 and recipeQuantity <= ProfessionShoppingList_Data.Recipes[recipeID].quantity then
 						app.UntrackRecipe(recipeID, recipeQuantity)
 
-						-- Show windows
+						-- Show window
 						app.Show()
 					else
 						app.Print("Invalid parameters. Please enter a valid recipe quantity.")
@@ -2903,7 +2904,7 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 			-- Remove 1 tracked recipe when it has been crafted (if the option is enabled)
 			app.UntrackRecipe(spellID, 1)
 			
-			-- Close windows if no recipes are left and the option is enabled
+			-- Close window if no recipes are left and the option is enabled
 			local next = next
 			if next(ProfessionShoppingList_Data.Recipes) == nil then
 				app.Window:Hide()
