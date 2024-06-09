@@ -2569,6 +2569,7 @@ function app.Settings()
 	Settings.CreateDropDown(category, setting, GetOptions, tooltip)
 	
 	--initializer:AddSearchTags
+	--defaults?
 end
 
 -- When the AddOn is fully loaded, actually run the components
