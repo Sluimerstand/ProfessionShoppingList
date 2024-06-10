@@ -405,7 +405,6 @@ function app.CreateWindow()
 			whileDead = true,
 			hideOnEscape = true,
 			showAlert = true,
-			hasItemFrame = true,
 		}
 		StaticPopup_Show("CLEAR_RECIPES")
 	end)
