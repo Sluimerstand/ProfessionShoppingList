@@ -29,9 +29,8 @@ Also lets you track the cost of vendor items. Say goodbye to scribbling on a not
 A full list of features and slash commands can be found in-game by reading the tooltips on the tracking window and viewing the AddOn's settings.
 
 ## If you are experiencing issues
-
 - Use `/psl clear`. Sometimes stuff gets stuck, or old data needs to be cleared;
-- If the issues persist or you have other feedback, feel free to join the [All The Things Discord](https://discord.gg/allthethings) and ask in the `#profession-shopping-list` Retail channel, or create a [ticket on GitHub](https://github.com/Sluimerstand/ProfessionShoppingList/issues). :)
+- If the issues persist or you have other feedback, feel free to join the [Discord](https://discord.gg/FwWZZ39kPX) and ask in the `#profession-shopping-list` channel, or create a [ticket on GitHub](https://github.com/Sluimerstand/ProfessionShoppingList/issues). :)
 
 ## Support me, if you want 👉👈😳
 [![](https://i.imgur.com/qGoTtXm.png)](https://www.buymeacoffee.com/SlacklusterYT)
