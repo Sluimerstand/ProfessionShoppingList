@@ -34,4 +34,4 @@ A full list of features and slash commands can be found in-game by reading the t
 - If the issues persist or you have other feedback, feel free to join the [All The Things Discord](https://discord.gg/allthethings) and ask in the `#profession-shopping-list` Retail channel, or create a [ticket on GitHub](https://github.com/Sluimerstand/ProfessionShoppingList/issues). :)
 
 ## Support me, if you want 👉👈😳
-[![](https://i.imgur.com/RrUREm1.png)](https://ko-fi.com/sluimerstand)
+[![](https://i.imgur.com/qGoTtXm.png)](https://www.buymeacoffee.com/SlacklusterYT)
