@@ -372,7 +372,7 @@ function app.CreateWindow()
 	app.Window.Corner = corner
 
 	-- Close button
-	local close = CreateFrame("Button", "pslOptionCloseButton", app.Window, "UIPanelCloseButton")
+	local close = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
 	close:SetPoint("TOPRIGHT", app.Window, "TOPRIGHT", 2, 2)
 	close:SetScript("OnClick", function()
 		app.Window:Hide()
@@ -384,9 +384,28 @@ function app.CreateWindow()
 		app.CloseButtonTooltip:Hide()
 	end)
 
+	-- Settings button
+	app.SettingsButton = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
+	app.SettingsButton:SetPoint("TOPRIGHT", close, "TOPLEFT", -2, 0)
+	app.SettingsButton:SetNormalTexture("Interface\\AddOns\\TransmogLootHelper\\assets\\button-settings.blp")
+	app.SettingsButton:GetNormalTexture():SetTexCoord(39/256, 75/256, 1/128, 38/128)
+	app.SettingsButton:SetDisabledTexture("Interface\\AddOns\\TransmogLootHelper\\assets\\button-settings.blp")
+	app.SettingsButton:GetDisabledTexture():SetTexCoord(39/256, 75/256, 41/128, 78/128)
+	app.SettingsButton:SetPushedTexture("Interface\\AddOns\\TransmogLootHelper\\assets\\button-settings.blp")
+	app.SettingsButton:GetPushedTexture():SetTexCoord(39/256, 75/256, 81/128, 118/128)
+	app.SettingsButton:SetScript("OnClick", function()
+		app.OpenSettings()
+	end)
+	app.SettingsButton:SetScript("OnEnter", function()
+		app.WindowTooltipShow(app.SettingsButtonTooltip)
+	end)
+	app.SettingsButton:SetScript("OnLeave", function()
+		app.SettingsButtonTooltip:Hide()
+	end)
+
 	-- Clear button
-	app.ClearButton = CreateFrame("Button", "pslOptionClearButton", app.Window, "UIPanelCloseButton")
-	app.ClearButton:SetPoint("TOPRIGHT", close, "TOPLEFT", -2, 0)
+	app.ClearButton = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
+	app.ClearButton:SetPoint("TOPRIGHT", app.SettingsButton, "TOPLEFT", -2, 0)
 	app.ClearButton:SetNormalTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-clear.blp")
 	app.ClearButton:GetNormalTexture():SetTexCoord(39/256, 75/256, 1/128, 38/128)
 	app.ClearButton:SetDisabledTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-clear.blp")
@@ -1919,25 +1938,28 @@ end
 -- Create assets
 function app.CreateGeneralAssets()
 	-- Create Recipes header tooltip
-	app.RecipesHeaderTooltip = app.WindowTooltip("Shift+click|cffFFFFFF: Link the recipe.\n|RCtrl+click|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click|cffFFFFFF: Untrack all of the selected recipe.")
+	app.RecipesHeaderTooltip = app.WindowTooltip("Shift+LMB|cffFFFFFF: Link the recipe\n|RCtrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RRMB|cffFFFFFF: Untrack 1 of the selected recipe\n|RCtrl+RMB|cffFFFFFF: Untrack all of the selected recipe")
 
 	-- Create Reagents header tooltip
-	app.ReagentsHeaderTooltip = app.WindowTooltip("Shift+click|cffFFFFFF: Link the reagent.\n|RCtrl+click|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)\nThe reagents listed here can also be imported to a new Auctionator shopping list.")
+	app.ReagentsHeaderTooltip = app.WindowTooltip("Shift+LMB|cffFFFFFF: Link the reagent\n|RCtrl+LMB|cffFFFFFF: Add recipe for the selected subreagent, if it exists\n(This only works for professions that have been opened with "..app.NameShort.." active)")
 
 	-- Create Cooldowns header tooltip
-	app.CooldownsHeaderTooltip = app.WindowTooltip("Right+click|cffFFFFFF: Remove the cooldown reminder.")
+	app.CooldownsHeaderTooltip = app.WindowTooltip("RMB|cffFFFFFF: Remove the cooldown reminder")
 
 	-- Create Close button tooltip
-	app.CloseButtonTooltip = app.WindowTooltip("Close the window.")
+	app.CloseButtonTooltip = app.WindowTooltip("Close the window")
+
+	-- Create Settings button tooltip
+	app.SettingsButtonTooltip = app.WindowTooltip("Open the settings")
 
 	-- Create Clear button tooltip
-	app.ClearButtonTooltip = app.WindowTooltip("Clear all tracked recipes.")
+	app.ClearButtonTooltip = app.WindowTooltip("Clear all tracked recipes")
 
 	-- Create Auctionator button tooltip
-	app.AuctionatorButtonTooltip = app.WindowTooltip("Create an Auctionator shopping list.\nAlso initiates a search if you have the Shopping tab open at the Auction House.")
+	app.AuctionatorButtonTooltip = app.WindowTooltip("Create an Auctionator shopping list\nAlso initiates a search if you have the Shopping tab open at the Auction House")
 
 	-- Create corner button tooltip
-	app.CornerButtonTooltip = app.WindowTooltip("Double-click|cffFFFFFF: Autosize to fit the window.")
+	app.CornerButtonTooltip = app.WindowTooltip("Double-click|cffFFFFFF: Autosize to fit the window")
 end
 
 function app.CreateTradeskillAssets()
