@@ -2420,7 +2420,7 @@ end
 function ProfessionShoppingList_Enter(self, button)
 	GameTooltip:ClearLines()
 	GameTooltip:SetOwner(type(self) ~= "string" and self or button, "ANCHOR_LEFT")
-	GameTooltip:AddLine(app.NameLong.."\n|cff9D9D9DLMB:|R Toggle the window.\n|cff9D9D9DRMB:|R Show the settings.")
+	GameTooltip:AddLine(app.NameLong.."\nLMB|cffFFFFFF: Toggle the window\n|RRMB|cffFFFFFF: Show the settings|R")
 	GameTooltip:Show()
 end
 
@@ -2446,7 +2446,7 @@ function app.Settings()
 		
 		OnTooltipShow = function(tooltip)
 			if not tooltip or not tooltip.AddLine then return end
-			tooltip:AddLine(app.NameLong.."\n|cff9D9D9DLMB:|R Toggle the window.\n|cff9D9D9DRMB:|R Show the settings.")
+			tooltip:AddLine(app.NameLong.."\nLMB|cffFFFFFF: Toggle the window\n|RRMB|cffFFFFFF: Show the settings|R")
 		end,
 	})
 						
