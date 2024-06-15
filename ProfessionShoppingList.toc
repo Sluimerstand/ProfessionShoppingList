@@ -1,5 +1,5 @@
 ## Interface: 100207
-## Title: |cffC69B6DProfession Shopping List|R
+## Title: |cffC69B6DProfession Shopping List|r
 ## Author: Sluimerstand
 ## IconTexture: Interface\AddOns\ProfessionShoppingList\assets\psl_icon.blp
 ## AddonCompartmentFunc: ProfessionShoppingList_Click
