@@ -6,9 +6,9 @@ A World of Warcraft AddOn. Download locations: [CurseForge](https://www.cursefor
 
 ![](https://media.forgecdn.net/attachments/description/498475/description_2221bf7d-a25f-455c-be98-a583840ca8eb.png)
 
-When viewing your profession knowledge, see at a glance how many perks you have unlocked and where you can still earn profession knowledge.
+When viewing your profession knowledge, see at a glance how many perks you have unlocked.
 
-![](https://media.forgecdn.net/attachments/description/498475/description_b3b81beb-3caf-4992-a802-be1b7123df4e.png)
+![](https://media.forgecdn.net/attachments/description/498475/description_ff5e8cb5-52e5-4d43-9dd2-d432d8302590.png)
 
 Quickly send work orders to your alts with the Quick Order preset, and repeat your last work order sent with the click of a button.
 
