@@ -20,6 +20,7 @@ end)
 event:RegisterEvent("ADDON_LOADED")
 event:RegisterEvent("SPELL_DATA_LOAD_RESULT")
 event:RegisterEvent("TRADE_SKILL_SHOW")
+event:RegisterEvent("TRAIT_CONFIG_UPDATED")
 
 ------------------
 -- INITIAL LOAD --
@@ -1071,6 +1072,13 @@ end
 
 -- When a recipe is selected (also used to determine professionID, which TRADE_SKILL_SHOW() is too quick for)
 function event:SPELL_DATA_LOAD_RESULT(spellID, success)
+	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true and app.Flag["knowledgeAssets"] == true then
+		app.KnowledgeTracker()
+	end
+end
+
+-- When profession knowledge is spent
+function event:TRAIT_CONFIG_UPDATED(spellID, success)
 	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true and app.Flag["knowledgeAssets"] == true then
 		app.KnowledgeTracker()
 	end
