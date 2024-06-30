@@ -100,7 +100,7 @@ end
 
 -- Populate knowledge tracker
 function app.KnowledgeTracker()
-	-- Show stuff depending on which profession is opened
+	-- Show stuff depending on which profession+expansion is opened
 	local skillLineID = C_TradeSkillUI.GetProfessionChildSkillLineID()
 	local professionID = C_TradeSkillUI.GetProfessionInfoBySkillLineID(skillLineID).profession
 
@@ -178,6 +178,7 @@ function app.KnowledgeTracker()
 	local hiddenMaster
 	local treasures
 	local books
+	local dragonflight = false
 	local progress = true
 
 	local function kpTooltip()
@@ -452,7 +453,7 @@ function app.KnowledgeTracker()
 		end
 		
 		-- Dragon Shard of Knowledge
-		if ProfessionShoppingList_Settings["knowledgeHideDone"] == true and shardNo == 4 then
+		if (ProfessionShoppingList_Settings["knowledgeHideDone"] == true and shardNo == 4) or dragonflight == false then
 			-- Don't show this
 		else
 			-- Cache dragon shard item
@@ -489,7 +490,7 @@ function app.KnowledgeTracker()
 		end
 
 		-- Hidden profession master
-		if ProfessionShoppingList_Settings["knowledgeHideDone"] == true and hiddenNumber == 1 then
+		if ProfessionShoppingList_Settings["knowledgeHideDone"] == true and hiddenNumber == 1 or hiddenMaster == nil then
 			-- Don't show this
 		else
 			oldText = knowledgePointTooltipText:GetText()
@@ -596,8 +597,10 @@ function app.KnowledgeTracker()
 		knowledgePointTooltip:Hide()
 	end)
 
+	-- DRAGONFLIGHT
+
 	-- Blacksmithing
-	if professionID == 1 then
+	if skillLineID == 2822 then
 		treatiseItem = 198454
 		treatiseQuest = 74109
 		orderQuest = 70589
@@ -640,10 +643,11 @@ function app.KnowledgeTracker()
 		renown[1] = {factionID = 2503, questID1 = 72312, questID2 = 72315}
 		renown[2] = {factionID = 2510, questID1 = 72329, questID2 = 70909}
 		dmf = 29508
+		dragonflight = true
 	end
 
 	-- Leatherworking
-	if professionID == 2 then
+	if skillLineID == 2830 then
 		treatiseItem = 194700
 		treatiseQuest = 74113
 		orderQuest = 70594
@@ -684,10 +688,11 @@ function app.KnowledgeTracker()
 		renown[1] = {factionID = 2503, questID1 = 72296, questID2 = 72297}
 		renown[2] = {factionID = 2511, questID1 = 72321, questID2 = 72326}
 		dmf = 29517
+		dragonflight = true
 	end
 
 	-- Alchemy
-	if professionID == 3 then
+	if skillLineID == 2823 then
 		treatiseItem = 194697
 		treatiseQuest = 74108
 		orderQuest = nil
@@ -728,10 +733,11 @@ function app.KnowledgeTracker()
 		renown[1] = {factionID = 2503, questID1 = 72311, questID2 = 72314}
 		renown[2] = {factionID = 2510, questID1 = 70892, questID2 = 70889}
 		dmf = 29506
+		dragonflight = true
 	end
 
 	-- Herbalism
-	if professionID == 4 then
+	if skillLineID == 2832 then
 		treatiseItem = 194704
 		treatiseQuest = 74107
 		orderQuest = nil
@@ -758,10 +764,11 @@ function app.KnowledgeTracker()
 		renown[1] = {factionID = 2503, questID1 = 72313, questID2 = 72316}
 		renown[2] = {factionID = 2511, questID1 = 72319, questID2 = 72324}
 		dmf = 29514
+		dragonflight = true
 	end
 
 	-- Mining
-	if professionID == 6 then
+	if skillLineID == 2833 then
 		treatiseItem = 194708
 		treatiseQuest = 74106
 		orderQuest = nil
@@ -788,10 +795,11 @@ function app.KnowledgeTracker()
 		renown[1] = {factionID = 2507, questID1 = 72302, questID2 = 72308}
 		renown[2] = {factionID = 2510, questID1 = 72332, questID2 = 72335}
 		dmf = 29518
+		dragonflight = true
 	end
 
 	-- Tailoring
-	if professionID == 7 then
+	if skillLineID == 2831 then
 		treatiseItem = 194698
 		treatiseQuest = 74115
 		orderQuest = 70595
@@ -833,10 +841,11 @@ function app.KnowledgeTracker()
 		renown[1] = {factionID = 2507, questID1 = 72303, questID2 = 72309}
 		renown[2] = {factionID = 2510, questID1 = 72333, questID2 = 72336}
 		dmf = 29520
+		dragonflight = true
 	end
 
 	-- Engineering
-	if professionID == 8 then
+	if skillLineID == 2827 then
 		treatiseItem = 198510
 		treatiseQuest = 74111
 		orderQuest = 70591
@@ -877,10 +886,11 @@ function app.KnowledgeTracker()
 		renown[1] = {factionID = 2507, questID1 = 72300, questID2 = 72305}
 		renown[2] = {factionID = 2510, questID1 = 72330, questID2 = 70902}
 		dmf = 29511
+		dragonflight = true
 	end
 
 	-- Enchanting
-	if professionID == 9 then
+	if skillLineID == 2825 then
 		treatiseItem = 194702
 		treatiseQuest = 74110
 		orderQuest = nil
@@ -922,10 +932,11 @@ function app.KnowledgeTracker()
 		renown[1] = {factionID = 2507, questID1 = 72299, questID2 = 72304}
 		renown[2] = {factionID = 2511, questID1 = 72318, questID2 = 72323}
 		dmf = 29510
+		dragonflight = true
 	end
 
 	-- Skinning
-	if professionID == 11 then
+	if skillLineID == 2834 then
 		treatiseItem = 201023
 		treatiseQuest = 74114
 		orderQuest = nil
@@ -952,10 +963,11 @@ function app.KnowledgeTracker()
 		renown[1] = {factionID = 2503, questID1 = 72310, questID2 = 72317}
 		renown[2] = {factionID = 2511, questID1 = 72322, questID2 = 72327}
 		dmf = 29519
+		dragonflight = true
 	end
 
 	-- Jewelcrafting
-	if professionID == 12 then
+	if skillLineID == 2829 then
 		treatiseItem = 194703
 		treatiseQuest = 74112
 		orderQuest = 70593
@@ -997,10 +1009,11 @@ function app.KnowledgeTracker()
 		renown[1] = {factionID = 2507, questID1 = 72301, questID2 = 72306}
 		renown[2] = {factionID = 2511, questID1 = 72320, questID2 = 72325}
 		dmf = 29516
+		dragonflight = true
 	end
 
 	-- Inscription
-	if professionID == 13 then
+	if skillLineID == 2828 then
 		treatiseItem = 194699
 		treatiseQuest = 74105
 		orderQuest = 70592
@@ -1042,6 +1055,7 @@ function app.KnowledgeTracker()
 		renown[1] = {factionID = 2507, questID1 = 72294, questID2 = 72295}
 		renown[2] = {factionID = 2510, questID1 = 72331, questID2 = 72334}
 		dmf = 29515
+		dragonflight = true
 	end
 
 	-- Professions with Knowledge Points
