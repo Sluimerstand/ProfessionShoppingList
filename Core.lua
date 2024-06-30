@@ -22,6 +22,7 @@ event:SetScript("OnEvent", function(self, event, ...)
 end)
 event:RegisterEvent("ADDON_LOADED")
 event:RegisterEvent("BAG_UPDATE_DELAYED")
+event:RegisterEvent("CHAT_MSG_ADDON")
 event:RegisterEvent("MERCHANT_SHOW")
 event:RegisterEvent("PLAYER_ENTERING_WORLD")
 event:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
@@ -201,6 +202,7 @@ function app.InitialiseCore()
 	-- Hidden	
 	if ProfessionShoppingList_Settings["windowPosition"] == nil then ProfessionShoppingList_Settings["windowPosition"] = { ["left"] = 1295, ["bottom"] = 836, ["width"] = 200, ["height"] = 200, } end
 	if ProfessionShoppingList_Settings["pcWindowPosition"] == nil then ProfessionShoppingList_Settings["pcWindowPosition"] = ProfessionShoppingList_Settings["windowPosition"] end
+	if ProfessionShoppingList_Settings["windowLocked"] == nil then ProfessionShoppingList_Settings["windowLocked"] = false end
 	if ProfessionShoppingList_Settings["alvinGUID"] == nil then ProfessionShoppingList_Settings["alvinGUID"] = "unknown" end
 	if ProfessionShoppingList_Settings["onetimeMessages"] == nil then ProfessionShoppingList_Settings["onetimeMessages"] = {} end
 	if ProfessionShoppingList_Settings["onetimeMessages"].vendorItems == nil then ProfessionShoppingList_Settings["onetimeMessages"].vendorItems = false end
@@ -221,6 +223,9 @@ function app.InitialiseCore()
 	app.SelectedRecipeID = 0
 	app.UpdatedCooldownWidth = 0
 	app.UpdatedReagentWidth = 0
+
+	-- Register our AddOn communications channel
+	C_ChatInfo.RegisterAddonMessagePrefix("ProfShopList")
 end
 
 -- Convert and/or delete older SavedVariables
@@ -313,8 +318,24 @@ function app.Legacy()
 	if personalOrders then ProfessionShoppingList_CharacterData.Orders = personalOrders end
 end
 
+-- Move the window
+function app.MoveWindow()
+	if ProfessionShoppingList_Settings["windowLocked"] then
+		-- Highlight the Unlock button
+		app.UnlockButton:LockHighlight()
+	else
+		-- Start moving the window, and hide any visible tooltips
+		app.Window:StartMoving()
+		GameTooltip:ClearLines()
+		GameTooltip:Hide()
+	end
+end
+
 -- Save the window position and size
 function app.SaveWindow()
+	-- Stop highlighting the unlock button
+	app.UnlockButton:UnlockHighlight()
+
 	-- Stop moving or resizing the window
 	app.Window:StopMovingOrSizing()
 
@@ -343,14 +364,11 @@ function app.CreateWindow()
 	app.Window:SetBackdropBorderColor(0.776, 0.608, 0.427)
 	app.Window:EnableMouse(true)
 	app.Window:SetMovable(true)
+	app.Window:SetClampedToScreen(true)
 	app.Window:SetResizable(true)
 	app.Window:SetResizeBounds(140, 140, 600, 600)
 	app.Window:RegisterForDrag("LeftButton")
-	app.Window:SetScript("OnDragStart", function()
-		app.Window:StartMoving()
-		GameTooltip:ClearLines()
-		GameTooltip:Hide()
-	end)
+	app.Window:SetScript("OnDragStart", function() app.MoveWindow() end)
 	app.Window:SetScript("OnDragStop", function() app.SaveWindow() end)
 	app.Window:Hide()
 
@@ -371,7 +389,7 @@ function app.CreateWindow()
 	app.Window.Corner = corner
 
 	-- Close button
-	local close = CreateFrame("Button", "pslOptionCloseButton", app.Window, "UIPanelCloseButton")
+	local close = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
 	close:SetPoint("TOPRIGHT", app.Window, "TOPRIGHT", 2, 2)
 	close:SetScript("OnClick", function()
 		app.Window:Hide()
@@ -383,9 +401,82 @@ function app.CreateWindow()
 		app.CloseButtonTooltip:Hide()
 	end)
 
+	-- Lock button
+	app.LockButton = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
+	app.LockButton:SetPoint("TOPRIGHT", close, "TOPLEFT", -2, 0)
+	app.LockButton:SetNormalTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-lock.blp")
+	app.LockButton:GetNormalTexture():SetTexCoord(39/256, 75/256, 1/128, 38/128)
+	app.LockButton:SetDisabledTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-lock.blp")
+	app.LockButton:GetDisabledTexture():SetTexCoord(39/256, 75/256, 41/128, 78/128)
+	app.LockButton:SetPushedTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-lock.blp")
+	app.LockButton:GetPushedTexture():SetTexCoord(39/256, 75/256, 81/128, 118/128)
+	app.LockButton:SetScript("OnClick", function()
+		ProfessionShoppingList_Settings["windowLocked"] = true
+		app.Window.Corner:Hide()
+		app.LockButton:Hide()
+		app.UnlockButton:Show()
+	end)
+	app.LockButton:SetScript("OnEnter", function()
+		app.WindowTooltipShow(app.LockButtonTooltip)
+	end)
+	app.LockButton:SetScript("OnLeave", function()
+		app.LockButtonTooltip:Hide()
+	end)
+
+	-- Unlock button
+	app.UnlockButton = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
+	app.UnlockButton:SetPoint("TOPRIGHT", close, "TOPLEFT", -2, 0)
+	app.UnlockButton:SetNormalTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-unlock.blp")
+	app.UnlockButton:GetNormalTexture():SetTexCoord(39/256, 75/256, 1/128, 38/128)
+	app.UnlockButton:SetDisabledTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-unlock.blp")
+	app.UnlockButton:GetDisabledTexture():SetTexCoord(39/256, 75/256, 41/128, 78/128)
+	app.UnlockButton:SetPushedTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-unlock.blp")
+	app.UnlockButton:GetPushedTexture():SetTexCoord(39/256, 75/256, 81/128, 118/128)
+	app.UnlockButton:SetScript("OnClick", function()
+		ProfessionShoppingList_Settings["windowLocked"] = false
+		app.Window.Corner:Show()
+		app.LockButton:Show()
+		app.UnlockButton:Hide()
+	end)
+	app.UnlockButton:SetScript("OnEnter", function()
+		app.WindowTooltipShow(app.UnlockButtonTooltip)
+	end)
+	app.UnlockButton:SetScript("OnLeave", function()
+		app.UnlockButtonTooltip:Hide()
+	end)
+
+	if ProfessionShoppingList_Settings["windowLocked"] then
+		app.Window.Corner:Hide()
+		app.LockButton:Hide()
+		app.UnlockButton:Show()
+	else
+		app.Window.Corner:Show()
+		app.LockButton:Show()
+		app.UnlockButton:Hide()
+	end
+
+	-- Settings button
+	app.SettingsButton = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
+	app.SettingsButton:SetPoint("TOPRIGHT", app.LockButton, "TOPLEFT", -2, 0)
+	app.SettingsButton:SetNormalTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-settings.blp")
+	app.SettingsButton:GetNormalTexture():SetTexCoord(39/256, 75/256, 1/128, 38/128)
+	app.SettingsButton:SetDisabledTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-settings.blp")
+	app.SettingsButton:GetDisabledTexture():SetTexCoord(39/256, 75/256, 41/128, 78/128)
+	app.SettingsButton:SetPushedTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-settings.blp")
+	app.SettingsButton:GetPushedTexture():SetTexCoord(39/256, 75/256, 81/128, 118/128)
+	app.SettingsButton:SetScript("OnClick", function()
+		app.OpenSettings()
+	end)
+	app.SettingsButton:SetScript("OnEnter", function()
+		app.WindowTooltipShow(app.SettingsButtonTooltip)
+	end)
+	app.SettingsButton:SetScript("OnLeave", function()
+		app.SettingsButtonTooltip:Hide()
+	end)
+
 	-- Clear button
-	app.ClearButton = CreateFrame("Button", "pslOptionClearButton", app.Window, "UIPanelCloseButton")
-	app.ClearButton:SetPoint("TOPRIGHT", close, "TOPLEFT", -2, 0)
+	app.ClearButton = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
+	app.ClearButton:SetPoint("TOPRIGHT", app.SettingsButton, "TOPLEFT", -2, 0)
 	app.ClearButton:SetNormalTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-clear.blp")
 	app.ClearButton:GetNormalTexture():SetTexCoord(39/256, 75/256, 1/128, 38/128)
 	app.ClearButton:SetDisabledTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\button-clear.blp")
@@ -398,14 +489,14 @@ function app.CreateWindow()
 			button1 = YES,
 			button2 = NO,
 			OnAccept = function()
-			app.Clear()
+				app.Clear()
 			end,
 			timeout = 0,
 			whileDead = true,
 			hideOnEscape = true,
 			showAlert = true,
 		}
-		StaticPopup_Show("CLEAR_RECIPES", "Interface\\AddOns\\ProfessionShoppingList\assets\\psl_icon.blp")
+		StaticPopup_Show("CLEAR_RECIPES")
 	end)
 	app.ClearButton:SetScript("OnEnter", function()
 		app.WindowTooltipShow(app.ClearButtonTooltip)
@@ -628,7 +719,7 @@ function app.UpdateNumbers()
 			end
 		end
 
-		-- Push the info to the windows
+		-- Push the info to the window
 		if reagentRow then
 			for i, row in pairs(reagentRow) do
 				if row:GetID() == reagentID or (reagentID == "gold" and row.text1:GetText() == BONUS_ROLL_REWARD_MONEY) then
@@ -823,11 +914,7 @@ function app.UpdateRecipes()
 		app.Window.Recipes:SetPoint("RIGHT", app.Window.Child)
 		app.Window.Recipes:RegisterForDrag("LeftButton")
 		app.Window.Recipes:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-		app.Window.Recipes:SetScript("OnDragStart", function()
-			app.Window:StartMoving()
-			GameTooltip:ClearLines()
-			GameTooltip:Hide()
-		end)
+		app.Window.Recipes:SetScript("OnDragStart", function() app.MoveWindow()	end)
 		app.Window.Recipes:SetScript("OnDragStop", function() app.SaveWindow() end)
 		app.Window.Recipes:SetScript("OnEnter", function()
 			app.WindowTooltipShow(app.RecipesHeaderTooltip)
@@ -918,11 +1005,7 @@ function app.UpdateRecipes()
 		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
 		row:RegisterForDrag("LeftButton")
 		row:RegisterForClicks("AnyUp", "AnyDown")
-		row:SetScript("OnDragStart", function()
-			app.Window:StartMoving()
-			GameTooltip:ClearLines()
-			GameTooltip:Hide()
-		end)
+		row:SetScript("OnDragStart", function() app.MoveWindow() end)
 		row:SetScript("OnDragStop", function() app.SaveWindow() end)
 		row:SetScript("OnEnter", function()
 			-- Show item tooltip if hovering over the actual row
@@ -956,7 +1039,7 @@ function app.UpdateRecipes()
 					app.UntrackRecipe(selectedRecipeID, 1)
 				end
 
-				-- Show windows
+				-- Show window
 				app.Show()
 			-- Left-click on recipe
 			elseif button == "LeftButton" then
@@ -1016,11 +1099,7 @@ function app.UpdateRecipes()
 		app.Window.Reagents:SetPoint("RIGHT", app.Window.Child)
 		app.Window.Reagents:RegisterForDrag("LeftButton")
 		app.Window.Reagents:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-		app.Window.Reagents:SetScript("OnDragStart", function()
-			app.Window:StartMoving()
-			GameTooltip:ClearLines()
-			GameTooltip:Hide()
-		end)
+		app.Window.Reagents:SetScript("OnDragStart", function() app.MoveWindow() end)
 		app.Window.Reagents:SetScript("OnDragStop", function() app.SaveWindow() end)
 		app.Window.Reagents:SetScript("OnEnter", function()
 			app.WindowTooltipShow(app.ReagentsHeaderTooltip)
@@ -1072,11 +1151,7 @@ function app.UpdateRecipes()
 		row:SetSize(0,16)
 		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
 		row:RegisterForDrag("LeftButton")
-		row:SetScript("OnDragStart", function()
-			app.Window:StartMoving()
-			GameTooltip:ClearLines()
-			GameTooltip:Hide()
-		end)
+		row:SetScript("OnDragStart", function() app.MoveWindow() end)
 		row:SetScript("OnDragStop", function() app.SaveWindow() end)
 		row:SetScript("OnEnter", function()
 			-- Show item tooltip if hovering over the actual row
@@ -1534,11 +1609,7 @@ function app.UpdateRecipes()
 		app.Window.Cooldowns:SetPoint("RIGHT", app.Window.Child)
 		app.Window.Cooldowns:RegisterForDrag("LeftButton")
 		app.Window.Cooldowns:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-		app.Window.Cooldowns:SetScript("OnDragStart", function()
-			app.Window:StartMoving()
-			GameTooltip:ClearLines()
-			GameTooltip:Hide()
-		end)
+		app.Window.Cooldowns:SetScript("OnDragStart", function() app.MoveWindow() end)
 		app.Window.Cooldowns:SetScript("OnDragStop", function() app.SaveWindow() end)
 		app.Window.Cooldowns:SetScript("OnEnter", function()
 			app.WindowTooltipShow(app.CooldownsHeaderTooltip)
@@ -1592,11 +1663,7 @@ function app.UpdateRecipes()
 		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
 		row:RegisterForDrag("LeftButton")
 		row:RegisterForClicks("AnyDown", "AnyUp")
-		row:SetScript("OnDragStart", function()
-			app.Window:StartMoving()
-			GameTooltip:ClearLines()
-			GameTooltip:Hide()
-		end)
+		row:SetScript("OnDragStart", function() app.MoveWindow() end)
 		row:SetScript("OnDragStop", function() app.SaveWindow() end)
 		row:SetScript("OnEnter", function()
 			if not cooldownTooltip then
@@ -1770,7 +1837,7 @@ function app.UpdateRecipes()
 	app.UpdateNumbers()
 end
 
--- Show windows and update numbers
+-- Show window and update numbers
 function app.Show()
 	-- Set window to its proper position and size
 	app.Window:ClearAllPoints()
@@ -1782,16 +1849,16 @@ function app.Show()
 		app.Window:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", ProfessionShoppingList_Settings["windowPosition"].left, ProfessionShoppingList_Settings["windowPosition"].bottom)
 	end
 
-	-- Show the windows
+	-- Show the window
 	app.Window:Show()
 
 	-- Update numbers
 	app.UpdateRecipes()
 end
 
--- Toggle windows
+-- Toggle window
 function app.Toggle()
-	-- Toggle tracking windows
+	-- Toggle tracking window
 	if app.Window:IsShown() then
 		app.Window:Hide()
 	else
@@ -1872,7 +1939,7 @@ function app.TrackRecipe(recipeID, recipeQuantity)
 	if not ProfessionShoppingList_Data.Recipes[recipeID] then ProfessionShoppingList_Data.Recipes[recipeID] = { quantity = 0, recraft = app.Flag["recraft"], link = recipeLink } end
 	ProfessionShoppingList_Data.Recipes[recipeID].quantity = ProfessionShoppingList_Data.Recipes[recipeID].quantity + recipeQuantity
 
-	-- Show windows
+	-- Show window
 	app.Show()	-- This also triggers the recipe update
 
 	-- Update the editbox
@@ -1918,25 +1985,32 @@ end
 -- Create assets
 function app.CreateGeneralAssets()
 	-- Create Recipes header tooltip
-	app.RecipesHeaderTooltip = app.WindowTooltip("Shift+click|cffFFFFFF: Link the recipe.\n|RCtrl+click|cffFFFFFF: Open the recipe (if known on current character).\n|RRight-click|cffFFFFFF: Untrack 1 of the selected recipe.\n|RCtrl+right-click|cffFFFFFF: Untrack all of the selected recipe.")
+	app.RecipesHeaderTooltip = app.WindowTooltip("Shift+LMB|cffFFFFFF: Link the recipe\n|RCtrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RRMB|cffFFFFFF: Untrack 1 of the selected recipe\n|RCtrl+RMB|cffFFFFFF: Untrack all of the selected recipe")
 
 	-- Create Reagents header tooltip
-	app.ReagentsHeaderTooltip = app.WindowTooltip("Shift+click|cffFFFFFF: Link the reagent.\n|RCtrl+click|cffFFFFFF: Add recipe for the selected subreagent, if it exists.\n(This only works for professions that have been opened with PSL active.)\nThe reagents listed here can also be imported to a new Auctionator shopping list.")
+	app.ReagentsHeaderTooltip = app.WindowTooltip("Shift+LMB|cffFFFFFF: Link the reagent\n|RCtrl+LMB|cffFFFFFF: Add recipe for the selected subreagent, if it exists\n(This only works for professions that have been opened with "..app.NameShort.." active)")
 
 	-- Create Cooldowns header tooltip
-	app.CooldownsHeaderTooltip = app.WindowTooltip("Right+click|cffFFFFFF: Remove the cooldown reminder.")
+	app.CooldownsHeaderTooltip = app.WindowTooltip("RMB|cffFFFFFF: Remove the cooldown reminder")
 
 	-- Create Close button tooltip
-	app.CloseButtonTooltip = app.WindowTooltip("Close the window.")
+	app.CloseButtonTooltip = app.WindowTooltip("Close the window")
+
+	-- Create Lock/Unlock button tooltip
+	app.LockButtonTooltip = app.WindowTooltip("Lock the window")
+	app.UnlockButtonTooltip = app.WindowTooltip("Unlock the window")
+	
+	-- Create Settings button tooltip
+	app.SettingsButtonTooltip = app.WindowTooltip("Open the settings")
 
 	-- Create Clear button tooltip
-	app.ClearButtonTooltip = app.WindowTooltip("Clear all tracked recipes.")
+	app.ClearButtonTooltip = app.WindowTooltip("Clear all tracked recipes")
 
 	-- Create Auctionator button tooltip
-	app.AuctionatorButtonTooltip = app.WindowTooltip("Create an Auctionator shopping list.\nAlso initiates a search if you have the Shopping tab open at the Auction House.")
+	app.AuctionatorButtonTooltip = app.WindowTooltip("Create an Auctionator shopping list\nAlso initiates a search if you have the Shopping tab open at the Auction House")
 
 	-- Create corner button tooltip
-	app.CornerButtonTooltip = app.WindowTooltip("Double-click|cffFFFFFF: Autosize to fit the window.")
+	app.CornerButtonTooltip = app.WindowTooltip("Double-click|cffFFFFFF: Autosize to fit the window")
 end
 
 function app.CreateTradeskillAssets()
@@ -1998,7 +2072,7 @@ function app.CreateTradeskillAssets()
 		untrackProfessionButton:SetScript("OnClick", function()
 			app.UntrackRecipe(app.SelectedRecipeID, 1)
 	
-			-- Show windows
+			-- Show window
 			app.Show()
 		end)
 	end
@@ -2156,7 +2230,7 @@ function app.CreateTradeskillAssets()
 				app.Flag["recraft"] = oldIsRecraft
 			end
 
-			-- Show windows
+			-- Show window
 			app.Show()
 		end)
 	end
@@ -2172,7 +2246,7 @@ function app.CreateTradeskillAssets()
 				app.UntrackRecipe(app.OrderRecipeID, 1)
 			end
 
-			-- Show windows
+			-- Show window
 			app.Show()
 		end)
 	end
@@ -2422,7 +2496,7 @@ end
 function ProfessionShoppingList_Enter(self, button)
 	GameTooltip:ClearLines()
 	GameTooltip:SetOwner(type(self) ~= "string" and self or button, "ANCHOR_LEFT")
-	GameTooltip:AddLine(app.NameLong.."\n|cff9D9D9DLMB:|R Toggle the windows.\n|cff9D9D9DRMB:|R Show the settings.")
+	GameTooltip:AddLine(app.NameLong.."\nLMB|cffFFFFFF: Toggle the window\n|RRMB|cffFFFFFF: Show the settings|R")
 	GameTooltip:Show()
 end
 
@@ -2448,7 +2522,7 @@ function app.Settings()
 		
 		OnTooltipShow = function(tooltip)
 			if not tooltip or not tooltip.AddLine then return end
-			tooltip:AddLine(app.NameLong.."\n|cff9D9D9DLMB:|R Toggle the windows.\n|cff9D9D9DRMB:|R Show the settings.")
+			tooltip:AddLine(app.NameLong.."\nLMB|cffFFFFFF: Toggle the window\n|RRMB|cffFFFFFF: Show the settings|R")
 		end,
 	})
 						
@@ -2489,7 +2563,7 @@ function app.Settings()
 		end
 	end)
 
-	local variable, name, tooltip = "ProfessionShoppingList_CharacterData.Recipes", "Track recipes per character", "Track recipes per character, instead of account-wide."
+	local variable, name, tooltip = "pcRecipes", "Track recipes per character", "Track recipes per character, instead of account-wide."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
@@ -2571,6 +2645,7 @@ function app.Settings()
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 	
 	--initializer:AddSearchTags
+	--defaults?
 end
 
 -- When the AddOn is fully loaded, actually run the components
@@ -2637,12 +2712,12 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 					if part2 == "all" then
 						app.UntrackRecipe(recipeID, 0)
 
-						-- Show windows
+						-- Show window
 						app.Show()
 					elseif type(recipeQuantity) == "number" and recipeQuantity ~= 0 and recipeQuantity <= ProfessionShoppingList_Data.Recipes[recipeID].quantity then
 						app.UntrackRecipe(recipeID, recipeQuantity)
 
-						-- Show windows
+						-- Show window
 						app.Show()
 					else
 						app.Print("Invalid parameters. Please enter a valid recipe quantity.")
@@ -2906,7 +2981,7 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 			-- Remove 1 tracked recipe when it has been crafted (if the option is enabled)
 			app.UntrackRecipe(spellID, 1)
 			
-			-- Close windows if no recipes are left and the option is enabled
+			-- Close window if no recipes are left and the option is enabled
 			local next = next
 			if next(ProfessionShoppingList_Data.Recipes) == nil then
 				app.Window:Hide()
@@ -3092,3 +3167,65 @@ end)
 EventRegistry:RegisterCallback("ProfessionsCustomerOrders.RecipeSelected", function()
 	app.Flag["recraft"] = false
 end)
+
+-----------------
+-- ADDON COMMS --
+-----------------
+
+-- Send information to other PSL users
+function app.SendAddonMessage(message)
+	-- Check which channel to use
+	if IsInRaid(2) or IsInGroup(2) then
+		-- Share with instance group first
+		ChatThrottleLib:SendAddonMessage("NORMAL", "ProfShopList", message, "INSTANCE_CHAT")
+	elseif IsInRaid() then
+		-- If not in an instance group, share it with the raid
+		ChatThrottleLib:SendAddonMessage("NORMAL", "ProfShopList", message, "RAID")
+	elseif IsInGroup() then
+		-- If not in a raid group, share it with the party
+		ChatThrottleLib:SendAddonMessage("NORMAL", "ProfShopList", message, "PARTY")
+	end
+end
+
+-- When joining a group
+function event:GROUP_JOINED(category, partyGUID)
+	-- Share our AddOn version with other users
+	local message = "version:"..C_AddOns.GetAddOnMetadata("ProfessionShoppingList", "Version")
+	app.SendAddonMessage(message)
+end
+
+-- When we receive information over the addon comms
+function event:CHAT_MSG_ADDON(prefix, text, channel, sender, target, zoneChannelID, localID, name, instanceID)
+	-- If it's our message
+	if prefix == "ProfShopList" then
+		-- Version
+		local version = text:match("version:(.+)")
+		if version then
+			if version ~= "@project-version@" then
+				-- Extract the interface and version from this
+				local expansion, major, minor, iteration = version:match("v(%d+)%.(%d+)%.(%d+)%-(%d%d%d)")
+				expansion = string.format("%02d", expansion)
+				major = string.format("%02d", major)
+				minor = string.format("%02d", minor)
+				local otherGameVersion = tonumber(expansion..major..minor)
+				local otherAddonVersion = tonumber(iteration)
+
+				-- Do the same for our local version
+				local localVersion = C_AddOns.GetAddOnMetadata("ProfessionShoppingList", "Version")
+				if localVersion ~= "@project-version@" then
+					expansion, major, minor, iteration = localVersion:match("v(%d+)%.(%d+)%.(%d+)%-(%d%d%d)")
+					expansion = string.format("%02d", expansion)
+					major = string.format("%02d", major)
+					minor = string.format("%02d", minor)
+					local localGameVersion = tonumber(expansion..major..minor)
+					local localAddonVersion = tonumber(iteration)
+
+					-- Now compare our versions
+					if otherGameVersion > localGameVersion or (otherGameVersion == localGameVersion and otherAddonVersion > localAddonVersion) then
+						app.Print("There is a newer version of "..app.NameLong.." available: "..version)
+					end
+				end
+			end
+		end
+	end
+end

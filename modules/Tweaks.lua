@@ -37,6 +37,7 @@ function app.InitialiseTweaks()
 	if ProfessionShoppingList_Settings["vendorAll"] == nil then ProfessionShoppingList_Settings["vendorAll"] = true end
 	if ProfessionShoppingList_Settings["queueSound"] == nil then ProfessionShoppingList_Settings["queueSound"] = false end
 	if ProfessionShoppingList_Settings["underminePrices"] == nil then ProfessionShoppingList_Settings["underminePrices"] = false end
+	if ProfessionShoppingList_Settings["handyNotes"] == nil then ProfessionShoppingList_Settings["handyNotes"] = false end
 end
 
 -- When the AddOn is fully loaded, actually run the components
@@ -45,6 +46,7 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 		app.InitialiseTweaks()
 		app.UnderminePrices()
 		app.HideOribos()
+		app.DisableHandyNotesAltRMB()
 		app.SettingsTweaks()
 	end
 end
@@ -260,6 +262,23 @@ function app.HideOribos()
 	end
 end
 
+----------------------------
+-- HANDYNOTES ALT+RMB FIX --
+----------------------------
+
+function app.DisableHandyNotesAltRMB()
+	-- Only run this if the setting is enabled
+	if ProfessionShoppingList_Settings["handyNotes"] == true then
+		-- Thank you for this code, Numy, this saves me a lot of frustration
+		if C_AddOns.IsAddOnLoaded("HandyNotes") and LibStub("AceAddon-3.0"):GetAddon("HandyNotes") then
+			local f = LibStub("AceAddon-3.0"):GetAddon("HandyNotes"):GetModule("HandyNotes").ClickHandlerFrame
+			local f2 = CreateFrame("Frame")
+			f:SetParent(f2)
+			f2:Hide()
+		end
+	end
+end
+
 --------------
 -- SETTINGS --
 --------------
@@ -351,4 +370,9 @@ function app.SettingsTweaks()
 	Settings.SetOnValueChangedCallback(variable, function()
 		app.HideOribos()
 	end)
+
+	local variable, name, tooltip = "handyNotes", "Disable HandyNotes Alt+RMB", "Let "..app.NameShort.." disable this keybind on the map, re-enabling it for TomTom waypoints instead.\n\n|cffFF0000"..REQUIRES_RELOAD
+	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
+	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 end

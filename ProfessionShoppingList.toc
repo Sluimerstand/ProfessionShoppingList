@@ -1,5 +1,5 @@
 ## Interface: 100207
-## Title: Profession Shopping List
+## Title: |cffC69B6DProfession Shopping List|r
 ## Author: Sluimerstand
 ## IconTexture: Interface\AddOns\ProfessionShoppingList\assets\psl_icon.blp
 ## AddonCompartmentFunc: ProfessionShoppingList_Click
@@ -14,6 +14,7 @@
 
 libs\LibDBIcon-1.0\embeds.xml
 libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua
+libs\ChatThrottleLib\ChatThrottleLib.xml
 libs\LibBattlePetTooltipLine\LibBattlePetTooltipLine.lua
 Core.lua
 Database.lua
