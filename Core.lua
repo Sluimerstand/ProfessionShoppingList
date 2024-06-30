@@ -2560,7 +2560,7 @@ function app.Settings()
 		end
 	end)
 
-	local variable, name, tooltip = "ProfessionShoppingList_CharacterData.Recipes", "Track recipes per character", "Track recipes per character, instead of account-wide."
+	local variable, name, tooltip = "pcRecipes", "Track recipes per character", "Track recipes per character, instead of account-wide."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckBox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
