@@ -31,7 +31,7 @@ function app.InitialiseProfessionKnowledge()
 	-- Enable default user settings
 	if ProfessionShoppingList_Settings["showKnowledgeNotPerks"] == nil then ProfessionShoppingList_Settings["showKnowledgeNotPerks"] = false end
 	if ProfessionShoppingList_Settings["knowledgeHideDone"] == nil then ProfessionShoppingList_Settings["knowledgeHideDone"] = false end
-	if ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == nil then ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] = false end
+	if ProfessionShoppingList_Settings["knowledgeShowDetails"] == nil then ProfessionShoppingList_Settings["knowledgeShowDetails"] = false end
 
 	app.Flag["knowledgeAssets"] = false
 end
@@ -420,7 +420,7 @@ function app.KnowledgeTracker()
 			oldText = knowledgePointTooltipText:GetText()
 			knowledgePointTooltipText:SetText(oldText.."\n".."|T"..dropsStatus..":0|t "..dropsNoCurrent.."/"..dropsNoTotal.." Drops")
 
-			if ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
+			if ProfessionShoppingList_Settings["knowledgeShowDetails"] == true then
 				for _, dropInfo in ipairs(drops) do
 					oldText = knowledgePointTooltipText:GetText()
 
@@ -468,7 +468,7 @@ function app.KnowledgeTracker()
 			oldText = knowledgePointTooltipText:GetText()
 			knowledgePointTooltipText:SetText(oldText.."\n|T"..shardStatus..":0|t "..shardNo.."/4 "..itemLink)
 
-			if ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
+			if ProfessionShoppingList_Settings["knowledgeShowDetails"] == true then
 				for no, questID in pairs(shardQuests) do
 					oldText = knowledgePointTooltipText:GetText()
 					local questTitle = C_QuestLog.GetTitleForQuestID(questID)
@@ -504,7 +504,7 @@ function app.KnowledgeTracker()
 				oldText = knowledgePointTooltipText:GetText()
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..treasureStatus..":0|t "..treasureNoCurrent.."/"..treasureNoTotal.." Treasures")
 
-				if ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
+				if ProfessionShoppingList_Settings["knowledgeShowDetails"] == true then
 					for questID, itemID in pairs(treasures) do
 						oldText = knowledgePointTooltipText:GetText()
 
@@ -536,7 +536,7 @@ function app.KnowledgeTracker()
 				oldText = knowledgePointTooltipText:GetText()
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..bookStatus..":0|t "..bookNoCurrent.."/"..bookNoTotal.." Books")
 
-				if ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
+				if ProfessionShoppingList_Settings["knowledgeShowDetails"] == true then
 					for _, bookInfo in ipairs(books) do
 						oldText = knowledgePointTooltipText:GetText()
 
@@ -567,7 +567,7 @@ function app.KnowledgeTracker()
 			else
 				oldText = knowledgePointTooltipText:GetText()
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..renownStatus..":0|t "..renownCount.."/4 Renown")
-				if ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
+				if ProfessionShoppingList_Settings["knowledgeShowDetails"] == true then
 					for key, info in ipairs(renownInfo) do
 
 						oldText = knowledgePointTooltipText:GetText()
@@ -576,6 +576,9 @@ function app.KnowledgeTracker()
 				end
 			end
 		end
+
+		oldText = knowledgePointTooltipText:GetText()
+		if ProfessionShoppingList_Settings["knowledgeShowDetails"] == false then knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000A detailed view can be enabled from the settings.") end
 
 		-- Set the tooltip size to fit its contents
 		knowledgePointTooltip:SetHeight(knowledgePointTooltipText:GetStringHeight()+20)
@@ -1104,7 +1107,7 @@ function app.SettingsKnowledgeTracker()
 	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
-	local variable, name, tooltip = "knowledgeAlwaysShowDetails", "Show details", "The tooltip will show all details."
+	local variable, name, tooltip = "knowledgeShowDetails", "Show details", "The tooltip will show all details."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)

@@ -228,96 +228,6 @@ function app.InitialiseCore()
 	C_ChatInfo.RegisterAddonMessagePrefix("ProfShopList")
 end
 
--- Convert and/or delete older SavedVariables
-function app.Legacy()
-	-- v10.2.0-007
-		-- Convert recipeLinks to recipesTracked
-		if recipesTracked then
-			for key, value in pairs(recipesTracked) do
-				if type(value) == "number" then
-					recipesTracked[key] = { quantity = value, recraft = false }
-				end
-			end
-		end
-
-		if pcRecipesTracked then
-			for key, value in pairs(pcRecipesTracked) do
-				if type(value) == "number" then
-					pcRecipesTracked[key] = { quantity = value, recraft = false }
-				end
-			end
-		end
-
-		if recipeLinks then
-			for key, value in pairs(recipeLinks) do
-				recipesTracked[key].link = value
-			end
-		end
-
-		if pcRecipeLinks then
-			for key, value in pairs(pcRecipeLinks) do
-				pcRecipesTracked[key].link = value
-			end
-		end
-
-		-- Delete old window position and size
-		if userSettings then
-			userSettings["recipeRows"] = nil
-			userSettings["reagentRows"] = nil
-			userSettings["recipeWidth"] = nil
-			userSettings["recipeNoWidth"] = nil
-			userSettings["reagentWidth"] = nil
-			userSettings["reagentNoWidth"] = nil
-		end
-	
-	-- v10.2.5-002
-	if recipeCooldowns then
-		local tempCooldowns = recipeCooldowns
-		recipeCooldowns = {}
-		for k, v in pairs(tempCooldowns) do
-			if not v.recipeID then
-				tempCooldowns[k].recipeID = k
-			end
-			recipeCooldowns[#recipeCooldowns+1] = v
-		end
-
-		for k, v in pairs(recipeCooldowns) do
-			if not v.charges then
-				v.charges = 0
-				v.maxCharges = 0
-			end
-		end
-	end
-
-	-- v10.2.7-003
-	if userSettings then
-		if userSettings["backpackCleanup"] == "default" then userSettings["backpackCleanup"] = 0 end
-		if userSettings["backpackCleanup"] == "ltor" then userSettings["backpackCleanup"] = 1 end
-		if userSettings["backpackCleanup"] == "rtol" then userSettings["backpackCleanup"] = 2 end
-
-		if userSettings["backpackLoot"] == "default" then userSettings["backpackLoot"] = 0 end
-		if userSettings["backpackLoot"] == "ltor" then userSettings["backpackLoot"] = 1 end
-		if userSettings["backpackLoot"] == "rtol" then userSettings["backpackLoot"] = 2 end
-
-		userSettings["headerTooltip"] = nil
-	end
-
-	-- v10.2.7-006
-	if userSettings then ProfessionShoppingList_Settings = userSettings end
-
-	if recipesTracked then ProfessionShoppingList_Data.Recipes = recipesTracked end
-	if recipeCooldowns then ProfessionShoppingList_Data.Cooldowns = recipeCooldowns end
-
-	if recipeLibrary then ProfessionShoppingList_Library = recipeLibrary end
-
-	if reagentTiers then ProfessionShoppingList_Cache.ReagentTiers = reagentTiers end
-	if reagentCache then ProfessionShoppingList_Cache.Reagents = reagentCache end
-	if fakeRecipeLibrary then ProfessionShoppingList_Cache.FakeRecipes = fakeRecipeLibrary end
-
-	if pcRecipesTracked then ProfessionShoppingList_CharacterData.Recipes = pcRecipesTracked end
-	if personalOrders then ProfessionShoppingList_CharacterData.Orders = personalOrders end
-end
-
 -- Move the window
 function app.MoveWindow()
 	if ProfessionShoppingList_Settings["windowLocked"] then
@@ -2652,7 +2562,6 @@ end
 function event:ADDON_LOADED(addOnName, containsBindings)
 	if addOnName == appName then
 		app.InitialiseCore()
-		app.Legacy()
 		app.CreateWindow()
 		app.CreateGeneralAssets()
 		app.TooltipInfo()		
