@@ -419,7 +419,7 @@ function app.KnowledgeTracker()
 			oldText = knowledgePointTooltipText:GetText()
 			knowledgePointTooltipText:SetText(oldText.."\n".."|T"..dropsStatus..":0|t "..dropsNoCurrent.."/"..dropsNoTotal.." Drops")
 
-			if IsModifierKeyDown() == true or ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
+			if ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
 				for _, dropInfo in ipairs(drops) do
 					oldText = knowledgePointTooltipText:GetText()
 
@@ -467,7 +467,7 @@ function app.KnowledgeTracker()
 			oldText = knowledgePointTooltipText:GetText()
 			knowledgePointTooltipText:SetText(oldText.."\n|T"..shardStatus..":0|t "..shardNo.."/4 "..itemLink)
 
-			if IsModifierKeyDown() == true or ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
+			if ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
 				for no, questID in pairs(shardQuests) do
 					oldText = knowledgePointTooltipText:GetText()
 					local questTitle = C_QuestLog.GetTitleForQuestID(questID)
@@ -503,7 +503,7 @@ function app.KnowledgeTracker()
 				oldText = knowledgePointTooltipText:GetText()
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..treasureStatus..":0|t "..treasureNoCurrent.."/"..treasureNoTotal.." Treasures")
 
-				if IsModifierKeyDown() == true or ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
+				if ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
 					for questID, itemID in pairs(treasures) do
 						oldText = knowledgePointTooltipText:GetText()
 
@@ -535,7 +535,7 @@ function app.KnowledgeTracker()
 				oldText = knowledgePointTooltipText:GetText()
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..bookStatus..":0|t "..bookNoCurrent.."/"..bookNoTotal.." Books")
 
-				if IsModifierKeyDown() == true or ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
+				if ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
 					for _, bookInfo in ipairs(books) do
 						oldText = knowledgePointTooltipText:GetText()
 
@@ -566,7 +566,7 @@ function app.KnowledgeTracker()
 			else
 				oldText = knowledgePointTooltipText:GetText()
 				knowledgePointTooltipText:SetText(oldText.."\n".."|T"..renownStatus..":0|t "..renownCount.."/4 Renown")
-				if IsModifierKeyDown() == true or ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
+				if ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == true then
 					for key, info in ipairs(renownInfo) do
 
 						oldText = knowledgePointTooltipText:GetText()
@@ -575,9 +575,6 @@ function app.KnowledgeTracker()
 				end
 			end
 		end
-		
-		oldText = knowledgePointTooltipText:GetText()
-		if IsModifierKeyDown() == false and ProfessionShoppingList_Settings["knowledgeAlwaysShowDetails"] == false then knowledgePointTooltipText:SetText(oldText.."\n\n|cffFFD000Press Alt, Ctrl, or Shift to show details.") end
 
 		-- Set the tooltip size to fit its contents
 		knowledgePointTooltip:SetHeight(knowledgePointTooltipText:GetStringHeight()+20)
@@ -593,14 +590,6 @@ function app.KnowledgeTracker()
 	-- Hide the tooltip when not mouse-over
 	knowledgePointTracker:SetScript("OnLeave", function()
 		knowledgePointTooltip:Hide()
-	end)
-
-	-- Refresh the tooltip on key down/up (to check for IsModifierKeyDown)
-	knowledgePointTracker:SetScript("OnKeyDown", function()
-		kpTooltip()
-	end)
-	knowledgePointTracker:SetScript("OnKeyUp", function()
-		kpTooltip()
 	end)
 
 	-- Blacksmithing
@@ -1107,7 +1096,7 @@ function app.SettingsKnowledgeTracker()
 	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
-	local variable, name, tooltip = "knowledgeAlwaysShowDetails", "Always show details", "The tooltip will always show all details, instead of only when holding a modifier key."
+	local variable, name, tooltip = "knowledgeAlwaysShowDetails", "Sow details", "The tooltip will show all details."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
