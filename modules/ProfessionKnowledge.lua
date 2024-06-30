@@ -1104,7 +1104,7 @@ function app.SettingsKnowledgeTracker()
 	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
-	local variable, name, tooltip = "knowledgeAlwaysShowDetails", "Sow details", "The tooltip will show all details."
+	local variable, name, tooltip = "knowledgeAlwaysShowDetails", "Show details", "The tooltip will show all details."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
 	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
