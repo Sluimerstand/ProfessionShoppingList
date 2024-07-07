@@ -239,25 +239,24 @@ function app.HideOribos()
 			-- Disable the original tooltip
 			OETooltip(false)
 
-			-- And hide the warning about it (thanks ChatGPT)
-			local function ChatFrame_AddMessageOverride(self, message, ...)
-				-- Check if the message contains the specific string and hasn't been modified yet
-				if message and not message:find("|cff000000") and message:find("Tooltip prices disabled. Run |cFFFFFF78/oetooltip on|r to enable.") then
-					-- Modify the message to prevent the error, we can't send an empty string due to LS Glass
-					message = "|cff000000" .. " " .. "|R"
-				end
-				-- Add the message to the ChatFrame
-				self:ChatFrame_AddMessageOriginal(message, ...)
-			end
+			-- And hide the warning about it
+			local function removeMessage()
+				local message = "Tooltip prices disabled. Run |cFFFFFF78/oetooltip on|r to enable."
+				local removed = 0
 
-			-- Hook the ChatFrame's AddMessage method
-			for i = 1, NUM_CHAT_WINDOWS do
-				local frame = _G["ChatFrame"..i]
-				if frame then
-					frame.ChatFrame_AddMessageOriginal = frame.AddMessage
-					frame.AddMessage = ChatFrame_AddMessageOverride
+				-- Remove the message if it contains the message string above
+				ChatFrame1:RemoveMessagesByPredicate(function(m)
+					-- We're probably too fast, so mark removed as +1
+					if m:find(message) ~= nil then removed = removed + 1 end
+					return m:find(message) ~= nil
+				end)
+
+				-- Try again if we failed, but only 10 times max
+				if removed < 10 then
+					C_Timer.After(1, function() RunNextFrame(removeMessage) end)
 				end
 			end
+			removeMessage()
 		end
 	end
 end
