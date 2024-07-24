@@ -228,96 +228,6 @@ function app.InitialiseCore()
 	C_ChatInfo.RegisterAddonMessagePrefix("ProfShopList")
 end
 
--- Convert and/or delete older SavedVariables
-function app.Legacy()
-	-- v10.2.0-007
-		-- Convert recipeLinks to recipesTracked
-		if recipesTracked then
-			for key, value in pairs(recipesTracked) do
-				if type(value) == "number" then
-					recipesTracked[key] = { quantity = value, recraft = false }
-				end
-			end
-		end
-
-		if pcRecipesTracked then
-			for key, value in pairs(pcRecipesTracked) do
-				if type(value) == "number" then
-					pcRecipesTracked[key] = { quantity = value, recraft = false }
-				end
-			end
-		end
-
-		if recipeLinks then
-			for key, value in pairs(recipeLinks) do
-				recipesTracked[key].link = value
-			end
-		end
-
-		if pcRecipeLinks then
-			for key, value in pairs(pcRecipeLinks) do
-				pcRecipesTracked[key].link = value
-			end
-		end
-
-		-- Delete old window position and size
-		if userSettings then
-			userSettings["recipeRows"] = nil
-			userSettings["reagentRows"] = nil
-			userSettings["recipeWidth"] = nil
-			userSettings["recipeNoWidth"] = nil
-			userSettings["reagentWidth"] = nil
-			userSettings["reagentNoWidth"] = nil
-		end
-	
-	-- v10.2.5-002
-	if recipeCooldowns then
-		local tempCooldowns = recipeCooldowns
-		recipeCooldowns = {}
-		for k, v in pairs(tempCooldowns) do
-			if not v.recipeID then
-				tempCooldowns[k].recipeID = k
-			end
-			recipeCooldowns[#recipeCooldowns+1] = v
-		end
-
-		for k, v in pairs(recipeCooldowns) do
-			if not v.charges then
-				v.charges = 0
-				v.maxCharges = 0
-			end
-		end
-	end
-
-	-- v10.2.7-003
-	if userSettings then
-		if userSettings["backpackCleanup"] == "default" then userSettings["backpackCleanup"] = 0 end
-		if userSettings["backpackCleanup"] == "ltor" then userSettings["backpackCleanup"] = 1 end
-		if userSettings["backpackCleanup"] == "rtol" then userSettings["backpackCleanup"] = 2 end
-
-		if userSettings["backpackLoot"] == "default" then userSettings["backpackLoot"] = 0 end
-		if userSettings["backpackLoot"] == "ltor" then userSettings["backpackLoot"] = 1 end
-		if userSettings["backpackLoot"] == "rtol" then userSettings["backpackLoot"] = 2 end
-
-		userSettings["headerTooltip"] = nil
-	end
-
-	-- v10.2.7-006
-	if userSettings then ProfessionShoppingList_Settings = userSettings end
-
-	if recipesTracked then ProfessionShoppingList_Data.Recipes = recipesTracked end
-	if recipeCooldowns then ProfessionShoppingList_Data.Cooldowns = recipeCooldowns end
-
-	if recipeLibrary then ProfessionShoppingList_Library = recipeLibrary end
-
-	if reagentTiers then ProfessionShoppingList_Cache.ReagentTiers = reagentTiers end
-	if reagentCache then ProfessionShoppingList_Cache.Reagents = reagentCache end
-	if fakeRecipeLibrary then ProfessionShoppingList_Cache.FakeRecipes = fakeRecipeLibrary end
-
-	if pcRecipesTracked then ProfessionShoppingList_CharacterData.Recipes = pcRecipesTracked end
-	if personalOrders then ProfessionShoppingList_CharacterData.Orders = personalOrders end
-end
-
 -- Move the window
 function app.MoveWindow()
 	if ProfessionShoppingList_Settings["windowLocked"] then
@@ -2015,10 +1925,10 @@ end
 
 function app.CreateTradeskillAssets()
 	-- Hide and disable existing tracking buttons
-	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckBox:SetAlpha(0)
-	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckBox:EnableMouse(false)
-	ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.TrackRecipeCheckBox:SetAlpha(0)
-	ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.TrackRecipeCheckBox:EnableMouse(false)
+	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckbox:SetAlpha(0)
+	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckbox:EnableMouse(false)
+	ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.TrackRecipeCheckbox:SetAlpha(0)
+	ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.TrackRecipeCheckbox:EnableMouse(false)
 
 	-- Create the profession UI track button
 	if not trackProfessionButton then
@@ -2307,16 +2217,17 @@ function app.UpdateAssets()
 		thermalAnvilCharges:SetText(anvilCharges)
 
 		-- Cooking Fire button cooldown
-		local start, duration = GetSpellCooldown(818)
-		CookingFireCooldown:SetCooldown(start, duration)
+		local startTime = C_Spell.GetSpellCooldown(818).startTime
+		local duration = C_Spell.GetSpellCooldown(818).duration
+		CookingFireCooldown:SetCooldown(startTime, duration)
 
 		-- Chef's Hat button cooldown
-		start, duration = GetItemCooldown(134020)
-		ChefsHatCooldown:SetCooldown(start, duration)
+		startTime, duration = C_Item.GetItemCooldown(134020)
+		ChefsHatCooldown:SetCooldown(startTime, duration)
 
 		-- Thermal Anvil button cooldown
-		start, duration = GetItemCooldown(87216)
-		thermalAnvilCooldown:SetCooldown(start, duration)
+		startTime, duration = C_Item.GetItemCooldown(87216)
+		thermalAnvilCooldown:SetCooldown(startTime, duration)
 
 		-- Make the Alvin the Anvil button not desaturated if it can be used
 		if C_PetJournal.PetIsSummonable(ProfessionShoppingList_Settings["alvinGUID"]) == true then
@@ -2324,12 +2235,14 @@ function app.UpdateAssets()
 		end
 
 		-- Alvin button cooldown
-		start, duration = GetSpellCooldown(61304)	-- Global spell cooldown
-		alvinCooldown:SetCooldown(start, duration)
+		startTime = C_Spell.GetSpellCooldown(61304).startTime
+		duration = C_Spell.GetSpellCooldown(61304).duration
+		alvinCooldown:SetCooldown(startTime, duration)
 
 		-- Lightforge cooldown
-		start, duration = GetSpellCooldown(259930)
-		lightforgeCooldown:SetCooldown(start, duration)
+		startTime = C_Spell.GetSpellCooldown(259930).startTime
+		duration = C_Spell.GetSpellCooldown(259930).duration
+		lightforgeCooldown:SetCooldown(startTime, duration)
 	end
 
 	-- Enable tracking button for 1 = Item, 3 = Enchant
@@ -2548,7 +2461,7 @@ function app.Settings()
 
 	local variable, name, tooltip = "minimapIcon", "Show minimap icon", "Show the minimap icon. If you disable this, "..app.NameShort.." is still available from the AddOn Compartment."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
-	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
 		if ProfessionShoppingList_Settings["minimapIcon"] == true then
@@ -2562,7 +2475,7 @@ function app.Settings()
 
 	local variable, name, tooltip = "pcRecipes", "Track recipes per character", "Track recipes per character, instead of account-wide."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
-	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
 		app.UpdateRecipes()
@@ -2570,14 +2483,14 @@ function app.Settings()
 
 	local variable, name, tooltip = "pcWindows", "Window position per character", "Save the window position per character, instead of account-wide."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
-	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Tracking Window"))
 
 	local variable, name, tooltip = "showRecipeCooldowns", "Track recipe cooldowns", "Enable the tracking of recipe cooldowns. These will show in the tracking window, and in chat upon login if ready."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
-	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
 		app.UpdateRecipes()
@@ -2585,7 +2498,7 @@ function app.Settings()
 
 	local variable, name, tooltip = "showRemaining", "Show remaining reagents", "Only show how many reagents you still need in the tracking window, instead of have/need."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
-	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
 		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
@@ -2600,7 +2513,7 @@ function app.Settings()
 		return container:GetData()
 	end
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, ProfessionShoppingList_Settings[variable])
-	Settings.CreateDropDown(category, setting, GetOptions, tooltip)
+	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
 		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
@@ -2608,18 +2521,18 @@ function app.Settings()
 
 	local variable, name, tooltip = "removeCraft", "Untrack on craft", "Remove one of a tracked recipe when you successfully craft it."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
-	local parentSetting = Settings.CreateCheckBox(category, setting, tooltip)
+	local parentSetting = Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	local variable, name, tooltip = "closeWhenDone", "Close window when done", "Close the tracking window after crafting the last tracked recipe."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
-	local subSetting = Settings.CreateCheckBox(category, setting, tooltip)
+	local subSetting = Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	subSetting:SetParentInitializer(parentSetting, function() return ProfessionShoppingList_Settings["removeCraft"] end)
 
 	local variable, name, tooltip = "showTooltip", "Show tooltip information", "Show how many of a reagent you have/need on the item's tooltip."
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
-	Settings.CreateCheckBox(category, setting, tooltip)
+	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Information"))
@@ -2639,7 +2552,7 @@ function app.Settings()
 		return container:GetData()
 	end
 	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, "")
-	Settings.CreateDropDown(category, setting, GetOptions, tooltip)
+	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 	
 	--initializer:AddSearchTags
 	--defaults?
@@ -2649,7 +2562,6 @@ end
 function event:ADDON_LOADED(addOnName, containsBindings)
 	if addOnName == appName then
 		app.InitialiseCore()
-		app.Legacy()
 		app.CreateWindow()
 		app.CreateGeneralAssets()
 		app.TooltipInfo()		
