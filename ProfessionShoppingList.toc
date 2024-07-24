@@ -1,4 +1,4 @@
-## Interface: 110002
+## Interface: 110000
 ## Title: |cffC69B6DProfession Shopping List|r
 ## Author: Sluimerstand
 ## IconTexture: Interface\AddOns\ProfessionShoppingList\assets\psl_icon.blp
