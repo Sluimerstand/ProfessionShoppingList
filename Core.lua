@@ -24,6 +24,7 @@ event:RegisterEvent("ADDON_LOADED")
 event:RegisterEvent("BAG_UPDATE_DELAYED")
 event:RegisterEvent("CHAT_MSG_ADDON")
 event:RegisterEvent("MERCHANT_SHOW")
+event:RegisterEvent("GROUP_ROSTER_UPDATE")
 event:RegisterEvent("PLAYER_ENTERING_WORLD")
 event:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
 event:RegisterEvent("SPELL_DATA_LOAD_RESULT")
@@ -3097,7 +3098,7 @@ function app.SendAddonMessage(message)
 end
 
 -- When joining a group
-function event:GROUP_JOINED(category, partyGUID)
+function event:GROUP_ROSTER_UPDATE(category, partyGUID)
 	-- Share our AddOn version with other users
 	local message = "version:"..C_AddOns.GetAddOnMetadata("ProfessionShoppingList", "Version")
 	app.SendAddonMessage(message)
