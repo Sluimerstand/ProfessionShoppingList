@@ -220,6 +220,7 @@ function app.InitialiseCore()
 	app.Flag["merchantAssets"] = false
 	app.Flag["recraft"] = false
 	app.Flag["tradeskillAssets"] = false
+	app.Flag["versionCheck"] = 0
 	app.ReagentQuantities = {}
 	app.SelectedRecipeID = 0
 	app.UpdatedCooldownWidth = 0
@@ -3132,7 +3133,11 @@ function event:CHAT_MSG_ADDON(prefix, text, channel, sender, target, zoneChannel
 
 					-- Now compare our versions
 					if otherGameVersion > localGameVersion or (otherGameVersion == localGameVersion and otherAddonVersion > localAddonVersion) then
-						app.Print("There is a newer version of "..app.NameLong.." available: "..version)
+						-- But only send the message once every 10 minutes
+						if GetServerTime() - app.Flag["versionCheck"] > 600 then
+							app.Print("There is a newer version of "..app.NameLong.." available: "..version)
+							app.Flag["versionCheck"] = GetServerTime()
+						end
 					end
 				end
 			end
