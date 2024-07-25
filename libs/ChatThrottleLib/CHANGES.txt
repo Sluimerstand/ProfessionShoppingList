@@ -1,0 +1,69 @@
+------------------------------------------------------------------------
+r89 | nevcairiel | 2024-05-07 23:01:48 +0000 (Tue, 07 May 2024) | 1 line
+Changed paths:
+   M /trunk/ChatThrottleLib.toc
+
+ChatThrottleLib: Update TOC for 10.2.7 and v29
+------------------------------------------------------------------------
+r88 | nevcairiel | 2024-05-07 23:00:52 +0000 (Tue, 07 May 2024) | 1 line
+Changed paths:
+   M /trunk/ChatThrottleLib.lua
+
+ChatThrottleLib: Battle.net addon message support (v29)
+------------------------------------------------------------------------
+r87 | nevcairiel | 2024-05-06 11:51:36 +0000 (Mon, 06 May 2024) | 1 line
+Changed paths:
+   M /trunk/ChatThrottleLib.lua
+   M /trunk/ChatThrottleLib.toc
+
+ChatThrottleLib: Improve handling of errored send calls (v28)
+------------------------------------------------------------------------
+r86 | nevcairiel | 2024-05-06 07:18:20 +0000 (Mon, 06 May 2024) | 3 lines
+Changed paths:
+   M /trunk/ChatThrottleLib.lua
+   M /trunk/ChatThrottleLib.toc
+
+ChatThrottleLib: Move Link method off Ring metatable (v27)
+
+This avoids an issue with the Ring metatable not being upgraded
+------------------------------------------------------------------------
+r85 | nevcairiel | 2024-05-05 21:49:06 +0000 (Sun, 05 May 2024) | 1 line
+Changed paths:
+   M /trunk/ChatThrottleLib.lua
+   M /trunk/ChatThrottleLib.toc
+
+ChatThrottleLib: Support for SendAddonMessageLogged
+------------------------------------------------------------------------
+r84 | nevcairiel | 2024-05-05 17:31:25 +0000 (Sun, 05 May 2024) | 1 line
+Changed paths:
+   M /trunk/ChatThrottleLib.toc
+
+ChatThrottleLib: Update TOC Interface and Version
+------------------------------------------------------------------------
+r83 | nevcairiel | 2024-05-05 17:30:35 +0000 (Sun, 05 May 2024) | 3 lines
+Changed paths:
+   M /trunk/ChatThrottleLib.lua
+
+ChatThrottleLib: Add support for per-prefix transmission throttling
+
+Work by Meorawr, originally at https://github.com/WoWUIDev/Ace3/commit/7b8e02c421e742e737a9f7e73002a2e9bdd8d7b7
+------------------------------------------------------------------------
+r82 | nevcairiel | 2022-10-02 16:28:27 +0000 (Sun, 02 Oct 2022) | 1 line
+Changed paths:
+   M /trunk/ChatThrottleLib.toc
+
+ChatThrottleLib: Update the version in the TOC to match the library version
+------------------------------------------------------------------------
+r81 | nevcairiel | 2018-04-20 19:16:19 +0000 (Fri, 20 Apr 2018) | 1 line
+Changed paths:
+   M /trunk/ChatThrottleLib.lua
+
+ChatThrottleLib: Update for WoW 8.0
+------------------------------------------------------------------------
+r80 | mikk | 2014-10-15 01:47:16 +0000 (Wed, 15 Oct 2014) | 1 line
+Changed paths:
+   M /trunk/ChatThrottleLib.toc
+
+TOC 60000
+------------------------------------------------------------------------
+
