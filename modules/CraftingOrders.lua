@@ -129,19 +129,19 @@ function app.CreateCraftingOrdersAssets()
 					-- Add the info for tiered reagents to craftingReagentItems
 					if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three ~= 0 then
 						-- Set it to the lowest quality we have enough of for this order
-						if C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true) >= quantityNo then
+						if C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, true) >= quantityNo then
 							craftingReagentInfo[no1] = {itemID = ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, dataSlotIndex = i, quantity = quantityNo}
 							no1 = no1 + 1
-						elseif C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true) >= quantityNo then
+						elseif C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, true) >= quantityNo then
 							craftingReagentInfo[no1] = {itemID = ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, dataSlotIndex = i, quantity = quantityNo}
 							no1 = no1 + 1
-						elseif C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true) >= quantityNo then
+						elseif C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true) >= quantityNo then
 							craftingReagentInfo[no1] = {itemID = ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, dataSlotIndex = i, quantity = quantityNo}
 							no1 = no1 + 1
 						end
 					-- Add the info for non-tiered reagents to reagentItems
 					else
-						if C_Item.GetItemCount(reagentID, true, false, true) >= quantityNo then
+						if C_Item.GetItemCount(reagentID, true, false, true, true) >= quantityNo then
 							reagentInfo[no2] = {itemID = ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, quantity = quantityNo}
 							no2 = no2 + 1
 						end
