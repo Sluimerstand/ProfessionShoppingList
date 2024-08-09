@@ -64,7 +64,7 @@ function app.CreateAuctionatorButton()
 						end
 
 						-- Get have/need
-						local reagentCount = C_Item.GetItemCount(reagentID, true, false, true)
+						local reagentCount = C_Item.GetItemCount(reagentID, true, false, true, true)
 						reagentCount = math.max(0, reagentAmount - reagentCount)
 
 						-- Put the items in the temporary variable

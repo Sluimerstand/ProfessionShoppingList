@@ -50,6 +50,21 @@ function app.Dump(table)
 	print(dumpTable(table))
 end
 
+-- Fix sequential tables with missing indexes (yes I expect to have to re-use this xD)
+function app.FixTable(table)
+	local fixedTable = {}
+	local index = 1
+	
+	for i = 1, #table do
+		if table[i] ~= nil then
+			fixedTable[index] = table[i]
+			index = index + 1
+		end
+	end
+	
+	return fixedTable
+end
+
 -- App colour
 function app.Colour(string)
 	return "|cffC69B6D"..string.."|R"
@@ -553,12 +568,12 @@ function app.UpdateNumbers()
 			local reagentAmountHave2 = 0
 			local reagentAmountHave3 = 0
 
-			reagentAmountHave1 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true)
+			reagentAmountHave1 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, true)
 			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 then
-				reagentAmountHave2 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true)
+				reagentAmountHave2 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, true)
 			end
 			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three ~= 0 then
-				reagentAmountHave3 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true)
+				reagentAmountHave3 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true)
 			end
 
 			-- Calculate owned amount based on the quality of the item
@@ -1088,7 +1103,7 @@ function app.UpdateRecipes()
 			local function trackSubreagent(recipeID, itemID)
 				-- Define the amount of recipes to be tracked
 				local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-				local amount = math.max(0, math.ceil((app.ReagentQuantities[itemID] - C_Item.GetItemCount(itemID, true, false, true)) / quantityMade))
+				local amount = math.max(0, math.ceil((app.ReagentQuantities[itemID] - C_Item.GetItemCount(itemID, true, false, true, true)) / quantityMade))
 				if ProfessionShoppingList_Data.Recipes[recipeID] then amount = math.max(0, (amount - ProfessionShoppingList_Data.Recipes[recipeID].quantity)) end
 
 				-- Track the recipe (don't track if 0)
@@ -1623,7 +1638,7 @@ function app.UpdateRecipes()
 		end)
 		row:SetScript("OnClick", function(self, button)
 			if button == "RightButton" then
-				ProfessionShoppingList_Data.Cooldowns[cooldownInfo.id] = nil
+				table.remove(ProfessionShoppingList_Data.Cooldowns, cooldownInfo.id)
 				app.UpdateRecipes()
 			end
 		end)
@@ -2071,7 +2086,7 @@ function app.CreateTradeskillAssets()
 		thermalAnvilCharges:SetPoint("BOTTOMRIGHT", thermalAnvilButton, "BOTTOMRIGHT", 0, 0)
 		thermalAnvilCharges:SetJustifyH("RIGHT")
 		if not C_Item.IsItemDataCachedByID(87216) then local item = Item:CreateFromItemID(87216) end
-		local anvilCharges = C_Item.GetItemCount(87216, false, true, false)
+		local anvilCharges = C_Item.GetItemCount(87216, false, true, false, false)
 		thermalAnvilCharges:SetText(anvilCharges)
 	end
 
@@ -2207,7 +2222,7 @@ function app.UpdateAssets()
 
 		-- Check how many thermal anvils the player has
 		if not C_Item.IsItemDataCachedByID(87216) then local item = Item:CreateFromItemID(87216) end
-		local anvilCount = C_Item.GetItemCount(87216)
+		local anvilCount = C_Item.GetItemCount(87216, false, false, false, false)
 		-- (De)saturate based on that
 		if anvilCount >= 1 then
 			thermalAnvilButton:GetNormalTexture():SetDesaturated(false)
@@ -2215,7 +2230,7 @@ function app.UpdateAssets()
 			thermalAnvilButton:GetNormalTexture():SetDesaturated(true)
 		end
 		-- Update charges
-		local anvilCharges = C_Item.GetItemCount(87216, false, true, false)
+		local anvilCharges = C_Item.GetItemCount(87216, false, true, false, false)
 		thermalAnvilCharges:SetText(anvilCharges)
 
 		-- Cooking Fire button cooldown
@@ -2338,15 +2353,15 @@ function app.TooltipInfo()
 
 			if ProfessionShoppingList_Cache.ReagentTiers[itemID] and ProfessionShoppingList_Cache.ReagentTiers[itemID].one ~= 0 then
 				reagentID1 = ProfessionShoppingList_Cache.ReagentTiers[itemID].one
-				reagentAmountHave1 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].one, true, false, true)
+				reagentAmountHave1 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].one, true, false, true, true)
 			end
 			if ProfessionShoppingList_Cache.ReagentTiers[itemID] and ProfessionShoppingList_Cache.ReagentTiers[itemID].two ~= 0 then
 				reagentID2 = ProfessionShoppingList_Cache.ReagentTiers[itemID].two
-				reagentAmountHave2 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].two, true, false, true)
+				reagentAmountHave2 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].two, true, false, true, true)
 			end
 			if ProfessionShoppingList_Cache.ReagentTiers[itemID] and ProfessionShoppingList_Cache.ReagentTiers[itemID].three ~= 0 then
 				reagentID3 = ProfessionShoppingList_Cache.ReagentTiers[itemID].three
-				reagentAmountHave3 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].three, true, false, true)
+				reagentAmountHave3 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].three, true, false, true, true)
 			end
 
 			-- Calculate owned amount/needed based on item quality
@@ -2869,6 +2884,9 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 
 				-- If the spell cooldown exists
 				if cooldown then
+					-- Fix the cooldown table if necessary
+					ProfessionShoppingList_Data.Cooldowns = app.FixTable(ProfessionShoppingList_Data.Cooldowns)
+
 					-- Replace the existing entry if it exists
 					local cdExists = false
 					for k, v in ipairs(ProfessionShoppingList_Data.Cooldowns) do
