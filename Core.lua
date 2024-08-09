@@ -50,6 +50,21 @@ function app.Dump(table)
 	print(dumpTable(table))
 end
 
+-- Fix sequential tables with missing indexes (yes I expect to have to re-use this xD)
+function app.FixTable(table)
+	local fixedTable = {}
+	local index = 1
+	
+	for i = 1, #table do
+		if table[i] ~= nil then
+			fixedTable[index] = table[i]
+			index = index + 1
+		end
+	end
+	
+	return fixedTable
+end
+
 -- App colour
 function app.Colour(string)
 	return "|cffC69B6D"..string.."|R"
@@ -1623,7 +1638,7 @@ function app.UpdateRecipes()
 		end)
 		row:SetScript("OnClick", function(self, button)
 			if button == "RightButton" then
-				ProfessionShoppingList_Data.Cooldowns[cooldownInfo.id] = nil
+				table.remove(ProfessionShoppingList_Data.Cooldowns, cooldownInfo.id)
 				app.UpdateRecipes()
 			end
 		end)
@@ -2869,6 +2884,9 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 
 				-- If the spell cooldown exists
 				if cooldown then
+					-- Fix the cooldown table if necessary
+					ProfessionShoppingList_Data.Cooldowns = app.FixTable(ProfessionShoppingList_Data.Cooldowns)
+
 					-- Replace the existing entry if it exists
 					local cdExists = false
 					for k, v in ipairs(ProfessionShoppingList_Data.Cooldowns) do
