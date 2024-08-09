@@ -2477,7 +2477,7 @@ function app.Settings()
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(C_AddOns.GetAddOnMetadata("ProfessionShoppingList", "Version")))
 
 	local variable, name, tooltip = "minimapIcon", "Show minimap icon", "Show the minimap icon. If you disable this, "..app.NameShort.." is still available from the AddOn Compartment."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
@@ -2491,7 +2491,7 @@ function app.Settings()
 	end)
 
 	local variable, name, tooltip = "pcRecipes", "Track recipes per character", "Track recipes per character, instead of account-wide."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
@@ -2499,14 +2499,14 @@ function app.Settings()
 	end)
 
 	local variable, name, tooltip = "pcWindows", "Window position per character", "Save the window position per character, instead of account-wide."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Tracking Window"))
 
 	local variable, name, tooltip = "showRecipeCooldowns", "Track recipe cooldowns", "Enable the tracking of recipe cooldowns. These will show in the tracking window, and in chat upon login if ready."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
@@ -2514,7 +2514,7 @@ function app.Settings()
 	end)
 
 	local variable, name, tooltip = "showRemaining", "Show remaining reagents", "Only show how many reagents you still need in the tracking window, instead of have/need."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
@@ -2529,7 +2529,7 @@ function app.Settings()
 		container:Add(3, "|A:Professions-ChatIcon-Quality-Tier3:17:15::1|a Tier 3")
 		return container:GetData()
 	end
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, ProfessionShoppingList_Settings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	Settings.SetOnValueChangedCallback(variable, function()
@@ -2537,18 +2537,18 @@ function app.Settings()
 	end)
 
 	local variable, name, tooltip = "removeCraft", "Untrack on craft", "Remove one of a tracked recipe when you successfully craft it."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	local parentSetting = Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	local variable, name, tooltip = "closeWhenDone", "Close window when done", "Close the tracking window after crafting the last tracked recipe."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	local subSetting = Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	subSetting:SetParentInitializer(parentSetting, function() return ProfessionShoppingList_Settings["removeCraft"] end)
 
 	local variable, name, tooltip = "showTooltip", "Show tooltip information", "Show how many of a reagent you have/need on the item's tooltip."
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Boolean, ProfessionShoppingList_Settings[variable])
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
@@ -2568,7 +2568,7 @@ function app.Settings()
 		container:Add(9, "/psl duration |cff1B9C85number|R", "Set the default quick order duration.")
 		return container:GetData()
 	end
-	local setting = Settings.RegisterAddOnSetting(category, name, variable, Settings.VarType.Number, "")
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 	
 	--initializer:AddSearchTags
