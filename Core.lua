@@ -2592,8 +2592,8 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 		refreshCooldowns()
 
 		-- Slash commands
-		SLASH_PSL1 = "/psl";
-		function SlashCmdList.PSL(msg, editBox)
+		SLASH_ProfessionShoppingList1 = "/psl";
+		function SlashCmdList.ProfessionShoppingList(msg, editBox)
 			-- Split message into command and rest
 			local command, rest = msg:match("^(%S*)%s*(.-)$")
 
