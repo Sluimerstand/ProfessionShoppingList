@@ -23,6 +23,7 @@ end)
 event:RegisterEvent("ADDON_LOADED")
 event:RegisterEvent("BAG_UPDATE_DELAYED")
 event:RegisterEvent("CHAT_MSG_ADDON")
+event:RegisterEvent("CHAT_MSG_CURRENCY")
 event:RegisterEvent("MERCHANT_SHOW")
 event:RegisterEvent("GROUP_ROSTER_UPDATE")
 event:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -2591,8 +2592,8 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 		refreshCooldowns()
 
 		-- Slash commands
-		SLASH_PSL1 = "/psl";
-		function SlashCmdList.PSL(msg, editBox)
+		SLASH_ProfessionShoppingList1 = "/psl";
+		function SlashCmdList.ProfessionShoppingList(msg, editBox)
 			-- Split message into command and rest
 			local command, rest = msg:match("^(%S*)%s*(.-)$")
 
@@ -2939,6 +2940,17 @@ function event:BAG_UPDATE_DELAYED()
 				-- Replace the bag count text
 				MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 .. "+" .. freeSlots2 .. ")")
 			end
+		end
+	end
+end
+
+-- When the player gains currency
+function event:CHAT_MSG_CURRENCY()
+	if UnitAffectingCombat("player") == false then
+		-- If any recipes are tracked
+		local next = next
+		if next(ProfessionShoppingList_Data.Recipes) ~= nil then
+			app.UpdateNumbers()
 		end
 	end
 end
