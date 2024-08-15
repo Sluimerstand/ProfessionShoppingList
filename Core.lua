@@ -2466,22 +2466,16 @@ function app.Settings()
 	end
 
 	-- Settings page
-	function app.SettingChanged(_, setting, value)
-		local variable = setting:GetVariable()
-		ProfessionShoppingList_Settings[variable] = value
-	end
-
 	local category, layout = Settings.RegisterVerticalLayoutCategory(app.NameLong)
 	Settings.RegisterAddOnCategory(category)
 	app.Category = category
 
-	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(C_AddOns.GetAddOnMetadata("ProfessionShoppingList", "Version")))
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(C_AddOns.GetAddOnMetadata(appName, "Version")))
 
 	local variable, name, tooltip = "minimapIcon", "Show minimap icon", "Show the minimap icon. If you disable this, "..app.NameShort.." is still available from the AddOn Compartment."
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	Settings.CreateCheckbox(category, setting, tooltip)
-	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
-	Settings.SetOnValueChangedCallback(variable, function()
+	setting:SetValueChangedCallback(function()
 		if ProfessionShoppingList_Settings["minimapIcon"] == true then
 			ProfessionShoppingList_Settings["hide"] = false
 			icon:Show("ProfessionShoppingList")
@@ -2494,31 +2488,27 @@ function app.Settings()
 	local variable, name, tooltip = "pcRecipes", "Track recipes per character", "Track recipes per character, instead of account-wide."
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	Settings.CreateCheckbox(category, setting, tooltip)
-	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
-	Settings.SetOnValueChangedCallback(variable, function()
+	setting:SetValueChangedCallback(function()
 		app.UpdateRecipes()
 	end)
 
 	local variable, name, tooltip = "pcWindows", "Window position per character", "Save the window position per character, instead of account-wide."
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	Settings.CreateCheckbox(category, setting, tooltip)
-	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Tracking Window"))
 
 	local variable, name, tooltip = "showRecipeCooldowns", "Track recipe cooldowns", "Enable the tracking of recipe cooldowns. These will show in the tracking window, and in chat upon login if ready."
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	Settings.CreateCheckbox(category, setting, tooltip)
-	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
-	Settings.SetOnValueChangedCallback(variable, function()
+	setting:SetValueChangedCallback(function()
 		app.UpdateRecipes()
 	end)
 
 	local variable, name, tooltip = "showRemaining", "Show remaining reagents", "Only show how many reagents you still need in the tracking window, instead of have/need."
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	Settings.CreateCheckbox(category, setting, tooltip)
-	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
-	Settings.SetOnValueChangedCallback(variable, function()
+	setting:SetValueChangedCallback(function()
 		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
 	end)
 
@@ -2532,26 +2522,22 @@ function app.Settings()
 	end
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
-	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
-	Settings.SetOnValueChangedCallback(variable, function()
+	setting:SetValueChangedCallback(function()
 		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
 	end)
 
 	local variable, name, tooltip = "removeCraft", "Untrack on craft", "Remove one of a tracked recipe when you successfully craft it."
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	local parentSetting = Settings.CreateCheckbox(category, setting, tooltip)
-	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	local variable, name, tooltip = "closeWhenDone", "Close window when done", "Close the tracking window after crafting the last tracked recipe."
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	local subSetting = Settings.CreateCheckbox(category, setting, tooltip)
-	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 	subSetting:SetParentInitializer(parentSetting, function() return ProfessionShoppingList_Settings["removeCraft"] end)
 
 	local variable, name, tooltip = "showTooltip", "Show tooltip information", "Show how many of a reagent you have/need on the item's tooltip."
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
 	Settings.CreateCheckbox(category, setting, tooltip)
-	Settings.SetOnValueChangedCallback(variable, app.SettingChanged)
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Information"))
 
@@ -2571,9 +2557,6 @@ function app.Settings()
 	end
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
-	
-	--initializer:AddSearchTags
-	--defaults?
 end
 
 -- When the AddOn is fully loaded, actually run the components
