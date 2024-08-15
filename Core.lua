@@ -68,7 +68,7 @@ end
 
 -- App colour
 function app.Colour(string)
-	return "|cffC69B6D"..string.."|R"
+	return "|cffC69B6D"..string.."|r"
 end
 
 -- Print with AddOn prefix
@@ -2548,11 +2548,11 @@ function app.Settings()
 		container:Add(2, "/psl resetpos", "Reset the tracking window position.")
 		container:Add(3, "/psl settings", "Go to the settings.")
 		container:Add(4, "/psl clear", "Clear all tracked recipes.")
-		container:Add(5, "/psl track |cff1B9C85recipeID quantity|R", "Track a recipe.")
-		container:Add(6, "/psl untrack |cff1B9C85recipeID quantity|R", "Untrack a recipe.")
-		container:Add(7, "/psl untrack |cff1B9C85recipeID |Rall", "Untrack all of a recipe.")
-		container:Add(8, "/psl |cff1B9C85[crafting achievement]|R", "Track the recipes needed for the linked achievement.")
-		container:Add(9, "/psl duration |cff1B9C85number|R", "Set the default quick order duration.")
+		container:Add(5, "/psl track " .. app.Colour("recipeID quantity"), "Track a recipe.")
+		container:Add(6, "/psl untrack " .. app.Colour("recipeID quantity"), "Untrack a recipe.")
+		container:Add(7, "/psl untrack " .. app.Colour("recipeID") .. " all", "Untrack all of a recipe.")
+		container:Add(8, "/psl " .. app.Colour("[crafting achievement]"), "Track the recipes needed for the linked achievement.")
+		container:Add(9, "/psl duration " .. app.Colour("number"), "Set the default quick order duration.")
 		return container:GetData()
 	end
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
