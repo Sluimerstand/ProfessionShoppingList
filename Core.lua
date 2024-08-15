@@ -294,7 +294,7 @@ function app.CreateWindow()
 	app.Window:SetMovable(true)
 	app.Window:SetClampedToScreen(true)
 	app.Window:SetResizable(true)
-	app.Window:SetResizeBounds(140, 140, 600, 600)
+	app.Window:SetResizeBounds(140, 140)
 	app.Window:RegisterForDrag("LeftButton")
 	app.Window:SetScript("OnDragStart", function() app.MoveWindow() end)
 	app.Window:SetScript("OnDragStop", function() app.SaveWindow() end)
@@ -1720,8 +1720,8 @@ function app.UpdateRecipes()
 		if showRecipes == false or #ProfessionShoppingList_Data.Recipes < 1 then
 			windowHeight = windowHeight + 2	-- Not sure why this is needed, but whatever
 		end
-		if windowHeight > 600 then windowHeight = 600 end
-		if windowWidth > 600 then windowWidth = 600 end
+		if windowHeight > math.floor(GetScreenHeight()*0.8) then windowHeight = math.floor(GetScreenHeight()*0.8) end
+		if windowWidth > math.floor(GetScreenWidth()*0.8) then windowWidth = math.floor(GetScreenWidth()*0.8) end
 		app.Window:SetHeight(math.max(140,windowHeight))
 		app.Window:SetWidth(math.max(140,windowWidth+40))
 		app.Window.ScrollFrame:SetVerticalScroll(0)
