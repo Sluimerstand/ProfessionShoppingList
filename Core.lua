@@ -206,17 +206,6 @@ function app.InitialiseCore()
 
 	-- Enable default user settings
 	if ProfessionShoppingList_Settings["hide"] == nil then ProfessionShoppingList_Settings["hide"] = false end
-	if ProfessionShoppingList_Settings["minimapIcon"] == nil then ProfessionShoppingList_Settings["minimapIcon"] = true end
-	if ProfessionShoppingList_Settings["pcRecipes"] == nil then ProfessionShoppingList_Settings["pcRecipes"] = false end
-	if ProfessionShoppingList_Settings["pcWindows"] == nil then ProfessionShoppingList_Settings["pcWindows"] = false end
-	-- Tracking Window
-	if ProfessionShoppingList_Settings["showRecipeCooldowns"] == nil then ProfessionShoppingList_Settings["showRecipeCooldowns"] = true end
-	if ProfessionShoppingList_Settings["showRemaining"] == nil then ProfessionShoppingList_Settings["showRemaining"] = false end
-	if ProfessionShoppingList_Settings["reagentQuality"] == nil then ProfessionShoppingList_Settings["reagentQuality"] = 1 end
-	if ProfessionShoppingList_Settings["removeCraft"] == nil then ProfessionShoppingList_Settings["removeCraft"] = true end
-	if ProfessionShoppingList_Settings["closeWhenDone"] == nil then ProfessionShoppingList_Settings["closeWhenDone"] = false end
-	if ProfessionShoppingList_Settings["showTooltip"] == nil then ProfessionShoppingList_Settings["showTooltip"] = true end
-	-- Hidden	
 	if ProfessionShoppingList_Settings["windowPosition"] == nil then ProfessionShoppingList_Settings["windowPosition"] = { ["left"] = 1295, ["bottom"] = 836, ["width"] = 200, ["height"] = 200, } end
 	if ProfessionShoppingList_Settings["pcWindowPosition"] == nil then ProfessionShoppingList_Settings["pcWindowPosition"] = ProfessionShoppingList_Settings["windowPosition"] end
 	if ProfessionShoppingList_Settings["windowLocked"] == nil then ProfessionShoppingList_Settings["windowLocked"] = false end
@@ -2473,7 +2462,7 @@ function app.Settings()
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(C_AddOns.GetAddOnMetadata(appName, "Version")))
 
 	local variable, name, tooltip = "minimapIcon", "Show minimap icon", "Show the minimap icon. If you disable this, "..app.NameShort.." is still available from the AddOn Compartment."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	setting:SetValueChangedCallback(function()
 		if ProfessionShoppingList_Settings["minimapIcon"] == true then
@@ -2486,27 +2475,27 @@ function app.Settings()
 	end)
 
 	local variable, name, tooltip = "pcRecipes", "Track recipes per character", "Track recipes per character, instead of account-wide."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	setting:SetValueChangedCallback(function()
 		app.UpdateRecipes()
 	end)
 
 	local variable, name, tooltip = "pcWindows", "Window position per character", "Save the window position per character, instead of account-wide."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
 	Settings.CreateCheckbox(category, setting, tooltip)
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Tracking Window"))
 
 	local variable, name, tooltip = "showRecipeCooldowns", "Track recipe cooldowns", "Enable the tracking of recipe cooldowns. These will show in the tracking window, and in chat upon login if ready."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	setting:SetValueChangedCallback(function()
 		app.UpdateRecipes()
 	end)
 
 	local variable, name, tooltip = "showRemaining", "Show remaining reagents", "Only show how many reagents you still need in the tracking window, instead of have/need."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	setting:SetValueChangedCallback(function()
 		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
@@ -2520,23 +2509,23 @@ function app.Settings()
 		container:Add(3, "|A:Professions-ChatIcon-Quality-Tier3:17:15::1|a Tier 3")
 		return container:GetData()
 	end
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name)
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 	setting:SetValueChangedCallback(function()
 		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
 	end)
 
 	local variable, name, tooltip = "removeCraft", "Untrack on craft", "Remove one of a tracked recipe when you successfully craft it."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	local parentSetting = Settings.CreateCheckbox(category, setting, tooltip)
 
 	local variable, name, tooltip = "closeWhenDone", "Close window when done", "Close the tracking window after crafting the last tracked recipe."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
 	local subSetting = Settings.CreateCheckbox(category, setting, tooltip)
 	subSetting:SetParentInitializer(parentSetting, function() return ProfessionShoppingList_Settings["removeCraft"] end)
 
 	local variable, name, tooltip = "showTooltip", "Show tooltip information", "Show how many of a reagent you have/need on the item's tooltip."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name)
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Information"))
