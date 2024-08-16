@@ -2473,7 +2473,7 @@ function app.Settings()
 			tooltip:AddLine(app.NameLong.."\nLMB|cffFFFFFF: Toggle the window\n|RRMB|cffFFFFFF: Show the settings|R")
 		end,
 	})
-						
+	
 	local icon = LibStub("LibDBIcon-1.0", true)
 	icon:Register("ProfessionShoppingList", miniButton, ProfessionShoppingList_Settings)
 
