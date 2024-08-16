@@ -291,6 +291,7 @@ function app.CreateCraftingOrdersAssets()
 		repeatOrderButton:SetScript("OnClick", function()
 			if ProfessionShoppingList_CharacterData.Orders["last"] ~= nil and ProfessionShoppingList_CharacterData.Orders["last"] ~= 0 then
 				quickOrder(ProfessionShoppingList_CharacterData.Orders["last"])
+				ProfessionsCustomerOrdersFrame.MyOrdersPage:RefreshOrders()
 			else
 				app.Print("No last Quick Order found.")
 			end
