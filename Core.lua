@@ -2426,6 +2426,8 @@ function app.Clear()
 	if app.Flag["craftingOrderAssets"] == true then
 		untrackPlaceOrderButton:Disable()
 	end
+	-- Set the quantity box to 0
+	ebRecipeQuantity:SetText("0")
 end
 
 -- Open settings
