@@ -402,7 +402,7 @@ function app.CreateWindow()
 	app.ClearButton:GetPushedTexture():SetTexCoord(1/256, 37/256, 81/128, 119/128)
 	app.ClearButton:SetScript("OnClick", function()
 		StaticPopupDialogs["CLEAR_RECIPES"] = {
-			text = app.NameLong.."\nDo you want to clear all recipes?",
+			text = app.NameLong.."\n\nDo you want to clear all recipes?",
 			button1 = YES,
 			button2 = NO,
 			OnAccept = function()
@@ -2013,6 +2013,37 @@ function app.CreateTradeskillAssets()
 		ebSLrankText:Hide()
 	end
 
+	-- Create the Track Unlearned Mogs button
+	if not trackUnlearnedMogsButton then
+		trackUnlearnedMogsButton = app.Button(ProfessionsFrame.CraftingPage, "Track unlearned mogs")
+		trackUnlearnedMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 0, -3)
+		trackUnlearnedMogsButton:SetFrameStrata("HIGH")
+		trackUnlearnedMogsButton:SetScript("OnClick", function()
+			local modeText = "N/A"
+			if ProfessionShoppingList_Settings["collectMode"] == 1 then
+				modeText = "new appearances"
+			elseif ProfessionShoppingList_Settings["collectMode"] == 2 then
+				modeText = "new appearances and sources"
+			end
+
+			local recipes = app.GetVisibleRecipes()
+
+			StaticPopupDialogs["TRACK_NEW_MOGS"] = {
+				text = app.NameLong.."\n\nThis will check the ".. #recipes .. " visible recipes for " .. modeText .. ".\n\nYour game may freeze for a few seconds.\nDo you wish to proceed?",
+				button1 = YES,
+				button2 = NO,
+				OnAccept = function()
+					app.TrackUnlearnedMog()
+				end,
+				timeout = 0,
+				whileDead = true,
+				hideOnEscape = true,
+				showAlert = true,
+			}
+			StaticPopup_Show("TRACK_NEW_MOGS")
+		end)
+	end
+
 	-- Create Cooking Fire button
 	if not cookingFireButton then
 		cookingFireButton = CreateFrame("Button", "CookingFireButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
@@ -2484,6 +2515,16 @@ function app.Settings()
 	local variable, name, tooltip = "pcWindows", "Window position per character", "Save the window position per character, instead of account-wide."
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
 	Settings.CreateCheckbox(category, setting, tooltip)
+
+	local variable, name, tooltip = "collectMode", "Collection mode", "Set which items are included when using the " .. app.Colour("Track unlearned mogs") .. " button."
+	local function GetOptions()
+		local container = Settings.CreateControlTextContainer()
+		container:Add(1, "Appearances", "Include items only if they have a new appearance.")
+		container:Add(2, "Sources", "Include items if they are a new source, including for known appearances.")
+		return container:GetData()
+	end
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
+	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Tracking Window"))
 
@@ -3143,6 +3184,94 @@ function event:CHAT_MSG_ADDON(prefix, text, channel, sender, target, zoneChannel
 					end
 				end
 			end
+		end
+	end
+end
+
+-------------------------
+-- TRACK UNLEARNED MOG --
+-------------------------
+
+-- Scan the tooltip for the appearance text, localised
+function app.GetAppearanceInfo(itemLinkie, searchString)
+	-- Grab the original value for this setting
+	local cvar = C_CVar.GetCVarInfo("missingTransmogSourceInItemTooltips")
+	
+	-- Enable this CVar, because we need it
+	C_CVar.SetCVar("missingTransmogSourceInItemTooltips", 1)
+
+	-- Get our tooltip information
+	local tooltip = C_TooltipInfo.GetHyperlink(itemLinkie)
+
+	-- Return the CVar to its original setting
+	C_CVar.SetCVar("missingTransmogSourceInItemTooltips", cvar)
+
+	-- Read all the lines as plain text
+	if tooltip["lines"] then
+		for k, v in ipairs(tooltip["lines"]) do
+			-- And if the transmog text line was found
+			if v["leftText"] and v["leftText"]:find(searchString) then
+				return true
+			end
+		end
+	end
+
+	-- Otherwise
+	return false
+end
+
+-- Get all visible recipes
+function app.GetVisibleRecipes(targetTable)
+	-- If no table is provided, create a new one
+	targetTable = targetTable or {}
+
+	local skillLineID = C_TradeSkillUI.GetProfessionChildSkillLineID()
+	local targetTable = C_TradeSkillUI.GetFilteredRecipeIDs()
+	-- If we're not searching for any recipes
+	if C_TradeSkillUI.GetRecipeItemNameFilter() == "" then
+		for k = #targetTable, 1, -1 do
+			-- If the recipe is NYI, or does not belong to our currently visible expansion
+			if app.nyiRecipes[k] or not C_TradeSkillUI.IsRecipeInSkillLine(targetTable[k], skillLineID) then
+				-- Remove it
+				table.remove(targetTable, k)
+			end
+		end
+	end
+
+	return targetTable
+end
+
+function app.TrackUnlearnedMog()
+	-- Set the update handler to active, to prevent multiple list updates from freezing the game
+	app.Flag["changingRecipes"] = true
+
+	local recipes = app.GetVisibleRecipes()
+
+	for i, recipeID in pairs(recipes) do
+		-- Grab the output itemID
+		local itemID = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).outputItemID
+
+		-- Cache the item, if there is an output item
+		if itemID then
+			local item = Item:CreateFromItemID(itemID)
+		
+			-- And when the item is cached
+			item:ContinueOnItemLoad(function()
+				-- Get item link
+				local _, itemLink = C_Item.GetItemInfo(itemID)
+
+				-- If the appearance is unlearned, track the recipe (taking our collection mode into account)
+				if app.GetAppearanceInfo(itemLink, TRANSMOGRIFY_TOOLTIP_APPEARANCE_UNKNOWN)
+				or (ProfessionShoppingList_Settings["collectMode"] == 2 and app.GetAppearanceInfo(itemLink, TRANSMOGRIFY_TOOLTIP_ITEM_UNKNOWN_APPEARANCE_KNOWN)) then
+					app.TrackRecipe(recipeID, 1)
+				end
+
+				-- If this is our last iteration, set update handler to false and force an update
+				if i == #recipes then
+					app.Flag["changingRecipes"] = false
+					app.UpdateRecipes()
+				end
+			end)
 		end
 	end
 end
