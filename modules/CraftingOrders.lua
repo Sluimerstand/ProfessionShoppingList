@@ -39,6 +39,7 @@ function app.InitialiseCraftingOrders()
 	app.Flag["craftingOrderAssets"] = false
 	app.Flag["quickOrder"] = 0
 	app.OrderRecipeID = 0
+	app.QuickOrderRecipeID = 0
 	app.QuickOrderAttempts = 0
 	app.QuickOrderErrors = 0
 end
@@ -101,6 +102,7 @@ function app.CreateCraftingOrdersAssets()
 
 	local function quickOrder(recipeID)
 		-- Create crafting info variables
+		app.QuickOrderRecipeID = recipeID
 		local reagentInfo = {}
 		local craftingReagentInfo = {}
 
@@ -419,7 +421,7 @@ function event:CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE(result)
 		end
 
 		-- Save this info as the last order done, unless it was a failed order
-		if (result ~= 29 and result ~= 40) or app.QuickOrderErrors >= 4 then ProfessionShoppingList_CharacterData.Orders["last"] = app.SelectedRecipeID end
+		if (result ~= 29 and result ~= 40) or app.QuickOrderErrors >= 4 then ProfessionShoppingList_CharacterData.Orders["last"] = app.QuickOrderRecipeID end
 
 		-- Set the last used recipe name for the repeat order button title
 		local recipeName = "No last order found"
