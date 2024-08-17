@@ -1993,7 +1993,7 @@ function app.CreateTradeskillAssets()
 		ebRecipeQuantity:SetScript("OnEditFocusLost", function(self, newValue)
 			ebRecipeQuantityUpdate(self, newValue)
 			trackProfessionButton:Enable()
-			if type(newValue) == "number" and newValue > 1 then
+			if type(newValue) == "number" and newValue >= 1 then
 				untrackProfessionButton:Enable()
 			end
 		end)
