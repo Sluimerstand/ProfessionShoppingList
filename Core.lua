@@ -2549,6 +2549,17 @@ function app.Settings()
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 
+	local variable, name, tooltip = "quickOrderDuration", "Quick order duration", "Set the duration for placing quick orders with " .. app.NameShort .. "."
+	local function GetOptions()
+		local container = Settings.CreateControlTextContainer()
+		container:Add(0, "Short (12 hours)")
+		container:Add(1, "Medium (24 hours)")
+		container:Add(2, "Long (48 hours)")
+		return container:GetData()
+	end
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 0)
+	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
+
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Tracking Window"))
 
 	local variable, name, tooltip = "showRecipeCooldowns", "Track recipe cooldowns", "Enable the tracking of recipe cooldowns. These will show in the tracking window, and in chat upon login if ready."
@@ -2687,21 +2698,6 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 					end
 				else
 					app.Print("Invalid parameters. Please enter a tracked recipe ID.")
-				end
-			-- Quick order duration
-			elseif command == 'duration' then
-				rest = tonumber(rest)
-				if rest == 0 or rest == 12 then
-					ProfessionShoppingList_Settings["quickOrderDuration"] = 0
-					app.Print("Quick order duration set to 12hr (short).")
-				elseif rest == 1 or rest == 24 then
-					ProfessionShoppingList_Settings["quickOrderDuration"] = 1
-					app.Print("Quick order duration set to 24hr (medium).")
-				elseif rest == 2 or rest == 48 then
-					ProfessionShoppingList_Settings["quickOrderDuration"] = 2
-					app.Print("Quick order duration set to 48hr (long).")
-				else
-					app.Print("Invalid parameter. Use a number: 0, 1, 2 (duration) or 12, 24, or 48 (hours) to set the default quick order duration.")
 				end
 			-- No command
 			elseif command == "" then

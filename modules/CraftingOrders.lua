@@ -33,7 +33,6 @@ event:RegisterEvent("CRAFTINGORDERS_SHOW_CUSTOMER")
 function app.InitialiseCraftingOrders()
 	-- Enable default user settings
 	if ProfessionShoppingList_Settings["useLocalReagents"] == nil then ProfessionShoppingList_Settings["useLocalReagents"] = false end
-	if ProfessionShoppingList_Settings["quickOrderDuration"] == nil then ProfessionShoppingList_Settings["quickOrderDuration"] = 0 end
 
 	-- Initialise some session variables
 	app.Flag["craftingOrderAssets"] = false
