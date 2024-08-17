@@ -2427,7 +2427,9 @@ function app.Clear()
 		untrackPlaceOrderButton:Disable()
 	end
 	-- Set the quantity box to 0
-	ebRecipeQuantity:SetText("0")
+	if ebRecipeQuantity then
+		ebRecipeQuantity:SetText("0")
+	end
 end
 
 -- Open settings
