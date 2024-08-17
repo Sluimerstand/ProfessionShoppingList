@@ -522,6 +522,25 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 	end
 end
 
+-- Get owned reagent quantity, accounting for reagent quality
+function app.GetReagentCount(reagentID)
+	local reagentCount = 0
+	if ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 3 then
+		reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true)
+	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 2 then
+		reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true)
+					 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, true)
+	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 1 then
+		reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true)
+					 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, true)
+					 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, true)
+	else
+		reagentCount = C_Item.GetItemCount(reagentID, true, false, true, true)
+	end
+
+	return reagentCount
+end
+
 -- Update numbers tracked
 function app.UpdateNumbers()
 	-- Update reagents tracked
@@ -1093,7 +1112,7 @@ function app.UpdateRecipes()
 			local function trackSubreagent(recipeID, itemID)
 				-- Define the amount of recipes to be tracked
 				local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-				local amount = math.max(0, math.ceil((app.ReagentQuantities[itemID] - C_Item.GetItemCount(itemID, true, false, true, true)) / quantityMade))
+				local amount = math.max(0, math.ceil((app.ReagentQuantities[itemID] - local reagentCount = app.GetReagentCount(itemID)) / quantityMade))
 				if ProfessionShoppingList_Data.Recipes[recipeID] then amount = math.max(0, (amount - ProfessionShoppingList_Data.Recipes[recipeID].quantity)) end
 
 				-- Track the recipe (don't track if 0)
@@ -1455,7 +1474,7 @@ function app.UpdateRecipes()
 						end)
 					end
 				end
-			-- Activate if Shift+clicking on the reagents column
+			-- Activate if Shift+clicking on the reagent
 			elseif button == "LeftButton" and IsShiftKeyDown() == true then
 				ChatEdit_InsertLink(reagentInfo.link)
 			end

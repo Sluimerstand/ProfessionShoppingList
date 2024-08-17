@@ -57,26 +57,16 @@ function app.CreateAuctionatorButton()
 						end
 
 						-- Set reagent quality to 2 or 3 if applicable and the user has this set, otherwise don't specify quality
-						-- Also include the itemCount here, since that depends on the reagentQuality setting
 						local reagentQuality = ""
-						local reagentCount
 
 						if ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 3 then
 							reagentQuality = 3
-							reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true)
 						elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 2 then
 							reagentQuality = 2
-							reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true)
-										 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, true)
-						elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 1 then
-							reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true)
-										 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, true)
-										 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, true)
-						else
-							reagentCount = C_Item.GetItemCount(reagentID, true, false, true, true)
 						end
 
 						-- Calculate how many we still need
+						local reagentCount = app.GetReagentCount(reagentID)
 						reagentCount = math.max(0, reagentAmount - reagentCount)
 
 						-- Put the items in the temporary variable
