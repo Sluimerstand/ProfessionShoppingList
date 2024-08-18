@@ -2718,13 +2718,15 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 					-- Get achievementID, number of criteria, and type of the first criterium
 					local achievementID = tonumber(string.match(string.sub(command, 25), "%d+"))
 					local numCriteria = GetAchievementNumCriteria(achievementID)
-					local _, criteriaType = GetAchievementCriteriaInfo(achievementID, 1)
+					local _, criteriaType = GetAchievementCriteriaInfo(achievementID, 1, true)
 
 					-- If the asset type is a (crafting) spell
-					if criteriaType == 29 then	
+					if criteriaType == 29 then
+						-- Make sure that we check the only criteria if numCriteria was evaluated to be 0
+						if numCriteria == 0 then numCriteria = 1 end
 						-- For each criteria, track the SpellID
-						for i=1,numCriteria,1 do
-							local _, criteriaType, completed, quantity, reqQuantity, _, _, assetID = GetAchievementCriteriaInfo(achievementID, i)
+						for i = 1, numCriteria, 1 do
+							local _, criteriaType, completed, quantity, reqQuantity, _, _, assetID = GetAchievementCriteriaInfo(achievementID, i, true)
 							-- If the criteria has not yet been completed
 							if completed == false then
 								-- Proper quantity, if the info is provided
@@ -2733,7 +2735,11 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 									numTrack = reqQuantity - quantity
 								end
 								-- Add the recipe
-								app.TrackRecipe(assetID, numTrack)
+								if ProfessionShoppingList_Library[assetID] then
+									app.TrackRecipe(assetID, numTrack)
+								else
+									app.Print("Recipe does not exist, or is not cached. No recipes were added.")
+								end
 							end
 						end
 					-- Chromatic Calibration: Cranial Cannons
