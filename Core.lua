@@ -688,22 +688,22 @@ function app.UpdateNumbers()
 	end
 
 	local customSortList = {
-		-- With fake colour code to prioritise subreagents
+		-- Needed reagents
+		"|cffe6cc80",				-- Artifact
+		"|cffff8000",				-- Legendary
+		"|cffa335ee",				-- Epic
+		"|cff0070dd",				-- Rare
+		"|cff1eff00",				-- Uncommon
+		"|cffffffff",				-- Common
+		-- Subreagents
 		"|cff000000|r|cffe6cc80",	-- Artifact
 		"|cff000000|r|cffff8000",	-- Legendary
 		"|cff000000|r|cffa335ee",	-- Epic
 		"|cff000000|r|cff0070dd",	-- Rare
 		"|cff000000|r|cff1eff00",	-- Uncommon
 		"|cff000000|r|cffffffff",	-- Common
-		"|cff000000|r|cff9d9d9d",	-- Poor (quantity 0)
-		-- Regular
-		"|cffe6cc80",	-- Artifact
-		"|cffff8000",	-- Legendary
-		"|cffa335ee",	-- Epic
-		"|cff0070dd",	-- Rare
-		"|cff1eff00",	-- Uncommon
-		"|cffffffff",	-- Common
-		"|cff9d9d9d",	-- Poor (quantity 0)
+		-- Collected reagents
+		"|cff9d9d9d",				-- Poor (quantity 0)
 	}
 
 	local function customSort(a, b)
