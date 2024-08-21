@@ -606,6 +606,16 @@ function app.UpdateNumbers()
 				itemLink = string.gsub(itemLink, "|cffa335ee|", "|cff9d9d9d|") -- Epic
 				itemLink = string.gsub(itemLink, "|cffff8000|", "|cff9d9d9d|") -- Legendary
 				itemLink = string.gsub(itemLink, "|cffe6cc80|", "|cff9d9d9d|") -- Artifact
+			-- Make the icon an arrow if it is a subreagent, but not at 0 needed
+			else
+				for k, v in pairs(ProfessionShoppingList_Data.Recipes) do
+					if ProfessionShoppingList_Library[k] and ProfessionShoppingList_Library[k].itemID == reagentID then
+						itemIcon = app.iconArrow
+						-- Set the itemlink to be Artifact colour and then its original colour, to force it being sorted at the top
+						itemLink = "|cff000000|r"..itemLink
+						break
+					end
+				end
 			end
 
 			-- Set the displayed amount based on settings
@@ -678,6 +688,15 @@ function app.UpdateNumbers()
 	end
 
 	local customSortList = {
+		-- With fake colour code to prioritise subreagents
+		"|cff000000|r|cffe6cc80",	-- Artifact
+		"|cff000000|r|cffff8000",	-- Legendary
+		"|cff000000|r|cffa335ee",	-- Epic
+		"|cff000000|r|cff0070dd",	-- Rare
+		"|cff000000|r|cff1eff00",	-- Uncommon
+		"|cff000000|r|cffffffff",	-- Common
+		"|cff000000|r|cff9d9d9d",	-- Poor (quantity 0)
+		-- Regular
 		"|cffe6cc80",	-- Artifact
 		"|cffff8000",	-- Legendary
 		"|cffa335ee",	-- Epic
