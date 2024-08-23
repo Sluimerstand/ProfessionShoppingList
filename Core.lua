@@ -2082,7 +2082,7 @@ function app.CreateTradeskillAssets()
 	-- Create the Track Unlearned Mogs button
 	if not trackUnlearnedMogsButton then
 		trackUnlearnedMogsButton = app.Button(ProfessionsFrame.CraftingPage, "Track unlearned mogs")
-		trackUnlearnedMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 0, -3)
+		trackUnlearnedMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 0, -4)
 		trackUnlearnedMogsButton:SetFrameStrata("HIGH")
 		trackUnlearnedMogsButton:SetScript("OnClick", function()
 			local modeText = "N/A"
