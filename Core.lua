@@ -2088,6 +2088,10 @@ function app.CreateTradeskillAssets()
 			}
 			StaticPopup_Show("TRACK_NEW_MOGS")
 		end)
+		-- Move the button if CraftScan is enabled, because it hogs a lot of space >,>
+		if C_AddOns.IsAddOnLoaded("CraftScan") then
+			trackUnlearnedMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 2, 24)
+		end
 	end
 
 	-- Create Cooking Fire button
