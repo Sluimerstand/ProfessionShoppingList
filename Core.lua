@@ -1010,8 +1010,6 @@ function app.UpdateRecipes()
 					-- Make sure the tradeskill frame is loaded
 					if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
 						C_TradeSkillUI.CraftRecipe(recipeInfo.recipeID, ProfessionShoppingList_Data.Recipes[recipeInfo.recipeID].quantity)
-					else
-						app.Print("Profession window hasn't finished loading yet.")
 					end
 				end
 			end
@@ -1684,8 +1682,6 @@ function app.UpdateRecipes()
 					-- Make sure the tradeskill frame is loaded
 					if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
 						C_TradeSkillUI.CraftRecipe(cooldownInfo.recipeID)
-					else
-						app.Print("Profession window hasn't finished loading yet.")
 					end
 				end
 			end
