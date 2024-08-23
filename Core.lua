@@ -982,16 +982,13 @@ function app.UpdateRecipes()
 			GameTooltip:Hide()
 		end)
 		row:SetScript("OnClick", function(self, button)
-			-- Get the selected recipe ID
-			local selectedRecipeID = recipeInfo.recipeID
-
 			-- Right-click on recipe amount
 			if button == "RightButton" then
 				-- Untrack the recipe
 				if IsControlKeyDown() == true then
-					app.UntrackRecipe(selectedRecipeID, 0)
+					app.UntrackRecipe(recipeInfo.recipeID, 0)
 				else
-					app.UntrackRecipe(selectedRecipeID, 1)
+					app.UntrackRecipe(recipeInfo.recipeID, 1)
 				end
 
 				-- Show window
@@ -1004,10 +1001,17 @@ function app.UpdateRecipes()
 					ChatEdit_InsertLink(recipeInfo.link)
 				-- If Control is held also
 				elseif IsControlKeyDown() == true then
-					-- Open recipe if it is learned
-					if selectedRecipeID ~= 0 and C_TradeSkillUI.IsRecipeProfessionLearned(selectedRecipeID) == true then
 						C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
-						C_TradeSkillUI.OpenRecipe(selectedRecipeID)
+						C_TradeSkillUI.OpenRecipe(recipeInfo.recipeID)
+				-- If Alt is held also
+				elseif IsAltKeyDown() == true then
+					C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
+					C_TradeSkillUI.OpenRecipe(recipeInfo.recipeID)
+					-- Make sure the tradeskill frame is loaded
+					if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
+						C_TradeSkillUI.CraftRecipe(recipeInfo.recipeID, ProfessionShoppingList_Data.Recipes[recipeInfo.recipeID].quantity)
+					else
+						app.Print("Profession window hasn't finished loading yet.")
 					end
 				end
 			end
@@ -1668,6 +1672,22 @@ function app.UpdateRecipes()
 			if button == "RightButton" then
 				table.remove(ProfessionShoppingList_Data.Cooldowns, cooldownInfo.id)
 				app.UpdateRecipes()
+			elseif button == "LeftButton" then
+				-- If Control is held also
+				if IsControlKeyDown() == true then
+					C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
+					C_TradeSkillUI.OpenRecipe(cooldownInfo.recipeID)
+				-- If Alt is held also
+				elseif IsAltKeyDown() == true then
+					C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
+					C_TradeSkillUI.OpenRecipe(cooldownInfo.recipeID)
+					-- Make sure the tradeskill frame is loaded
+					if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
+						C_TradeSkillUI.CraftRecipe(cooldownInfo.recipeID)
+					else
+						app.Print("Profession window hasn't finished loading yet.")
+					end
+				end
 			end
 		end)
 
@@ -1940,13 +1960,13 @@ end
 -- Create assets
 function app.CreateGeneralAssets()
 	-- Create Recipes header tooltip
-	app.RecipesHeaderTooltip = app.WindowTooltip("Shift+LMB|cffFFFFFF: Link the recipe\n|RCtrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RRMB|cffFFFFFF: Untrack 1 of the selected recipe\n|RCtrl+RMB|cffFFFFFF: Untrack all of the selected recipe")
+	app.RecipesHeaderTooltip = app.WindowTooltip("Shift+LMB|cffFFFFFF: Link the recipe\n|RCtrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RAlt+LMB|cffFFFFFF: Attempt to craft this recipe (as many times as you have it tracked)\n|RRMB|cffFFFFFF: Untrack 1 of the selected recipe\n|RCtrl+RMB|cffFFFFFF: Untrack all of the selected recipe")
 
 	-- Create Reagents header tooltip
 	app.ReagentsHeaderTooltip = app.WindowTooltip("Shift+LMB|cffFFFFFF: Link the reagent\n|RCtrl+LMB|cffFFFFFF: Add recipe for the selected subreagent, if it exists\n(This only works for professions that have been opened with "..app.NameShort.." active)")
 
 	-- Create Cooldowns header tooltip
-	app.CooldownsHeaderTooltip = app.WindowTooltip("RMB|cffFFFFFF: Remove the cooldown reminder")
+	app.CooldownsHeaderTooltip = app.WindowTooltip("Ctrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RAlt+LMB|cffFFFFFF: Attempt to craft this recipe (as many times as you have it tracked)\n|RRMB|cffFFFFFF: Remove this specific cooldown reminder")
 
 	-- Create Close button tooltip
 	app.CloseButtonTooltip = app.WindowTooltip("Close the window")
