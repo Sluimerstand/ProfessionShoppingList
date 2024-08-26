@@ -2950,9 +2950,21 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 				-- Set timer to 7 days for the Alchemy sac transmutes
 				if spellID == 213256 or spellID == 251808 then
 					cooldown = 7 * 24 * 60 * 60
-				-- Keep the actual spell coolcown for Dragonflight Alchemy experimentations, and only show the last one done
+				-- Keep the actual spell cooldown for Dragonflight Alchemy experimentations, and only show the last one done
 				elseif spellID == 370743 or spellID == 370745 or spellID == 370746 or spellID == 370747 then
 					local spells = {370743,  370745, 370746, 370747}
+					for k, v in pairs(spells) do
+						if v ~= spellID then
+							for k2, v2 in pairs(ProfessionShoppingList_Data.Cooldowns) do
+								if v2.recipeID == v then
+									ProfessionShoppingList_Data.Cooldowns[k2] = nil
+								end
+							end
+						end
+					end
+				-- Keep the actual spell cooldown for The War Within Alchemy experimentations, and only show the last one done
+				elseif spellID == 427174 or spellID == 430345 then
+					local spells = {427174,  430345}
 					for k, v in pairs(spells) do
 						if v ~= spellID then
 							for k2, v2 in pairs(ProfessionShoppingList_Data.Cooldowns) do
