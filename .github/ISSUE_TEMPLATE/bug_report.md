@@ -10,7 +10,7 @@ assignees: Sluimerstand
 **AddOn version**
 _For example v11.0.2-006_
 
-**Have you tried to /reload, used /psl clear if it is recipe-related, and checked the issue occurs with only PSL enabled?
+**Have you tried to /reload, used /psl clear if it is recipe-related, and checked the issue occurs with only PSL enabled?**
 _Preferably the answer to this question is yes._
 
 **Describe the problem**
