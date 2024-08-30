@@ -2265,6 +2265,15 @@ function app.CreateTradeskillAssets()
 		end)
 	end
 
+	-- Create Dragonflight Milling info
+	if not app.Concentration then
+		ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.ConcentrationDisplay.Icon, "TOPRIGHT", 6, 0)
+
+		app.Concentration = ProfessionsFrame.CraftingPage.ConcentrationDisplay:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.Concentration:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount, "BOTTOMLEFT", 0, 0)
+		app.Concentration:SetJustifyH("LEFT")
+	end
+
 	-- Set the flag for assets created to true
 	app.Flag["tradeskillAssets"] = true
 end
@@ -2817,40 +2826,55 @@ end
 
 -- When a tradeskill window is opened
 function event:TRADE_SKILL_SHOW()
-	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
-		app.CreateTradeskillAssets()
-	end
-
-	-- Register all recipes for this profession
-	for _, recipeID in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
-	-- If there is an output item
-	local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID
-		local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
-		local ability = C_TradeSkillUI.GetRecipeInfo(recipeID).skillLineAbilityID
-		-- Register the output item, the recipe's abilityID, and the recipe's profession
-		if item ~= nil then
-			ProfessionShoppingList_Library[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill}
-		else
-			ProfessionShoppingList_Library[recipeID] = {itemID = 0, abilityID = ability, tradeskillID = tradeskill}
+	if UnitAffectingCombat("player") == false then
+		if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
+			app.CreateTradeskillAssets()
 		end
-	end
 
-	-- Get Alvin the Anvil's GUID
-	for i=1, 9999 do
-		local petID, speciesID = C_PetJournal.GetPetInfoByIndex(i)
-		if speciesID == 3274 then
-			if petID then ProfessionShoppingList_Settings["alvinGUID"] = petID end
-			break
-		elseif speciesID == nil then
-			break
+		-- Register all recipes for this profession
+		for _, recipeID in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
+		-- If there is an output item
+		local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID
+			local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
+			local ability = C_TradeSkillUI.GetRecipeInfo(recipeID).skillLineAbilityID
+			-- Register the output item, the recipe's abilityID, and the recipe's profession
+			if item ~= nil then
+				ProfessionShoppingList_Library[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill}
+			else
+				ProfessionShoppingList_Library[recipeID] = {itemID = 0, abilityID = ability, tradeskillID = tradeskill}
+			end
 		end
-	end
 
-	if app.Flag["tradeskillAssets"] == true then
-		if ProfessionShoppingList_Settings["alvinGUID"] ~= "unknown" then
-			alvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..ProfessionShoppingList_Settings["alvinGUID"].."')")
-		else
-			alvinButton:SetAttribute("macrotext1", "")
+		-- Get Alvin the Anvil's GUID
+		for i=1, 9999 do
+			local petID, speciesID = C_PetJournal.GetPetInfoByIndex(i)
+			if speciesID == 3274 then
+				if petID then ProfessionShoppingList_Settings["alvinGUID"] = petID end
+				break
+			elseif speciesID == nil then
+				break
+			end
+		end
+
+		if app.Flag["tradeskillAssets"] == true then
+			-- Alvin button
+			if ProfessionShoppingList_Settings["alvinGUID"] ~= "unknown" then
+				alvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..ProfessionShoppingList_Settings["alvinGUID"].."')")
+			else
+				alvinButton:SetAttribute("macrotext1", "")
+			end
+
+			-- Recharge timer
+			C_Timer.After(1, function()
+				local concentration = string.match(ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount:GetText(), "%d+")
+				if concentration then
+					local timeLeft = math.ceil((1000 - concentration) / 10)
+
+					app.Concentration:SetText("|cffFFFFFFFully recharged:|r "..timeLeft.."h")
+				else
+					app.Concentration:SetText("|cffFFFFFFFully recharged:|r ?")
+				end
+			end)
 		end
 	end
 end
