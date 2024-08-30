@@ -3001,6 +3001,9 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 							end
 						end
 					end
+				-- Keep the actual spell cooldown for Invent (TWW Engineering)
+				elseif spellID == 447312 then
+					--
 				-- Otherwise, if the cooldown exists, set it to line up with daily reset
 				elseif cooldown and cooldown >= 60 then
 					local days = math.floor( cooldown / 86400 )	-- Count how many days we add to the time until daily reset
