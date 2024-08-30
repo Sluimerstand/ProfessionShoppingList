@@ -2866,13 +2866,16 @@ function event:TRADE_SKILL_SHOW()
 
 			-- Recharge timer
 			C_Timer.After(1, function()
-				local concentration = string.match(ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount:GetText(), "%d+")
-				if concentration then
-					local timeLeft = math.ceil((1000 - concentration) / 10)
+				if ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount:GetText() then
+					local concentration = string.match(ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount:GetText(), "%d+")
+				
+					if concentration then
+						local timeLeft = math.ceil((1000 - concentration) / 10)
 
-					app.Concentration:SetText("|cffFFFFFFFully recharged:|r "..timeLeft.."h")
-				else
-					app.Concentration:SetText("|cffFFFFFFFully recharged:|r ?")
+						app.Concentration:SetText("|cffFFFFFFFully recharged:|r "..timeLeft.."h")
+					else
+						app.Concentration:SetText("|cffFFFFFFFully recharged:|r ?")
+					end
 				end
 			end)
 		end
