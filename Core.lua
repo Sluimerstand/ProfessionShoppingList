@@ -2302,6 +2302,14 @@ function app.CreateTradeskillAssets()
 		millingDragonflight:SetText(app.Colour("Milling information").."\n|cffFFFFFFFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nBlazing Pigment: Saxifrage\nShimmering Pigment: Hochenblume")
 	end
 
+	-- Create The War Within Milling info
+	if not millingTheWarWithin then
+		millingTheWarWithin = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		millingTheWarWithin:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 30, 30)
+		millingTheWarWithin:SetJustifyH("LEFT")
+		millingTheWarWithin:SetText(app.Colour("Milling information").."\n|cffFFFFFFNacreous Pigment: Mycobloom\nLuredrop Pigment: Luredrop\nOrbinid Pigment: Orbinid\nBlossom Pigment: Blessing Blossom")
+	end
+
 	-- Grab the order information when opening a crafting order (THANK YOU PLUSMOUSE <3)
 	hooksecurefunc(ProfessionsFrame.OrdersPage, "ViewOrder", function(_, orderDetails)
 		app.OrderInfo = orderDetails
@@ -3020,6 +3028,12 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 				millingDragonflight:Show()
 			else
 				millingDragonflight:Hide()
+			end
+
+			if spellID == 444181 then
+				millingTheWarWithin:Show()
+			else
+				millingTheWarWithin:Hide()
 			end
 
 			-- Check if the SL rank editbox should be displayed
