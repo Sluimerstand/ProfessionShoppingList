@@ -18,6 +18,7 @@ event:SetScript("OnEvent", function(self, event, ...)
 	end
 end)
 event:RegisterEvent("ADDON_LOADED")
+event:RegisterEvent("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE")
 event:RegisterEvent("CRAFTINGORDERS_HIDE_CUSTOMER")
 event:RegisterEvent("CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE")
 event:RegisterEvent("CRAFTINGORDERS_SHOW_CUSTOMER")
@@ -377,6 +378,19 @@ end
 -- When closing the crafting orders window
 function event:CRAFTINGORDERS_HIDE_CUSTOMER()
 	app.Flag["recraft"] = false
+end
+
+-- When fulfilling an order
+function event:CRAFTINGORDERS_FULFILL_ORDER_RESPONSE(result, orderID)
+	if ProfessionShoppingList_Settings["removeCraft"] == true then
+		for k, v in pairs (ProfessionShoppingList_Data.Recipes) do
+			if tonumber(string.match(k, ":(%d+):")) == orderID then
+				-- Remove 1 tracked recipe when it has been crafted (if the option is enabled)
+				app.UntrackRecipe(k, 1)
+				break
+			end
+		end
+	end
 end
 
 ------------------
