@@ -199,6 +199,7 @@ function app.InitialiseCore()
 	if not ProfessionShoppingList_Cache.ReagentTiers then ProfessionShoppingList_Cache.ReagentTiers = {} end
 	if not ProfessionShoppingList_Cache.Reagents then ProfessionShoppingList_Cache.Reagents = {} end
 	if not ProfessionShoppingList_Cache.FakeRecipes then ProfessionShoppingList_Cache.FakeRecipes = {} end
+	if not ProfessionShoppingList_Cache.CraftSimRecipes then ProfessionShoppingList_Cache.CraftSimRecipes = {} end
 	
 	if not ProfessionShoppingList_CharacterData then ProfessionShoppingList_CharacterData = {} end
 	if not ProfessionShoppingList_CharacterData.Recipes then ProfessionShoppingList_CharacterData.Recipes = {} end
@@ -457,7 +458,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 	local craftingRecipeID = recipeID
 	if string.sub(recipeID, 1, 6) == "order:" then
 		craftingOrder = true
-		recipeID = string.match(recipeID, ":(%d+)$")
+		recipeID = string.match(recipeID, "^order:%d+:(%d+)")
 	end
 
 	-- Exception for SL legendary crafts
@@ -492,7 +493,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 			end
 
 			-- Adjust the numbers for crafting orders
-			if craftingOrder then
+			if craftingOrder and not ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim then
 				for k, v in pairs (ProfessionShoppingList_Cache.FakeRecipes[craftingRecipeID].reagents) do
 					if v.reagent.itemID == reagentID1 or v.reagent.itemID == reagentID2 or v.reagent.itemID == reagentID3 then
 						reagentAmount = reagentAmount - v.reagent.quantity
@@ -532,11 +533,19 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 				end)
 			end
 
-			-- Add the info to the specified variable, if it's not 0
-			if reagentAmount > 0 then
+			-- Add the info to the specified variable, if it's not 0 and not a CraftSim recipe
+			if not ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim and reagentAmount > 0 then
 				if reagentVariable[reagentID] == nil then reagentVariable[reagentID] = 0 end
 				reagentVariable[reagentID] = reagentVariable[reagentID] + ( reagentAmount * recipeQuantity )
 			end
+		end
+	end
+
+	-- Manually insert the reagents if it's a CraftSim recipe
+	if ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim then
+		for k, v in pairs(ProfessionShoppingList_Cache.CraftSimRecipes[craftingRecipeID]) do
+			if reagentVariable[k] == nil then reagentVariable[k] = 0 end
+			reagentVariable[k] = reagentVariable[k] + (v * ProfessionShoppingList_Data.Recipes[craftingRecipeID].quantity)
 		end
 	end
 end
@@ -1851,7 +1860,7 @@ function app.Toggle()
 end
 
 -- Track recipe
-function app.TrackRecipe(recipeID, recipeQuantity, orderID)
+function app.TrackRecipe(recipeID, recipeQuantity, orderID, craftSim)
 	-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
 	if C_TradeSkillUI.GetRecipeSchematic(recipeID,false).recipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(recipeID,false).reagentSlotSchematics[1] == nil then
 		do return end
@@ -1925,7 +1934,7 @@ function app.TrackRecipe(recipeID, recipeQuantity, orderID)
 		local reagents = {}
 		local key
 
-		for i, orderInfo in pairs (ordersTable) do
+		for i, orderInfo in pairs(ordersTable) do
 			if orderID == orderInfo.orderID then
 				key = "order:" .. orderID .. ":" .. recipeID
 
@@ -1941,7 +1950,7 @@ function app.TrackRecipe(recipeID, recipeQuantity, orderID)
 	end
 
 	if not ProfessionShoppingList_Data.Recipes[recipeID] then
-		ProfessionShoppingList_Data.Recipes[recipeID] = { quantity = 0, recraft = app.Flag["recraft"], link = recipeLink }
+		ProfessionShoppingList_Data.Recipes[recipeID] = { quantity = 0, recraft = app.Flag["recraft"], link = recipeLink, craftSim = craftSim }
 	end
 	ProfessionShoppingList_Data.Recipes[recipeID].quantity = ProfessionShoppingList_Data.Recipes[recipeID].quantity + recipeQuantity
 
@@ -2036,7 +2045,36 @@ function app.CreateTradeskillAssets()
 		trackProfessionButton = app.Button(ProfessionsFrame.CraftingPage, "Track")
 		trackProfessionButton:SetPoint("TOPRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "TOPRIGHT", -9, -10)
 		trackProfessionButton:SetScript("OnClick", function()
-			app.TrackRecipe(app.SelectedRecipeID, 1)
+			local craftSim = false
+
+			-- If CraftSim is active (thanks Blaez)
+			if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
+				craftSim = true
+				
+				-- Grab the reagents it provides
+				local craftSimSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
+				craftSimRequiredReagents = craftSimSimulationMode.recipeData.reagentData.requiredReagents
+
+				if craftSimRequiredReagents then
+					local reagents = {}
+					for k, v in pairs(craftSimRequiredReagents) do
+						for k2, v2 in pairs(v.items) do
+							if v2.quantity > 0 then
+								reagents[v2.item.itemID] = v2.quantity
+							end
+						end
+					end
+
+					-- Save the reagents into a fake recipe
+					ProfessionShoppingList_Cache.CraftSimRecipes[app.SelectedRecipeID] = reagents
+				else
+					app.Print("Could not read the information from CraftSim.")
+				end
+			else
+				craftSim = false
+			end
+
+			app.TrackRecipe(app.SelectedRecipeID, 1, nil, craftSim)
 		end)
 	end
 	
@@ -2285,6 +2323,44 @@ function app.CreateTradeskillAssets()
 		trackMakeOrderButton:SetPoint("TOPRIGHT", ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "TOPRIGHT", -9, -10)
 		trackMakeOrderButton:SetScript("OnClick", function()
 			local key = "order:" .. app.OrderInfo.orderID .. ":" .. app.OrderInfo.spellID
+			local craftSim = false
+
+			-- If CraftSim is active (thanks Blaez)
+			if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
+				craftSim = true
+				
+				-- Grab the provided reagents
+				local providedReagents = {}
+				for k, v in pairs(app.OrderInfo.reagents) do
+					providedReagents[v.reagent.itemID] = v.reagent.quantity
+				end
+
+				-- Grab the reagents it provides
+				local craftSimSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
+				craftSimRequiredReagents = craftSimSimulationMode.recipeData.reagentData.requiredReagents
+
+				if craftSimRequiredReagents then
+					local reagents = {}
+					for k, v in pairs(craftSimRequiredReagents) do
+						for k2, v2 in pairs(v.items) do
+							if v2.quantity > 0 then
+								-- Exclude provided reagents
+								if providedReagents[v2.item.itemID] or (ProfessionShoppingList_Cache.ReagentTiers[v2.item.itemID] and (providedReagents[ProfessionShoppingList_Cache.ReagentTiers[v2.item.itemID].one] or providedReagents[ProfessionShoppingList_Cache.ReagentTiers[v2.item.itemID].two] or providedReagents[ProfessionShoppingList_Cache.ReagentTiers[v2.item.itemID].three])) then
+								else
+									reagents[v2.item.itemID] = v2.quantity
+								end
+							end
+						end
+					end
+
+					-- Save the reagents into a fake recipe
+					ProfessionShoppingList_Cache.CraftSimRecipes[key] = reagents
+				else
+					app.Print("Could not read the information from CraftSim.")
+				end
+			else
+				craftSim = false
+			end
 
 			if ProfessionShoppingList_Data.Recipes[key] then
 				-- Untrack the recipe
@@ -2301,7 +2377,7 @@ function app.CreateTradeskillAssets()
 				end
 
 				-- Track the recipe
-				app.TrackRecipe(app.OrderInfo.spellID, 1, app.OrderInfo.orderID)
+				app.TrackRecipe(app.OrderInfo.spellID, 1, app.OrderInfo.orderID, craftSim)
 
 				-- Revert the recraft flag
 				if app.OrderInfo.isRecraft then
