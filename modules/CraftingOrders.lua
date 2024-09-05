@@ -18,14 +18,9 @@ event:SetScript("OnEvent", function(self, event, ...)
 	end
 end)
 event:RegisterEvent("ADDON_LOADED")
-event:RegisterEvent("CRAFTINGORDERS_CLAIM_ORDER_RESPONSE")
-event:RegisterEvent("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE")
 event:RegisterEvent("CRAFTINGORDERS_HIDE_CUSTOMER")
 event:RegisterEvent("CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE")
-event:RegisterEvent("CRAFTINGORDERS_REJECT_ORDER_RESPONSE")
-event:RegisterEvent("CRAFTINGORDERS_RELEASE_ORDER_RESPONSE")
 event:RegisterEvent("CRAFTINGORDERS_SHOW_CUSTOMER")
-event:RegisterEvent("TRADE_SKILL_CLOSE")
 
 ------------------
 -- INITIAL LOAD --
@@ -39,7 +34,6 @@ function app.InitialiseCraftingOrders()
 	-- Initialise some session variables
 	app.Flag["craftingOrderAssets"] = false
 	app.Flag["quickOrder"] = 0
-	app.OrderRecipeID = 0
 	app.QuickOrderRecipeID = 0
 	app.QuickOrderAttempts = 0
 	app.QuickOrderErrors = 0
@@ -383,28 +377,6 @@ end
 -- When closing the crafting orders window
 function event:CRAFTINGORDERS_HIDE_CUSTOMER()
 	app.Flag["recraft"] = false
-end
-
--- Save the order recipeID if the order has been started, because SPELL_LOAD_RESULT does not fire for it anymore
-function event:CRAFTINGORDERS_CLAIM_ORDER_RESPONSE()
-	app.OrderRecipeID = app.SelectedRecipeID
-end
-
--- Revert the above if the order is cancelled, fulfilled, or rejected, or if the tradeskill window is closed, since then SPELL_LOAD_RESULT fires again for it
-function event:CRAFTINGORDERS_RELEASE_ORDER_RESPONSE()
-	app.OrderRecipeID = 0
-end
-
-function event:CRAFTINGORDERS_FULFILL_ORDER_RESPONSE()
-	app.OrderRecipeID = 0
-end
-
-function event:CRAFTINGORDERS_REJECT_ORDER_RESPONSE()
-	app.OrderRecipeID = 0
-end
-
-function event:TRADE_SKILL_CLOSE()
-	app.OrderRecipeID = 0
 end
 
 ------------------

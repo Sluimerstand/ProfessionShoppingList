@@ -18,6 +18,7 @@ app.iconNotReady = "Interface\\RaidFrame\\ReadyCheck-NotReady"
 app.iconArrow = "Interface\\AddOns\\ProfessionShoppingList\\assets\\UI-RaidFrame-Arrow-Cropped"
 app.iconProfession = {}
 app.iconProfession[0] = "Interface\\MoneyFrame\\UI-GoldIcon"    -- Vendor
+app.iconProfession[1] = "Interface\\AddOns\\ProfessionShoppingList\\assets\\hammer-32"    -- Crafting order
 app.iconProfession[164] = "Interface\\Icons\\ui_profession_blacksmithing"
 app.iconProfession[165] = "Interface\\Icons\\ui_profession_leatherworking"
 app.iconProfession[171] = "Interface\\Icons\\ui_profession_alchemy"

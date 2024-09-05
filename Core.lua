@@ -452,6 +452,14 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 	-- Grab all the reagent info from the API
 	local reagentsTable
 
+	-- Check to see if it's a crafting order
+	local craftingOrder = false
+	local craftingRecipeID = recipeID
+	if string.sub(recipeID, 1, 6) == "order:" then
+		craftingOrder = true
+		recipeID = string.match(recipeID, ":(%d+)$")
+	end
+
 	-- Exception for SL legendary crafts
 	if app.slLegendaryRecipeIDs[recipeID] then
 		reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, false, app.slLegendaryRecipeIDs[recipeID].rank).reagentSlotSchematics
@@ -481,6 +489,15 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 			-- Get quality tier 3 info
 			if reagentInfo.reagents[3] then
 				reagentID3 = reagentInfo.reagents[3].itemID
+			end
+
+			-- Adjust the numbers for crafting orders
+			if craftingOrder then
+				for k, v in pairs (ProfessionShoppingList_Cache.FakeRecipes[craftingRecipeID].reagents) do
+					if v.reagent.itemID == reagentID1 or v.reagent.itemID == reagentID2 or v.reagent.itemID == reagentID3 then
+						reagentAmount = reagentAmount - v.reagent.quantity
+					end
+				end
 			end
 
 			-- Add the different reagent tiers into ProfessionShoppingList_Cache.ReagentTiers so they can be queried later
@@ -515,9 +532,11 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 				end)
 			end
 
-			-- Add the info to the specified variable
-			if reagentVariable[reagentID] == nil then reagentVariable[reagentID] = 0 end
-			reagentVariable[reagentID] = reagentVariable[reagentID] + ( reagentAmount * recipeQuantity )
+			-- Add the info to the specified variable, if it's not 0
+			if reagentAmount > 0 then
+				if reagentVariable[reagentID] == nil then reagentVariable[reagentID] = 0 end
+				reagentVariable[reagentID] = reagentVariable[reagentID] + ( reagentAmount * recipeQuantity )
+			end
 		end
 	end
 end
@@ -807,9 +826,14 @@ function app.UpdateRecipes()
 		app.ReagentQuantities = {}
 
 		for recipeID, recipeInfo in pairs(ProfessionShoppingList_Data.Recipes) do
+			-- Normal recipes
 			if type(recipeID) == "number" then
 				app.GetReagents(app.ReagentQuantities, recipeID, recipeInfo.quantity, recipeInfo.recraft)
-			elseif ProfessionShoppingList_Cache.FakeRecipes[recipeID] then
+			-- Crafting orders
+			elseif ProfessionShoppingList_Cache.FakeRecipes[recipeID] and string.sub(recipeID, 1, 6) == "order:" then
+				app.GetReagents(app.ReagentQuantities, recipeID, recipeInfo.quantity, recipeInfo.recraft)
+			-- Vendor items
+			elseif ProfessionShoppingList_Cache.FakeRecipes[recipeID] and string.sub(recipeID, 1, 7) == "vendor:" then
 				-- Add gold costs
 				if ProfessionShoppingList_Cache.FakeRecipes[recipeID].costCopper > 0 then
 					if app.ReagentQuantities["gold"] == nil then app.ReagentQuantities["gold"] = 0 end
@@ -1000,11 +1024,11 @@ function app.UpdateRecipes()
 					-- Try write link to chat
 					ChatEdit_InsertLink(recipeInfo.link)
 				-- If Control is held also
-				elseif IsControlKeyDown() == true then
+				elseif IsControlKeyDown() == true and type(recipeInfo.recipeID) == "number" then
 						C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
 						C_TradeSkillUI.OpenRecipe(recipeInfo.recipeID)
 				-- If Alt is held also
-				elseif IsAltKeyDown() == true then
+				elseif IsAltKeyDown() == true and type(recipeInfo.recipeID) == "number" then
 					C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
 					C_TradeSkillUI.OpenRecipe(recipeInfo.recipeID)
 					-- Make sure the tradeskill frame is loaded
@@ -1533,7 +1557,7 @@ function app.UpdateRecipes()
 	local trackRecipes = false
 	local trackItems = false
 	for k, v in pairs(ProfessionShoppingList_Data.Recipes) do
-		if type(k) == "number" then
+		if type(k) == "number" or string.sub(k, 1, 6) == "order:" then
 			trackRecipes = true
 		else
 			trackItems = true
@@ -1781,7 +1805,6 @@ function app.UpdateRecipes()
 	if not ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID] or ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID].quantity == 0 then
 		if app.Flag["tradeskillAssets"] == true then
 			untrackProfessionButton:Disable()
-			untrackMakeOrderButton:Disable()
 		end
 		if app.Flag["craftingOrderAssets"] == true then
 			untrackPlaceOrderButton:Disable()
@@ -1789,19 +1812,9 @@ function app.UpdateRecipes()
 	else
 		if app.Flag["tradeskillAssets"] == true then
 			untrackProfessionButton:Enable()
-			untrackMakeOrderButton:Enable()
 		end
 		if app.Flag["craftingOrderAssets"] == true then
 			untrackPlaceOrderButton:Enable()
-		end
-	end
-
-	-- Check if the making crafting orders Untrack button should be enabled
-	if app.OrderRecipeID ~= 0 and app.Flag["tradeskillAssets"] == true then
-		if not ProfessionShoppingList_Data.Recipes[app.OrderRecipeID] or ProfessionShoppingList_Data.Recipes[app.OrderRecipeID].quantity == 0 then
-			untrackMakeOrderButton:Disable()
-		else
-			untrackMakeOrderButton:Enable()
 		end
 	end
 
@@ -1838,7 +1851,7 @@ function app.Toggle()
 end
 
 -- Track recipe
-function app.TrackRecipe(recipeID, recipeQuantity)
+function app.TrackRecipe(recipeID, recipeQuantity, orderID)
 	-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
 	if C_TradeSkillUI.GetRecipeSchematic(recipeID,false).recipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(recipeID,false).reagentSlotSchematics[1] == nil then
 		do return end
@@ -1907,7 +1920,29 @@ function app.TrackRecipe(recipeID, recipeQuantity)
 	end
 
 	-- Track recipe
-	if not ProfessionShoppingList_Data.Recipes[recipeID] then ProfessionShoppingList_Data.Recipes[recipeID] = { quantity = 0, recraft = app.Flag["recraft"], link = recipeLink } end
+	if orderID then
+		local ordersTable = C_CraftingOrders.GetCrafterOrders()
+		local reagents = {}
+		local key
+
+		for i, orderInfo in pairs (ordersTable) do
+			if orderID == orderInfo.orderID then
+				key = "order:" .. orderID .. ":" .. recipeID
+
+				ProfessionShoppingList_Cache.FakeRecipes[key] = {
+					["spellID"] = recipeID,
+					["tradeskillID"] = 1,	-- Crafting order
+					["reagents"] = orderInfo.reagents
+				}
+
+				recipeID = key
+			end
+		end
+	end
+
+	if not ProfessionShoppingList_Data.Recipes[recipeID] then
+		ProfessionShoppingList_Data.Recipes[recipeID] = { quantity = 0, recraft = app.Flag["recraft"], link = recipeLink }
+	end
 	ProfessionShoppingList_Data.Recipes[recipeID].quantity = ProfessionShoppingList_Data.Recipes[recipeID].quantity + recipeQuantity
 
 	-- Show window
@@ -1950,6 +1985,11 @@ function app.UntrackRecipe(recipeID, recipeQuantity)
 			ebRecipeQuantityNo = 0
 		end
 		ebRecipeQuantity:SetText(ebRecipeQuantityNo)
+
+		if app.OrderInfo and app.OrderInfo.orderID == tonumber(string.match(recipeID, ":(%d+):")) then
+			trackMakeOrderButton:SetText("Track")
+			trackMakeOrderButton:SetWidth(trackMakeOrderButton:GetTextWidth()+20)
+		end
 	end
 end
 
@@ -2224,40 +2264,53 @@ function app.CreateTradeskillAssets()
 		millingDragonflight:SetText(app.Colour("Milling information").."\n|cffFFFFFFFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nBlazing Pigment: Saxifrage\nShimmering Pigment: Hochenblume")
 	end
 
-	-- Create the fulfil crafting orders UI Track button
+	-- Grab the order information when opening a crafting order (THANK YOU PLUSMOUSE <3)
+	hooksecurefunc(ProfessionsFrame.OrdersPage, "ViewOrder", function(_, orderDetails)
+		app.OrderInfo = orderDetails
+
+		local key = "order:" .. app.OrderInfo.orderID .. ":" .. app.OrderInfo.spellID
+
+		if ProfessionShoppingList_Data.Recipes[key] then
+			trackMakeOrderButton:SetText("Untrack")
+			trackMakeOrderButton:SetWidth(trackMakeOrderButton:GetTextWidth()+20)
+		else
+			trackMakeOrderButton:SetText("Track")
+			trackMakeOrderButton:SetWidth(trackMakeOrderButton:GetTextWidth()+20)
+		end
+	end)
+
+	-- Create the fulfil crafting orders UI (Un)track button
 	if not trackMakeOrderButton then
 		trackMakeOrderButton = app.Button(ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "Track")
 		trackMakeOrderButton:SetPoint("TOPRIGHT", ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "TOPRIGHT", -9, -10)
 		trackMakeOrderButton:SetScript("OnClick", function()
-			local oldIsRecraft = app.Flag["recraft"]
-			if ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.RecraftingOutputText:IsVisible() == true then
-				app.Flag["recraft"] = true
-			end
+			local key = "order:" .. app.OrderInfo.orderID .. ":" .. app.OrderInfo.spellID
 
-			if app.OrderRecipeID == 0 then
-				app.TrackRecipe(app.SelectedRecipeID, 1)
+			if ProfessionShoppingList_Data.Recipes[key] then
+				-- Untrack the recipe
+				app.UntrackRecipe(key, 1)
+
+				-- Change button text
+				trackMakeOrderButton:SetText("Track")
+				trackMakeOrderButton:SetWidth(trackMakeOrderButton:GetTextWidth()+20)
 			else
-				app.TrackRecipe(app.OrderRecipeID, 1)
-			end
+				local oldIsRecraft = app.Flag["recraft"]
+				-- Set the recraft flag
+				if app.OrderInfo.isRecraft then
+					app.Flag["recraft"] = true
+				end
 
-			if ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.RecraftingOutputText:IsVisible() == true then
-				app.Flag["recraft"] = oldIsRecraft
-			end
+				-- Track the recipe
+				app.TrackRecipe(app.OrderInfo.spellID, 1, app.OrderInfo.orderID)
 
-			-- Show window
-			app.Show()
-		end)
-	end
+				-- Revert the recraft flag
+				if app.OrderInfo.isRecraft then
+					app.Flag["recraft"] = oldIsRecraft
+				end
 
-	-- Create the fulfil crafting orders UI untrack button
-	if not untrackMakeOrderButton then
-		untrackMakeOrderButton = app.Button(ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "Untrack")
-		untrackMakeOrderButton:SetPoint("TOPRIGHT", trackMakeOrderButton, "TOPLEFT", -4, 0)
-		untrackMakeOrderButton:SetScript("OnClick", function()
-			if app.OrderRecipeID == 0 then
-				app.UntrackRecipe(app.SelectedRecipeID, 1)
-			else
-				app.UntrackRecipe(app.OrderRecipeID, 1)
+				-- Change button text
+				trackMakeOrderButton:SetText("Untrack")
+				trackMakeOrderButton:SetWidth(trackMakeOrderButton:GetTextWidth()+20)
 			end
 
 			-- Show window
@@ -2363,9 +2416,6 @@ function app.UpdateAssets()
 		if app.Flag["craftingOrderAssets"] == true then
 			trackPlaceOrderButton:Enable()
 		end
-		if app.Flag["tradeskillAssets"] == true then
-			trackMakeOrderButton:Enable()
-		end
 	end
 
 	-- Disable tracking button for 2 = Salvage, recipes without reagents
@@ -2374,10 +2424,6 @@ function app.UpdateAssets()
 			trackPlaceOrderButton:Disable()
 			untrackPlaceOrderButton:Disable()
 		end
-		if app.Flag["tradeskillAssets"] == true then
-			trackMakeOrderButton:Disable()
-			untrackMakeOrderButton:Disable()
-		end
 	end
 
 	-- Enable tracking button for tracked recipes
@@ -2385,15 +2431,9 @@ function app.UpdateAssets()
 		if app.Flag["craftingOrderAssets"] == true then
 			untrackPlaceOrderButton:Disable()
 		end
-		if app.Flag["tradeskillAssets"] == true then
-			untrackMakeOrderButton:Disable()
-		end
 	else
 		if app.Flag["craftingOrderAssets"] == true then
 			untrackPlaceOrderButton:Enable()
-		end
-		if app.Flag["tradeskillAssets"] == true then
-			untrackMakeOrderButton:Enable()
 		end
 	end
 
@@ -2496,7 +2536,8 @@ function app.Clear()
 	-- Disable remove button
 	if app.Flag["tradeskillAssets"] == true then
 		untrackProfessionButton:Disable()
-		untrackMakeOrderButton:Disable()
+		trackMakeOrderButton:SetText("Track")
+		trackMakeOrderButton:SetWidth(trackMakeOrderButton:GetTextWidth()+20)
 	end
 	if app.Flag["craftingOrderAssets"] == true then
 		untrackPlaceOrderButton:Disable()
@@ -3113,7 +3154,7 @@ function event:MERCHANT_SHOW()
 			local _, _, itemPrice = GetMerchantItemInfo(vendorIndex)
 
 			-- Add this as a fake recipe
-			local key = merchant..":"..itemID
+			local key = "vendor:" .. merchant .. ":" .. itemID
 			ProfessionShoppingList_Cache.FakeRecipes[key] = {
 				["itemID"] = itemID,
 				["tradeskillID"] = 0,	-- Vendor item
