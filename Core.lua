@@ -2995,7 +2995,8 @@ function event:TRADE_SKILL_SHOW()
 					local concentration = string.match(ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount:GetText(), "%d+")
 				
 					if concentration then
-						local timeLeft = math.ceil((1000 - concentration) / 10)
+						-- 250 Concentration per 24 hours
+						local timeLeft = math.ceil((1000 - concentration) / 250 * 24)
 
 						app.Concentration:SetText("|cffFFFFFFFully recharged:|r "..timeLeft.."h")
 					else
