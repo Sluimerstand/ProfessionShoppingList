@@ -544,8 +544,21 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 	-- Manually insert the reagents if it's a CraftSim recipe
 	if ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim then
 		for k, v in pairs(ProfessionShoppingList_Cache.CraftSimRecipes[craftingRecipeID]) do
-			if reagentVariable[k] == nil then reagentVariable[k] = 0 end
-			reagentVariable[k] = reagentVariable[k] + (v * ProfessionShoppingList_Data.Recipes[craftingRecipeID].quantity)
+			-- Check if the reagent isn't provided if it's a crafting order
+			local providedReagents = {}
+			if ProfessionShoppingList_Cache.FakeRecipes[craftingRecipeID] then
+				for k, v in pairs(ProfessionShoppingList_Cache.FakeRecipes[craftingRecipeID].reagents) do
+					-- Just add all qualities to be thorough, these can't double up within the same recipe anyway
+					providedReagents[ProfessionShoppingList_Cache.ReagentTiers[v.reagent.itemID].one] = v.reagent.quantity
+					providedReagents[ProfessionShoppingList_Cache.ReagentTiers[v.reagent.itemID].two] = v.reagent.quantity
+					providedReagents[ProfessionShoppingList_Cache.ReagentTiers[v.reagent.itemID].three] = v.reagent.quantity
+				end
+			end
+			
+			if not providedReagents[k] then
+				if reagentVariable[k] == nil then reagentVariable[k] = 0 end
+				reagentVariable[k] = reagentVariable[k] + (v * ProfessionShoppingList_Data.Recipes[craftingRecipeID].quantity)
+			end
 		end
 	end
 end
