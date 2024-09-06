@@ -2411,13 +2411,21 @@ function app.CreateTradeskillAssets()
 		end)
 	end
 
-	-- Create Dragonflight Milling info
-	if not app.Concentration then
+	-- Create Concentration info
+	if not app.Concentration1 then
 		ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.ConcentrationDisplay.Icon, "TOPRIGHT", 6, 0)
 
-		app.Concentration = ProfessionsFrame.CraftingPage.ConcentrationDisplay:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.Concentration:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount, "BOTTOMLEFT", 0, 0)
-		app.Concentration:SetJustifyH("LEFT")
+		app.Concentration1 = ProfessionsFrame.CraftingPage.ConcentrationDisplay:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.Concentration1:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount, "BOTTOMLEFT", 0, 0)
+		app.Concentration1:SetJustifyH("LEFT")
+	end
+
+	if not app.Concentration2 then
+		ProfessionsFrame.OrdersPage.OrderView.ConcentrationDisplay.Amount:SetPoint("TOPLEFT", ProfessionsFrame.OrdersPage.OrderView.ConcentrationDisplay.Icon, "TOPRIGHT", 6, 0)
+
+		app.Concentration2 = ProfessionsFrame.OrdersPage.OrderView.ConcentrationDisplay:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.Concentration2:SetPoint("TOPLEFT", ProfessionsFrame.OrdersPage.OrderView.ConcentrationDisplay.Amount, "BOTTOMLEFT", 0, 0)
+		app.Concentration2:SetJustifyH("LEFT")
 	end
 
 	-- Set the flag for assets created to true
@@ -3007,9 +3015,11 @@ function event:TRADE_SKILL_SHOW()
 						-- 250 Concentration per 24 hours
 						local timeLeft = math.ceil((1000 - concentration) / 250 * 24)
 
-						app.Concentration:SetText("|cffFFFFFFFully recharged:|r "..timeLeft.."h")
+						app.Concentration1:SetText("|cffFFFFFFFully recharged:|r "..timeLeft.."h")
+						app.Concentration2:SetText("|cffFFFFFFFully recharged:|r "..timeLeft.."h")
 					else
-						app.Concentration:SetText("|cffFFFFFFFully recharged:|r ?")
+						app.Concentration1:SetText("|cffFFFFFFFully recharged:|r ?")
+						app.Concentration2:SetText("|cffFFFFFFFully recharged:|r ?")
 					end
 				end
 			end)
