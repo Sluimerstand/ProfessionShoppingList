@@ -3059,8 +3059,6 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 			app.SelectedRecipeID = spellID
 			app.RecipeType = C_TradeSkillUI.GetRecipeSchematic(spellID, false).recipeType
 			app.UpdateAssets()
-		else
-			app.SelectedRecipeID = 0
 		end
 		
 		-- Milling info
