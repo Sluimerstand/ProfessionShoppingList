@@ -553,7 +553,18 @@ end
 -- Get owned reagent quantity, accounting for reagent quality
 function app.GetReagentCount(reagentID)
 	local reagentCount = 0
-	if ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 3 then
+
+	-- Index CraftSim reagents, whose quality is not subject to our quality setting
+	local craftSimReagents = {}
+	for k, v in pairs(ProfessionShoppingList_Cache.CraftSimRecipes) do
+		for k2, v2 in pairs(v) do
+			craftSimReagents[k2] = v2
+		end
+	end
+
+	if craftSimReagents[reagentID] then
+		reagentCount = C_Item.GetItemCount(reagentID, true, false, true, true)
+	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 3 then
 		reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true)
 	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 2 then
 		reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true)
