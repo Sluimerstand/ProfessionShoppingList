@@ -2460,13 +2460,13 @@ end
 function app.UpdateAssets()
 	if app.Flag["tradeskillAssets"] == true then
 		-- Enable tracking button for 1 = Item, 3 = Enchant
-		if pslRecipeType == 1 or pslRecipeType == 3 then
+		if app.RecipeType == 1 or app.RecipeType == 3 then
 			trackProfessionButton:Enable()
 			ebRecipeQuantity:Enable()
 		end
 
 		-- Disable tracking button for 2 = Salvage, recipes without reagents
-		if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(app.SelectedRecipeID,false).reagentSlotSchematics[1] == nil then
+		if app.RecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(app.SelectedRecipeID,false).reagentSlotSchematics[1] == nil then
 			trackProfessionButton:Disable()
 			untrackProfessionButton:Disable()
 			ebRecipeQuantity:Disable()
@@ -2537,14 +2537,14 @@ function app.UpdateAssets()
 	end
 
 	-- Enable tracking button for 1 = Item, 3 = Enchant
-	if pslRecipeType == 1 or pslRecipeType == 3 then
+	if app.RecipeType == 1 or app.RecipeType == 3 then
 		if app.Flag["craftingOrderAssets"] == true then
 			trackPlaceOrderButton:Enable()
 		end
 	end
 
 	-- Disable tracking button for 2 = Salvage, recipes without reagents
-	if pslRecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(app.SelectedRecipeID,false).reagentSlotSchematics[1] == nil then
+	if app.RecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(app.SelectedRecipeID,false).reagentSlotSchematics[1] == nil then
 		if app.Flag["craftingOrderAssets"] == true then
 			trackPlaceOrderButton:Disable()
 			untrackPlaceOrderButton:Disable()
@@ -3054,17 +3054,15 @@ end
 -- When a recipe is selected (also used to determine professionID, which TRADE_SKILL_SHOW() is too quick for)
 function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 	if UnitAffectingCombat("player") == false then
-		-- Only set this number if it actually is a recipe
-		if C_TradeSkillUI.GetRecipeSchematic(spellID,false).reagentSlotSchematics[1] ~= nil then
+		-- Only set this number and refresh out assets for it, if it actually is a recipe
+		if C_TradeSkillUI.GetRecipeRequirements(spellID) ~= nil then
 			app.SelectedRecipeID = spellID
+			app.RecipeType = C_TradeSkillUI.GetRecipeSchematic(spellID, false).recipeType
+			app.UpdateAssets()
 		else
 			app.SelectedRecipeID = 0
 		end
 		
-		pslRecipeType = C_TradeSkillUI.GetRecipeSchematic(app.SelectedRecipeID,false).recipeType
-
-		app.UpdateAssets()
-
 		-- Milling info
 		local function millingInfo()
 			-- Check if/what Milling info should be displayed
@@ -3394,7 +3392,7 @@ function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 	end
 end
 
--- When a recipe is selected (very for realsies)
+-- When a recipe is selected (very for realsies, although this doesn't work for crafting orders, which is why I still use SPELL_DATA_LOAD_RESULT)
 EventRegistry:RegisterCallback("ProfessionsRecipeListMixin.Event.OnRecipeSelected", function(_, recipeInfo)
 	if recipeInfo["isRecraft"] == true then app.Flag["recraft"] = true
 	elseif recipeInfo["isRecraft"] == false then app.Flag["recraft"] = false
