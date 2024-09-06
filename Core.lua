@@ -2058,9 +2058,15 @@ function app.CreateTradeskillAssets()
 				if craftSimRequiredReagents then
 					local reagents = {}
 					for k, v in pairs(craftSimRequiredReagents) do
-						for k2, v2 in pairs(v.items) do
-							if v2.quantity > 0 then
-								reagents[v2.item.itemID] = v2.quantity
+						-- For reagents without quality
+						if not v.hasQuality then
+							reagents[v.items[1].item.itemID] = v.requiredQuantity
+						-- For reagents with quality
+						else
+							for k2, v2 in pairs(v.items) do
+								if v2.quantity > 0 then
+									reagents[v2.item.itemID] = v2.quantity
+								end
 							end
 						end
 					end
@@ -2337,12 +2343,6 @@ function app.CreateTradeskillAssets()
 			if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
 				craftSim = true
 				
-				-- Grab the provided reagents
-				local providedReagents = {}
-				for k, v in pairs(app.OrderInfo.reagents) do
-					providedReagents[v.reagent.itemID] = v.reagent.quantity
-				end
-
 				-- Grab the reagents it provides
 				local craftSimSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
 				craftSimRequiredReagents = craftSimSimulationMode.recipeData.reagentData.requiredReagents
@@ -2350,11 +2350,13 @@ function app.CreateTradeskillAssets()
 				if craftSimRequiredReagents then
 					local reagents = {}
 					for k, v in pairs(craftSimRequiredReagents) do
-						for k2, v2 in pairs(v.items) do
-							if v2.quantity > 0 then
-								-- Exclude provided reagents
-								if providedReagents[v2.item.itemID] or (ProfessionShoppingList_Cache.ReagentTiers[v2.item.itemID] and (providedReagents[ProfessionShoppingList_Cache.ReagentTiers[v2.item.itemID].one] or providedReagents[ProfessionShoppingList_Cache.ReagentTiers[v2.item.itemID].two] or providedReagents[ProfessionShoppingList_Cache.ReagentTiers[v2.item.itemID].three])) then
-								else
+						-- For reagents without quality
+						if not v.hasQuality then
+							reagents[v.items[1].item.itemID] = v.requiredQuantity
+						-- For reagents with quality
+						else
+							for k2, v2 in pairs(v.items) do
+								if v2.quantity > 0 then
 									reagents[v2.item.itemID] = v2.quantity
 								end
 							end
