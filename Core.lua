@@ -2087,13 +2087,20 @@ function app.CreateTradeskillAssets()
 	-- Create the profession UI quantity editbox
 	if not ebRecipeQuantityNo then ebRecipeQuantityNo = 0 end
 	local function ebRecipeQuantityUpdate(self, newValue)
+		local craftSim = false
+
+		-- If CraftSim is active (thanks Blaez)
+		if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
+			craftSim = true
+		end
+
 		-- Get the entered number cleanly
 		newValue = math.floor(self:GetNumber())
 		-- If the value is positive, change the number of recipes tracked
 		if newValue >= 0 then
-			app.UntrackRecipe(app.SelectedRecipeID,0)
+			app.UntrackRecipe(app.SelectedRecipeID, 0)
 			if newValue >0 then
-				app.TrackRecipe(app.SelectedRecipeID, newValue)
+				app.TrackRecipe(app.SelectedRecipeID, newValue, nil, craftSim)
 			end
 		end
 	end
