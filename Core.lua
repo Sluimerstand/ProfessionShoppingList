@@ -1303,7 +1303,6 @@ function app.UpdateRecipes()
 					
 					-- If two options
 					if no >= 2 then
-						print("hi2")
 						-- Adjust popup frame
 						f:SetSize(430, 205)
 
