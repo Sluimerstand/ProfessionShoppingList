@@ -3001,19 +3001,21 @@ function event:TRADE_SKILL_SHOW()
 			app.CreateTradeskillAssets()
 		end
 
-		-- Register all recipes for this profession
-		for _, recipeID in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
-		-- If there is an output item
-		local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID
-			local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
-			local ability = C_TradeSkillUI.GetRecipeInfo(recipeID).skillLineAbilityID
-			-- Register the output item, the recipe's abilityID, and the recipe's profession
-			if item ~= nil then
-				ProfessionShoppingList_Library[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill}
-			else
-				ProfessionShoppingList_Library[recipeID] = {itemID = 0, abilityID = ability, tradeskillID = tradeskill}
+		-- Register all recipes for this profession, on a delay so we give all this info time to load.
+		C_Timer.After(2, function()
+			for _, recipeID in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
+			-- If there is an output item
+			local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID
+				local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
+				local ability = C_TradeSkillUI.GetRecipeInfo(recipeID).skillLineAbilityID
+				-- Register the output item, the recipe's abilityID, and the recipe's profession
+				if item ~= nil then
+					ProfessionShoppingList_Library[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill}
+				else
+					ProfessionShoppingList_Library[recipeID] = {itemID = 0, abilityID = ability, tradeskillID = tradeskill}
+				end
 			end
-		end
+		end)
 
 		-- Get Alvin the Anvil's GUID
 		for i=1, 9999 do
