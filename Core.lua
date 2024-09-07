@@ -534,7 +534,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 			end
 
 			-- Add the info to the specified variable, if it's not 0 and not a CraftSim recipe
-			if not ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim and reagentAmount > 0 then
+			if (ProfessionShoppingList_Data.Recipes[craftingRecipeID] and not ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim and reagentAmount > 0) or not ProfessionShoppingList_Data.Recipes[craftingRecipeID] then
 				if reagentVariable[reagentID] == nil then reagentVariable[reagentID] = 0 end
 				reagentVariable[reagentID] = reagentVariable[reagentID] + ( reagentAmount * recipeQuantity )
 			end
@@ -542,7 +542,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 	end
 
 	-- Manually insert the reagents if it's a CraftSim recipe
-	if ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim then
+	if ProfessionShoppingList_Data.Recipes[craftingRecipeID] and ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim then
 		for k, v in pairs(ProfessionShoppingList_Cache.CraftSimRecipes[craftingRecipeID]) do
 			-- Check if the reagent isn't provided if it's a crafting order
 			local providedReagents = {}
@@ -1303,6 +1303,7 @@ function app.UpdateRecipes()
 					
 					-- If two options
 					if no >= 2 then
+						print("hi2")
 						-- Adjust popup frame
 						f:SetSize(430, 205)
 
