@@ -85,6 +85,13 @@ function app.CreateAuctionatorButton()
 						local reagentCount = app.GetReagentCount(reagentID)
 						reagentCount = math.max(0, reagentAmount - reagentCount)
 
+						-- But make it zero if it's a subreagent
+						for k, v in pairs(ProfessionShoppingList_Data.Recipes) do
+							if ProfessionShoppingList_Library[k] and ProfessionShoppingList_Library[k].itemID == reagentID then
+								reagentCount = 0
+							end
+						end
+
 						-- Put the items in the temporary variable
 						if reagentCount > 0 then
 							table.insert(searchStrings, Auctionator.API.v1.ConvertToSearchString(app.Name, { searchString = itemName, isExact = true, categoryKey = "", tier = reagentQuality, quantity = reagentCount}))
