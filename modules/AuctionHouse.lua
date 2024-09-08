@@ -72,10 +72,8 @@ function app.CreateAuctionatorButton()
 								reagentQuality = 3
 							elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two == reagentID then
 								reagentQuality = 2
-							elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].one == reagentID and ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 then
-								reagentQuality = 1
 							end
-						elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 3 then
+						elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].three ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 3 then
 							reagentQuality = 3
 						elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 2 then
 							reagentQuality = 2
