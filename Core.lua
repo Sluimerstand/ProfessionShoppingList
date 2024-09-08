@@ -2003,6 +2003,7 @@ function app.UntrackRecipe(recipeID, recipeQuantity)
 		-- Set numbers to nil if it doesn't exist anymore
 		if ProfessionShoppingList_Data.Recipes[recipeID].quantity <= 0 then
 			ProfessionShoppingList_Data.Recipes[recipeID] = nil
+			ProfessionShoppingList_Cache.CraftSimRecipes[recipeID] = nil
 		end
 	end
 
@@ -2658,6 +2659,7 @@ function app.Clear()
 	ProfessionShoppingList_Cache.ReagentTiers = {}
 	ProfessionShoppingList_Cache.Reagents = {}
 	ProfessionShoppingList_Cache.FakeRecipes = {}
+	ProfessionShoppingList_Cache.CraftSimRecipes = {}
 	app.UpdateRecipes()
 	app.Window.ScrollFrame:SetVerticalScroll(0)
 
