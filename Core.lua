@@ -231,6 +231,7 @@ function app.InitialiseCore()
 	app.SelectedRecipeID = 0
 	app.UpdatedCooldownWidth = 0
 	app.UpdatedReagentWidth = 0
+	app.IncludeWarbank = true	-- Temporary flag until Blizz fixes their shit
 
 	-- Register our AddOn communications channel
 	C_ChatInfo.RegisterAddonMessagePrefix("ProfShopList")
@@ -446,6 +447,17 @@ function app.CreateWindow()
 	scrollFrame:SetScript("OnVerticalScroll", function() scrollChild:SetPoint("BOTTOMRIGHT", scrollFrame) end)
 	app.Window.Child = scrollChild
 	app.Window.ScrollFrame = scrollFrame
+
+	-- Temporary checkbox until Blizz fixes their shit
+	local checkBox = CreateFrame("CheckButton", nil, app.Window, "ChatConfigCheckButtonTemplate")
+	checkBox:SetPoint("TOPLEFT", app.Window, "BOTTOMLEFT", 2, 0)
+	checkBox.Text:SetText("Include Warbank")
+	checkBox.tooltip = "Because crafting orders cannot use items stored in the Warbank currently, you can disable tracking them."
+	checkBox:HookScript("OnClick", function()
+		app.IncludeWarbank = checkBox:GetChecked()
+		app.UpdateNumbers()
+	end)
+	checkBox:SetChecked(app.IncludeWarbank)
 end
 
 -- Get reagents for recipe
@@ -579,18 +591,31 @@ function app.GetReagentCount(reagentID)
 	end
 
 	if craftSimReagents[reagentID] then
-		reagentCount = C_Item.GetItemCount(reagentID, true, false, true, true)
+		if ProfessionShoppingList_Cache.ReagentTiers[reagentID] then
+			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three == reagentID then
+				reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
+			elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two == reagentID then
+				reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
+							 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+			elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].one == reagentID then
+				reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
+							 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+							 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
+			end
+		else
+			reagentCount = C_Item.GetItemCount(reagentID, true, false, true, app.IncludeWarbank)
+		end
 	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 3 then
-		reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true)
+		reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
 	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 2 then
-		reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true)
-					 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, true)
+		reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
+					 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
 	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 1 then
-		reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true)
-					 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, true)
-					 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, true)
+		reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
+					 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+					 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
 	else
-		reagentCount = C_Item.GetItemCount(reagentID, true, false, true, true)
+		reagentCount = C_Item.GetItemCount(reagentID, true, false, true, app.IncludeWarbank)
 	end
 
 	return reagentCount
@@ -628,27 +653,7 @@ function app.UpdateNumbers()
 
 		if type(reagentID) == "number" then
 			-- Get needed/owned number of reagents
-			local reagentAmountHave1 = 0
-			local reagentAmountHave2 = 0
-			local reagentAmountHave3 = 0
-
-			reagentAmountHave1 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, true)
-			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 then
-				reagentAmountHave2 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, true)
-			end
-			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three ~= 0 then
-				reagentAmountHave3 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true)
-			end
-
-			-- Calculate owned amount based on the quality of the item
-			local reagentAmountHave = 0
-			if reagentID == ProfessionShoppingList_Cache.ReagentTiers[reagentID].one then
-				reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
-			elseif reagentID == ProfessionShoppingList_Cache.ReagentTiers[reagentID].two then
-				reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
-			elseif reagentID == ProfessionShoppingList_Cache.ReagentTiers[reagentID].three then
-				reagentAmountHave = reagentAmountHave3
-			end
+			local reagentAmountHave = app.GetReagentCount(reagentID)
 
 			-- Make stuff grey and add a checkmark if 0 are needed
 			if math.max(0,amount-reagentAmountHave) == 0 then
@@ -2618,15 +2623,15 @@ function app.TooltipInfo()
 
 			if ProfessionShoppingList_Cache.ReagentTiers[itemID] and ProfessionShoppingList_Cache.ReagentTiers[itemID].one ~= 0 then
 				reagentID1 = ProfessionShoppingList_Cache.ReagentTiers[itemID].one
-				reagentAmountHave1 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].one, true, false, true, true)
+				reagentAmountHave1 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].one, true, false, true, app.IncludeWarbank)
 			end
 			if ProfessionShoppingList_Cache.ReagentTiers[itemID] and ProfessionShoppingList_Cache.ReagentTiers[itemID].two ~= 0 then
 				reagentID2 = ProfessionShoppingList_Cache.ReagentTiers[itemID].two
-				reagentAmountHave2 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].two, true, false, true, true)
+				reagentAmountHave2 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].two, true, false, true, app.IncludeWarbank)
 			end
 			if ProfessionShoppingList_Cache.ReagentTiers[itemID] and ProfessionShoppingList_Cache.ReagentTiers[itemID].three ~= 0 then
 				reagentID3 = ProfessionShoppingList_Cache.ReagentTiers[itemID].three
-				reagentAmountHave3 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].three, true, false, true, true)
+				reagentAmountHave3 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].three, true, false, true, app.IncludeWarbank)
 			end
 
 			-- Calculate owned amount/needed based on item quality
