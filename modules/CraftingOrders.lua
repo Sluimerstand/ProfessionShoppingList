@@ -151,7 +151,7 @@ function app.CreateCraftingOrdersAssets()
 		-- Only add the reagentInfo if the option is enabled
 		if ProfessionShoppingList_Settings["useLocalReagents"] == true then localReagentsOrder() end
 
-		-- Signal that PSL is currently working on a quick order with local reagents, if applicable
+		-- Signal that PSL is currently working on a quick order with tiered local reagents, if applicable
 		local next = next
 		if next(craftingReagentInfo) ~= nil and ProfessionShoppingList_Settings["useLocalReagents"] == true then
 			app.Flag["quickOrder"] = 2
@@ -423,9 +423,13 @@ function event:CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE(result)
 		if result == 29 then
 			app.Print("Can't create a quick order for items with mandatory reagents. Sorry. :(")
 		end
+		-- Separate error message for uh, I don't evem know
+		if result == 37 then
+			app.Print("Cannot place a guild order while not in a guild.")
+		end
 		-- Separate error message if the target can't craft
 		if result == 40 then
-			app.Print("Target character cannot craft that item. Please enter a valid character name.")
+			app.Print("Target recipient cannot craft that item. Please enter a valid recipient name.")
 		end
 
 		-- Save this info as the last order done, unless it was a failed order
