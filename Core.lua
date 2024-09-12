@@ -3009,17 +3009,28 @@ function event:TRADE_SKILL_SHOW()
 
 		-- Register all recipes for this profession, on a delay so we give all this info time to load.
 		C_Timer.After(2, function()
+			local addedRecipes = 0
 			for _, recipeID in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
 			-- If there is an output item
 			local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID
 				local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
 				local ability = C_TradeSkillUI.GetRecipeInfo(recipeID).skillLineAbilityID
+
 				-- Register the output item, the recipe's abilityID, and the recipe's profession
+				if not ProfessionShoppingList_Library[recipeID] then
+					addedRecipes = addedRecipes + 1
+				end
+
 				if item ~= nil then
 					ProfessionShoppingList_Library[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill}
 				else
 					ProfessionShoppingList_Library[recipeID] = {itemID = 0, abilityID = ability, tradeskillID = tradeskill}
 				end
+			end
+
+			-- Inform the user
+			if addedRecipes > 0 then
+				app.Print("Cached "..addedRecipes.." new recipes. You may need to close and open the tradeskill window.")
 			end
 		end)
 
@@ -3067,7 +3078,7 @@ end
 function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 	if UnitAffectingCombat("player") == false then
 		-- Only set this number and refresh out assets for it, if it actually is a recipe
-		if C_TradeSkillUI.GetRecipeRequirements(spellID) ~= nil then
+		if ProfessionShoppingList_Library[spellID] then
 			app.SelectedRecipeID = spellID
 			app.RecipeType = C_TradeSkillUI.GetRecipeSchematic(spellID, false).recipeType
 			app.UpdateAssets()
