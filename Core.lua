@@ -590,32 +590,95 @@ function app.GetReagentCount(reagentID)
 		end
 	end
 
+	-- Helper functions
+	local function tierOne()
+		local reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
+						   + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+						   + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
+		return reagentCount
+	end
+
+	local function tierTwo()
+		local reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
+						   + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+		return reagentCount
+	end
+
+	local function tierThree()
+		local reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
+		return reagentCount
+	end
+
+	-- Account for multiple tiers of the same reagent
+	local tier1 = false
+	local tier2 = false
+	local tier3 = false
+	local tierTotal = 0
 	if craftSimReagents[reagentID] then
+		if app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].one] then
+			tier1 = true
+			tierTotal = tierTotal + 1
+		end
+		if app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].two] then
+			tier2 = true
+			tierTotal = tierTotal + 1
+		end
+		if app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three] then
+			tier3 = true
+			tierTotal = tierTotal + 1
+		end
+	end
+
+	
+
+	-- Use the CraftSim-provided tier if we have no duplicates
+	if craftSimReagents[reagentID] and tierTotal < 2 then
 		if ProfessionShoppingList_Cache.ReagentTiers[reagentID] then
 			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three == reagentID then
-				reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
+				reagentCount = tierThree()
 			elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two == reagentID then
-				reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
-							 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+				reagentCount = tierTwo()
 			elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].one == reagentID then
-				reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
-							 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
-							 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
+				reagentCount = tierOne()
 			end
-		else
-			reagentCount = C_Item.GetItemCount(reagentID, true, false, true, app.IncludeWarbank)
 		end
+	-- Account for the combinations of 2 different tiers of the same reagent
+	elseif craftSimReagents[reagentID] and tierTotal == 2 then
+		if tier2 and tier1 then
+			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].two == reagentID then
+				reagentCount = tierTwo()
+			elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].one == reagentID then
+				reagentCount = math.max(0, tierOne() - app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].two])
+			end
+		elseif tier3 and tier1 then
+			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three == reagentID then
+				reagentCount = tierThree()
+			elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].one == reagentID then
+				reagentCount = math.max(0, tierOne() - app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three])
+			end
+		elseif tier3 and tier2 then
+			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three == reagentID then
+				reagentCount = tierThree()
+			elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two == reagentID then
+				reagentCount = math.max(0, tierTwo() - app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three])
+			end
+		end
+	-- Account for the combination of all 3 different tiers of the same reagent
+	elseif craftSimReagents[reagentID] and tierTotal == 3 then
+		if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three == reagentID then
+			reagentCount = tierThree()
+		elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two == reagentID then
+			reagentCount = math.max(0, tierTwo() - app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three])
+		elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].one == reagentID then
+			reagentCount = math.max(0, tierOne() - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].two] + app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three]))
+		end
+	-- Use our addon setting if there is no quality specified
 	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 3 then
-		reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
+		reagentCount = tierThree()
 	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 2 then
-		reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
-					 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+		reagentCount = tierTwo()
 	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 1 then
-		reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
-					 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
-					 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
-	else
-		reagentCount = C_Item.GetItemCount(reagentID, true, false, true, app.IncludeWarbank)
+		reagentCount = tierOne()
 	end
 
 	return reagentCount
@@ -2611,45 +2674,45 @@ function app.TooltipInfo()
 		-- Only run this if the setting is enabled
 		if ProfessionShoppingList_Settings["showTooltip"] == true then
 			-- Stop if error, it will try again on its own REAL soon
-			if itemID == nil then return end
-
-			-- Get owned number of reagents
-			local reagentID1
-			local reagentID2
-			local reagentID3
-			local reagentAmountHave1 = 0
-			local reagentAmountHave2 = 0
-			local reagentAmountHave3 = 0
-
-			if ProfessionShoppingList_Cache.ReagentTiers[itemID] and ProfessionShoppingList_Cache.ReagentTiers[itemID].one ~= 0 then
-				reagentID1 = ProfessionShoppingList_Cache.ReagentTiers[itemID].one
-				reagentAmountHave1 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].one, true, false, true, app.IncludeWarbank)
-			end
-			if ProfessionShoppingList_Cache.ReagentTiers[itemID] and ProfessionShoppingList_Cache.ReagentTiers[itemID].two ~= 0 then
-				reagentID2 = ProfessionShoppingList_Cache.ReagentTiers[itemID].two
-				reagentAmountHave2 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].two, true, false, true, app.IncludeWarbank)
-			end
-			if ProfessionShoppingList_Cache.ReagentTiers[itemID] and ProfessionShoppingList_Cache.ReagentTiers[itemID].three ~= 0 then
-				reagentID3 = ProfessionShoppingList_Cache.ReagentTiers[itemID].three
-				reagentAmountHave3 = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[itemID].three, true, false, true, app.IncludeWarbank)
+			if itemID == nil then
+				return
 			end
 
-			-- Calculate owned amount/needed based on item quality
-			local reagentAmountHave = 0
+			-- Get have/need
+			local reagentID1 = 0
+			local reagentID2 = 0
+			local reagentID3 = 0
 			local reagentAmountNeed = 0
-			if itemID == reagentID1 then
-				reagentAmountHave = reagentAmountHave1 + reagentAmountHave2 + reagentAmountHave3
-				reagentAmountNeed = app.ReagentQuantities[reagentID1]
-			elseif itemID == reagentID2 then
-				reagentAmountHave = reagentAmountHave2 + reagentAmountHave3
-				reagentAmountNeed = app.ReagentQuantities[reagentID2]
-			elseif itemID == reagentID3 then
-				reagentAmountHave = reagentAmountHave3
-				reagentAmountNeed = app.ReagentQuantities[reagentID3]
+			local reagentAmountNeed1 = 0
+			local reagentAmountNeed2 = 0
+			local reagentAmountNeed3 = 0
+
+			if ProfessionShoppingList_Cache.ReagentTiers[itemID] then
+				if ProfessionShoppingList_Cache.ReagentTiers[itemID].one ~= 0 then
+					reagentID1 = ProfessionShoppingList_Cache.ReagentTiers[itemID].one
+					reagentAmountNeed1 = app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[itemID].one] or 0
+				end
+				if ProfessionShoppingList_Cache.ReagentTiers[itemID].two ~= 0 then
+					reagentID2 = ProfessionShoppingList_Cache.ReagentTiers[itemID].two
+					reagentAmountNeed2 = app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[itemID].two] or 0
+				end
+				if ProfessionShoppingList_Cache.ReagentTiers[itemID].three ~= 0 then
+					reagentID3 = ProfessionShoppingList_Cache.ReagentTiers[itemID].three
+					reagentAmountNeed3 = app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[itemID].three] or 0
+				end
 			end
+			
+			if itemID == reagentID3 then
+				reagentAmountNeed = reagentAmountNeed1 + reagentAmountNeed2 + reagentAmountNeed3
+			elseif itemID == reagentID2 then
+				reagentAmountNeed = reagentAmountNeed1 + reagentAmountNeed2
+			elseif itemID == reagentID1 then
+				reagentAmountNeed = reagentAmountNeed1
+			end		
 
 			-- Add the tooltip info
-			if (itemID == reagentID1 or itemID == reagentID2 or itemID == reagentID3) and reagentAmountNeed ~= 0 and reagentAmountNeed ~= nil then
+			if reagentAmountNeed > 0 then
+				local reagentAmountHave = app.GetReagentCount(itemID)
 				tooltip:AddLine(" ")
 				tooltip:AddLine(app.NameShort..": "..reagentAmountHave.."/"..reagentAmountNeed.." ("..math.max(0,reagentAmountNeed-reagentAmountHave).." more needed)")
 			end
