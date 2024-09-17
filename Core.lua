@@ -677,6 +677,8 @@ function app.GetReagentCount(reagentID)
 		reagentCount = tierTwo()
 	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].one ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 1 then
 		reagentCount = tierOne()
+	else
+		C_Item.GetItemCount(reagentID, true, false, true, app.IncludeWarbank)
 	end
 
 	return reagentCount
