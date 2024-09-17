@@ -629,8 +629,6 @@ function app.GetReagentCount(reagentID)
 		end
 	end
 
-	
-
 	-- Use the CraftSim-provided tier if we have no duplicates
 	if craftSimReagents[reagentID] and tierTotal < 2 then
 		if ProfessionShoppingList_Cache.ReagentTiers[reagentID] then
@@ -673,11 +671,11 @@ function app.GetReagentCount(reagentID)
 			reagentCount = math.max(0, tierOne() - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].two] + app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three]))
 		end
 	-- Use our addon setting if there is no quality specified
-	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 3 then
+	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].three ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 3 then
 		reagentCount = tierThree()
 	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 2 then
 		reagentCount = tierTwo()
-	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 1 then
+	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].one ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 1 then
 		reagentCount = tierOne()
 	end
 
