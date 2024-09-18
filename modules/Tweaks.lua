@@ -277,6 +277,8 @@ function event:PLAYER_INTERACTION_MANAGER_FRAME_SHOW(type)
 		app.CatalystSkip:SetScript("OnClick", function()
 			ItemInteractionFrame:CompleteItemInteraction()
 		end)
+	end
+	if type == 44 and app.CatalystSkip then
 		app.CatalystSkip:Show()
 	end
 end
