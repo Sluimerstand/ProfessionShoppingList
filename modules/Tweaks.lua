@@ -22,6 +22,7 @@ event:RegisterEvent("LFG_PROPOSAL_SHOW")
 event:RegisterEvent("MERCHANT_SHOW")
 event:RegisterEvent("PET_BATTLE_QUEUE_PROPOSE_MATCH")
 event:RegisterEvent("PLAYER_ENTERING_WORLD")
+event:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
 
 ------------------
 -- INITIAL LOAD --
@@ -261,6 +262,16 @@ function app.DisableHandyNotesAltRMB()
 			f:SetParent(f2)
 			f2:Hide()
 		end
+	end
+end
+
+function event:PLAYER_INTERACTION_MANAGER_FRAME_SHOW(type)
+	if type == 44 and not app.CatalystSkip then
+		app.CatalystSkip = app.Button(ItemInteractionFrame, "Instantly Catalyze")
+		app.CatalystSkip:SetPoint("CENTER", ItemInteractionFrameTitleText, 0, -30)
+		app.CatalystSkip:SetScript("OnClick", function()
+			ItemInteractionFrame:CompleteItemInteraction()
+		end)
 	end
 end
 
