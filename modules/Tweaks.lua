@@ -265,6 +265,10 @@ function app.DisableHandyNotesAltRMB()
 	end
 end
 
+------------------------
+-- INSTANTLY CATALYSE --
+------------------------
+
 function event:PLAYER_INTERACTION_MANAGER_FRAME_SHOW(type)
 	if type == 44 and not app.CatalystSkip then
 		app.CatalystSkip = app.Button(ItemInteractionFrame, "Instantly Catalyze")
