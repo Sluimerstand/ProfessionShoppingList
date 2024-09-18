@@ -3629,6 +3629,9 @@ function app.TrackUnlearnedMog()
 
 	local recipes = app.GetVisibleRecipes()
 
+	-- Start a count
+	local added = 0
+
 	for i, recipeID in pairs(recipes) do
 		-- Grab the output itemID
 		local itemID = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).outputItemID
@@ -3636,7 +3639,7 @@ function app.TrackUnlearnedMog()
 		-- Cache the item, if there is an output item
 		if itemID then
 			local item = Item:CreateFromItemID(itemID)
-		
+
 			-- And when the item is cached
 			item:ContinueOnItemLoad(function()
 				-- Get item link
@@ -3646,12 +3649,14 @@ function app.TrackUnlearnedMog()
 				if app.GetAppearanceInfo(itemLink, TRANSMOGRIFY_TOOLTIP_APPEARANCE_UNKNOWN)
 				or (ProfessionShoppingList_Settings["collectMode"] == 2 and app.GetAppearanceInfo(itemLink, TRANSMOGRIFY_TOOLTIP_ITEM_UNKNOWN_APPEARANCE_KNOWN)) then
 					app.TrackRecipe(recipeID, 1)
+					added = added + 1
 				end
 
-				-- If this is our last iteration, set update handler to false and force an update
+				-- If this is our last iteration, set update handler to false and force an update, and let the user know what we did
 				if i == #recipes then
 					app.Flag["changingRecipes"] = false
 					app.UpdateRecipes()
+					app.Print("Added ".. added .." eligible recipes.")
 				end
 			end)
 		end
