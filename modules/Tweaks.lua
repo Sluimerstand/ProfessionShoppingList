@@ -22,6 +22,7 @@ event:RegisterEvent("LFG_PROPOSAL_SHOW")
 event:RegisterEvent("MERCHANT_SHOW")
 event:RegisterEvent("PET_BATTLE_QUEUE_PROPOSE_MATCH")
 event:RegisterEvent("PLAYER_ENTERING_WORLD")
+event:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
 event:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
 
 ------------------
@@ -276,6 +277,13 @@ function event:PLAYER_INTERACTION_MANAGER_FRAME_SHOW(type)
 		app.CatalystSkip:SetScript("OnClick", function()
 			ItemInteractionFrame:CompleteItemInteraction()
 		end)
+		app.CatalystSkip:Show()
+	end
+end
+
+function event:PLAYER_INTERACTION_MANAGER_FRAME_HIDE(type)
+	if app.CatalystSkip then
+		app.CatalystSkip:Hide()
 	end
 end
 
