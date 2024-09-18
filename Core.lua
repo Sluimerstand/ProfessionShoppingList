@@ -211,6 +211,7 @@ function app.InitialiseCore()
 	if ProfessionShoppingList_Settings["pcWindowPosition"] == nil then ProfessionShoppingList_Settings["pcWindowPosition"] = ProfessionShoppingList_Settings["windowPosition"] end
 	if ProfessionShoppingList_Settings["windowLocked"] == nil then ProfessionShoppingList_Settings["windowLocked"] = false end
 	if ProfessionShoppingList_Settings["alvinGUID"] == nil then ProfessionShoppingList_Settings["alvinGUID"] = "unknown" end
+	if ProfessionShoppingList_Settings["ragnarosGUID"] == nil then ProfessionShoppingList_Settings["ragnarosGUID"] = "unknown" end
 	if ProfessionShoppingList_Settings["onetimeMessages"] == nil then ProfessionShoppingList_Settings["onetimeMessages"] = {} end
 	if ProfessionShoppingList_Settings["onetimeMessages"].vendorItems == nil then ProfessionShoppingList_Settings["onetimeMessages"].vendorItems = false end
 
@@ -2322,10 +2323,12 @@ function app.CreateTradeskillAssets()
 		cookingFireButton:SetAttribute("spell1", 818)
 		cookingFireButton:SetAttribute("unit1", "player")
 		cookingFireButton:SetAttribute("spell2", 818)
+		cookingFireButton:Hide()
 		app.Border(cookingFireButton, -1, 2, 2, -1)
 		cookingFireCooldown = CreateFrame("Cooldown", "CookingFireCooldown", cookingFireButton, "CooldownFrameTemplate")
 		cookingFireCooldown:SetAllPoints(cookingFireButton)
 		cookingFireCooldown:SetSwipeColor(1, 1, 1)
+
 	end
 
 	-- Create Chef's Hat button
@@ -2392,6 +2395,25 @@ function app.CreateTradeskillAssets()
 		alvinCooldown = CreateFrame("Cooldown", "AlvinCooldown", alvinButton, "CooldownFrameTemplate")
 		alvinCooldown:SetAllPoints(alvinButton)
 		alvinCooldown:SetSwipeColor(1, 1, 1)
+	end
+
+	-- Create Lil' Ragnaros button
+	if not ragnarosButton then
+		ragnarosButton = CreateFrame("Button", "RagnarosButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
+		ragnarosButton:SetWidth(40)
+		ragnarosButton:SetHeight(40)
+		ragnarosButton:SetNormalTexture(254652)
+		ragnarosButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		ragnarosButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
+		ragnarosButton:SetFrameStrata("HIGH")
+		ragnarosButton:RegisterForClicks("AnyDown", "AnyUp")
+		ragnarosButton:SetAttribute("type1", "macro")
+		ragnarosButton:Hide()
+		app.Border(ragnarosButton, -1, 2, 2, -1)
+
+		ragnarosCooldown = CreateFrame("Cooldown", "RagnarosCooldown", ragnarosButton, "CooldownFrameTemplate")
+		ragnarosCooldown:SetAllPoints(ragnarosButton)
+		ragnarosCooldown:SetSwipeColor(1, 1, 1)
 	end
 
 	-- Create Lightforged Draenei Lightforge button
@@ -3229,12 +3251,28 @@ function event:TRADE_SKILL_SHOW()
 			end
 		end
 
+		-- Get Lil' Ragnaros's GUID
+		for i=1, 9999 do
+			local petID, speciesID = C_PetJournal.GetPetInfoByIndex(i)
+			if speciesID == 297 then
+				if petID then ProfessionShoppingList_Settings["ragnarosGUID"] = petID end
+				break
+			elseif speciesID == nil then
+				break
+			end
+		end
+
 		if app.Flag["tradeskillAssets"] == true then
 			-- Alvin button
 			if ProfessionShoppingList_Settings["alvinGUID"] ~= "unknown" then
 				alvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..ProfessionShoppingList_Settings["alvinGUID"].."')")
 			else
 				alvinButton:SetAttribute("macrotext1", "")
+			end
+
+			-- Lil' Ragnaros button
+			if ProfessionShoppingList_Settings["ragnarosGUID"] ~= "unknown" then
+				ragnarosButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..ProfessionShoppingList_Settings["ragnarosGUID"].."')")
 			end
 
 			-- Recharge timer
@@ -3366,10 +3404,15 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 
 			-- Cooking Fire and Chef's Hat buttons
 			if professionID == 5 then
-				cookingFireButton:Show()
+				if ProfessionShoppingList_Settings["ragnarosGUID"] ~= "unknown" then
+					ragnarosButton:Show()
+				else
+					cookingFireButton:Show()
+				end
 				chefsHatButton:Show()
 			else
 				cookingFireButton:Hide()
+				ragnarosButton:Hide()
 				chefsHatButton:Hide()
 			end
 
