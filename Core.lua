@@ -2755,7 +2755,7 @@ function app.TooltipInfo()
 		end
 
 		-- Only run this if the setting is enabled
-		if ProfessionShoppingList_Settings["showTooltip"] == true then
+		if ProfessionShoppingList_Settings["showTooltip"] then
 			-- Stop if error, it will try again on its own REAL soon
 			if itemID == nil then
 				return
@@ -2794,10 +2794,29 @@ function app.TooltipInfo()
 			end		
 
 			-- Add the tooltip info
+			local emptyLine = false
 			if reagentAmountNeed > 0 then
 				local reagentAmountHave = app.GetReagentCount(itemID)
 				tooltip:AddLine(" ")
+				emptyLine = true
 				tooltip:AddLine(app.NameShort..": "..reagentAmountHave.."/"..reagentAmountNeed.." ("..math.max(0,reagentAmountNeed-reagentAmountHave).." more needed)")
+			end
+
+			-- Check for crafting info
+			if ProfessionShoppingList_Settings["showCraftTooltip"] then
+				for k, v in pairs (ProfessionShoppingList_Library) do
+					if type(v) ~= "number" and v.itemID == itemID then	-- No clue why these non-table values are here, tbh
+						if emptyLine == false then
+							tooltip:AddLine(" ")
+						end
+						if v.learned then
+							tooltip:AddLine("Made with  ".. "|T" .. app.iconProfession[v.tradeskillID] .. ":0|t " .. app.ProfessionName[v.tradeskillID] .. " (recipe learned)")
+						else
+							tooltip:AddLine("Made with  ".. "|T" .. app.iconProfession[v.tradeskillID] .. ":0|t " .. app.ProfessionName[v.tradeskillID] .. " (recipe not learned)")
+						end
+						break
+					end
+				end
 			end
 		end
 	end
@@ -2906,16 +2925,35 @@ function app.Settings()
 		end
 	end)
 
-	local variable, name, tooltip = "pcRecipes", "Track recipes per character", "Track recipes per character, instead of account-wide."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
+	local variable, name, tooltip = "showRecipeCooldowns", "Track recipe cooldowns", "Enable the tracking of recipe cooldowns. These will show in the tracking window, and in chat upon login if ready."
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	setting:SetValueChangedCallback(function()
 		app.UpdateRecipes()
 	end)
 
-	local variable, name, tooltip = "pcWindows", "Window position per character", "Save the window position per character, instead of account-wide."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
-	Settings.CreateCheckbox(category, setting, tooltip)
+	local variable, name, tooltip = "showTooltip", "Show tooltip information", "Show how many of a reagent you have/need on the item's tooltip."
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	local parentSetting = Settings.CreateCheckbox(category, setting, tooltip)
+
+	local variable, name, tooltip = "showCraftTooltip", "Show crafting information", "Show with which profession an item is made, and if the recipe is known on your account."
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	local subSetting = Settings.CreateCheckbox(category, setting, tooltip)
+	subSetting:SetParentInitializer(parentSetting, function() return ProfessionShoppingList_Settings["showTooltip"] end)
+
+	local variable, name, tooltip = "reagentQuality", "Minimum reagent quality", "Set the minimum quality reagents need to be before "..app.NameShort.." includes them in the item count."
+	local function GetOptions()
+		local container = Settings.CreateControlTextContainer()
+		container:Add(1, "|A:Professions-ChatIcon-Quality-Tier1:17:15::1|a Tier 1")
+		container:Add(2, "|A:Professions-ChatIcon-Quality-Tier2:17:15::1|a Tier 2")
+		container:Add(3, "|A:Professions-ChatIcon-Quality-Tier3:17:15::1|a Tier 3")
+		return container:GetData()
+	end
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
+	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
+	setting:SetValueChangedCallback(function()
+		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
+	end)
 
 	local variable, name, tooltip = "collectMode", "Collection mode", "Set which items are included when using the " .. app.Colour("Track unlearned mogs") .. " button."
 	local function GetOptions()
@@ -2940,8 +2978,12 @@ function app.Settings()
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Tracking Window"))
 
-	local variable, name, tooltip = "showRecipeCooldowns", "Track recipe cooldowns", "Enable the tracking of recipe cooldowns. These will show in the tracking window, and in chat upon login if ready."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	local variable, name, tooltip = "pcWindows", "Window position per character", "Save the window position per character, instead of account-wide."
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
+	Settings.CreateCheckbox(category, setting, tooltip)
+
+	local variable, name, tooltip = "pcRecipes", "Track recipes per character", "Track recipes per character, instead of account-wide."
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	setting:SetValueChangedCallback(function()
 		app.UpdateRecipes()
@@ -2954,20 +2996,6 @@ function app.Settings()
 		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
 	end)
 
-	local variable, name, tooltip = "reagentQuality", "Minimum reagent quality", "Set the minimum quality reagents need to be before "..app.NameShort.." includes them in the item count."
-	local function GetOptions()
-		local container = Settings.CreateControlTextContainer()
-		container:Add(1, "|A:Professions-ChatIcon-Quality-Tier1:17:15::1|a Tier 1")
-		container:Add(2, "|A:Professions-ChatIcon-Quality-Tier2:17:15::1|a Tier 2")
-		container:Add(3, "|A:Professions-ChatIcon-Quality-Tier3:17:15::1|a Tier 3")
-		return container:GetData()
-	end
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
-	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
-	setting:SetValueChangedCallback(function()
-		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
-	end)
-
 	local variable, name, tooltip = "removeCraft", "Untrack on craft", "Remove one of a tracked recipe when you successfully craft it."
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	local parentSetting = Settings.CreateCheckbox(category, setting, tooltip)
@@ -2976,10 +3004,6 @@ function app.Settings()
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
 	local subSetting = Settings.CreateCheckbox(category, setting, tooltip)
 	subSetting:SetParentInitializer(parentSetting, function() return ProfessionShoppingList_Settings["removeCraft"] end)
-
-	local variable, name, tooltip = "showTooltip", "Show tooltip information", "Show how many of a reagent you have/need on the item's tooltip."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
-	Settings.CreateCheckbox(category, setting, tooltip)
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Information"))
 
@@ -3167,10 +3191,24 @@ function event:TRADE_SKILL_SHOW()
 					addedRecipes = addedRecipes + 1
 				end
 
-				if item ~= nil then
-					ProfessionShoppingList_Library[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill}
+				-- Register if the recipe is known
+				local recipeLearned = C_TradeSkillUI.GetRecipeInfo(recipeID).learned
+
+				-- Set the itemID to 0 if there is no output item
+				if item == nil then
+					itemID = 0
+				end
+
+				if ProfessionShoppingList_Library[recipeID] then
+					ProfessionShoppingList_Library[recipeID].itemID = item
+					ProfessionShoppingList_Library[recipeID].abilityID = ability
+					ProfessionShoppingList_Library[recipeID].tradeskillID = tradeskill
+
+					if not ProfessionShoppingList_Library[recipeID].learned then
+						ProfessionShoppingList_Library[recipeID].learned = recipeLearned
+					end
 				else
-					ProfessionShoppingList_Library[recipeID] = {itemID = 0, abilityID = ability, tradeskillID = tradeskill}
+					ProfessionShoppingList_Library[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill, learned = recipeLearned }
 				end
 			end
 

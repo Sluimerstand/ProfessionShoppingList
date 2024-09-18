@@ -33,6 +33,20 @@ app.iconProfession[393] = "Interface\\Icons\\ui_profession_skinning"
 app.iconProfession[755] = "Interface\\Icons\\ui_profession_jewelcrafting"
 app.iconProfession[773] = "Interface\\Icons\\ui_profession_inscription"
 app.iconProfession[999] = "Interface\\Icons\\inv_misc_questionmark"
+app.ProfessionName = {}
+app.ProfessionName[164] = "Blacksmithing"
+app.ProfessionName[165] = "Leatherworking"
+app.ProfessionName[171] = "Alchemy"
+app.ProfessionName[182] = "Herbalism"
+app.ProfessionName[185] = "Cooking"
+app.ProfessionName[186] = "Mining"
+app.ProfessionName[197] = "Tailoring"
+app.ProfessionName[202] = "Engineering"
+app.ProfessionName[333] = "Enchanting"
+app.ProfessionName[356] = "Fishing"
+app.ProfessionName[393] = "Skinning"
+app.ProfessionName[755] = "Jewelcrafting"
+app.ProfessionName[773] = "Inscription"
 
 -- Shadowlands Legendary craft SpellIDs
 app.slLegendaryRecipeIDs = {}
