@@ -2414,20 +2414,92 @@ function app.CreateTradeskillAssets()
 		lightforgeCooldown:SetSwipeColor(1, 1, 1)
 	end
 
+	-- Create Classic Milling info
+	if not millingClassic then
+		millingClassic = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		millingClassic:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		millingClassic:SetJustifyH("LEFT")
+		millingClassic:SetText(app.Colour("Milling information").."\n|cffFFFFFFSapphire Pigment: 25% from Golden Sansam, Dreamfoil, Mountain Silversage, Sorrowmoss, Icecap\nSilvery Pigment: 75% from Golden Sansam, Dreamfoil, Mountain Silversage, Sorrowmoss, Icecap\n\nRuby Pigment: 25% from Firebloom, Purple Lotus, Arthas' Tears, Sungrass, Blindweed,\n      Ghost Mushroom, Gromsblood\nViolet Pigment: 75% from Firebloom, Purple Lotus, Arthas' Tears, Sungrass, Blindweed,\n      Ghost Mushroom, Gromsblood\n\nIndigo Pigment: 25% from Fadeleaf, Goldthorn, Khadgar's Whisker, Dragon's Teeth\nEmerald Pigment: 75% from Fadeleaf, Goldthorn, Khadgar's Whisker, Dragon's Teeth\n\nBurnt Pigment: 25% from Wild Steelbloom, Grave Moss, Kingsblood, Liferoot\nGolden Pigment: 75% from Wild Steelbloom, Grave Moss, Kingsblood, Liferoot\n\nVerdant Pigment: 25% from Mageroyal, Briarthorn, Swiftthistle, Bruiseweed, Stranglekelp\nDusky Pigment: 75% from Mageroyal, Briarthorn, Swiftthistle, Bruiseweed, Stranglekelp\n\nAlabaster Pigment: 100% from Peacebloom, Silverleaf, Earthroot")
+	end
+
+	-- Create The Burning Crusade Milling info
+	if not millingTheBurningCrusade then
+		millingTheBurningCrusade = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		millingTheBurningCrusade:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		millingTheBurningCrusade:SetJustifyH("LEFT")
+		millingTheBurningCrusade:SetText(app.Colour("Milling information").."\n|cffFFFFFFEbon Pigment: 25%\nNether Pigment: 100%")
+	end
+
+	-- Create Wrath of the Lich King Milling info
+	if not millingWrathOfTheLichKing then
+		millingWrathOfTheLichKing = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		millingWrathOfTheLichKing:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		millingWrathOfTheLichKing:SetJustifyH("LEFT")
+		millingWrathOfTheLichKing:SetText(app.Colour("Milling information").."\n|cffFFFFFFIcy Pigment: 25%\nAzure Pigment: 100%")
+	end
+
+	-- Create Cataclysm Milling info
+	if not millingCataclysm then
+		millingCataclysm = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		millingCataclysm:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		millingCataclysm:SetJustifyH("LEFT")
+		millingCataclysm:SetText(app.Colour("Milling information").."\n|cffFFFFFFBurning Embers: 25%, 50% from Twilight Jasmine and Whiptail\nAshen Pigment: 100%")
+	end
+
+	-- Create Mists of Pandaria Milling info
+	if not millingMistsOfPandaria then
+		millingMistsOfPandaria = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		millingMistsOfPandaria:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		millingMistsOfPandaria:SetJustifyH("LEFT")
+		millingMistsOfPandaria:SetText(app.Colour("Milling information").."\n|cffFFFFFFMisty Pigment: 25%, 50% from Fool's Cap\nShadow Pigment: 100%")
+	end
+
+	-- Create Warlords of Draenor Milling info
+	if not millingWarlordsOfDraenor then
+		millingWarlordsOfDraenor = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		millingWarlordsOfDraenor:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		millingWarlordsOfDraenor:SetJustifyH("LEFT")
+		millingWarlordsOfDraenor:SetText(app.Colour("Milling information").."\n|cffFFFFFFCerulean Pigment: 100%")
+	end
+
+	-- Create Legion Milling info
+	if not millingLegion then
+		millingLegion = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		millingLegion:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		millingLegion:SetJustifyH("LEFT")
+		millingLegion:SetText(app.Colour("Milling information").."\n|cffFFFFFFSallow Pigment: 10%, 80% from Felwort\nRoseate Pigment: 90%")
+	end
+
+	-- Create Battle for Azeroth Milling info
+	if not millingBattleForAzeroth then
+		millingBattleForAzeroth = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		millingBattleForAzeroth:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		millingBattleForAzeroth:SetJustifyH("LEFT")
+		millingBattleForAzeroth:SetText(app.Colour("Milling information").."\n|cffFFFFFFViridescent Pigment: 10%, 30% from Anchor Weed\nUltramarine Pigment: 25%\nCrimson Pigment: 75%")
+	end
+
+	-- Create Shadowlands Milling info
+	if not millingShadowlands then
+		millingShadowlands = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		millingShadowlands:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		millingShadowlands:SetJustifyH("LEFT")
+		millingShadowlands:SetText(app.Colour("Milling information").."\n|cffFFFFFFTranquil Pigment: Nightshade\nLuminous Pigment: Death Blossom, Rising Glory, Vigil's Torch\nUmbral Pigment: Death's Blossom, Marrowroot, Widowbloom")
+	end
+
 	-- Create Dragonflight Milling info
 	if not millingDragonflight then
 		millingDragonflight = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		millingDragonflight:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 30, 30)
+		millingDragonflight:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
 		millingDragonflight:SetJustifyH("LEFT")
-		millingDragonflight:SetText(app.Colour("Milling information").."\n|cffFFFFFFFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nBlazing Pigment: Saxifrage\nShimmering Pigment: Hochenblume")
+		millingDragonflight:SetText(app.Colour("Milling information").."\n|cffFFFFFFBlazing Pigment: Saxifrage\nFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nShimmering Pigment: Hochenblume")
 	end
 
 	-- Create The War Within Milling info
 	if not millingTheWarWithin then
 		millingTheWarWithin = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		millingTheWarWithin:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 30, 30)
+		millingTheWarWithin:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
 		millingTheWarWithin:SetJustifyH("LEFT")
-		millingTheWarWithin:SetText(app.Colour("Milling information").."\n|cffFFFFFFNacreous Pigment: Mycobloom\nLuredrop Pigment: Luredrop\nOrbinid Pigment: Orbinid\nBlossom Pigment: Blessing Blossom")
+		millingTheWarWithin:SetText(app.Colour("Milling information").."\n|cffFFFFFFBlossom Pigment: Blessing Blossom\nLuredrop Pigment: Luredrop\nOrbinid Pigment: Orbinid\nNacreous Pigment: Mycobloom")
 	end
 
 	-- Grab the order information when opening a crafting order (THANK YOU PLUSMOUSE <3)
@@ -3158,19 +3230,83 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 			app.UpdateAssets()
 		end
 		
-		-- Milling info
+		-- Milling info (and SL legendary ranks editbox)
 		local function millingInfo()
-			-- Check if/what Milling info should be displayed
+			-- The War Within
+			if spellID == 444181 then
+				millingTheWarWithin:Show()
+			else
+				millingTheWarWithin:Hide()
+			end
+
+			-- Dragonflight
 			if spellID == 382981 then
 				millingDragonflight:Show()
 			else
 				millingDragonflight:Hide()
 			end
 
-			if spellID == 444181 then
-				millingTheWarWithin:Show()
+			-- Shadowlands
+			if spellID == 382982 then
+				millingShadowlands:Show()
 			else
-				millingTheWarWithin:Hide()
+				millingShadowlands:Hide()
+			end
+
+			-- Battle for Azeroth
+			if spellID == 382984 then
+				millingBattleForAzeroth:Show()
+			else
+				millingBattleForAzeroth:Hide()
+			end
+
+			-- Legion
+			if spellID == 382986 then
+				millingLegion:Show()
+			else
+				millingLegion:Hide()
+			end
+
+			-- Warlords of Draenor
+			if spellID == 382987 then
+				millingWarlordsOfDraenor:Show()
+			else
+				millingWarlordsOfDraenor:Hide()
+			end
+
+			-- Mists of Pandaria
+			if spellID == 382988 then
+				millingMistsOfPandaria:Show()
+			else
+				millingMistsOfPandaria:Hide()
+			end
+
+			-- Cataclysm
+			if spellID == 382989 then
+				millingCataclysm:Show()
+			else
+				millingCataclysm:Hide()
+			end
+
+			-- Wrath of the Lich King
+			if spellID == 382990 then
+				millingWrathOfTheLichKing:Show()
+			else
+				millingWrathOfTheLichKing:Hide()
+			end
+
+			-- The Burning Crusade
+			if spellID == 382991 then
+				millingTheBurningCrusade:Show()
+			else
+				millingTheBurningCrusade:Hide()
+			end
+
+			-- Classic
+			if spellID == 382994 then
+				millingClassic:Show()
+			else
+				millingClassic:Hide()
 			end
 
 			-- Check if the SL rank editbox should be displayed
