@@ -140,9 +140,9 @@ function app.Button(parent, text)
 end
 
 -- Window tooltip body
-function app.WindowTooltip(text)
+function app.Tooltip(parent, text)
 	-- Tooltip
-	local frame = CreateFrame("Frame", nil, app.Window, "BackdropTemplate")
+	local frame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
 	frame:SetFrameStrata("TOOLTIP")
 	frame:SetBackdrop({
 		bgFile = "Interface/Tooltips/UI-Tooltip-Background",
@@ -2102,32 +2102,32 @@ end
 -- Create assets
 function app.CreateGeneralAssets()
 	-- Create Recipes header tooltip
-	app.RecipesHeaderTooltip = app.WindowTooltip("Shift+LMB|cffFFFFFF: Link the recipe\n|RCtrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RAlt+LMB|cffFFFFFF: Attempt to craft this recipe (as many times as you have it tracked)\n|RRMB|cffFFFFFF: Untrack 1 of the selected recipe\n|RCtrl+RMB|cffFFFFFF: Untrack all of the selected recipe")
+	app.RecipesHeaderTooltip = app.Tooltip(app.Window, "Shift+LMB|cffFFFFFF: Link the recipe\n|RCtrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RAlt+LMB|cffFFFFFF: Attempt to craft this recipe (as many times as you have it tracked)\n|RRMB|cffFFFFFF: Untrack 1 of the selected recipe\n|RCtrl+RMB|cffFFFFFF: Untrack all of the selected recipe")
 
 	-- Create Reagents header tooltip
-	app.ReagentsHeaderTooltip = app.WindowTooltip("Shift+LMB|cffFFFFFF: Link the reagent\n|RCtrl+LMB|cffFFFFFF: Add recipe for the selected subreagent, if it exists\n(This only works for professions that have been opened with "..app.NameShort.." active)")
+	app.ReagentsHeaderTooltip = app.Tooltip(app.Window, "Shift+LMB|cffFFFFFF: Link the reagent\n|RCtrl+LMB|cffFFFFFF: Add recipe for the selected subreagent, if it exists\n(This only works for professions that have been opened with "..app.NameShort.." active)")
 
 	-- Create Cooldowns header tooltip
-	app.CooldownsHeaderTooltip = app.WindowTooltip("Ctrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RAlt+LMB|cffFFFFFF: Attempt to craft this recipe (as many times as you have it tracked)\n|RRMB|cffFFFFFF: Remove this specific cooldown reminder")
+	app.CooldownsHeaderTooltip = app.Tooltip(app.Window, "Ctrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RAlt+LMB|cffFFFFFF: Attempt to craft this recipe (as many times as you have it tracked)\n|RRMB|cffFFFFFF: Remove this specific cooldown reminder")
 
 	-- Create Close button tooltip
-	app.CloseButtonTooltip = app.WindowTooltip("Close the window")
+	app.CloseButtonTooltip = app.Tooltip(app.Window, "Close the window")
 
 	-- Create Lock/Unlock button tooltip
-	app.LockButtonTooltip = app.WindowTooltip("Lock the window")
-	app.UnlockButtonTooltip = app.WindowTooltip("Unlock the window")
+	app.LockButtonTooltip = app.Tooltip(app.Window, "Lock the window")
+	app.UnlockButtonTooltip = app.Tooltip(app.Window, "Unlock the window")
 	
 	-- Create Settings button tooltip
-	app.SettingsButtonTooltip = app.WindowTooltip("Open the settings")
+	app.SettingsButtonTooltip = app.Tooltip(app.Window, "Open the settings")
 
 	-- Create Clear button tooltip
-	app.ClearButtonTooltip = app.WindowTooltip("Clear all tracked recipes")
+	app.ClearButtonTooltip = app.Tooltip(app.Window, "Clear all tracked recipes")
 
 	-- Create Auctionator button tooltip
-	app.AuctionatorButtonTooltip = app.WindowTooltip("Create an Auctionator shopping list\nAlso initiates a search if you have the Shopping tab open at the Auction House")
+	app.AuctionatorButtonTooltip = app.Tooltip(app.Window, "Create an Auctionator shopping list\nAlso initiates a search if you have the Shopping tab open at the Auction House")
 
 	-- Create corner button tooltip
-	app.CornerButtonTooltip = app.WindowTooltip("Double-click|cffFFFFFF: Autosize to fit the window")
+	app.CornerButtonTooltip = app.Tooltip(app.Window, "Double-click|cffFFFFFF: Autosize to fit the window")
 end
 
 function app.CreateTradeskillAssets()
@@ -2265,21 +2265,21 @@ function app.CreateTradeskillAssets()
 
 	-- Create the Track Unlearned Mogs button
 	if not trackUnlearnedMogsButton then
+		local modeText = "N/A"
+		if ProfessionShoppingList_Settings["collectMode"] == 1 then
+			modeText = "new appearances"
+		elseif ProfessionShoppingList_Settings["collectMode"] == 2 then
+			modeText = "new appearances and sources"
+		end
+
 		trackUnlearnedMogsButton = app.Button(ProfessionsFrame.CraftingPage, "Track unlearned mogs")
 		trackUnlearnedMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 0, -4)
 		trackUnlearnedMogsButton:SetFrameStrata("HIGH")
 		trackUnlearnedMogsButton:SetScript("OnClick", function()
-			local modeText = "N/A"
-			if ProfessionShoppingList_Settings["collectMode"] == 1 then
-				modeText = "new appearances"
-			elseif ProfessionShoppingList_Settings["collectMode"] == 2 then
-				modeText = "new appearances and sources"
-			end
-
 			local recipes = app.GetVisibleRecipes()
 
 			StaticPopupDialogs["TRACK_NEW_MOGS"] = {
-				text = app.NameLong.."\n\nThis will check the ".. #recipes .. " visible recipes for " .. modeText .. ".\n\nYour game may freeze for a few seconds.\nDo you wish to proceed?",
+				text = app.NameLong.."\n\nThis will check the ".. #recipes .. " visible recipes for\n" .. modeText .. ".\n\nYour game may freeze for a few seconds.\nDo you wish to proceed?",
 				button1 = YES,
 				button2 = NO,
 				OnAccept = function()
@@ -2292,6 +2292,16 @@ function app.CreateTradeskillAssets()
 			}
 			StaticPopup_Show("TRACK_NEW_MOGS")
 		end)
+
+		local tooltip = app.Tooltip(trackUnlearnedMogsButton, "Current setting: "..modeText)
+		tooltip:SetPoint("TOP", trackUnlearnedMogsButton, "BOTTOM")
+		trackUnlearnedMogsButton:SetScript("OnEnter", function()
+			tooltip:Show()
+		end)
+		trackUnlearnedMogsButton:SetScript("OnLeave", function()
+			tooltip:Hide()
+		end)
+
 		-- Move the button if CraftScan is enabled, because it hogs a lot of space >,>
 		if C_AddOns.IsAddOnLoaded("CraftScan") then
 			trackUnlearnedMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 2, 24)
