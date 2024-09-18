@@ -2667,7 +2667,7 @@ function app.UpdateAssets()
 		end
 
 		-- Make the Chef's Hat button not desaturated if it can be used
-		if PlayerHasToy(134020) and C_TradeSkillUI.GetProfessionInfoBySkillLineID(2546).skillLevel >= 25 then
+		if PlayerHasToy(134020) then
 			chefsHatButton:GetNormalTexture():SetDesaturated(false)
 		end
 
