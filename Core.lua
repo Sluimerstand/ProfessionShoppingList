@@ -593,15 +593,28 @@ function app.GetReagentCount(reagentID)
 
 	-- Helper functions
 	local function tierOne()
-		local reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
-						   + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
-						   + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
+		local reagentCount
+		if ProfessionShoppingList_Settings["includeHigher"] == 1 then
+			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
+						 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+						 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
+		elseif ProfessionShoppingList_Settings["includeHigher"] == 2 then
+			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+						 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
+		elseif ProfessionShoppingList_Settings["includeHigher"] == 3 then
+			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
+		end
 		return reagentCount
 	end
 
 	local function tierTwo()
-		local reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
-						   + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+		local reagentCount
+		if ProfessionShoppingList_Settings["includeHigher"] == 1 then
+			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
+						 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+		elseif ProfessionShoppingList_Settings["includeHigher"] >= 2 then
+			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+		end
 		return reagentCount
 	end
 
@@ -2963,12 +2976,26 @@ function app.Settings()
 	local subSetting = Settings.CreateCheckbox(category, setting, tooltip)
 	subSetting:SetParentInitializer(parentSetting, function() return ProfessionShoppingList_Settings["showTooltip"] end)
 
-	local variable, name, tooltip = "reagentQuality", "Minimum reagent quality", "Set the minimum quality reagents need to be before "..app.NameShort.." includes them in the item count."
+	local variable, name, tooltip = "reagentQuality", "Minimum reagent quality", "Set the minimum quality reagents need to be before "..app.NameShort.." includes them in the item count. CraftSim results will still override this."
 	local function GetOptions()
 		local container = Settings.CreateControlTextContainer()
 		container:Add(1, "|A:Professions-ChatIcon-Quality-Tier1:17:15::1|a Tier 1")
 		container:Add(2, "|A:Professions-ChatIcon-Quality-Tier2:17:15::1|a Tier 2")
 		container:Add(3, "|A:Professions-ChatIcon-Quality-Tier3:17:15::1|a Tier 3")
+		return container:GetData()
+	end
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
+	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
+	setting:SetValueChangedCallback(function()
+		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
+	end)
+
+	local variable, name, tooltip = "includeHigher", "Include higher quality", "Set which higher qualities to include when tracking lower quality reagents. (I.e. whether to include tier 3 reagents in the owned count when tracking tier 1 reagents.)"
+	local function GetOptions()
+		local container = Settings.CreateControlTextContainer()
+		container:Add(1, "Include |A:Professions-ChatIcon-Quality-Tier3:17:15::1|a Tier 3 and |A:Professions-ChatIcon-Quality-Tier2:17:15::1|a Tier 2")
+		container:Add(2, "Only include |A:Professions-ChatIcon-Quality-Tier2:17:15::1|a Tier 2")
+		container:Add(3, "Don't include higher qualities")
 		return container:GetData()
 	end
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
