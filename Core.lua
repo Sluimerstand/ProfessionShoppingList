@@ -2844,9 +2844,9 @@ function app.TooltipInfo()
 						if emptyLine == false then
 							tooltip:AddLine(" ")
 						end
-						if v.learned then
+						if v.learned and v.tradeskillID then
 							tooltip:AddLine("Made with  ".. "|T" .. app.iconProfession[v.tradeskillID] .. ":0|t " .. app.ProfessionName[v.tradeskillID] .. " (recipe learned)")
-						else
+						elseif v.tradeskillID then
 							tooltip:AddLine("Made with  ".. "|T" .. app.iconProfession[v.tradeskillID] .. ":0|t " .. app.ProfessionName[v.tradeskillID] .. " (recipe not learned)")
 						end
 						break
