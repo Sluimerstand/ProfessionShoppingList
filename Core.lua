@@ -592,59 +592,35 @@ function app.GetReagentCount(reagentID)
 	end
 
 	-- Helper functions
-	local function tierOne()
-		local reagentCount
-		if ProfessionShoppingList_Settings["includeHigher"] == 1 then
-			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
-						 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
-						 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
-		elseif ProfessionShoppingList_Settings["includeHigher"] == 2 then
-			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
-						 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
-		elseif ProfessionShoppingList_Settings["includeHigher"] == 3 then
-			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
-		end
+	local function tierThree()
+		local reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
 		return reagentCount
 	end
 
 	local function tierTwo()
 		local reagentCount
 		if ProfessionShoppingList_Settings["includeHigher"] == 1 then
-			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
-						 + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+			reagentCount = math.max(0, C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank) - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three] or 0)) + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
 		elseif ProfessionShoppingList_Settings["includeHigher"] >= 2 then
 			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
 		end
 		return reagentCount
 	end
 
-	local function tierThree()
-		local reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
+	local function tierOne()
+		local reagentCount
+		if ProfessionShoppingList_Settings["includeHigher"] == 1 then
+			reagentCount = math.max(0, (math.max(0, C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank) - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three] or 0)) + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)) - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].two] or 0)) + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
+		elseif ProfessionShoppingList_Settings["includeHigher"] == 2 then
+			reagentCount = math.max(0, C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank) - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].two] or 0)) + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
+		elseif ProfessionShoppingList_Settings["includeHigher"] == 3 then
+			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
+		end
 		return reagentCount
 	end
 
-	-- Account for multiple tiers of the same reagent
-	local tier1 = false
-	local tier2 = false
-	local tier3 = false
-	local tierTotal = 0
+	-- Count the right reagents when it's applicable
 	if craftSimReagents[reagentID] then
-		if app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].one] then
-			tier1 = true
-			tierTotal = tierTotal + 1
-		end
-		if app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].two] then
-			tier2 = true
-			tierTotal = tierTotal + 1
-		end
-		if app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three] then
-			tier3 = true
-			tierTotal = tierTotal + 1
-		end
-	end
-
-	-- Use the CraftSim-provided tier if we have no duplicates
-	if craftSimReagents[reagentID] and tierTotal < 2 then
 		if ProfessionShoppingList_Cache.ReagentTiers[reagentID] then
 			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three == reagentID then
 				reagentCount = tierThree()
@@ -653,36 +629,6 @@ function app.GetReagentCount(reagentID)
 			elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].one == reagentID then
 				reagentCount = tierOne()
 			end
-		end
-	-- Account for the combinations of 2 different tiers of the same reagent
-	elseif craftSimReagents[reagentID] and tierTotal == 2 then
-		if tier2 and tier1 then
-			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].two == reagentID then
-				reagentCount = tierTwo()
-			elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].one == reagentID then
-				reagentCount = math.max(0, tierOne() - app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].two])
-			end
-		elseif tier3 and tier1 then
-			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three == reagentID then
-				reagentCount = tierThree()
-			elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].one == reagentID then
-				reagentCount = math.max(0, tierOne() - app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three])
-			end
-		elseif tier3 and tier2 then
-			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three == reagentID then
-				reagentCount = tierThree()
-			elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two == reagentID then
-				reagentCount = math.max(0, tierTwo() - app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three])
-			end
-		end
-	-- Account for the combination of all 3 different tiers of the same reagent
-	elseif craftSimReagents[reagentID] and tierTotal == 3 then
-		if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three == reagentID then
-			reagentCount = tierThree()
-		elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two == reagentID then
-			reagentCount = math.max(0, tierTwo() - app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three])
-		elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].one == reagentID then
-			reagentCount = math.max(0, tierOne() - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].two] + app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three]))
 		end
 	-- Use our addon setting if there is no quality specified
 	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].three ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 3 then
