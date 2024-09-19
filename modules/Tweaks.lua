@@ -255,7 +255,7 @@ end
 
 function app.DisableHandyNotesAltRMB()
 	-- Only run this if the setting is enabled
-	if ProfessionShoppingList_Settings["handyNotes"] == true then
+	if ProfessionShoppingList_Settings["handyNotes"] then
 		-- Thank you for this code, Numy, this saves me a lot of frustration
 		if C_AddOns.IsAddOnLoaded("HandyNotes") and LibStub("AceAddon-3.0"):GetAddon("HandyNotes") then
 			local f = LibStub("AceAddon-3.0"):GetAddon("HandyNotes"):GetModule("HandyNotes").ClickHandlerFrame
@@ -271,15 +271,17 @@ end
 ------------------------
 
 function event:PLAYER_INTERACTION_MANAGER_FRAME_SHOW(type)
-	if type == 44 and not app.CatalystSkip then
-		app.CatalystSkip = app.Button(ItemInteractionFrame, "Instantly Catalyze")
-		app.CatalystSkip:SetPoint("CENTER", ItemInteractionFrameTitleText, 0, -30)
-		app.CatalystSkip:SetScript("OnClick", function()
-			ItemInteractionFrame:CompleteItemInteraction()
-		end)
-	end
-	if type == 44 and app.CatalystSkip then
-		app.CatalystSkip:Show()
+	-- Only run this if the setting is enabled
+	if ProfessionShoppingList_Settings["catalystButton"] then
+		if type == 44 and not app.CatalystSkip then
+			app.CatalystSkip = app.Button(ItemInteractionFrame, "Instantly Catalyze")
+			app.CatalystSkip:SetPoint("CENTER", ItemInteractionFrameTitleText, 0, -30)
+			app.CatalystSkip:SetScript("OnClick", function()
+				ItemInteractionFrame:CompleteItemInteraction()
+			end)
+		elseif type == 44 and app.CatalystSkip then
+			app.CatalystSkip:Show()
+		end
 	end
 end
 
@@ -356,14 +358,22 @@ function app.SettingsTweaks()
 		end
 	end)
 
-	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Other Tweaks"))
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Other tweaks"))
 
 	local variable, name, tooltip = "vendorAll", "Disable vendor filter", "Automatically set all vendor filters to |cffFFFFFFAll|R to display items normally not shown to your class."
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 
+	local variable, name, tooltip = "catalystButton", "Show catalyst button", "Show a button on the Revival Catalyst that allows you to instantly catalyze an item, skipping the 5 second confirmation timer."
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	Settings.CreateCheckbox(category, setting, tooltip)
+
 	local variable, name, tooltip = "queueSound", "Play queue sound", "Play the Deadly Boss Mods style queue sound when any queue pops, including battlegrounds and pet battles."
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
+	Settings.CreateCheckbox(category, setting, tooltip)
+
+	local variable, name, tooltip = "handyNotes", "Disable HandyNotes Alt+RMB", "Let "..app.NameShort.." disable this keybind on the map, re-enabling it for TomTom waypoints instead.\n\n|cffFF0000"..REQUIRES_RELOAD
+	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 
 	local variable, name, tooltip = "underminePrices", "Fix Oribos Exchange tooltip", "Let "..app.NameShort.." simplify and fix the tooltip provided by the Oribos Exchange AddOn:\n- Round to the nearest gold;\n- Fix recipe prices;\n- Fix profession window prices;\n- Show battle pet prices inside the existing tooltip."
@@ -372,8 +382,4 @@ function app.SettingsTweaks()
 	setting:SetValueChangedCallback(function()
 		app.HideOribos()
 	end)
-
-	local variable, name, tooltip = "handyNotes", "Disable HandyNotes Alt+RMB", "Let "..app.NameShort.." disable this keybind on the map, re-enabling it for TomTom waypoints instead.\n\n|cffFF0000"..REQUIRES_RELOAD
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
-	Settings.CreateCheckbox(category, setting, tooltip)
 end

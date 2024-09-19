@@ -2998,7 +2998,7 @@ function app.Settings()
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 0)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 
-	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Tracking Window"))
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Tracking window"))
 
 	local variable, name, tooltip = "pcWindows", "Window position per character", "Save the window position per character, instead of account-wide."
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
