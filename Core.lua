@@ -2780,20 +2780,20 @@ function app.TooltipInfo()
 				local reagentAmountHave = app.GetReagentCount(itemID)
 				tooltip:AddLine(" ")
 				emptyLine = true
-				tooltip:AddLine(app.NameShort..": "..reagentAmountHave.."/"..reagentAmountNeed.." ("..math.max(0,reagentAmountNeed-reagentAmountHave).." more needed)")
+				tooltip:AddLine("|TInterface\\AddOns\\ProfessionShoppingList\\assets\\psl_icon.blp:0|t "..reagentAmountHave.."/"..reagentAmountNeed.." ("..math.max(0,reagentAmountNeed-reagentAmountHave).." more needed)")
 			end
 
 			-- Check for crafting info
-			if ProfessionShoppingList_Settings["showCraftTooltip"] then
+			if ProfessionShoppingList_Settings["showCraftTooltip"] and C_Item.IsEquippableItem(itemID) then
 				for k, v in pairs (ProfessionShoppingList_Library) do
 					if type(v) ~= "number" and v.itemID == itemID then	-- No clue why these non-table values are here, tbh
 						if emptyLine == false then
 							tooltip:AddLine(" ")
 						end
 						if v.learned and v.tradeskillID then
-							tooltip:AddLine("Made with  ".. "|T" .. app.iconProfession[v.tradeskillID] .. ":0|t " .. app.ProfessionName[v.tradeskillID] .. " (recipe learned)")
+							tooltip:AddLine("|TInterface\\AddOns\\ProfessionShoppingList\\assets\\psl_icon.blp:0|t Made with  |T" .. app.iconProfession[v.tradeskillID] .. ":0|t " .. app.ProfessionName[v.tradeskillID] .. " (recipe learned)")
 						elseif v.tradeskillID then
-							tooltip:AddLine("Made with  ".. "|T" .. app.iconProfession[v.tradeskillID] .. ":0|t " .. app.ProfessionName[v.tradeskillID] .. " (recipe not learned)")
+							tooltip:AddLine("|TInterface\\AddOns\\ProfessionShoppingList\\assets\\psl_icon.blp:0|t Made with  |T" .. app.iconProfession[v.tradeskillID] .. ":0|t " .. app.ProfessionName[v.tradeskillID] .. " (recipe not learned)")
 						end
 						break
 					end
@@ -2917,7 +2917,7 @@ function app.Settings()
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	local parentSetting = Settings.CreateCheckbox(category, setting, tooltip)
 
-	local variable, name, tooltip = "showCraftTooltip", "Show crafting information", "Show with which profession an item is made, and if the recipe is known on your account."
+	local variable, name, tooltip = "showCraftTooltip", "Show crafting information", "Show with which profession a piece of gear is made, and if the recipe is known on your account."
 	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	local subSetting = Settings.CreateCheckbox(category, setting, tooltip)
 	subSetting:SetParentInitializer(parentSetting, function() return ProfessionShoppingList_Settings["showTooltip"] end)
