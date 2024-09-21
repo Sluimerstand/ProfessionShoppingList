@@ -93,10 +93,6 @@ function app.CreateAuctionatorButton()
 						-- Put the items in the temporary variable
 						if reagentCount > 0 then
 							table.insert(searchStrings, Auctionator.API.v1.ConvertToSearchString(app.Name, { searchString = itemName, isExact = true, categoryKey = "", tier = reagentQuality, quantity = reagentCount}))
-							if reagentQuality == 2 then
-								-- Also add tier 3 for minimum reagent quality 2
-								table.insert(searchStrings, Auctionator.API.v1.ConvertToSearchString(app.Name, { searchString = itemName, isExact = true, categoryKey = "", tier = 3, quantity = reagentCount}))
-							end
 						end
 					end
 				end
