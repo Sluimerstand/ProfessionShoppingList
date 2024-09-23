@@ -2262,8 +2262,8 @@ function app.CreateTradeskillAssets()
 			tooltip:Hide()
 		end)
 
-		-- Move the button if CraftScan is enabled, because it hogs a lot of space >,>
-		if C_AddOns.IsAddOnLoaded("CraftScan") then
+		-- Move the button if CraftScan or TestFlight is enabled, because we're nice
+		if C_AddOns.IsAddOnLoaded("CraftScan") or C_AddOns.IsAddOnLoaded("TestFlight") then
 			trackUnlearnedMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 2, 24)
 		end
 	end
