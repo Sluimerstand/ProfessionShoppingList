@@ -3459,8 +3459,8 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 							end
 						end
 					end
-				-- Keep the actual spell cooldown for Invent (TWW Engineering)
-				elseif spellID == 447312 then
+				-- Keep the actual spell cooldown for Invent (TWW Engineering) and Algari Amber Prism (TWW Jewelcrafting)
+				elseif spellID == 447312 or spellID == 435337 then
 					--
 				-- Otherwise, if the cooldown exists, set it to line up with daily reset
 				elseif cooldown and cooldown >= 60 then
