@@ -490,19 +490,19 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 		if reagentInfo.reagentType == 1 then
 			-- Get (quality tier 1) info
 			local reagentID
-			local reagentID1 = reagentInfo.reagents[1].itemID
+			local reagentID1 = reagentInfo.reagents[1].itemID or 0
 			local reagentID2 = 0
 			local reagentID3 = 0
 			local reagentAmount = reagentInfo.quantityRequired
 
 			-- Get quality tier 2 info
 			if reagentInfo.reagents[2] then
-				reagentID2 = reagentInfo.reagents[2].itemID
+				reagentID2 = reagentInfo.reagents[2].itemID or 0
 			end
 
 			-- Get quality tier 3 info
 			if reagentInfo.reagents[3] then
-				reagentID3 = reagentInfo.reagents[3].itemID
+				reagentID3 = reagentInfo.reagents[3].itemID or 0
 			end
 
 			-- Adjust the numbers for crafting orders
