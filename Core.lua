@@ -76,6 +76,13 @@ function app.Print(...)
 	print(app.NameShort..":", ...)
 end
 
+-- Debug print with AddOn prefix
+function app.Debug(...)
+	if ProfessionShoppingList_Settings["debug"] then
+		print(app.NameShort..app.Colour(" Debug")..":", ...)
+	end
+end
+
 -- Pop-up window
 function app.Popup(show, text)
 	-- Create popup frame
@@ -214,6 +221,7 @@ function app.InitialiseCore()
 	if ProfessionShoppingList_Settings["ragnarosGUID"] == nil then ProfessionShoppingList_Settings["ragnarosGUID"] = "unknown" end
 	if ProfessionShoppingList_Settings["onetimeMessages"] == nil then ProfessionShoppingList_Settings["onetimeMessages"] = {} end
 	if ProfessionShoppingList_Settings["onetimeMessages"].vendorItems == nil then ProfessionShoppingList_Settings["onetimeMessages"].vendorItems = false end
+	if ProfessionShoppingList_Settings["debug"] == nil then ProfessionShoppingList_Settings["debug"] = false end
 
 	-- Load personal recipes, if the setting is enabled
 	if ProfessionShoppingList_Settings["pcRecipes"] == true then
@@ -556,6 +564,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 
 	-- Manually insert the reagents if it's a CraftSim recipe
 	if ProfessionShoppingList_Data.Recipes[craftingRecipeID] and ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim then
+		app.Debug()
 		for k, v in pairs(ProfessionShoppingList_Cache.CraftSimRecipes[craftingRecipeID]) do
 			-- Check if the reagent isn't provided if it's a crafting order
 			local providedReagents = {}
@@ -3095,6 +3104,15 @@ function event:ADDON_LOADED(addOnName, containsBindings)
 					end
 				else
 					app.Print("Invalid parameters. Please enter a tracked recipe ID.")
+				end
+			-- Toggle debug mode
+			elseif command == 'debug' then
+				if ProfessionShoppingList_Settings["debug"] then
+					ProfessionShoppingList_Settings["debug"] = false
+					app.Print("Debug mode disabled.")
+				else
+					ProfessionShoppingList_Settings["debug"] = true
+					app.Print("Debug mode enabled.")
 				end
 			-- No command
 			elseif command == "" then
