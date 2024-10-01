@@ -2129,7 +2129,12 @@ function app.CreateTradeskillAssets()
 					end
 
 					-- Save the reagents into a fake recipe
-					ProfessionShoppingList_Cache.CraftSimRecipes[app.SelectedRecipeID] = reagents
+					if reagents then
+						ProfessionShoppingList_Cache.CraftSimRecipes[app.SelectedRecipeID] = reagents
+					else
+						app.Print("There was an issue grabbing the proper reagents from CraftSim.")
+						do return end
+					end
 				else
 					app.Print("Could not read the information from CraftSim.")
 				end
@@ -2531,7 +2536,13 @@ function app.CreateTradeskillAssets()
 					end
 
 					-- Save the reagents into a fake recipe
-					ProfessionShoppingList_Cache.CraftSimRecipes[key] = reagents
+					if reagents then
+						ProfessionShoppingList_Cache.CraftSimRecipes[key] = reagents
+					else
+						app.Print("There was an issue grabbing the proper reagents from CraftSim.")
+						do return end
+					end
+					
 				else
 					app.Print("Could not read the information from CraftSim.")
 				end
