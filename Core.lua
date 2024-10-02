@@ -564,7 +564,15 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 
 	-- Manually insert the reagents if it's a CraftSim recipe
 	if ProfessionShoppingList_Data.Recipes[craftingRecipeID] and ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim then
-		app.Debug()
+		-- Debug to try and troubleshoot this dumbass issue
+		if ProfessionShoppingList_Settings["debug"] then
+			app.Debug("craftingRecipeID: "..craftingRecipeID)
+			app.Debug("ProfessionShoppingList_Data.Recipes[craftingRecipeID]:")
+			app.Dump(ProfessionShoppingList_Data.Recipes[craftingRecipeID])
+			app.Debug("ProfessionShoppingList_Cache.CraftSimRecipes[craftingRecipeID]:")
+			app.Dump(ProfessionShoppingList_Cache.CraftSimRecipes[craftingRecipeID])
+			print("-----")
+		end
 		for k, v in pairs(ProfessionShoppingList_Cache.CraftSimRecipes[craftingRecipeID]) do
 			-- Check if the reagent isn't provided if it's a crafting order
 			local providedReagents = {}
