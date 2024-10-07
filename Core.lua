@@ -3457,13 +3457,13 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 
 				-- Get spell cooldown info
 				local recipeName = C_TradeSkillUI.GetRecipeSchematic(spellID, false).name
-				local cooldown, isDayCooldown, charges, maxCharges = C_TradeSkillUI.GetRecipeCooldown(spellID)	-- For daily cooldowns, this returns the time until midnight. Only after a relog does it return the time until daily reset, when the recipe actually resets.
+				local cooldown, isDayCooldown, charges, maxCharges = C_TradeSkillUI.GetRecipeCooldown(spellID)	-- For daily cooldowns, 'cooldown' returns the time until midnight, after relogging it's accurate. 'isDayCooldown' can be used to identify if it should be aligned with daily reset right away.
 				local recipeStart = GetServerTime()
 
 				-- Set timer to 7 days for the Alchemy sac transmutes
 				if spellID == 213256 or spellID == 251808 then
 					cooldown = 7 * 24 * 60 * 60
-				-- Keep the actual spell cooldown for Dragonflight Alchemy experimentations, and only show the last one done
+				-- Shared cooldowns for Dragonflight Alchemy experimentations
 				elseif spellID == 370743 or spellID == 370745 or spellID == 370746 or spellID == 370747 then
 					local spells = {370743,  370745, 370746, 370747}
 					for k, v in pairs(spells) do
@@ -3475,7 +3475,7 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 							end
 						end
 					end
-				-- Keep the actual spell cooldown for The War Within Alchemy experimentations, and only show the last one done
+				-- Shared cooldowns for The War Within Alchemy experimentations
 				elseif spellID == 427174 or spellID == 430345 then
 					local spells = {427174,  430345}
 					for k, v in pairs(spells) do
@@ -3487,13 +3487,10 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 							end
 						end
 					end
-				-- Keep the actual spell cooldown for Invent (TWW Engineering), Box o' Booms (TWW Engineering), Algari Amber Prism (TWW Jewelcrafting)
-				elseif spellID == 447312 or spellID == 447374 or spellID == 435337 then
-					--
-				-- Otherwise, if the cooldown exists, set it to line up with daily reset
-				elseif cooldown and cooldown >= 60 then
-					local days = math.floor( cooldown / 86400 )	-- Count how many days we add to the time until daily reset
-					cooldown = GetQuestResetTime() + ( days * 86400 )
+				-- Daily cooldowns (which return the wrong 'cooldown' info initially)
+				elseif isDayCooldown then
+					-- Set the cooldown to align with daily reset
+					cooldown = C_DateAndTime.GetSecondsUntilDailyReset()
 				end
 
 				-- If the spell cooldown exists
