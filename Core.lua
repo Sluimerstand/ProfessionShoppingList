@@ -2500,6 +2500,14 @@ function app.CreateTradeskillAssets()
 		millingTheWarWithin:SetText(app.Colour("Milling information").."\n|cffFFFFFFBlossom Pigment: Blessing Blossom\nLuredrop Pigment: Luredrop\nOrbinid Pigment: Orbinid\nNacreous Pigment: Mycobloom")
 	end
 
+	-- Create The War Within Thaumaturgy info
+	if not thaumaturgyTheWarWithin then
+		thaumaturgyTheWarWithin = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		thaumaturgyTheWarWithin:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		thaumaturgyTheWarWithin:SetJustifyH("LEFT")
+		thaumaturgyTheWarWithin:SetText(app.Colour("Thaumaturgy information").."\n|cffFFFFFFMercurial Transmutagen: Aqirite, Gloom Chitin, Luredrop, Orbinid\nOminous Transmutagen: Bismuth, Mycobloom, Storm Dust, Weavercloth\nVolatile Transmutagen: Arathor's Spear, Blessing Blossom, Ironclaw Ore, Stormcharged Leather")
+	end
+
 	-- Grab the order information when opening a crafting order (THANK YOU PLUSMOUSE <3)
 	hooksecurefunc(ProfessionsFrame.OrdersPage, "ViewOrder", function(_, orderDetails)
 		app.OrderInfo = orderDetails
@@ -3305,87 +3313,81 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 			app.UpdateAssets()
 		end
 		
-		-- Milling info (and SL legendary ranks editbox)
-		local function millingInfo()
-			-- The War Within
-			if spellID == 444181 then
+		-- Recipe-specific assets
+		local function recipeAssets()
+			if spellID == 444181 then	-- The War Within Thaumaturgy
 				millingTheWarWithin:Show()
 			else
 				millingTheWarWithin:Hide()
 			end
 
-			-- Dragonflight
-			if spellID == 382981 then
+			if spellID == 430315 then	-- The War Within Milling
+				thaumaturgyTheWarWithin:Show()
+			else
+				thaumaturgyTheWarWithin:Hide()
+			end
+
+			if spellID == 382981 then	-- Dragonflight Milling
 				millingDragonflight:Show()
 			else
 				millingDragonflight:Hide()
 			end
 
-			-- Shadowlands
-			if spellID == 382982 then
+			if spellID == 382982 then	-- Shadowlands Milling
 				millingShadowlands:Show()
 			else
 				millingShadowlands:Hide()
 			end
 
-			-- Battle for Azeroth
-			if spellID == 382984 then
+			if spellID == 382984 then	-- Battle for Azeroth Milling
 				millingBattleForAzeroth:Show()
 			else
 				millingBattleForAzeroth:Hide()
 			end
 
-			-- Legion
-			if spellID == 382986 then
+			if spellID == 382986 then	-- Legion Milling
 				millingLegion:Show()
 			else
 				millingLegion:Hide()
 			end
 
-			-- Warlords of Draenor
-			if spellID == 382987 then
+			if spellID == 382987 then	-- Warlords of Draenor Milling
 				millingWarlordsOfDraenor:Show()
 			else
 				millingWarlordsOfDraenor:Hide()
 			end
 
-			-- Mists of Pandaria
-			if spellID == 382988 then
+			if spellID == 382988 then	-- Mists of Pandaria Milling
 				millingMistsOfPandaria:Show()
 			else
 				millingMistsOfPandaria:Hide()
 			end
 
-			-- Cataclysm
-			if spellID == 382989 then
+			if spellID == 382989 then	-- Cataclysm Milling
 				millingCataclysm:Show()
 			else
 				millingCataclysm:Hide()
 			end
 
-			-- Wrath of the Lich King
-			if spellID == 382990 then
+			if spellID == 382990 then	-- Wrath of the Lich King Milling
 				millingWrathOfTheLichKing:Show()
 			else
 				millingWrathOfTheLichKing:Hide()
 			end
 
-			-- The Burning Crusade
-			if spellID == 382991 then
+			if spellID == 382991 then	-- The Burning Crusade Milling
 				millingTheBurningCrusade:Show()
 			else
 				millingTheBurningCrusade:Hide()
 			end
 
-			-- Classic
-			if spellID == 382994 then
+			if spellID == 382994 then	-- Classic Milling
 				millingClassic:Show()
 			else
 				millingClassic:Hide()
 			end
 
-			-- Check if the SL rank editbox should be displayed
-			if app.slLegendaryRecipeIDs[app.SelectedRecipeID] then
+			if app.slLegendaryRecipeIDs[app.SelectedRecipeID] then	-- Shadowlands Legendary recipes
 				ebSLrankText:Show()
 				ebSLrank:Show()
 				ebSLrank:SetText(app.slLegendaryRecipeIDs[app.SelectedRecipeID].rank)
@@ -3431,7 +3433,7 @@ function event:SPELL_DATA_LOAD_RESULT(spellID, success)
 		end
 
 		if app.Flag["tradeskillAssets"] == true then
-			millingInfo()
+			recipeAssets()
 			professionButtons()
 		end
 	end
