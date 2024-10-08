@@ -1773,7 +1773,7 @@ function app.UpdateRecipes()
 			cooldownTooltip:Hide()
 		end)
 		row:SetScript("OnClick", function(self, button)
-			if button == "RightButton" then
+			if button == "RightButton" and IsShiftKeyDown() then
 				table.remove(ProfessionShoppingList_Data.Cooldowns, cooldownInfo.id)
 				app.UpdateRecipes()
 			elseif button == "LeftButton" then
@@ -2085,7 +2085,7 @@ function app.CreateGeneralAssets()
 	app.ReagentsHeaderTooltip = app.Tooltip(app.Window, "Shift+LMB|cffFFFFFF: Link the reagent\n|RCtrl+LMB|cffFFFFFF: Add recipe for the selected subreagent, if it exists\n(This only works for professions that have been opened with "..app.NameShort.." active)")
 
 	-- Create Cooldowns header tooltip
-	app.CooldownsHeaderTooltip = app.Tooltip(app.Window, "Ctrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RAlt+LMB|cffFFFFFF: Attempt to craft this recipe (as many times as you have it tracked)\n|RRMB|cffFFFFFF: Remove this specific cooldown reminder")
+	app.CooldownsHeaderTooltip = app.Tooltip(app.Window, "Ctrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RAlt+LMB|cffFFFFFF: Attempt to craft this recipe (as many times as you have it tracked)\n|RShift+RMB|cffFFFFFF: Remove this specific cooldown reminder")
 
 	-- Create Close button tooltip
 	app.CloseButtonTooltip = app.Tooltip(app.Window, "Close the window")
