@@ -3467,7 +3467,7 @@ function event:UNIT_SPELLCAST_SUCCEEDED(unitTarget, castGUID, spellID)
 						if v ~= spellID then
 							for k2, v2 in pairs(ProfessionShoppingList_Data.Cooldowns) do
 								if v2.recipeID == v and v2.user == character .. "-" .. realm then
-									ProfessionShoppingList_Data.Cooldowns[k2] = nil
+									table.remove(ProfessionShoppingList_Data.Cooldowns, k2)
 								end
 							end
 						end
@@ -3686,7 +3686,7 @@ function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 					-- And move the reset time if we're not at full charges yet
 					if ProfessionShoppingList_Data.Cooldowns[k].charges ~= ProfessionShoppingList_Data.Cooldowns[k].maxCharges then
 						ProfessionShoppingList_Data.Cooldowns[k].start = GetServerTime()
-						ProfessionShoppingList_Data.Cooldowns[k].cooldown = GetQuestResetTime()
+						ProfessionShoppingList_Data.Cooldowns[k].cooldown = C_DateAndTime.GetSecondsUntilDailyReset()
 					end
 				end
 
