@@ -175,6 +175,145 @@ function app.KnowledgeTracker()
 	else
 		knowledgePointTracker:Hide()
 	end
+
+	-- Knowledge point tooltip
+	local function kpTooltip()
+		-- Populate the profession knowledge tooltip
+		if app.ProfessionKnowledge[skillLineID] then
+			local renownCount = 0
+			
+			-- Vendors
+			local text = "Vendors"
+
+			for k, v in ipairs(app.ProfessionKnowledge[skillLineID]) do
+				-- Completion status
+				local icon = app.iconNotReady
+				if C_QuestLog.IsQuestFlaggedCompleted(v.quest) then
+					icon = app.iconReady
+				end
+
+				if v.type == "vendor" then
+					-- Item link
+					if not C_Item.IsItemDataCachedByID(v.item) then local item = Item:CreateFromItemID(v.item) end
+					local _, itemLink = C_Item.GetItemInfo(v.item)
+					-- Grab faction name if applicable
+					local factionName, status, zoneName
+					if v.renown then
+						factionName = C_Reputation.GetFactionDataByID(v.source).name
+						if C_MajorFactions.GetRenownLevels(v.source)[v.renown].locked then
+							status = "|cffD222D"
+						else
+							status = "|cff238823"
+						end
+					elseif v.sourceType == "zone" then
+						zoneName = C_Map.GetMapInfo(v.source).name
+					end
+					-- If anything is missing, try again
+					if not itemLink or (v.renown and not factionName) or (v.sourceType == "zone" and not zoneName) then
+						RunNextFrame(kpTooltip)
+						do return end
+					end
+
+					-- Add text
+					if v.renown then
+						text = text .. "\n" .. "|T"..icon..":0|t " .. itemLink .. "|cffffffff ("..factionName.." - "..status..RENOWN_LEVEL_LABEL..v.renown.."|r)|r"
+					elseif v.sourceType == "zone" then
+						text = text .. "\n" .. "|T"..icon..":0|t " .. itemLink .. "|cffffffff ("..zoneName..")|r"
+					elseif v.sourceType == "static" then
+						text = text .. "\n" .. "|T"..icon..":0|t " .. itemLink .. "|cffffffff ("..v.source..")|r"
+					end
+				end
+
+				-- Count Renown
+				if v.type == "renown" then
+					renownCount = renownCount + 1
+				end
+			end
+
+			-- Renown
+			if renownCount > 0 then
+				text = text .. "\n\n" .. "Renown"
+
+				for k, v in ipairs(app.ProfessionKnowledge[skillLineID]) do
+					-- Completion status
+					local icon = app.iconNotReady
+					if C_QuestLog.IsQuestFlaggedCompleted(v.quest) then
+						icon = app.iconReady
+					end
+	
+					if v.type == "renown" then
+						-- Quest and faction info
+						local questTitle = C_QuestLog.GetTitleForQuestID(v.quest)
+						local factionTitle = C_Reputation.GetFactionDataByID(v.faction).name
+						local status
+						if C_MajorFactions.GetRenownLevels(v.faction)[v.renown].locked then
+							status = "|cffD222D"
+						else
+							status = "|cff238823"
+						end
+						-- If anything missing, try again
+						if not questTitle or not factionTitle then
+							RunNextFrame(kpTooltip)
+							do return end
+						end
+	
+						-- Add text
+						text = text .. "\n" .. "|T"..icon ..":0|t " .. "|cffffff00|Hquest:"..v.quest.."62|h["..questTitle.."]|h|r" .. "|cffffffff ("..factionTitle.." - "..status..RENOWN_LEVEL_LABEL..v.renown.."|r)|r"
+					end
+				end
+			end
+
+			-- World
+			text = text .. "\n\n" .. "World"
+
+			for k, v in ipairs(app.ProfessionKnowledge[skillLineID]) do
+				-- Completion status
+				local icon = app.iconNotReady
+				if C_QuestLog.IsQuestFlaggedCompleted(v.quest) then
+					icon = app.iconReady
+				end
+
+				if v.type == "world" then
+					-- Zone name
+					local zone = C_Map.GetMapInfo(v.zone).name
+
+					-- Item link
+					local _, itemLink
+					if v.item then
+						if not C_Item.IsItemDataCachedByID(v.item) then local item = Item:CreateFromItemID(v.item) end
+						_, itemLink = C_Item.GetItemInfo(v.item)
+
+						-- If anything is missing, try again
+						if not itemLink or not zone then
+							RunNextFrame(kpTooltip)
+							do return end
+						end
+					else
+						itemLink = "Hidden Profession Master"
+					end
+
+					-- Add text
+					text = text .. "\n" .. "|T"..icon..":0|t |cffffffff" .. itemLink .. " ("..zone..")|r"
+				end
+			end
+
+			-- Set the tooltip text
+			knowledgePointTooltipText:SetText(text)
+			-- Set the tooltip size to fit its contents
+			knowledgePointTooltip:SetHeight(knowledgePointTooltipText:GetStringHeight()+20)
+			knowledgePointTooltip:SetWidth(knowledgePointTooltipText:GetStringWidth()+20)
+		end
+	end
+
+	-- Refresh and show the tooltip on mouse-over
+	knowledgePointTracker:SetScript("OnEnter", function()
+		kpTooltip()
+		knowledgePointTooltip:Show()
+	end)
+	-- Hide the tooltip when not mouse-over
+	knowledgePointTracker:SetScript("OnLeave", function()
+		knowledgePointTooltip:Hide()
+	end)
 end
 
 -- When a tradeskill window is opened
