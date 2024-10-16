@@ -390,6 +390,12 @@ function event:CRAFTINGORDERS_FULFILL_ORDER_RESPONSE(result, orderID)
 				break
 			end
 		end
+
+		-- Close window if no recipes are left and the option is enabled
+		local next = next
+		if next(ProfessionShoppingList_Data.Recipes) == nil and ProfessionShoppingList_Settings["closeWhenDone"] then
+			app.Window:Hide()
+		end
 	end
 end
 
