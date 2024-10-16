@@ -44,7 +44,7 @@ end
 function app.CreateCraftingOrdersAssets()
 	-- Hide and disable existing tracking buttons
 	ProfessionsCustomerOrdersFrame.Form.TrackRecipeCheckbox:SetAlpha(0)
-	ProfessionsCustomerOrdersFrame.Form.TrackRecipeCheckbox:EnableMouse(false)
+	ProfessionsCustomerOrdersFrame.Form.TrackRecipeCheckbox.Checkbox:EnableMouse(false)
 
 	-- Create the place crafting orders UI Track button
 	if not trackPlaceOrderButton then
