@@ -1002,7 +1002,7 @@ function app.UpdateAssets()
 		-- Ragnaros button cooldown
 		startTime = C_Spell.GetSpellCooldown(61304).startTime
 		duration = C_Spell.GetSpellCooldown(61304).duration
-		app.AlvinCooldown:SetCooldown(startTime, duration)
+		app.RagnarosCooldown:SetCooldown(startTime, duration)
 
 		-- Lightforge cooldown
 		startTime = C_Spell.GetSpellCooldown(259930).startTime
