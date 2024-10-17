@@ -6,19 +6,6 @@
 -- Initialisation
 local appName, app = ...	-- Returns the AddOn name and a unique table
 
-----------------------
--- HELPER FUNCTIONS --
-----------------------
-
--- WoW API Events
-local event = CreateFrame("Frame")
-event:SetScript("OnEvent", function(self, event, ...)
-	if self[event] then
-		self[event](self, ...)
-	end
-end)
-event:RegisterEvent("ADDON_LOADED")
-
 ------------------------
 -- AUCTIONATOR IMPORT --
 ------------------------
@@ -116,8 +103,8 @@ function app.CreateAuctionatorButton()
 	end
 end
 
-function event:ADDON_LOADED(addOnName, containsBindings)
+app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 	if addOnName == appName then
 		app.CreateAuctionatorButton()
 	end
-end
+end)

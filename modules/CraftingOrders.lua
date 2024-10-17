@@ -6,23 +6,6 @@
 -- Initialisation
 local appName, app = ...	-- Returns the AddOn name and a unique table
 
-----------------------
--- HELPER FUNCTIONS --
-----------------------
-
--- WoW API Events
-local event = CreateFrame("Frame")
-event:SetScript("OnEvent", function(self, event, ...)
-	if self[event] then
-		self[event](self, ...)
-	end
-end)
-event:RegisterEvent("ADDON_LOADED")
-event:RegisterEvent("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE")
-event:RegisterEvent("CRAFTINGORDERS_HIDE_CUSTOMER")
-event:RegisterEvent("CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE")
-event:RegisterEvent("CRAFTINGORDERS_SHOW_CUSTOMER")
-
 ------------------
 -- INITIAL LOAD --
 ------------------
@@ -47,19 +30,19 @@ function app.CreateCraftingOrdersAssets()
 	ProfessionsCustomerOrdersFrame.Form.TrackRecipeCheckbox.Checkbox:EnableMouse(false)
 
 	-- Create the place crafting orders UI Track button
-	if not trackPlaceOrderButton then
-		trackPlaceOrderButton = app.Button(ProfessionsCustomerOrdersFrame.Form, "Track")
-		trackPlaceOrderButton:SetPoint("TOPLEFT", ProfessionsCustomerOrdersFrame.Form, "TOPLEFT", 12, -73)
-		trackPlaceOrderButton:SetScript("OnClick", function()
+	if not app.TrackPlaceOrderButton then
+		app.TrackPlaceOrderButton = app.Button(ProfessionsCustomerOrdersFrame.Form, "Track")
+		app.TrackPlaceOrderButton:SetPoint("TOPLEFT", ProfessionsCustomerOrdersFrame.Form, "TOPLEFT", 12, -73)
+		app.TrackPlaceOrderButton:SetScript("OnClick", function()
 			app.TrackRecipe(app.SelectedRecipeID, 1)
 		end)
 	end
 
 	-- Create the place crafting orders UI untrack button
-	if not untrackPlaceOrderButton then
-		untrackPlaceOrderButton = app.Button(ProfessionsCustomerOrdersFrame.Form, "Untrack")
-		untrackPlaceOrderButton:SetPoint("TOPLEFT", trackPlaceOrderButton, "TOPRIGHT", 2, 0)
-		untrackPlaceOrderButton:SetScript("OnClick", function()
+	if not app.UntrackPlaceOrderButton then
+		app.UntrackPlaceOrderButton = app.Button(ProfessionsCustomerOrdersFrame.Form, "Untrack")
+		app.UntrackPlaceOrderButton:SetPoint("TOPLEFT", app.TrackPlaceOrderButton, "TOPRIGHT", 2, 0)
+		app.UntrackPlaceOrderButton:SetScript("OnClick", function()
 			app.UntrackRecipe(app.SelectedRecipeID, 1)
 	
 			-- Show windows
@@ -68,32 +51,32 @@ function app.CreateCraftingOrdersAssets()
 	end
 
 	-- Create the place crafting orders UI personal order name field
-	if not personalCharname then
-		personalCharname = CreateFrame("EditBox", nil, ProfessionsCustomerOrdersFrame.Form, "InputBoxTemplate")
-		personalCharname:SetSize(80,20)
-		personalCharname:SetPoint("CENTER", trackPlaceOrderButton, "CENTER", 0, 0)
-		personalCharname:SetPoint("LEFT", trackPlaceOrderButton, "LEFT", 415, 0)
-		personalCharname:SetAutoFocus(false)
-		personalCharname:SetCursorPosition(0)
-		personalCharname:SetScript("OnEditFocusLost", function(self)
-			ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID] = tostring(personalCharname:GetText())
+	if not app.QuickOrderTargetBox then
+		app.QuickOrderTargetBox = CreateFrame("EditBox", nil, ProfessionsCustomerOrdersFrame.Form, "InputBoxTemplate")
+		app.QuickOrderTargetBox:SetSize(80,20)
+		app.QuickOrderTargetBox:SetPoint("CENTER", app.TrackPlaceOrderButton, "CENTER", 0, 0)
+		app.QuickOrderTargetBox:SetPoint("LEFT", app.TrackPlaceOrderButton, "LEFT", 415, 0)
+		app.QuickOrderTargetBox:SetAutoFocus(false)
+		app.QuickOrderTargetBox:SetCursorPosition(0)
+		app.QuickOrderTargetBox:SetScript("OnEditFocusLost", function(self)
+			ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID] = tostring(app.QuickOrderTargetBox:GetText())
 			app.UpdateAssets()
 		end)
-		personalCharname:SetScript("OnEnterPressed", function(self)
-			ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID] = tostring(personalCharname:GetText())
+		app.QuickOrderTargetBox:SetScript("OnEnterPressed", function(self)
+			ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID] = tostring(app.QuickOrderTargetBox:GetText())
 			self:ClearFocus()
 			app.UpdateAssets()
 		end)
-		personalCharname:SetScript("OnEscapePressed", function(self)
+		app.QuickOrderTargetBox:SetScript("OnEscapePressed", function(self)
 			app.UpdateAssets()
 		end)
-		personalCharname:SetScript("OnEnter", function()
-			personalOrderTooltip:Show()
+		app.QuickOrderTargetBox:SetScript("OnEnter", function()
+			app.QuickOrderTooltip:Show()
 		end)
-		personalCharname:SetScript("OnLeave", function()
-			personalOrderTooltip:Hide()
+		app.QuickOrderTargetBox:SetScript("OnLeave", function()
+			app.QuickOrderTooltip:Hide()
 		end)
-		app.Border(personalCharname, -6, 1, 2, -2)
+		app.Border(app.QuickOrderTargetBox, -6, 1, 2, -2)
 	end
 
 	local function quickOrder(recipeID)
@@ -193,110 +176,110 @@ function app.CreateCraftingOrdersAssets()
 	end
 
 	-- Create the place crafting orders personal order button
-	if not personalOrderButton then
-		personalOrderButton = app.Button(ProfessionsCustomerOrdersFrame.Form, "Quick Order")
-		personalOrderButton:SetPoint("CENTER", personalCharname, "CENTER", 0, 0)
-		personalOrderButton:SetPoint("RIGHT", personalCharname, "LEFT", -8, 0)
-		personalOrderButton:SetScript("OnClick", function()
+	if not app.QuickOrderButton then
+		app.QuickOrderButton = app.Button(ProfessionsCustomerOrdersFrame.Form, "Quick Order")
+		app.QuickOrderButton:SetPoint("CENTER", app.QuickOrderTargetBox, "CENTER", 0, 0)
+		app.QuickOrderButton:SetPoint("RIGHT", app.QuickOrderTargetBox, "LEFT", -8, 0)
+		app.QuickOrderButton:SetScript("OnClick", function()
 			quickOrder(app.SelectedRecipeID)
 		end)
-		personalOrderButton:SetScript("OnEnter", function()
-			personalOrderTooltip:Show()
+		app.QuickOrderButton:SetScript("OnEnter", function()
+			app.QuickOrderTooltip:Show()
 		end)
-		personalOrderButton:SetScript("OnLeave", function()
-			personalOrderTooltip:Hide()
+		app.QuickOrderButton:SetScript("OnLeave", function()
+			app.QuickOrderTooltip:Hide()
 		end)
 	end
 
 	-- Create the place crafting orders personal order button tooltip
-	if not personalOrderTooltip then
-		personalOrderTooltip = CreateFrame("Frame", nil, personalOrderButton, "BackdropTemplate")
-		personalOrderTooltip:SetPoint("CENTER")
-		personalOrderTooltip:SetPoint("TOP", personalOrderButton, "BOTTOM", 0, 0)
-		personalOrderTooltip:SetFrameStrata("TOOLTIP")
-		personalOrderTooltip:SetBackdrop({
+	if not app.QuickOrderTooltip then
+		app.QuickOrderTooltip = CreateFrame("Frame", nil, app.QuickOrderButton, "BackdropTemplate")
+		app.QuickOrderTooltip:SetPoint("CENTER")
+		app.QuickOrderTooltip:SetPoint("TOP", app.QuickOrderButton, "BOTTOM", 0, 0)
+		app.QuickOrderTooltip:SetFrameStrata("TOOLTIP")
+		app.QuickOrderTooltip:SetBackdrop({
 			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
 			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 			edgeSize = 16,
 			insets = { left = 4, right = 4, top = 4, bottom = 4 },
 		})
 
-		personalOrderTooltip:SetBackdropColor(0, 0, 0, 0.9)
-		personalOrderTooltip:EnableMouse(false)
-		personalOrderTooltip:SetMovable(false)
-		personalOrderTooltip:Hide()
+		app.QuickOrderTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		app.QuickOrderTooltip:EnableMouse(false)
+		app.QuickOrderTooltip:SetMovable(false)
+		app.QuickOrderTooltip:Hide()
 
-		personalOrderTooltipText = personalOrderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		personalOrderTooltipText:SetPoint("TOPLEFT", personalOrderTooltip, "TOPLEFT", 10, -10)
+		personalOrderTooltipText = app.QuickOrderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		personalOrderTooltipText:SetPoint("TOPLEFT", app.QuickOrderTooltip, "TOPLEFT", 10, -10)
 		personalOrderTooltipText:SetJustifyH("LEFT")
 		personalOrderTooltipText:SetText("|cffFF0000Instantly|r create a crafting order for the specified recipient.\n\nUse |cffFFFFFFGUILD|r (all uppercase) to place a Guild Order.\nUse a character name to place a Personal Order.\nRecipients are saved per recipe.\n\nIf the button is |cff9D9D9Dgreyed|r out, you need to cache the profession\nand/or enter a valid recipient to send the order to.")
 
 		-- Set the tooltip size to fit its contents
-		personalOrderTooltip:SetHeight(personalOrderTooltipText:GetStringHeight()+20)
-		personalOrderTooltip:SetWidth(personalOrderTooltipText:GetStringWidth()+20)
+		app.QuickOrderTooltip:SetHeight(personalOrderTooltipText:GetStringHeight()+20)
+		app.QuickOrderTooltip:SetWidth(personalOrderTooltipText:GetStringWidth()+20)
 	end
 
 	-- Create the local reagents checkbox
-	if not cbUseLocalReagents then
-		cbUseLocalReagents = CreateFrame("CheckButton", nil, ProfessionsCustomerOrdersFrame.Form, "InterfaceOptionsCheckButtonTemplate")
-		cbUseLocalReagents.Text:SetText("Use local reagents")
-		cbUseLocalReagents.Text:SetTextColor(1, 1, 1, 1)
-		cbUseLocalReagents.Text:SetScale(1.2)
-		cbUseLocalReagents:SetPoint("BOTTOMLEFT", personalOrderButton, "TOPLEFT", 0, 0)
-		cbUseLocalReagents:SetFrameStrata("HIGH")
-		cbUseLocalReagents:SetChecked(ProfessionShoppingList_Settings["useLocalReagents"])
-		cbUseLocalReagents:SetScript("OnClick", function(self)
+	if not app.LocalReagentsCheckbox then
+		app.LocalReagentsCheckbox = CreateFrame("CheckButton", nil, ProfessionsCustomerOrdersFrame.Form, "InterfaceOptionsCheckButtonTemplate")
+		app.LocalReagentsCheckbox.Text:SetText("Use local reagents")
+		app.LocalReagentsCheckbox.Text:SetTextColor(1, 1, 1, 1)
+		app.LocalReagentsCheckbox.Text:SetScale(1.2)
+		app.LocalReagentsCheckbox:SetPoint("BOTTOMLEFT", app.QuickOrderButton, "TOPLEFT", 0, 0)
+		app.LocalReagentsCheckbox:SetFrameStrata("HIGH")
+		app.LocalReagentsCheckbox:SetChecked(ProfessionShoppingList_Settings["useLocalReagents"])
+		app.LocalReagentsCheckbox:SetScript("OnClick", function(self)
 			ProfessionShoppingList_Settings["useLocalReagents"] = self:GetChecked()
 
 			if ProfessionShoppingList_CharacterData.Orders["last"] ~= nil and ProfessionShoppingList_CharacterData.Orders["last"] ~= 0 then
 				local reagents = "false"
 				local recipient = ProfessionShoppingList_CharacterData.Orders[ProfessionShoppingList_CharacterData.Orders["last"]]
 				if ProfessionShoppingList_Settings["useLocalReagents"] == true then reagents = "true" end
-				repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.\nRecipient: "..recipient.."\nUse local reagents: "..reagents)
-				repeatOrderTooltip:SetHeight(repeatOrderTooltipText:GetStringHeight()+20)
-				repeatOrderTooltip:SetWidth(repeatOrderTooltipText:GetStringWidth()+20)
+				app.RepeatQuickOrderTooltipText:SetText("Repeat the last Quick Order done on this character.\nRecipient: "..recipient.."\nUse local reagents: "..reagents)
+				app.RepeatQuickOrderTooltip:SetHeight(app.RepeatQuickOrderTooltipText:GetStringHeight()+20)
+				app.RepeatQuickOrderTooltip:SetWidth(app.RepeatQuickOrderTooltipText:GetStringWidth()+20)
 			end
 		end)
-		cbUseLocalReagents:SetScript("OnEnter", function()
-			useLocalReagentsTooltip:Show()
+		app.LocalReagentsCheckbox:SetScript("OnEnter", function()
+			app.LocalReagentsTooltip:Show()
 		end)
-		cbUseLocalReagents:SetScript("OnLeave", function()
-			useLocalReagentsTooltip:Hide()
+		app.LocalReagentsCheckbox:SetScript("OnLeave", function()
+			app.LocalReagentsTooltip:Hide()
 		end)
 	end
 
 	-- Create the local reagents tooltip
-	if not useLocalReagentsTooltip then
-		useLocalReagentsTooltip = CreateFrame("Frame", nil, cbUseLocalReagents, "BackdropTemplate")
-		useLocalReagentsTooltip:SetPoint("CENTER")
-		useLocalReagentsTooltip:SetPoint("TOP", cbUseLocalReagents, "BOTTOM", 0, 0)
-		useLocalReagentsTooltip:SetFrameStrata("TOOLTIP")
-		useLocalReagentsTooltip:SetBackdrop({
+	if not app.LocalReagentsTooltip then
+		app.LocalReagentsTooltip = CreateFrame("Frame", nil, app.LocalReagentsCheckbox, "BackdropTemplate")
+		app.LocalReagentsTooltip:SetPoint("CENTER")
+		app.LocalReagentsTooltip:SetPoint("TOP", app.LocalReagentsCheckbox, "BOTTOM", 0, 0)
+		app.LocalReagentsTooltip:SetFrameStrata("TOOLTIP")
+		app.LocalReagentsTooltip:SetBackdrop({
 			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
 			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 			edgeSize = 16,
 			insets = { left = 4, right = 4, top = 4, bottom = 4 },
 		})
-		useLocalReagentsTooltip:SetBackdropColor(0, 0, 0, 0.9)
-		useLocalReagentsTooltip:EnableMouse(false)
-		useLocalReagentsTooltip:SetMovable(false)
-		useLocalReagentsTooltip:Hide()
+		app.LocalReagentsTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		app.LocalReagentsTooltip:EnableMouse(false)
+		app.LocalReagentsTooltip:SetMovable(false)
+		app.LocalReagentsTooltip:Hide()
 
-		useLocalReagentsTooltipText = useLocalReagentsTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		useLocalReagentsTooltipText:SetPoint("TOPLEFT", useLocalReagentsTooltip, "TOPLEFT", 10, -10)
+		useLocalReagentsTooltipText = app.LocalReagentsTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		useLocalReagentsTooltipText:SetPoint("TOPLEFT", app.LocalReagentsTooltip, "TOPLEFT", 10, -10)
 		useLocalReagentsTooltipText:SetJustifyH("LEFT")
 		useLocalReagentsTooltipText:SetText("Use (the lowest quality) available local reagents.\nWhich reagents are used |cffFF0000cannot|r be customised.")
 
 		-- Set the tooltip size to fit its contents
-		useLocalReagentsTooltip:SetHeight(useLocalReagentsTooltipText:GetStringHeight()+20)
-		useLocalReagentsTooltip:SetWidth(useLocalReagentsTooltipText:GetStringWidth()+20)
+		app.LocalReagentsTooltip:SetHeight(useLocalReagentsTooltipText:GetStringHeight()+20)
+		app.LocalReagentsTooltip:SetWidth(useLocalReagentsTooltipText:GetStringWidth()+20)
 	end
 
 	-- Create the repeat last crafting order button
-	if not repeatOrderButton then
-		repeatOrderButton = app.Button(ProfessionsCustomerOrdersFrame, "")
-		repeatOrderButton:SetPoint("BOTTOMLEFT", ProfessionsCustomerOrdersFrame, 170, 5)
-		repeatOrderButton:SetScript("OnClick", function()
+	if not app.RepeatQuickOrderButton then
+		app.RepeatQuickOrderButton = app.Button(ProfessionsCustomerOrdersFrame, "")
+		app.RepeatQuickOrderButton:SetPoint("BOTTOMLEFT", ProfessionsCustomerOrdersFrame, 170, 5)
+		app.RepeatQuickOrderButton:SetScript("OnClick", function()
 			if ProfessionShoppingList_CharacterData.Orders["last"] ~= nil and ProfessionShoppingList_CharacterData.Orders["last"] ~= 0 then
 				quickOrder(ProfessionShoppingList_CharacterData.Orders["last"])
 				ProfessionsCustomerOrdersFrame.MyOrdersPage:RefreshOrders()
@@ -304,11 +287,11 @@ function app.CreateCraftingOrdersAssets()
 				app.Print("No last Quick Order found.")
 			end
 		end)
-		repeatOrderButton:SetScript("OnEnter", function()
-			repeatOrderTooltip:Show()
+		app.RepeatQuickOrderButton:SetScript("OnEnter", function()
+			app.RepeatQuickOrderTooltip:Show()
 		end)
-		repeatOrderButton:SetScript("OnLeave", function()
-			repeatOrderTooltip:Hide()
+		app.RepeatQuickOrderButton:SetScript("OnLeave", function()
+			app.RepeatQuickOrderTooltip:Hide()
 		end)
 
 		-- Set the last used recipe name for the repeat order button title
@@ -317,42 +300,42 @@ function app.CreateCraftingOrdersAssets()
 		if ProfessionShoppingList_CharacterData.Orders["last"] ~= nil and ProfessionShoppingList_CharacterData.Orders["last"] ~= 0 then
 			recipeName = C_TradeSkillUI.GetRecipeSchematic(ProfessionShoppingList_CharacterData.Orders["last"], false).name
 		end
-		repeatOrderButton:SetText(recipeName)
-		repeatOrderButton:SetWidth(repeatOrderButton:GetTextWidth()+20)
+		app.RepeatQuickOrderButton:SetText(recipeName)
+		app.RepeatQuickOrderButton:SetWidth(app.RepeatQuickOrderButton:GetTextWidth()+20)
 	end
 
 	-- Create the local reagents tooltip
-	if not repeatOrderTooltip then
-		repeatOrderTooltip = CreateFrame("Frame", nil, repeatOrderButton, "BackdropTemplate")
-		repeatOrderTooltip:SetPoint("CENTER")
-		repeatOrderTooltip:SetPoint("TOP", repeatOrderButton, "BOTTOM", 0, 0)
-		repeatOrderTooltip:SetFrameStrata("TOOLTIP")
-		repeatOrderTooltip:SetBackdrop({
+	if not app.RepeatQuickOrderTooltip then
+		app.RepeatQuickOrderTooltip = CreateFrame("Frame", nil, app.RepeatQuickOrderButton, "BackdropTemplate")
+		app.RepeatQuickOrderTooltip:SetPoint("CENTER")
+		app.RepeatQuickOrderTooltip:SetPoint("TOP", app.RepeatQuickOrderButton, "BOTTOM", 0, 0)
+		app.RepeatQuickOrderTooltip:SetFrameStrata("TOOLTIP")
+		app.RepeatQuickOrderTooltip:SetBackdrop({
 			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
 			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 			edgeSize = 16,
 			insets = { left = 4, right = 4, top = 4, bottom = 4 },
 		})
-		repeatOrderTooltip:SetBackdropColor(0, 0, 0, 0.9)
-		repeatOrderTooltip:EnableMouse(false)
-		repeatOrderTooltip:SetMovable(false)
-		repeatOrderTooltip:Hide()
+		app.RepeatQuickOrderTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		app.RepeatQuickOrderTooltip:EnableMouse(false)
+		app.RepeatQuickOrderTooltip:SetMovable(false)
+		app.RepeatQuickOrderTooltip:Hide()
 
-		repeatOrderTooltipText = repeatOrderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		repeatOrderTooltipText:SetPoint("TOPLEFT", repeatOrderTooltip, "TOPLEFT", 10, -10)
-		repeatOrderTooltipText:SetJustifyH("LEFT")
+		app.RepeatQuickOrderTooltipText = app.RepeatQuickOrderTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.RepeatQuickOrderTooltipText:SetPoint("TOPLEFT", app.RepeatQuickOrderTooltip, "TOPLEFT", 10, -10)
+		app.RepeatQuickOrderTooltipText:SetJustifyH("LEFT")
 		if ProfessionShoppingList_CharacterData.Orders["last"] ~= nil and ProfessionShoppingList_CharacterData.Orders["last"] ~= 0 then
 			local reagents = "false"
 			local recipient = ProfessionShoppingList_CharacterData.Orders[ProfessionShoppingList_CharacterData.Orders["last"]]
 			if ProfessionShoppingList_Settings["useLocalReagents"] == true then reagents = "true" end
-			repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.\nRecipient: "..recipient.."\nUse local reagents: "..reagents)
+			app.RepeatQuickOrderTooltipText:SetText("Repeat the last Quick Order done on this character.\nRecipient: "..recipient.."\nUse local reagents: "..reagents)
 		else
-			repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.")
+			app.RepeatQuickOrderTooltipText:SetText("Repeat the last Quick Order done on this character.")
 		end
 		
 		-- Set the tooltip size to fit its contents
-		repeatOrderTooltip:SetHeight(repeatOrderTooltipText:GetStringHeight()+20)
-		repeatOrderTooltip:SetWidth(repeatOrderTooltipText:GetStringWidth()+20)
+		app.RepeatQuickOrderTooltip:SetHeight(app.RepeatQuickOrderTooltipText:GetStringHeight()+20)
+		app.RepeatQuickOrderTooltip:SetWidth(app.RepeatQuickOrderTooltipText:GetStringWidth()+20)
 	end
 
 	-- Set the flag for assets created to true
@@ -360,28 +343,28 @@ function app.CreateCraftingOrdersAssets()
 end
 
 -- When the AddOn is fully loaded, actually run the components
-function event:ADDON_LOADED(addOnName, containsBindings)
+app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 	if addOnName == appName then
 		app.InitialiseCraftingOrders()
 	end
-end
+end)
 
 ---------------------
 -- CRAFTING ORDERS --
 ---------------------
 
 -- When opening the crafting orders window
-function event:CRAFTINGORDERS_SHOW_CUSTOMER()
+app.Event:Register("CRAFTINGORDERS_SHOW_CUSTOMER", function()
 	app.CreateCraftingOrdersAssets()
-end
+end)
 
 -- When closing the crafting orders window
-function event:CRAFTINGORDERS_HIDE_CUSTOMER()
+app.Event:Register("CRAFTINGORDERS_HIDE_CUSTOMER", function()
 	app.Flag["recraft"] = false
-end
+end)
 
 -- When fulfilling an order
-function event:CRAFTINGORDERS_FULFILL_ORDER_RESPONSE(result, orderID)
+app.Event:Register("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE", function(result, orderID)
 	if ProfessionShoppingList_Settings["removeCraft"] == true then
 		for k, v in pairs (ProfessionShoppingList_Data.Recipes) do
 			if tonumber(string.match(k, ":(%d+):")) == orderID then
@@ -397,14 +380,14 @@ function event:CRAFTINGORDERS_FULFILL_ORDER_RESPONSE(result, orderID)
 			app.Window:Hide()
 		end
 	end
-end
+end)
 
 ------------------
 -- QUICK ORDERS --
 ------------------
 
 -- If placing a crafting order through PSL
-function event:CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE(result)
+app.Event:Register("CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE", function(result)
 	if app.Flag["quickOrder"] >= 1 then
 		-- Count a(nother) quick order attempt
 		app.QuickOrderAttempts = app.QuickOrderAttempts + 1
@@ -448,12 +431,12 @@ function event:CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE(result)
 			local reagents = "false"
 			local recipient = ProfessionShoppingList_CharacterData.Orders[ProfessionShoppingList_CharacterData.Orders["last"]]
 			if ProfessionShoppingList_Settings["useLocalReagents"] == true then reagents = "true" end
-			repeatOrderTooltipText:SetText("Repeat the last Quick Order done on this character.\nRecipient: "..recipient.."\nUse local reagents: "..reagents)
-			repeatOrderTooltip:SetHeight(repeatOrderTooltipText:GetStringHeight()+20)
-			repeatOrderTooltip:SetWidth(repeatOrderTooltipText:GetStringWidth()+20)
+			app.RepeatQuickOrderTooltipText:SetText("Repeat the last Quick Order done on this character.\nRecipient: "..recipient.."\nUse local reagents: "..reagents)
+			app.RepeatQuickOrderTooltip:SetHeight(app.RepeatQuickOrderTooltipText:GetStringHeight()+20)
+			app.RepeatQuickOrderTooltip:SetWidth(app.RepeatQuickOrderTooltipText:GetStringWidth()+20)
 		end
-		repeatOrderButton:SetText(recipeName)
-		repeatOrderButton:SetWidth(repeatOrderButton:GetTextWidth()+20)
+		app.RepeatQuickOrderButton:SetText(recipeName)
+		app.RepeatQuickOrderButton:SetWidth(app.RepeatQuickOrderButton:GetTextWidth()+20)
 
 		-- Reset all the numbers if we're done
 		if (app.Flag["quickOrder"] == 1 and app.QuickOrderAttempts >= 1) or (app.Flag["quickOrder"] == 2 and app.QuickOrderAttempts >= 4) then
@@ -462,4 +445,4 @@ function event:CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE(result)
 			app.QuickOrderErrors = 0
 		end
 	end
-end
+end)

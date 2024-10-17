@@ -6,22 +6,6 @@
 -- Initialisation
 local appName, app = ...	-- Returns the AddOn name and a unique table
 
-----------------------
--- HELPER FUNCTIONS --
-----------------------
-
--- WoW API Events
-local event = CreateFrame("Frame")
-event:SetScript("OnEvent", function(self, event, ...)
-	if self[event] then
-		self[event](self, ...)
-	end
-end)
-event:RegisterEvent("ADDON_LOADED")
-event:RegisterEvent("SPELL_DATA_LOAD_RESULT")
-event:RegisterEvent("TRADE_SKILL_SHOW")
-event:RegisterEvent("TRAIT_CONFIG_UPDATED")
-
 ------------------
 -- INITIAL LOAD --
 ------------------
@@ -33,11 +17,11 @@ function app.InitialiseProfessionKnowledge()
 end
 
 -- When the AddOn is fully loaded
-function event:ADDON_LOADED(addOnName, containsBindings)
+app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 	if addOnName == appName then
 		app.InitialiseProfessionKnowledge()
 	end
-end
+end)
 
 -----------------------
 -- KNOWLEDGE TRACKER --
@@ -46,48 +30,48 @@ end
 -- Create knowledge tracker
 function app.CreateProfessionKnowledgeAssets()
 	-- Create Knowledge Point tracker
-	if not knowledgePointTracker then
+	if not app.KnowledgePointTracker then
 		-- Bar wrapper
-		knowledgePointTracker = CreateFrame("Frame", "KnowledgePointTracker", ProfessionsFrame.SpecPage, "TooltipBackdropTemplate")
-		knowledgePointTracker:SetBackdropBorderColor(0.5, 0.5, 0.5)
-		knowledgePointTracker:SetSize(470,25)
-		knowledgePointTracker:SetPoint("TOPRIGHT", ProfessionsFrame.SpecPage, "TOPRIGHT", -5, -24)
-		knowledgePointTracker:SetFrameStrata("HIGH")
+		app.KnowledgePointTracker = CreateFrame("Frame", "KnowledgePointTracker", ProfessionsFrame.SpecPage, "TooltipBackdropTemplate")
+		app.KnowledgePointTracker:SetBackdropBorderColor(0.5, 0.5, 0.5)
+		app.KnowledgePointTracker:SetSize(470,25)
+		app.KnowledgePointTracker:SetPoint("TOPRIGHT", ProfessionsFrame.SpecPage, "TOPRIGHT", -5, -24)
+		app.KnowledgePointTracker:SetFrameStrata("HIGH")
 
 		-- Bar
-		knowledgePointTracker.Bar = CreateFrame("StatusBar", nil, knowledgePointTracker)
-		knowledgePointTracker.Bar:SetStatusBarTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\profbars\\generic.blp")
+		app.KnowledgePointTracker.Bar = CreateFrame("StatusBar", nil, app.KnowledgePointTracker)
+		app.KnowledgePointTracker.Bar:SetStatusBarTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\profbars\\generic.blp")
 		
-		knowledgePointTracker.Bar:SetPoint("TOPLEFT", 5, -5)
-		knowledgePointTracker.Bar:SetPoint("BOTTOMRIGHT", -5, 5)
-		Mixin(knowledgePointTracker.Bar, SmoothStatusBarMixin)
+		app.KnowledgePointTracker.Bar:SetPoint("TOPLEFT", 5, -5)
+		app.KnowledgePointTracker.Bar:SetPoint("BOTTOMRIGHT", -5, 5)
+		Mixin(app.KnowledgePointTracker.Bar, SmoothStatusBarMixin)
 
 		-- Text
-		knowledgePointTracker.Text = knowledgePointTracker.Bar:CreateFontString("OVERLAY", nil, "GameFontNormalOutline")
-		knowledgePointTracker.Text:SetPoint("CENTER", knowledgePointTracker, "CENTER", 0, 0)
-		knowledgePointTracker.Text:SetTextColor(1, 1, 1, 1)
+		app.KnowledgePointTracker.Text = app.KnowledgePointTracker.Bar:CreateFontString("OVERLAY", nil, "GameFontNormalOutline")
+		app.KnowledgePointTracker.Text:SetPoint("CENTER", app.KnowledgePointTracker, "CENTER", 0, 0)
+		app.KnowledgePointTracker.Text:SetTextColor(1, 1, 1, 1)
 	end
 
 	-- Create Knowledge Point tracker tooltip
-	if not knowledgePointTooltip then
-		knowledgePointTooltip = CreateFrame("Frame", nil, knowledgePointTracker, "BackdropTemplate")
-		knowledgePointTooltip:SetPoint("CENTER")
-		knowledgePointTooltip:SetPoint("TOP", knowledgePointTracker, "BOTTOM", 0, 0)
-		knowledgePointTooltip:SetFrameStrata("TOOLTIP")
-		knowledgePointTooltip:SetBackdrop({
+	if not app.KnowledgePointTooltip then
+		app.KnowledgePointTooltip = CreateFrame("Frame", nil, app.KnowledgePointTracker, "BackdropTemplate")
+		app.KnowledgePointTooltip:SetPoint("CENTER")
+		app.KnowledgePointTooltip:SetPoint("TOP", app.KnowledgePointTracker, "BOTTOM", 0, 0)
+		app.KnowledgePointTooltip:SetFrameStrata("TOOLTIP")
+		app.KnowledgePointTooltip:SetBackdrop({
 			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
 			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 			edgeSize = 16,
 			insets = { left = 4, right = 4, top = 4, bottom = 4 },
 		})
-		knowledgePointTooltip:SetBackdropColor(0, 0, 0, 0.9)
-		knowledgePointTooltip:EnableMouse(false)
-		knowledgePointTooltip:SetMovable(false)
-		knowledgePointTooltip:Hide()
+		app.KnowledgePointTooltip:SetBackdropColor(0, 0, 0, 0.9)
+		app.KnowledgePointTooltip:EnableMouse(false)
+		app.KnowledgePointTooltip:SetMovable(false)
+		app.KnowledgePointTooltip:Hide()
 
-		knowledgePointTooltipText = knowledgePointTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		knowledgePointTooltipText:SetPoint("TOPLEFT", knowledgePointTooltip, "TOPLEFT", 10, -10)
-		knowledgePointTooltipText:SetJustifyH("LEFT")
+		app.KnowledgePointTooltipText = app.KnowledgePointTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.KnowledgePointTooltipText:SetPoint("TOPLEFT", app.KnowledgePointTooltip, "TOPLEFT", 10, -10)
+		app.KnowledgePointTooltipText:SetJustifyH("LEFT")
 	end
 
 	app.Flag["knowledgeAssets"] = true
@@ -149,11 +133,11 @@ function app.KnowledgeTracker()
 		end
 
 		-- Set text, background, and progress, then show bar
-		knowledgePointTracker.Text:SetText(perksEarned.."/"..perkCount.." perks unlocked ("..knowledgeSpent.."/"..knowledgeMax.." knowledge)")
-		knowledgePointTracker.Bar:SetMinMaxSmoothedValue(0, knowledgeMax)
-		knowledgePointTracker.Bar:SetSmoothedValue(knowledgeSpent)
-		knowledgePointTracker.Bar:SetStatusBarTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\profbars\\"..professionID..".blp")
-		knowledgePointTracker:Show()
+		app.KnowledgePointTracker.Text:SetText(perksEarned.."/"..perkCount.." perks unlocked ("..knowledgeSpent.."/"..knowledgeMax.." knowledge)")
+		app.KnowledgePointTracker.Bar:SetMinMaxSmoothedValue(0, knowledgeMax)
+		app.KnowledgePointTracker.Bar:SetSmoothedValue(knowledgeSpent)
+		app.KnowledgePointTracker.Bar:SetStatusBarTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\profbars\\"..professionID..".blp")
+		app.KnowledgePointTracker:Show()
 	end
 
 	-- Professions with Knowledge Points
@@ -173,7 +157,7 @@ function app.KnowledgeTracker()
 			setKnowledgePointTracker()
 		end
 	else
-		knowledgePointTracker:Hide()
+		app.KnowledgePointTracker:Hide()
 	end
 
 	-- Knowledge point tooltip
@@ -298,41 +282,41 @@ function app.KnowledgeTracker()
 			end
 
 			-- Set the tooltip text
-			knowledgePointTooltipText:SetText(text)
+			app.KnowledgePointTooltipText:SetText(text)
 			-- Set the tooltip size to fit its contents
-			knowledgePointTooltip:SetHeight(knowledgePointTooltipText:GetStringHeight()+20)
-			knowledgePointTooltip:SetWidth(knowledgePointTooltipText:GetStringWidth()+20)
+			app.KnowledgePointTooltip:SetHeight(app.KnowledgePointTooltipText:GetStringHeight()+20)
+			app.KnowledgePointTooltip:SetWidth(app.KnowledgePointTooltipText:GetStringWidth()+20)
 		end
 	end
 
 	-- Refresh and show the tooltip on mouse-over
-	knowledgePointTracker:SetScript("OnEnter", function()
+	app.KnowledgePointTracker:SetScript("OnEnter", function()
 		kpTooltip()
-		knowledgePointTooltip:Show()
+		app.KnowledgePointTooltip:Show()
 	end)
 	-- Hide the tooltip when not mouse-over
-	knowledgePointTracker:SetScript("OnLeave", function()
-		knowledgePointTooltip:Hide()
+	app.KnowledgePointTracker:SetScript("OnLeave", function()
+		app.KnowledgePointTooltip:Hide()
 	end)
 end
 
 -- When a tradeskill window is opened
-function event:TRADE_SKILL_SHOW()
+app.Event:Register("TRADE_SKILL_SHOW", function()
 	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
 		app.CreateProfessionKnowledgeAssets()
 	end
-end
+end)
 
 -- When a recipe is selected (also used to determine professionID, which TRADE_SKILL_SHOW() is too quick for)
-function event:SPELL_DATA_LOAD_RESULT(spellID, success)
+app.Event:Register("SPELL_DATA_LOAD_RESULT", function(spellID, success)
 	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true and app.Flag["knowledgeAssets"] == true then
 		app.KnowledgeTracker()
 	end
-end
+end)
 
 -- When profession knowledge is spent
-function event:TRAIT_CONFIG_UPDATED(spellID, success)
+app.Event:Register("TRAIT_CONFIG_UPDATED", function(spellID, success)
 	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true and app.Flag["knowledgeAssets"] == true then
 		app.KnowledgeTracker()
 	end
-end
+end)

@@ -6,44 +6,25 @@
 -- Initialisation
 local appName, app = ...	-- Returns the AddOn name and a unique table
 
-----------------------
--- HELPER FUNCTIONS --
-----------------------
-
--- WoW API Events
-local event = CreateFrame("Frame")
-event:SetScript("OnEvent", function(self, event, ...)
-	if self[event] then
-		self[event](self, ...)
-	end
-end)
-event:RegisterEvent("ADDON_LOADED")
-event:RegisterEvent("LFG_PROPOSAL_SHOW")
-event:RegisterEvent("MERCHANT_SHOW")
-event:RegisterEvent("PET_BATTLE_QUEUE_PROPOSE_MATCH")
-event:RegisterEvent("PLAYER_ENTERING_WORLD")
-event:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
-event:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
-
 ------------------
 -- INITIAL LOAD --
 ------------------
 
 -- When the AddOn is fully loaded, actually run the components
-function event:ADDON_LOADED(addOnName, containsBindings)
+app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 	if addOnName == appName then
 		app.UnderminePrices()
 		app.HideOribos()
 		app.DisableHandyNotesAltRMB()
 		app.SettingsTweaks()
 	end
-end
+end)
 
 ----------------------
 -- BACKPACK SORTING --
 ----------------------
 
-function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
+app.Event:Register("PLAYER_ENTERING_WORLD", function(isInitialLogin, isReloadingUi)
 	-- Enforce backpack sorting options
 	if ProfessionShoppingList_Settings["backpackCleanup"] == 1 then
 		C_Container.SetSortBagsRightToLeft(false)
@@ -56,7 +37,29 @@ function event:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
 	elseif ProfessionShoppingList_Settings["backpackLoot"] == 2 then
 		C_Container.SetInsertItemsLeftToRight(false)
 	end
-end
+end)
+
+-----------------------------
+-- SPLIT REAGENT BAG COUNT --
+-----------------------------
+
+-- When bag changes occur (out of combat)
+app.Event:Register("BAG_UPDATE_DELAYED", function()
+	if UnitAffectingCombat("player") == false then
+		-- If the setting for split reagent bag count is enabled
+		if ProfessionShoppingList_Settings["backpackCount"] == true then
+			-- Get number of free bag slots
+			local freeSlots1 = C_Container.GetContainerNumFreeSlots(0) + C_Container.GetContainerNumFreeSlots(1) + C_Container.GetContainerNumFreeSlots(2) + C_Container.GetContainerNumFreeSlots(3) + C_Container.GetContainerNumFreeSlots(4)
+			local freeSlots2 = C_Container.GetContainerNumFreeSlots(5)
+
+			-- If a reagent bag is equipped
+			if C_Container.GetContainerNumSlots(5) ~= 0 then
+				-- Replace the bag count text
+				MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 .. "+" .. freeSlots2 .. ")")
+			end
+		end
+	end
+end)
 
 -----------------
 -- QUEUE SOUND --
@@ -71,14 +74,14 @@ function app.QueueSound()
 end
 
 -- When a LFG queue pops
-function event:LFG_PROPOSAL_SHOW()
+app.Event:Register("LFG_PROPOSAL_SHOW", function()
 	app.QueueSound()
-end
+end)
 
 -- When a pet battle queue pops
-function event:PET_BATTLE_QUEUE_PROPOSE_MATCH()
+app.Event:Register("PET_BATTLE_QUEUE_PROPOSE_MATCH", function()
 	app.QueueSound()
-end
+end)
 
 -- When a PvP queue pops
 hooksecurefunc("PVPReadyDialog_Display", function()
@@ -101,9 +104,9 @@ function app.MerchantFilter()
 end
 
 -- When a vendor window is opened
-function event:MERCHANT_SHOW()
+app.Event:Register("MERCHANT_SHOW", function()
 	app.MerchantFilter()
-end
+end)
 
 ----------------------
 -- UNDERMINE PRICES --
@@ -270,26 +273,26 @@ end
 -- INSTANTLY CATALYSE --
 ------------------------
 
-function event:PLAYER_INTERACTION_MANAGER_FRAME_SHOW(type)
+app.Event:Register("PLAYER_INTERACTION_MANAGER_FRAME_SHOW", function(type)
 	-- Only run this if the setting is enabled
 	if ProfessionShoppingList_Settings["catalystButton"] then
-		if type == 44 and not app.CatalystSkip then
-			app.CatalystSkip = app.Button(ItemInteractionFrame, "Instantly Catalyze")
-			app.CatalystSkip:SetPoint("CENTER", ItemInteractionFrameTitleText, 0, -30)
-			app.CatalystSkip:SetScript("OnClick", function()
+		if type == 44 and not app.CatalystSkipButton then
+			app.CatalystSkipButton = app.Button(ItemInteractionFrame, "Instantly Catalyze")
+			app.CatalystSkipButton:SetPoint("CENTER", ItemInteractionFrameTitleText, 0, -30)
+			app.CatalystSkipButton:SetScript("OnClick", function()
 				ItemInteractionFrame:CompleteItemInteraction()
 			end)
-		elseif type == 44 and app.CatalystSkip then
-			app.CatalystSkip:Show()
+		elseif type == 44 and app.CatalystSkipButton then
+			app.CatalystSkipButton:Show()
 		end
 	end
-end
+end)
 
-function event:PLAYER_INTERACTION_MANAGER_FRAME_HIDE(type)
-	if app.CatalystSkip then
-		app.CatalystSkip:Hide()
+app.Event:Register("PLAYER_INTERACTION_MANAGER_FRAME_HIDE", function(type)
+	if app.CatalystSkipButton then
+		app.CatalystSkipButton:Hide()
 	end
-end
+end)
 
 --------------
 -- SETTINGS --
