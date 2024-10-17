@@ -69,9 +69,9 @@ function app.CreateProfessionKnowledgeAssets()
 		app.KnowledgePointTooltip:SetMovable(false)
 		app.KnowledgePointTooltip:Hide()
 
-		app.KnowledgePointTooltipText = app.KnowledgePointTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.KnowledgePointTooltipText:SetPoint("TOPLEFT", app.KnowledgePointTooltip, "TOPLEFT", 10, -10)
-		app.KnowledgePointTooltipText:SetJustifyH("LEFT")
+		app.KnowledgePointTooltip.Text = app.KnowledgePointTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.KnowledgePointTooltip.Text:SetPoint("TOPLEFT", app.KnowledgePointTooltip, "TOPLEFT", 10, -10)
+		app.KnowledgePointTooltip.Text:SetJustifyH("LEFT")
 	end
 
 	app.Flag["knowledgeAssets"] = true
@@ -282,10 +282,10 @@ function app.KnowledgeTracker()
 			end
 
 			-- Set the tooltip text
-			app.KnowledgePointTooltipText:SetText(text)
+			app.KnowledgePointTooltip.Text:SetText(text)
 			-- Set the tooltip size to fit its contents
-			app.KnowledgePointTooltip:SetHeight(app.KnowledgePointTooltipText:GetStringHeight()+20)
-			app.KnowledgePointTooltip:SetWidth(app.KnowledgePointTooltipText:GetStringWidth()+20)
+			app.KnowledgePointTooltip:SetHeight(app.KnowledgePointTooltip.Text:GetStringHeight()+20)
+			app.KnowledgePointTooltip:SetWidth(app.KnowledgePointTooltip.Text:GetStringWidth()+20)
 		end
 	end
 

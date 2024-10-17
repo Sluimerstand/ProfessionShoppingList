@@ -228,8 +228,6 @@ function app.InitialiseCore()
 	if ProfessionShoppingList_Settings["windowLocked"] == nil then ProfessionShoppingList_Settings["windowLocked"] = false end
 	if ProfessionShoppingList_Settings["alvinGUID"] == nil then ProfessionShoppingList_Settings["alvinGUID"] = "unknown" end
 	if ProfessionShoppingList_Settings["ragnarosGUID"] == nil then ProfessionShoppingList_Settings["ragnarosGUID"] = "unknown" end
-	if ProfessionShoppingList_Settings["onetimeMessages"] == nil then ProfessionShoppingList_Settings["onetimeMessages"] = {} end
-	if ProfessionShoppingList_Settings["onetimeMessages"].vendorItems == nil then ProfessionShoppingList_Settings["onetimeMessages"].vendorItems = false end
 	if ProfessionShoppingList_Settings["debug"] == nil then ProfessionShoppingList_Settings["debug"] = false end
 
 	-- Load personal recipes, if the setting is enabled
@@ -242,11 +240,13 @@ function app.InitialiseCore()
 	app.Flag = {}
 	app.Flag["changingRecipes"] = false
 	app.Flag["merchantAssets"] = false
-	app.Flag["recraft"] = false
 	app.Flag["tradeskillAssets"] = false
 	app.Flag["versionCheck"] = 0
 	app.ReagentQuantities = {}
-	app.SelectedRecipeID = 0
+	app.SelectedRecipe = {}
+	app.SelectedRecipe.Profession = { recipeID = 0, recraft = false, recipeType = 0 }
+	app.SelectedRecipe.PlaceOrder = { recipeID = 0, recraft = false, recipeType = 0 }
+	app.SelectedRecipe.MakeOrder = {}
 	app.UpdatedCooldownWidth = 0
 	app.UpdatedReagentWidth = 0
 	app.IncludeWarbank = true	-- Temporary flag until Blizz fixes their shit
@@ -405,907 +405,6 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 					app.Print("Invalid command. See /psl settings for more info.")
 				end
 			end
-		end
-	end
-end)
-
-------------
--- ASSETS --
-------------
-
--- Create assets
-function app.CreateTradeskillAssets()
-	-- Hide and disable existing tracking buttons
-	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckbox:SetAlpha(0)
-	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckbox:EnableMouse(false)
-	ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.TrackRecipeCheckbox:SetAlpha(0)
-	ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.TrackRecipeCheckbox:EnableMouse(false)
-
-	-- Create the profession UI track button
-	if not app.TrackProfessionButton then
-		app.TrackProfessionButton = app.Button(ProfessionsFrame.CraftingPage, "Track")
-		app.TrackProfessionButton:SetPoint("TOPRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "TOPRIGHT", -9, -10)
-		app.TrackProfessionButton:SetScript("OnClick", function()
-			local craftSim = false
-
-			-- If CraftSim is active (thanks Blaez)
-			if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
-				craftSim = true
-				
-				-- Grab the reagents it provides
-				local craftSimSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
-				craftSimRequiredReagents = craftSimSimulationMode.recipeData.reagentData.requiredReagents
-
-				if craftSimRequiredReagents then
-					local reagents = {}
-					for k, v in pairs(craftSimRequiredReagents) do
-						-- For reagents without quality
-						if not v.hasQuality then
-							reagents[v.items[1].item.itemID] = v.requiredQuantity
-						-- For reagents with quality
-						else
-							for k2, v2 in pairs(v.items) do
-								if v2.quantity > 0 then
-									reagents[v2.item.itemID] = v2.quantity
-								end
-							end
-						end
-					end
-
-					-- Save the reagents into a fake recipe
-					ProfessionShoppingList_Cache.CraftSimRecipes[app.SelectedRecipeID] = reagents
-				else
-					app.Print("Could not read the information from CraftSim.")
-				end
-			else
-				craftSim = false
-			end
-
-			app.TrackRecipe(app.SelectedRecipeID, 1, nil, craftSim)
-		end)
-	end
-	
-	-- Create the profession UI quantity editbox
-	if not app.RecipeQuantity then app.RecipeQuantity = 0 end
-	local function ebRecipeQuantityUpdate(self, newValue)
-		local craftSim = false
-
-		-- If CraftSim is active (thanks Blaez)
-		if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
-			craftSim = true
-		end
-
-		-- Get the entered number cleanly
-		newValue = math.floor(self:GetNumber())
-		-- If the value is positive, change the number of recipes tracked
-		if newValue >= 0 then
-			app.UntrackRecipe(app.SelectedRecipeID, 0)
-			if newValue >0 then
-				app.TrackRecipe(app.SelectedRecipeID, newValue, nil, craftSim)
-			end
-		end
-	end
-	if not app.RecipeQuantityBox then
-		app.RecipeQuantityBox = CreateFrame("EditBox", nil, ProfessionsFrame.CraftingPage, "InputBoxTemplate")
-		app.RecipeQuantityBox:SetSize(25,20)
-		app.RecipeQuantityBox:SetPoint("CENTER", app.TrackProfessionButton, "CENTER", 0, 0)
-		app.RecipeQuantityBox:SetPoint("RIGHT", app.TrackProfessionButton, "LEFT", -4, 0)
-		app.RecipeQuantityBox:SetAutoFocus(false)
-		app.RecipeQuantityBox:SetText(app.RecipeQuantity)
-		app.RecipeQuantityBox:SetCursorPosition(0)
-		app.RecipeQuantityBox:SetScript("OnEditFocusGained", function(self, newValue)
-			app.TrackProfessionButton:Disable()
-			app.UntrackProfessionButton:Disable()
-		end)
-		app.RecipeQuantityBox:SetScript("OnEditFocusLost", function(self, newValue)
-			ebRecipeQuantityUpdate(self, newValue)
-			app.TrackProfessionButton:Enable()
-			if type(newValue) == "number" and newValue >= 1 then
-				app.UntrackProfessionButton:Enable()
-			end
-		end)
-		app.RecipeQuantityBox:SetScript("OnEnterPressed", function(self, newValue)
-			ebRecipeQuantityUpdate(self, newValue)
-			self:ClearFocus()
-		end)
-		app.RecipeQuantityBox:SetScript("OnEscapePressed", function(self, newValue)
-			self:SetText(app.RecipeQuantity)
-		end)
-		app.Border(app.RecipeQuantityBox, -6, 1, 2, -2)
-	end
-
-	-- Create the profession UI untrack button
-	if not app.UntrackProfessionButton then
-		app.UntrackProfessionButton = app.Button(ProfessionsFrame.CraftingPage, "Untrack")
-		app.UntrackProfessionButton:SetPoint("TOP", app.TrackProfessionButton, "TOP", 0, 0)
-		app.UntrackProfessionButton:SetPoint("RIGHT", app.RecipeQuantityBox, "LEFT", -8, 0)
-		app.UntrackProfessionButton:SetFrameStrata("HIGH")
-		app.UntrackProfessionButton:SetScript("OnClick", function()
-			app.UntrackRecipe(app.SelectedRecipeID, 1)
-	
-			-- Show window
-			app.Show()
-		end)
-	end
-
-	-- Create the rank editbox for SL legendary recipes
-	if not app.ShadowlandsRankBox then
-		app.ShadowlandsRankBox = CreateFrame("EditBox", nil, ProfessionsFrame.CraftingPage, "InputBoxTemplate")
-		app.ShadowlandsRankBox:SetSize(25,20)
-		app.ShadowlandsRankBox:SetPoint("CENTER", app.RecipeQuantityBox, "CENTER", 0, 0)
-		app.ShadowlandsRankBox:SetPoint("TOP", app.RecipeQuantityBox, "BOTTOM", 0, -4)
-		app.ShadowlandsRankBox:SetAutoFocus(false)
-		app.ShadowlandsRankBox:SetCursorPosition(0)
-		app.ShadowlandsRankBox:Hide()
-		app.Border(app.ShadowlandsRankBox, -6, 1, 2, -2)
-	end
-	if not app.ShadowlandsRankText then
-		app.ShadowlandsRankText = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.ShadowlandsRankText:SetPoint("RIGHT", app.ShadowlandsRankBox, "LEFT", -10, 0)
-		app.ShadowlandsRankText:SetJustifyH("LEFT")
-		app.ShadowlandsRankText:SetText("Rank:")
-		app.ShadowlandsRankText:Hide()
-	end
-
-	-- Create the Track Unlearned Mogs button
-	if not app.TrackUnlearnedMogsButton then
-		local modeText = "N/A"
-		if ProfessionShoppingList_Settings["collectMode"] == 1 then
-			modeText = "new appearances"
-		elseif ProfessionShoppingList_Settings["collectMode"] == 2 then
-			modeText = "new appearances and sources"
-		end
-
-		app.TrackUnlearnedMogsButton = app.Button(ProfessionsFrame.CraftingPage, "Track unlearned mogs")
-		app.TrackUnlearnedMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 0, -4)
-		app.TrackUnlearnedMogsButton:SetFrameStrata("HIGH")
-		app.TrackUnlearnedMogsButton:SetScript("OnClick", function()
-			local recipes = app.GetVisibleRecipes()
-
-			StaticPopupDialogs["TRACK_NEW_MOGS"] = {
-				text = app.NameLong.."\n\nThis will check the ".. #recipes .. " visible recipes for\n" .. modeText .. ".\n\nYour game may freeze for a few seconds.\nDo you wish to proceed?",
-				button1 = YES,
-				button2 = NO,
-				OnAccept = function()
-					app.TrackUnlearnedMog()
-				end,
-				timeout = 0,
-				whileDead = true,
-				hideOnEscape = true,
-				showAlert = true,
-			}
-			StaticPopup_Show("TRACK_NEW_MOGS")
-		end)
-
-		local tooltip = app.Tooltip(app.TrackUnlearnedMogsButton, "Current setting: "..modeText)
-		tooltip:SetPoint("TOP", app.TrackUnlearnedMogsButton, "BOTTOM")
-		app.TrackUnlearnedMogsButton:SetScript("OnEnter", function()
-			tooltip:Show()
-		end)
-		app.TrackUnlearnedMogsButton:SetScript("OnLeave", function()
-			tooltip:Hide()
-		end)
-
-		-- Move the button if CraftScan or TestFlight is enabled, because we're nice
-		if C_AddOns.IsAddOnLoaded("CraftScan") or C_AddOns.IsAddOnLoaded("TestFlight") then
-			app.TrackUnlearnedMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 2, 24)
-		end
-	end
-
-	-- Create Cooking Fire button
-	if not app.CookingFireButton then
-		app.CookingFireButton = CreateFrame("Button", "CookingFireButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
-		app.CookingFireButton:SetWidth(40)
-		app.CookingFireButton:SetHeight(40)
-		app.CookingFireButton:SetNormalTexture(135805)
-		app.CookingFireButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-		app.CookingFireButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
-		app.CookingFireButton:SetFrameStrata("HIGH")
-		app.CookingFireButton:RegisterForClicks("AnyDown", "AnyUp")
-		app.CookingFireButton:SetAttribute("type", "spell")
-		app.CookingFireButton:SetAttribute("spell1", 818)
-		app.CookingFireButton:SetAttribute("unit1", "player")
-		app.CookingFireButton:SetAttribute("spell2", 818)
-		app.CookingFireButton:Hide()
-		app.Border(app.CookingFireButton, -1, 2, 2, -1)
-
-		app.CookingFireCooldown = CreateFrame("Cooldown", "CookingFireCooldown", app.CookingFireButton, "CooldownFrameTemplate")
-		app.CookingFireCooldown:SetAllPoints(app.CookingFireButton)
-		app.CookingFireCooldown:SetSwipeColor(1, 1, 1)
-
-	end
-
-	-- Create Chef's Hat button
-	if not app.ChefsHatButton then
-		app.ChefsHatButton = CreateFrame("Button", "ChefsHatButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
-		app.ChefsHatButton:SetWidth(40)
-		app.ChefsHatButton:SetHeight(40)
-		app.ChefsHatButton:SetNormalTexture(236571)
-		app.ChefsHatButton:GetNormalTexture():SetDesaturated(true)
-		app.ChefsHatButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-		app.ChefsHatButton:SetPoint("BOTTOMRIGHT", app.CookingFireButton, "BOTTOMLEFT", -3, 0)
-		app.ChefsHatButton:SetFrameStrata("HIGH")
-		app.ChefsHatButton:RegisterForClicks("AnyDown", "AnyUp")
-		app.ChefsHatButton:SetAttribute("type1", "toy")
-		app.ChefsHatButton:SetAttribute("toy", 134020)
-		app.Border(app.ChefsHatButton, -1, 2, 2, -1)
-
-		app.ChefsHatCooldown = CreateFrame("Cooldown", "ChefsHatCooldown", app.ChefsHatButton, "CooldownFrameTemplate")
-		app.ChefsHatCooldown:SetAllPoints(app.ChefsHatButton)
-		app.ChefsHatCooldown:SetSwipeColor(1, 1, 1)
-	end
-
-	-- Create Thermal Anvil button
-	if not app.ThermalAnvilButton then
-		app.ThermalAnvilButton = CreateFrame("Button", "ThermalAnvilButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
-		app.ThermalAnvilButton:SetWidth(40)
-		app.ThermalAnvilButton:SetHeight(40)
-		app.ThermalAnvilButton:SetNormalTexture(136241)
-		app.ThermalAnvilButton:GetNormalTexture():SetDesaturated(true)
-		app.ThermalAnvilButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-		app.ThermalAnvilButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
-		app.ThermalAnvilButton:SetFrameStrata("HIGH")
-		app.ThermalAnvilButton:RegisterForClicks("AnyDown", "AnyUp")
-		app.ThermalAnvilButton:SetAttribute("type1", "macro")
-		app.ThermalAnvilButton:SetAttribute("macrotext1", "/use item:87216")
-		app.Border(app.ThermalAnvilButton, -1, 2, 2, -1)
-
-		app.ThermalAnvilCooldown = CreateFrame("Cooldown", "ThermalAnvilCooldown", app.ThermalAnvilButton, "CooldownFrameTemplate")
-		app.ThermalAnvilCooldown:SetAllPoints(app.ThermalAnvilButton)
-		app.ThermalAnvilCooldown:SetSwipeColor(1, 1, 1)
-
-		app.ThermalAnvilCharges = app.ThermalAnvilButton:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.ThermalAnvilCharges:SetPoint("BOTTOMRIGHT", app.ThermalAnvilButton, "BOTTOMRIGHT", 0, 0)
-		app.ThermalAnvilCharges:SetJustifyH("RIGHT")
-		if not C_Item.IsItemDataCachedByID(87216) then local item = Item:CreateFromItemID(87216) end
-		local anvilCharges = C_Item.GetItemCount(87216, false, true, false, false)
-		app.ThermalAnvilCharges:SetText(anvilCharges)
-	end
-
-	-- Create Alvin the Anvil button
-	if not app.AlvinButton then
-		app.AlvinButton = CreateFrame("Button", "AlvinButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
-		app.AlvinButton:SetWidth(40)
-		app.AlvinButton:SetHeight(40)
-		app.AlvinButton:SetNormalTexture(1020356)
-		app.AlvinButton:GetNormalTexture():SetDesaturated(true)
-		app.AlvinButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-		app.AlvinButton:SetPoint("BOTTOMRIGHT", app.ThermalAnvilButton, "BOTTOMLEFT", -3, 0)
-		app.AlvinButton:SetFrameStrata("HIGH")
-		app.AlvinButton:RegisterForClicks("AnyDown", "AnyUp")
-		app.AlvinButton:SetAttribute("type1", "macro")
-		app.Border(app.AlvinButton, -1, 2, 2, -1)
-
-		app.AlvinCooldown = CreateFrame("Cooldown", "AlvinCooldown", app.AlvinButton, "CooldownFrameTemplate")
-		app.AlvinCooldown:SetAllPoints(app.AlvinButton)
-		app.AlvinCooldown:SetSwipeColor(1, 1, 1)
-	end
-
-	-- Create Lil' Ragnaros button
-	if not app.RagnarosButton then
-		app.RagnarosButton = CreateFrame("Button", "RagnarosButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
-		app.RagnarosButton:SetWidth(40)
-		app.RagnarosButton:SetHeight(40)
-		app.RagnarosButton:SetNormalTexture(254652)
-		app.RagnarosButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-		app.RagnarosButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
-		app.RagnarosButton:SetFrameStrata("HIGH")
-		app.RagnarosButton:RegisterForClicks("AnyDown", "AnyUp")
-		app.RagnarosButton:SetAttribute("type1", "macro")
-		app.RagnarosButton:Hide()
-		app.Border(app.RagnarosButton, -1, 2, 2, -1)
-
-		app.RagnarosCooldown = CreateFrame("Cooldown", "RagnarosCooldown", app.RagnarosButton, "CooldownFrameTemplate")
-		app.RagnarosCooldown:SetAllPoints(app.RagnarosButton)
-		app.RagnarosCooldown:SetSwipeColor(1, 1, 1)
-	end
-
-	-- Create Lightforged Draenei Lightforge button
-	if not app.LightforgeButton then
-		app.LightforgeButton = CreateFrame("Button", "LightforgeButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
-		app.LightforgeButton:SetWidth(40)
-		app.LightforgeButton:SetHeight(40)
-		app.LightforgeButton:SetNormalTexture(1723995)
-		app.LightforgeButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
-		app.LightforgeButton:SetPoint("BOTTOMRIGHT", app.AlvinButton, "BOTTOMLEFT", -3, 0)
-		app.LightforgeButton:SetFrameStrata("HIGH")
-		app.LightforgeButton:RegisterForClicks("AnyDown", "AnyUp")
-		app.LightforgeButton:SetAttribute("type", "spell")
-		app.LightforgeButton:SetAttribute("spell", 259930)
-		app.LightforgeButton:Hide()
-		app.Border(app.LightforgeButton, -1, 2, 2, -1)
-
-		app.LightforgeCooldown = CreateFrame("Cooldown", "LightforgeCooldown", app.LightforgeButton, "CooldownFrameTemplate")
-		app.LightforgeCooldown:SetAllPoints(app.LightforgeButton)
-		app.LightforgeCooldown:SetSwipeColor(1, 1, 1)
-	end
-
-	-- Create Classic Milling info
-	if not app.MillingClassic then
-		app.MillingClassic = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.MillingClassic:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
-		app.MillingClassic:SetJustifyH("LEFT")
-		app.MillingClassic:SetText(app.Colour("Milling information").."\n|cffFFFFFFSapphire Pigment: 25% from Golden Sansam, Dreamfoil, Mountain Silversage, Sorrowmoss, Icecap\nSilvery Pigment: 75% from Golden Sansam, Dreamfoil, Mountain Silversage, Sorrowmoss, Icecap\n\nRuby Pigment: 25% from Firebloom, Purple Lotus, Arthas' Tears, Sungrass, Blindweed,\n      Ghost Mushroom, Gromsblood\nViolet Pigment: 75% from Firebloom, Purple Lotus, Arthas' Tears, Sungrass, Blindweed,\n      Ghost Mushroom, Gromsblood\n\nIndigo Pigment: 25% from Fadeleaf, Goldthorn, Khadgar's Whisker, Dragon's Teeth\nEmerald Pigment: 75% from Fadeleaf, Goldthorn, Khadgar's Whisker, Dragon's Teeth\n\nBurnt Pigment: 25% from Wild Steelbloom, Grave Moss, Kingsblood, Liferoot\nGolden Pigment: 75% from Wild Steelbloom, Grave Moss, Kingsblood, Liferoot\n\nVerdant Pigment: 25% from Mageroyal, Briarthorn, Swiftthistle, Bruiseweed, Stranglekelp\nDusky Pigment: 75% from Mageroyal, Briarthorn, Swiftthistle, Bruiseweed, Stranglekelp\n\nAlabaster Pigment: 100% from Peacebloom, Silverleaf, Earthroot")
-	end
-
-	-- Create The Burning Crusade Milling info
-	if not app.MillingTheBurningCrusade then
-		app.MillingTheBurningCrusade = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.MillingTheBurningCrusade:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
-		app.MillingTheBurningCrusade:SetJustifyH("LEFT")
-		app.MillingTheBurningCrusade:SetText(app.Colour("Milling information").."\n|cffFFFFFFEbon Pigment: 25%\nNether Pigment: 100%")
-	end
-
-	-- Create Wrath of the Lich King Milling info
-	if not app.MillingWrathOfTheLichKing then
-		app.MillingWrathOfTheLichKing = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.MillingWrathOfTheLichKing:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
-		app.MillingWrathOfTheLichKing:SetJustifyH("LEFT")
-		app.MillingWrathOfTheLichKing:SetText(app.Colour("Milling information").."\n|cffFFFFFFIcy Pigment: 25%\nAzure Pigment: 100%")
-	end
-
-	-- Create Cataclysm Milling info
-	if not app.MillingCataclysm then
-		app.MillingCataclysm = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.MillingCataclysm:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
-		app.MillingCataclysm:SetJustifyH("LEFT")
-		app.MillingCataclysm:SetText(app.Colour("Milling information").."\n|cffFFFFFFBurning Embers: 25%, 50% from Twilight Jasmine and Whiptail\nAshen Pigment: 100%")
-	end
-
-	-- Create Mists of Pandaria Milling info
-	if not app.MillingMistsOfPandaria then
-		app.MillingMistsOfPandaria = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.MillingMistsOfPandaria:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
-		app.MillingMistsOfPandaria:SetJustifyH("LEFT")
-		app.MillingMistsOfPandaria:SetText(app.Colour("Milling information").."\n|cffFFFFFFMisty Pigment: 25%, 50% from Fool's Cap\nShadow Pigment: 100%")
-	end
-
-	-- Create Warlords of Draenor Milling info
-	if not app.MillingWarlordsOfDraenor then
-		app.MillingWarlordsOfDraenor = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.MillingWarlordsOfDraenor:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
-		app.MillingWarlordsOfDraenor:SetJustifyH("LEFT")
-		app.MillingWarlordsOfDraenor:SetText(app.Colour("Milling information").."\n|cffFFFFFFCerulean Pigment: 100%")
-	end
-
-	-- Create Legion Milling info
-	if not app.MillingLegion then
-		app.MillingLegion = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.MillingLegion:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
-		app.MillingLegion:SetJustifyH("LEFT")
-		app.MillingLegion:SetText(app.Colour("Milling information").."\n|cffFFFFFFSallow Pigment: 10%, 80% from Felwort\nRoseate Pigment: 90%")
-	end
-
-	-- Create Battle for Azeroth Milling info
-	if not app.MillingBattleForAzeroth then
-		app.MillingBattleForAzeroth = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.MillingBattleForAzeroth:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
-		app.MillingBattleForAzeroth:SetJustifyH("LEFT")
-		app.MillingBattleForAzeroth:SetText(app.Colour("Milling information").."\n|cffFFFFFFViridescent Pigment: 10%, 30% from Anchor Weed\nUltramarine Pigment: 25%\nCrimson Pigment: 75%")
-	end
-
-	-- Create Shadowlands Milling info
-	if not app.MillingShadowlands then
-		app.MillingShadowlands = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.MillingShadowlands:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
-		app.MillingShadowlands:SetJustifyH("LEFT")
-		app.MillingShadowlands:SetText(app.Colour("Milling information").."\n|cffFFFFFFTranquil Pigment: Nightshade\nLuminous Pigment: Death Blossom, Rising Glory, Vigil's Torch\nUmbral Pigment: Death's Blossom, Marrowroot, Widowbloom")
-	end
-
-	-- Create Dragonflight Milling info
-	if not app.MillingDragonflight then
-		app.MillingDragonflight = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.MillingDragonflight:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
-		app.MillingDragonflight:SetJustifyH("LEFT")
-		app.MillingDragonflight:SetText(app.Colour("Milling information").."\n|cffFFFFFFBlazing Pigment: Saxifrage\nFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nShimmering Pigment: Hochenblume")
-	end
-
-	-- Create The War Within Milling info
-	if not app.MillingTheWarWithin then
-		app.MillingTheWarWithin = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.MillingTheWarWithin:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
-		app.MillingTheWarWithin:SetJustifyH("LEFT")
-		app.MillingTheWarWithin:SetText(app.Colour("Milling information").."\n|cffFFFFFFBlossom Pigment: Blessing Blossom\nLuredrop Pigment: Luredrop\nOrbinid Pigment: Orbinid\nNacreous Pigment: Mycobloom")
-	end
-
-	-- Create The War Within Thaumaturgy info
-	if not app.ThaumaturgyTheWarWithin then
-		app.ThaumaturgyTheWarWithin = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.ThaumaturgyTheWarWithin:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
-		app.ThaumaturgyTheWarWithin:SetJustifyH("LEFT")
-		app.ThaumaturgyTheWarWithin:SetText(app.Colour("Thaumaturgy information").."\n|cffFFFFFFMercurial Transmutagen: Aqirite, Gloom Chitin, Luredrop, Orbinid\nOminous Transmutagen: Bismuth, Mycobloom, Storm Dust, Weavercloth\nVolatile Transmutagen: Arathor's Spear, Blessing Blossom, Ironclaw Ore, Stormcharged Leather")
-	end
-
-	-- Grab the order information when opening a crafting order (THANK YOU PLUSMOUSE <3)
-	hooksecurefunc(ProfessionsFrame.OrdersPage, "ViewOrder", function(_, orderDetails)
-		app.OrderInfo = orderDetails
-
-		local key = "order:" .. app.OrderInfo.orderID .. ":" .. app.OrderInfo.spellID
-
-		if ProfessionShoppingList_Data.Recipes[key] then
-			app.TrackMakeOrderButton:SetText("Untrack")
-			app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
-		else
-			app.TrackMakeOrderButton:SetText("Track")
-			app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
-		end
-	end)
-
-	-- Create the fulfil crafting orders UI (Un)track button
-	if not app.TrackMakeOrderButton then
-		app.TrackMakeOrderButton = app.Button(ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "Track")
-		app.TrackMakeOrderButton:SetPoint("TOPRIGHT", ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "TOPRIGHT", -9, -10)
-		app.TrackMakeOrderButton:SetScript("OnClick", function()
-			local key = "order:" .. app.OrderInfo.orderID .. ":" .. app.OrderInfo.spellID
-			local craftSim = false
-
-			-- If CraftSim is active (thanks Blaez)
-			if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
-				craftSim = true
-				
-				-- Grab the reagents it provides
-				local craftSimSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
-				craftSimRequiredReagents = craftSimSimulationMode.recipeData.reagentData.requiredReagents
-
-				if craftSimRequiredReagents then
-					local reagents = {}
-					for k, v in pairs(craftSimRequiredReagents) do
-						-- For reagents without quality
-						if not v.hasQuality then
-							reagents[v.items[1].item.itemID] = v.requiredQuantity
-						-- For reagents with quality
-						else
-							for k2, v2 in pairs(v.items) do
-								if v2.quantity > 0 then
-									reagents[v2.item.itemID] = v2.quantity
-								end
-							end
-						end
-					end
-
-					-- Save the reagents into a fake recipe
-					ProfessionShoppingList_Cache.CraftSimRecipes[key] = reagents
-				else
-					app.Print("Could not read the information from CraftSim.")
-				end
-			else
-				craftSim = false
-			end
-
-			if ProfessionShoppingList_Data.Recipes[key] then
-				-- Untrack the recipe
-				app.UntrackRecipe(key, 1)
-
-				-- Change button text
-				app.TrackMakeOrderButton:SetText("Track")
-				app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
-			else
-				local oldIsRecraft = app.Flag["recraft"]
-				-- Set the recraft flag
-				if app.OrderInfo.isRecraft then
-					app.Flag["recraft"] = true
-				end
-
-				-- Track the recipe
-				app.TrackRecipe(app.OrderInfo.spellID, 1, app.OrderInfo.orderID, craftSim)
-
-				-- Revert the recraft flag
-				if app.OrderInfo.isRecraft then
-					app.Flag["recraft"] = oldIsRecraft
-				end
-
-				-- Change button text
-				app.TrackMakeOrderButton:SetText("Untrack")
-				app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
-			end
-
-			-- Show window
-			app.Show()
-		end)
-	end
-
-	-- Create Concentration info
-	if not app.Concentration1 then
-		ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.ConcentrationDisplay.Icon, "TOPRIGHT", 6, 0)
-
-		app.Concentration1 = ProfessionsFrame.CraftingPage.ConcentrationDisplay:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.Concentration1:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount, "BOTTOMLEFT", 0, 0)
-		app.Concentration1:SetJustifyH("LEFT")
-	end
-
-	if not app.Concentration2 then
-		ProfessionsFrame.OrdersPage.OrderView.ConcentrationDisplay.Amount:SetPoint("TOPLEFT", ProfessionsFrame.OrdersPage.OrderView.ConcentrationDisplay.Icon, "TOPRIGHT", 6, 0)
-
-		app.Concentration2 = ProfessionsFrame.OrdersPage.OrderView.ConcentrationDisplay:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.Concentration2:SetPoint("TOPLEFT", ProfessionsFrame.OrdersPage.OrderView.ConcentrationDisplay.Amount, "BOTTOMLEFT", 0, 0)
-		app.Concentration2:SetJustifyH("LEFT")
-	end
-
-	-- Set the flag for assets created to true
-	app.Flag["tradeskillAssets"] = true
-end
-
--- Update assets
-function app.UpdateAssets()
-	if app.Flag["tradeskillAssets"] == true then
-		-- Enable tracking button for 1 = Item, 3 = Enchant
-		if app.RecipeType == 1 or app.RecipeType == 3 then
-			app.TrackProfessionButton:Enable()
-			app.RecipeQuantityBox:Enable()
-		end
-
-		-- Disable tracking button for 2 = Salvage, recipes without reagents
-		if app.RecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(app.SelectedRecipeID,false).reagentSlotSchematics[1] == nil then
-			app.TrackProfessionButton:Disable()
-			app.UntrackProfessionButton:Disable()
-			app.RecipeQuantityBox:Disable()
-		end
-
-		-- Enable tracking button for tracked recipes
-		if not ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID] or ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID].quantity == 0 then
-			app.UntrackProfessionButton:Disable()
-		else
-			app.UntrackProfessionButton:Enable()
-		end
-
-		-- Update the quantity textbox
-		if app.RecipeQuantity ~= nil then
-			if ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID] then
-				app.RecipeQuantity = ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID].quantity
-			else
-				app.RecipeQuantity = 0
-			end
-			app.RecipeQuantityBox:SetText(app.RecipeQuantity)
-		end
-
-		-- Make the Chef's Hat button not desaturated if it can be used
-		if PlayerHasToy(134020) then
-			app.ChefsHatButton:GetNormalTexture():SetDesaturated(false)
-		end
-
-		-- Check how many thermal anvils the player has
-		if not C_Item.IsItemDataCachedByID(87216) then local item = Item:CreateFromItemID(87216) end
-		local anvilCount = C_Item.GetItemCount(87216, false, false, false, false)
-		-- (De)saturate based on that
-		if anvilCount >= 1 then
-			app.ThermalAnvilButton:GetNormalTexture():SetDesaturated(false)
-		else
-			app.ThermalAnvilButton:GetNormalTexture():SetDesaturated(true)
-		end
-		-- Update charges
-		local anvilCharges = C_Item.GetItemCount(87216, false, true, false, false)
-		app.ThermalAnvilCharges:SetText(anvilCharges)
-
-		-- Cooking Fire button cooldown
-		local startTime = C_Spell.GetSpellCooldown(818).startTime
-		local duration = C_Spell.GetSpellCooldown(818).duration
-		app.CookingFireCooldown:SetCooldown(startTime, duration)
-
-		-- Chef's Hat button cooldown
-		startTime, duration = C_Item.GetItemCooldown(134020)
-		app.ChefsHatCooldown:SetCooldown(startTime, duration)
-
-		-- Thermal Anvil button cooldown
-		startTime, duration = C_Item.GetItemCooldown(87216)
-		app.ThermalAnvilCooldown:SetCooldown(startTime, duration)
-
-		-- Make the Alvin the Anvil button not desaturated if it can be used
-		if C_PetJournal.PetIsSummonable(ProfessionShoppingList_Settings["alvinGUID"]) == true then
-			app.AlvinButton:GetNormalTexture():SetDesaturated(false)
-		end
-
-		-- Alvin button cooldown
-		startTime = C_Spell.GetSpellCooldown(61304).startTime
-		duration = C_Spell.GetSpellCooldown(61304).duration
-		app.AlvinCooldown:SetCooldown(startTime, duration)
-
-		-- Ragnaros button cooldown
-		startTime = C_Spell.GetSpellCooldown(61304).startTime
-		duration = C_Spell.GetSpellCooldown(61304).duration
-		app.RagnarosCooldown:SetCooldown(startTime, duration)
-
-		-- Lightforge cooldown
-		startTime = C_Spell.GetSpellCooldown(259930).startTime
-		duration = C_Spell.GetSpellCooldown(259930).duration
-		app.LightforgeCooldown:SetCooldown(startTime, duration)
-	end
-
-	-- Enable tracking button for 1 = Item, 3 = Enchant
-	if app.RecipeType == 1 or app.RecipeType == 3 then
-		if app.Flag["craftingOrderAssets"] == true then
-			app.TrackPlaceOrderButton:Enable()
-		end
-	end
-
-	-- Disable tracking button for 2 = Salvage, recipes without reagents
-	if app.RecipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(app.SelectedRecipeID,false).reagentSlotSchematics[1] == nil then
-		if app.Flag["craftingOrderAssets"] == true then
-			app.TrackPlaceOrderButton:Disable()
-			app.UntrackPlaceOrderButton:Disable()
-		end
-	end
-
-	-- Enable tracking button for tracked recipes
-	if not ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID] or ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID].quantity == 0 then
-		if app.Flag["craftingOrderAssets"] == true then
-			app.UntrackPlaceOrderButton:Disable()
-		end
-	else
-		if app.Flag["craftingOrderAssets"] == true then
-			app.UntrackPlaceOrderButton:Enable()
-		end
-	end
-
-	-- Remove the personal order entry if the value is ""
-	if ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID] == "" then ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID] = nil end
-
-	-- Enable the quick order button if abilityID and target are known
-	if app.Flag["craftingOrderAssets"] == true then
-		if ProfessionShoppingList_Library[app.SelectedRecipeID] and type(ProfessionShoppingList_Library[app.SelectedRecipeID]) ~= "number" then
-			if ProfessionShoppingList_Library[app.SelectedRecipeID].abilityID ~= nil and ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID] ~= nil then
-				app.QuickOrderButton:Enable()
-			else
-				app.QuickOrderButton:Disable()
-			end
-		else
-			app.QuickOrderButton:Disable()
-		end
-
-		-- Update the personal order name textbox
-		if ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID] then
-			app.QuickOrderTargetBox:SetText(ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipeID])
-		else
-			app.QuickOrderTargetBox:SetText("")
-		end
-	end
-end
-
--- When a tradeskill window is opened
-app.Event:Register("TRADE_SKILL_SHOW", function()
-	if UnitAffectingCombat("player") == false then
-		if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
-			app.CreateTradeskillAssets()
-		end
-
-		-- Register all recipes for this profession, on a delay so we give all this info time to load.
-		C_Timer.After(2, function()
-			local addedRecipes = 0
-			for _, recipeID in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
-			-- If there is an output item
-			local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID
-				local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
-				local ability = C_TradeSkillUI.GetRecipeInfo(recipeID).skillLineAbilityID
-
-				-- Register the output item, the recipe's abilityID, and the recipe's profession
-				if not ProfessionShoppingList_Library[recipeID] then
-					addedRecipes = addedRecipes + 1
-				end
-
-				-- Register if the recipe is known
-				local recipeLearned = C_TradeSkillUI.GetRecipeInfo(recipeID).learned
-
-				-- Set the itemID to 0 if there is no output item
-				if item == nil then
-					itemID = 0
-				end
-
-				if ProfessionShoppingList_Library[recipeID] then
-					ProfessionShoppingList_Library[recipeID].itemID = item
-					ProfessionShoppingList_Library[recipeID].abilityID = ability
-					ProfessionShoppingList_Library[recipeID].tradeskillID = tradeskill
-
-					if not ProfessionShoppingList_Library[recipeID].learned then
-						ProfessionShoppingList_Library[recipeID].learned = recipeLearned
-					end
-				else
-					ProfessionShoppingList_Library[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill, learned = recipeLearned }
-				end
-			end
-
-			-- Inform the user
-			if addedRecipes > 0 then
-				app.Print("Cached "..addedRecipes.." new recipes. You may need to close and open the tradeskill window.")
-			end
-		end)
-
-		-- Get Alvin the Anvil's GUID
-		for i=1, 9999 do
-			local petID, speciesID = C_PetJournal.GetPetInfoByIndex(i)
-			if speciesID == 3274 then
-				if petID then ProfessionShoppingList_Settings["alvinGUID"] = petID end
-				break
-			elseif speciesID == nil then
-				break
-			end
-		end
-
-		-- Get Lil' Ragnaros's GUID
-		for i=1, 9999 do
-			local petID, speciesID = C_PetJournal.GetPetInfoByIndex(i)
-			if speciesID == 297 then
-				if petID then ProfessionShoppingList_Settings["ragnarosGUID"] = petID end
-				break
-			elseif speciesID == nil then
-				break
-			end
-		end
-
-		if app.Flag["tradeskillAssets"] == true then
-			-- Alvin button
-			if ProfessionShoppingList_Settings["alvinGUID"] ~= "unknown" then
-				app.AlvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..ProfessionShoppingList_Settings["alvinGUID"].."')")
-			else
-				app.AlvinButton:SetAttribute("macrotext1", "")
-			end
-
-			-- Lil' Ragnaros button
-			if ProfessionShoppingList_Settings["ragnarosGUID"] ~= "unknown" then
-				app.RagnarosButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..ProfessionShoppingList_Settings["ragnarosGUID"].."')")
-			end
-
-			-- Recharge timer
-			C_Timer.After(1, function()
-				if ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount:GetText() then
-					local concentration = string.match(ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount:GetText(), "%d+")
-				
-					if concentration then
-						-- 250 Concentration per 24 hours
-						local timeLeft = math.ceil((1000 - concentration) / 250 * 24)
-
-						app.Concentration1:SetText("|cffFFFFFFFully recharged:|r "..timeLeft.."h")
-						app.Concentration2:SetText("|cffFFFFFFFully recharged:|r "..timeLeft.."h")
-					else
-						app.Concentration1:SetText("|cffFFFFFFFully recharged:|r ?")
-						app.Concentration2:SetText("|cffFFFFFFFully recharged:|r ?")
-					end
-				end
-			end)
-		end
-	end
-end)
-
--- When a recipe is selected (also used to determine professionID, which TRADE_SKILL_SHOW() is too quick for)
-app.Event:Register("SPELL_DATA_LOAD_RESULT", function(spellID, success)
-	if UnitAffectingCombat("player") == false then
-		-- Only set this number and refresh out assets for it, if it actually is a recipe
-		if ProfessionShoppingList_Library[spellID] then
-			app.SelectedRecipeID = spellID
-			app.RecipeType = C_TradeSkillUI.GetRecipeSchematic(spellID, false).recipeType
-			app.UpdateAssets()
-		end
-		
-		-- Recipe-specific assets
-		local function recipeAssets()
-			if spellID == 444181 then	-- The War Within Thaumaturgy
-				app.MillingTheWarWithin:Show()
-			else
-				app.MillingTheWarWithin:Hide()
-			end
-
-			if spellID == 430315 then	-- The War Within Milling
-				app.ThaumaturgyTheWarWithin:Show()
-			else
-				app.ThaumaturgyTheWarWithin:Hide()
-			end
-
-			if spellID == 382981 then	-- Dragonflight Milling
-				app.MillingDragonflight:Show()
-			else
-				app.MillingDragonflight:Hide()
-			end
-
-			if spellID == 382982 then	-- Shadowlands Milling
-				app.MillingShadowlands:Show()
-			else
-				app.MillingShadowlands:Hide()
-			end
-
-			if spellID == 382984 then	-- Battle for Azeroth Milling
-				app.MillingBattleForAzeroth:Show()
-			else
-				app.MillingBattleForAzeroth:Hide()
-			end
-
-			if spellID == 382986 then	-- Legion Milling
-				app.MillingLegion:Show()
-			else
-				app.MillingLegion:Hide()
-			end
-
-			if spellID == 382987 then	-- Warlords of Draenor Milling
-				app.MillingWarlordsOfDraenor:Show()
-			else
-				app.MillingWarlordsOfDraenor:Hide()
-			end
-
-			if spellID == 382988 then	-- Mists of Pandaria Milling
-				app.MillingMistsOfPandaria:Show()
-			else
-				app.MillingMistsOfPandaria:Hide()
-			end
-
-			if spellID == 382989 then	-- Cataclysm Milling
-				app.MillingCataclysm:Show()
-			else
-				app.MillingCataclysm:Hide()
-			end
-
-			if spellID == 382990 then	-- Wrath of the Lich King Milling
-				app.MillingWrathOfTheLichKing:Show()
-			else
-				app.MillingWrathOfTheLichKing:Hide()
-			end
-
-			if spellID == 382991 then	-- The Burning Crusade Milling
-				app.MillingTheBurningCrusade:Show()
-			else
-				app.MillingTheBurningCrusade:Hide()
-			end
-
-			if spellID == 382994 then	-- Classic Milling
-				app.MillingClassic:Show()
-			else
-				app.MillingClassic:Hide()
-			end
-
-			if app.slLegendaryRecipeIDs[app.SelectedRecipeID] then	-- Shadowlands Legendary recipes
-				app.ShadowlandsRankText:Show()
-				app.ShadowlandsRankBox:Show()
-				app.ShadowlandsRankBox:SetText(app.slLegendaryRecipeIDs[app.SelectedRecipeID].rank)
-			else
-				app.ShadowlandsRankText:Hide()
-				app.ShadowlandsRankBox:Hide()
-			end
-		end
-
-		-- Profession buttons
-		local function professionButtons()
-			-- Show stuff depending on which profession is opened
-			local skillLineID = C_TradeSkillUI.GetProfessionChildSkillLineID()
-			local professionID = C_TradeSkillUI.GetProfessionInfoBySkillLineID(skillLineID).profession
-
-			-- Cooking Fire and Chef's Hat buttons
-			if professionID == 5 then
-				if ProfessionShoppingList_Settings["ragnarosGUID"] ~= "unknown" then
-					app.RagnarosButton:Show()
-				else
-					app.CookingFireButton:Show()
-				end
-				app.ChefsHatButton:Show()
-			else
-				app.CookingFireButton:Hide()
-				app.RagnarosButton:Hide()
-				app.ChefsHatButton:Hide()
-			end
-
-			-- Thermal Anvil button
-			if professionID == 1 or professionID == 6 or professionID == 8 then
-				app.ThermalAnvilButton:Show()
-				app.AlvinButton:Show()
-				local _, _, raceID = UnitRace("player")
-				if raceID == 30 then
-					app.LightforgeButton:Show()
-				end
-			else
-				app.ThermalAnvilButton:Hide()
-				app.AlvinButton:Hide()
-				app.LightforgeButton:Hide()
-			end
-		end
-
-		if app.Flag["tradeskillAssets"] == true then
-			recipeAssets()
-			professionButtons()
-		end
-	end
-end)
-
--- When a spell is succesfully cast by the player (for updating profession buttons)
-app.Event:Register("UNIT_SPELLCAST_SUCCEEDED", function(unitTarget, castGUID, spellID)
-	if UnitAffectingCombat("player") == false and unitTarget == "player" then
-		-- Profession button stuff
-		if spellID == 818 or spellID == 67556 or spellID == 126462 or spellID == 279205 or spellID == 259930 then
-			C_Timer.After(0.1, function() app.UpdateAssets() end)
 		end
 	end
 end)
@@ -1817,8 +916,11 @@ function app.UpdateRecipes()
 			-- Normal recipes
 			if type(recipeID) == "number" then
 				app.GetReagents(app.ReagentQuantities, recipeID, recipeInfo.quantity, recipeInfo.recraft)
-			-- Crafting orders
+			-- Patron orders
 			elseif ProfessionShoppingList_Cache.FakeRecipes[recipeID] and string.sub(recipeID, 1, 6) == "order:" then
+				app.GetReagents(app.ReagentQuantities, recipeID, recipeInfo.quantity, recipeInfo.recraft)
+			-- Guild/Personal orders
+			elseif string.sub(recipeID, 1, 6) == "order:" then
 				app.GetReagents(app.ReagentQuantities, recipeID, recipeInfo.quantity, recipeInfo.recraft)
 			-- Vendor items
 			elseif ProfessionShoppingList_Cache.FakeRecipes[recipeID] and string.sub(recipeID, 1, 7) == "vendor:" then
@@ -1841,972 +943,954 @@ function app.UpdateRecipes()
 			end
 		end
 
-		-- Update numbers tracked
-		app.UpdateNumbers()
-	end
+		local rowNo = 0
+		local showRecipes = true
+		local maxLength1 = 0
+		local maxLength2 = 0
+		local maxLength3 = 0
 
-	local rowNo = 0
-	local showRecipes = true
-	local maxLength1 = 0
-	local maxLength2 = 0
-	local maxLength3 = 0
-
-	if recipeRow then
-		for i, row in pairs(recipeRow) do
-			row:SetParent(app.Hidden)
-			row:Hide()
-		end
-	end
-	if reagentRow then
-		for i, row in pairs(reagentRow) do
-			row:SetParent(app.Hidden)
-			row:Hide()
-		end
-	end
-	if cooldownRow then
-		for i, row in pairs(cooldownRow) do
-			row:SetParent(app.Hidden)
-			row:Hide()
-		end
-	end
-
-	recipeRow = {}
-	reagentRow = {}
-	cooldownRow = {}
-
-	if not app.Window.Recipes then
-		app.Window.Recipes = CreateFrame("Button", nil, app.Window.Child)
-		app.Window.Recipes:SetSize(0,16)
-		app.Window.Recipes:SetPoint("TOPLEFT", app.Window.Child, -1, 0)
-		app.Window.Recipes:SetPoint("RIGHT", app.Window.Child)
-		app.Window.Recipes:RegisterForDrag("LeftButton")
-		app.Window.Recipes:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-		app.Window.Recipes:SetScript("OnDragStart", function() app.MoveWindow()	end)
-		app.Window.Recipes:SetScript("OnDragStop", function() app.SaveWindow() end)
-		app.Window.Recipes:SetScript("OnEnter", function()
-			app.WindowTooltipShow(app.RecipesHeaderTooltip)
-		end)
-		app.Window.Recipes:SetScript("OnLeave", function()
-			app.RecipesHeaderTooltip:Hide()
-		end)
-		
-		local recipes1 = app.Window.Recipes:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		recipes1:SetPoint("LEFT", app.Window.Recipes)
-		recipes1:SetScale(1.1)
-		app.RecipeHeader = recipes1
-	end
-
-	app.Window.Recipes:SetScript("OnClick", function(self)
-		local children = {self:GetChildren()}
-
-		if showRecipes == true then
-			for _, child in ipairs(children) do child:Hide() end
-			app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, -2)
-			showRecipes = false
-		else
-			for _, child in ipairs(children) do child:Show() end
-			local offset = -2
-			if #recipeRow >= 1 then offset = -16*#recipeRow end
-			app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, offset)
-			showRecipes = true
-		end
-	end)
-
-	local customSortList = {
-		"|cffe6cc80",	-- Artifact
-		"|cffff8000",	-- Legendary
-		"|cffa335ee",	-- Epic
-		"|cff0070dd",	-- Rare
-		"|cff1eff00",	-- Uncommon
-		"|cffffffff",	-- Common
-		"|cff9d9d9d",	-- Poor (quantity 0)
-	}
-
-	-- Custom comparison function based on the beginning of the string (thanks ChatGPT)
-	local function customSort(a, b)
-		for _, v in ipairs(customSortList) do
-			local indexA = string.find(a.link, v, 1, true)
-			local indexB = string.find(b.link, v, 1, true)
-	
-			if indexA == 1 and indexB ~= 1 then
-				return true
-			elseif indexA ~= 1 and indexB == 1 then
-				return false
+		if recipeRow then
+			for i, row in pairs(recipeRow) do
+				row:SetParent(app.Hidden)
+				row:Hide()
 			end
 		end
-	
-		-- If custom sort index is the same, compare alphabetically
-		return string.gsub(a.link, ".-(:%|h)", "") < string.gsub(b.link, ".-(:%|h)", "")
-	end
-
-	-- Group and sort recipes and vendor items
-	local recipesSorted1 = {}
-	local recipesSorted2 = {}
-	
-	for k, v in pairs(ProfessionShoppingList_Data.Recipes) do
-		if type(k) == "number" then
-			recipesSorted1[#recipesSorted1+1] = {recipeID = k, recraft = v.recraft, quantity = v.quantity, link = v.link}
-		else
-			recipesSorted2[#recipesSorted2+1] = {recipeID = k, recraft = v.recraft, quantity = v.quantity, link = v.link}
+		if reagentRow then
+			for i, row in pairs(reagentRow) do
+				row:SetParent(app.Hidden)
+				row:Hide()
+			end
 		end
-	end
+		if cooldownRow then
+			for i, row in pairs(cooldownRow) do
+				row:SetParent(app.Hidden)
+				row:Hide()
+			end
+		end
 
-	table.sort(recipesSorted1, customSort)
-	table.sort(recipesSorted2, customSort)
+		recipeRow = {}
+		reagentRow = {}
+		cooldownRow = {}
 
-	-- Combine the sorted entries into a combined table
-	local recipesSorted = {}
+		if not app.Window.Recipes then
+			app.Window.Recipes = CreateFrame("Button", nil, app.Window.Child)
+			app.Window.Recipes:SetSize(0,16)
+			app.Window.Recipes:SetPoint("TOPLEFT", app.Window.Child, -1, 0)
+			app.Window.Recipes:SetPoint("RIGHT", app.Window.Child)
+			app.Window.Recipes:RegisterForDrag("LeftButton")
+			app.Window.Recipes:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+			app.Window.Recipes:SetScript("OnDragStart", function() app.MoveWindow()	end)
+			app.Window.Recipes:SetScript("OnDragStop", function() app.SaveWindow() end)
+			app.Window.Recipes:SetScript("OnEnter", function()
+				app.WindowTooltipShow(app.RecipesHeaderTooltip)
+			end)
+			app.Window.Recipes:SetScript("OnLeave", function()
+				app.RecipesHeaderTooltip:Hide()
+			end)
+			
+			local recipes1 = app.Window.Recipes:CreateFontString("ARTWORK", nil, "GameFontNormal")
+			recipes1:SetPoint("LEFT", app.Window.Recipes)
+			recipes1:SetScale(1.1)
+			app.RecipeHeader = recipes1
+		end
 
-	for _, key in ipairs(recipesSorted1) do
-		table.insert(recipesSorted, key)
-	end
-	for _, key in ipairs(recipesSorted2) do
-		table.insert(recipesSorted, key)
-	end
+		app.Window.Recipes:SetScript("OnClick", function(self)
+			local children = {self:GetChildren()}
 
-	for _i, recipeInfo in ipairs(recipesSorted) do
-		rowNo = rowNo + 1
-
-		local row = CreateFrame("Button", nil, app.Window.Recipes)
-		row:SetSize(0,16)
-		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-		row:RegisterForDrag("LeftButton")
-		row:RegisterForClicks("AnyUp")
-		row:SetScript("OnDragStart", function() app.MoveWindow() end)
-		row:SetScript("OnDragStop", function() app.SaveWindow() end)
-		row:SetScript("OnEnter", function()
-			-- Show item tooltip if hovering over the actual row
-			GameTooltip:ClearLines()
-
-			-- Set the tooltip to either the left or right, depending on where the window is placed
-			if GetScreenWidth()/2-ProfessionShoppingList_Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-				GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
-				GameTooltip:SetPoint("LEFT", app.Window, "RIGHT")
+			if showRecipes == true then
+				for _, child in ipairs(children) do child:Hide() end
+				app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, -2)
+				showRecipes = false
 			else
-				GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
-				GameTooltip:SetPoint("RIGHT", app.Window, "LEFT")
+				for _, child in ipairs(children) do child:Show() end
+				local offset = -2
+				if #recipeRow >= 1 then offset = -16*#recipeRow end
+				app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, offset)
+				showRecipes = true
 			end
-			GameTooltip:SetHyperlink(recipeInfo.link)
-			GameTooltip:Show()
 		end)
-		row:SetScript("OnLeave", function()
-			GameTooltip:ClearLines()
-			GameTooltip:Hide()
-		end)
-		row:SetScript("OnClick", function(self, button)
-			-- Right-click on recipe amount
-			if button == "RightButton" then
-				-- Untrack the recipe
-				if IsControlKeyDown() == true then
-					app.UntrackRecipe(recipeInfo.recipeID, 0)
-				else
-					app.UntrackRecipe(recipeInfo.recipeID, 1)
-				end
 
-				-- Show window
-				app.Show()
-			-- Left-click on recipe
-			elseif button == "LeftButton" then
-				-- If Shift is held also
-				if IsShiftKeyDown() == true then
-					-- Try write link to chat
-					ChatEdit_InsertLink(recipeInfo.link)
-				-- If Control is held also
-				elseif IsControlKeyDown() == true and type(recipeInfo.recipeID) == "number" then
+		local customSortList = {
+			"|cffe6cc80",	-- Artifact
+			"|cffff8000",	-- Legendary
+			"|cffa335ee",	-- Epic
+			"|cff0070dd",	-- Rare
+			"|cff1eff00",	-- Uncommon
+			"|cffffffff",	-- Common
+			"|cff9d9d9d",	-- Poor (quantity 0)
+		}
+
+		-- Custom comparison function based on the beginning of the string (thanks ChatGPT)
+		local function customSort(a, b)
+			for _, v in ipairs(customSortList) do
+				local indexA = string.find(a.link, v, 1, true)
+				local indexB = string.find(b.link, v, 1, true)
+		
+				if indexA == 1 and indexB ~= 1 then
+					return true
+				elseif indexA ~= 1 and indexB == 1 then
+					return false
+				end
+			end
+		
+			-- If custom sort index is the same, compare alphabetically
+			return string.gsub(a.link, ".-(:%|h)", "") < string.gsub(b.link, ".-(:%|h)", "")
+		end
+
+		-- Group and sort recipes and vendor items
+		local recipesSorted1 = {}
+		local recipesSorted2 = {}
+		
+		for k, v in pairs(ProfessionShoppingList_Data.Recipes) do
+			if type(k) == "number" then
+				recipesSorted1[#recipesSorted1+1] = {recipeID = k, recraft = v.recraft, quantity = v.quantity, link = v.link}
+			else
+				recipesSorted2[#recipesSorted2+1] = {recipeID = k, recraft = v.recraft, quantity = v.quantity, link = v.link}
+			end
+		end
+
+		table.sort(recipesSorted1, customSort)
+		table.sort(recipesSorted2, customSort)
+
+		-- Combine the sorted entries into a combined table
+		local recipesSorted = {}
+
+		for _, key in ipairs(recipesSorted1) do
+			table.insert(recipesSorted, key)
+		end
+		for _, key in ipairs(recipesSorted2) do
+			table.insert(recipesSorted, key)
+		end
+
+		for _i, recipeInfo in ipairs(recipesSorted) do
+			rowNo = rowNo + 1
+
+			local row = CreateFrame("Button", nil, app.Window.Recipes)
+			row:SetSize(0,16)
+			row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+			row:RegisterForDrag("LeftButton")
+			row:RegisterForClicks("AnyUp")
+			row:SetScript("OnDragStart", function() app.MoveWindow() end)
+			row:SetScript("OnDragStop", function() app.SaveWindow() end)
+			row:SetScript("OnEnter", function()
+				-- Show item tooltip if hovering over the actual row
+				GameTooltip:ClearLines()
+
+				-- Set the tooltip to either the left or right, depending on where the window is placed
+				if GetScreenWidth()/2-ProfessionShoppingList_Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+					GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
+					GameTooltip:SetPoint("LEFT", app.Window, "RIGHT")
+				else
+					GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
+					GameTooltip:SetPoint("RIGHT", app.Window, "LEFT")
+				end
+				GameTooltip:SetHyperlink(recipeInfo.link)
+				GameTooltip:Show()
+			end)
+			row:SetScript("OnLeave", function()
+				GameTooltip:ClearLines()
+				GameTooltip:Hide()
+			end)
+			row:SetScript("OnClick", function(self, button)
+				-- Right-click on recipe amount
+				if button == "RightButton" then
+					-- Untrack the recipe
+					if IsControlKeyDown() == true then
+						app.UntrackRecipe(recipeInfo.recipeID, 0)
+					else
+						app.UntrackRecipe(recipeInfo.recipeID, 1)
+					end
+
+					-- Show window
+					app.Show()
+				-- Left-click on recipe
+				elseif button == "LeftButton" then
+					-- If Shift is held also
+					if IsShiftKeyDown() == true then
+						-- Try write link to chat
+						ChatEdit_InsertLink(recipeInfo.link)
+					-- If Control is held also
+					elseif IsControlKeyDown() == true and type(recipeInfo.recipeID) == "number" then
+							C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
+							C_TradeSkillUI.OpenRecipe(recipeInfo.recipeID)
+					-- If Alt is held also
+					elseif IsAltKeyDown() == true and type(recipeInfo.recipeID) == "number" then
 						C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
 						C_TradeSkillUI.OpenRecipe(recipeInfo.recipeID)
-				-- If Alt is held also
-				elseif IsAltKeyDown() == true and type(recipeInfo.recipeID) == "number" then
-					C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
-					C_TradeSkillUI.OpenRecipe(recipeInfo.recipeID)
-					-- Make sure the tradeskill frame is loaded
-					if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
-						C_TradeSkillUI.CraftRecipe(recipeInfo.recipeID, ProfessionShoppingList_Data.Recipes[recipeInfo.recipeID].quantity)
-					end
-				end
-			end
-		end)
-
-		recipeRow[rowNo] = row
-
-		local tradeskill = 999
-		if ProfessionShoppingList_Cache.FakeRecipes[recipeInfo.recipeID] then
-			tradeskill = ProfessionShoppingList_Cache.FakeRecipes[recipeInfo.recipeID].tradeskillID
-		elseif ProfessionShoppingList_Library[recipeInfo.recipeID] then
-	   		tradeskill = ProfessionShoppingList_Library[recipeInfo.recipeID].tradeskillID or 999
-		end
-
-		local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		icon1:SetPoint("LEFT", row)
-		icon1:SetScale(1.2)
-		icon1:SetText("|T"..app.iconProfession[tradeskill]..":0|t")
-
-		local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		text2:SetPoint("CENTER", icon1)
-		text2:SetPoint("RIGHT", app.Window.Child)
-		text2:SetJustifyH("RIGHT")
-		text2:SetTextColor(1, 1, 1)
-		text2:SetText(recipeInfo.quantity)
-
-		local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
-		text1:SetPoint("RIGHT", text2, "LEFT")
-		text1:SetTextColor(1, 1, 1)
-		text1:SetText(recipeInfo.link)
-		text1:SetJustifyH("LEFT")
-		text1:SetWordWrap(false)
-
-		maxLength1 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength1)
-	end
-
-	local rowNo2 = 0
-	local showReagents = true
-
-	if not app.Window.Reagents then
-		app.Window.Reagents = CreateFrame("Button", nil, app.Window.Child)
-		app.Window.Reagents:SetSize(0,16)
-		app.Window.Reagents:SetPoint("RIGHT", app.Window.Child)
-		app.Window.Reagents:RegisterForDrag("LeftButton")
-		app.Window.Reagents:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-		app.Window.Reagents:SetScript("OnDragStart", function() app.MoveWindow() end)
-		app.Window.Reagents:SetScript("OnDragStop", function() app.SaveWindow() end)
-		app.Window.Reagents:SetScript("OnEnter", function()
-			app.WindowTooltipShow(app.ReagentsHeaderTooltip)
-		end)
-		app.Window.Reagents:SetScript("OnLeave", function()
-			app.ReagentsHeaderTooltip:Hide()
-		end)
-		
-		local reagents1 = app.Window.Reagents:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		reagents1:SetPoint("LEFT", app.Window.Reagents)
-		reagents1:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS)
-		reagents1:SetScale(1.1)
-		app.ReagentHeader = reagents1
-	end
-	if rowNo == 0 then
-		app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, -2)
-	else
-		app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, rowNo*-16)
-	end
-	app.Window.Reagents:SetScript("OnClick", function(self)
-		local children = {self:GetChildren()}
-
-		if showReagents == true then
-			for _, child in ipairs(children) do child:Hide() end
-			app.Window.Cooldowns:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, -2)
-			showReagents = false
-		else
-			for _, child in ipairs(children) do child:Show() end
-			local offset = -2
-			if #reagentRow >= 1 then offset = -16*#reagentRow end
-			app.Window.Cooldowns:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, offset)
-			showReagents = true
-		end
-	end)
-
-	reagentsSorted = {}
-	for k, v in pairs(app.ReagentQuantities) do
-		if not ProfessionShoppingList_Cache.Reagents[k] then
-			C_Timer.After(1, function() app.UpdateRecipes() end)
-			do return end
-		end
-		reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = ProfessionShoppingList_Cache.Reagents[k].icon, link = ProfessionShoppingList_Cache.Reagents[k].link}
-	end
-
-	for _, reagentInfo in ipairs(reagentsSorted) do
-		rowNo2 = rowNo2 + 1
-
-		local row = CreateFrame("Button", nil, app.Window.Reagents, "", reagentInfo.reagentID)
-		row:SetSize(0,16)
-		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-		row:RegisterForDrag("LeftButton")
-		row:SetScript("OnDragStart", function() app.MoveWindow() end)
-		row:SetScript("OnDragStop", function() app.SaveWindow() end)
-		row:SetScript("OnEnter", function()
-			-- Show item tooltip if hovering over the actual row
-			GameTooltip:ClearLines()
-			
-			-- Set the tooltip to either the left or right, depending on where the window is placed
-			if GetScreenWidth()/2-ProfessionShoppingList_Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-				GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
-				GameTooltip:SetPoint("LEFT", app.Window, "RIGHT")
-			else
-				GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
-				GameTooltip:SetPoint("RIGHT", app.Window, "LEFT")
-			end
-			GameTooltip:SetHyperlink(reagentInfo.link)
-			GameTooltip:Show()
-		end)
-		row:SetScript("OnLeave", function()
-			GameTooltip:ClearLines()
-			GameTooltip:Hide()
-		end)
-		row:SetScript("OnClick", function(self, button)
-			local function trackSubreagent(recipeID, itemID)
-				-- Define the amount of recipes to be tracked
-				local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
-				local amount = math.max(0, math.ceil((app.ReagentQuantities[itemID] - app.GetReagentCount(itemID)) / quantityMade))
-				if ProfessionShoppingList_Data.Recipes[recipeID] then amount = math.max(0, (amount - ProfessionShoppingList_Data.Recipes[recipeID].quantity)) end
-
-				-- Track the recipe (don't track if 0)
-				if amount > 0 then app.TrackRecipe(recipeID, amount) end
-			end
-
-			-- Control+click on reagent
-			if button == "LeftButton" and IsControlKeyDown() == true then
-				-- Get itemIDs
-				local itemID = reagentInfo.reagentID
-				if ProfessionShoppingList_Cache.ReagentTiers[itemID] then itemID = ProfessionShoppingList_Cache.ReagentTiers[itemID].one end
-
-				-- Get possible recipeIDs
-				local recipeIDs = {}
-				local no = 0
-
-				for recipe, recipeInfo in pairs(ProfessionShoppingList_Library) do
-					if type(recipeInfo) ~= "number" then	-- Because of old ProfessionShoppingList_Library
-						if recipeInfo.itemID == itemID and not app.nyiRecipes[recipe] then
-							no = no + 1
-							recipeIDs[no] = recipe
+						-- Make sure the tradeskill frame is loaded
+						if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
+							C_TradeSkillUI.CraftRecipe(recipeInfo.recipeID, ProfessionShoppingList_Data.Recipes[recipeInfo.recipeID].quantity)
 						end
 					end
 				end
+			end)
 
-				-- If there is only one possible recipe, use that
-				if no == 1 then
-					trackSubreagent(recipeIDs[1], itemID)
-				-- If there is more than one possible recipe, provide options
-				elseif no > 1 then
-					-- Create popup frame
-					local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-					f:SetPoint("CENTER")
-					f:SetBackdrop({
+			recipeRow[rowNo] = row
+
+			local tradeskill = 999
+			if ProfessionShoppingList_Cache.FakeRecipes[recipeInfo.recipeID] then
+				tradeskill = ProfessionShoppingList_Cache.FakeRecipes[recipeInfo.recipeID].tradeskillID
+			elseif ProfessionShoppingList_Library[recipeInfo.recipeID] then
+				tradeskill = ProfessionShoppingList_Library[recipeInfo.recipeID].tradeskillID or 999
+			end
+
+			local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+			icon1:SetPoint("LEFT", row)
+			icon1:SetScale(1.2)
+			icon1:SetText("|T"..app.iconProfession[tradeskill]..":0|t")
+
+			local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+			text2:SetPoint("CENTER", icon1)
+			text2:SetPoint("RIGHT", app.Window.Child)
+			text2:SetJustifyH("RIGHT")
+			text2:SetTextColor(1, 1, 1)
+			text2:SetText(recipeInfo.quantity)
+
+			local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+			text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
+			text1:SetPoint("RIGHT", text2, "LEFT")
+			text1:SetTextColor(1, 1, 1)
+			text1:SetText(recipeInfo.link)
+			text1:SetJustifyH("LEFT")
+			text1:SetWordWrap(false)
+
+			maxLength1 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength1)
+		end
+
+		local rowNo2 = 0
+		local showReagents = true
+
+		if not app.Window.Reagents then
+			app.Window.Reagents = CreateFrame("Button", nil, app.Window.Child)
+			app.Window.Reagents:SetSize(0,16)
+			app.Window.Reagents:SetPoint("RIGHT", app.Window.Child)
+			app.Window.Reagents:RegisterForDrag("LeftButton")
+			app.Window.Reagents:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+			app.Window.Reagents:SetScript("OnDragStart", function() app.MoveWindow() end)
+			app.Window.Reagents:SetScript("OnDragStop", function() app.SaveWindow() end)
+			app.Window.Reagents:SetScript("OnEnter", function()
+				app.WindowTooltipShow(app.ReagentsHeaderTooltip)
+			end)
+			app.Window.Reagents:SetScript("OnLeave", function()
+				app.ReagentsHeaderTooltip:Hide()
+			end)
+			
+			local reagents1 = app.Window.Reagents:CreateFontString("ARTWORK", nil, "GameFontNormal")
+			reagents1:SetPoint("LEFT", app.Window.Reagents)
+			reagents1:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS)
+			reagents1:SetScale(1.1)
+			app.ReagentHeader = reagents1
+		end
+		if rowNo == 0 then
+			app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, -2)
+		else
+			app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, rowNo*-16)
+		end
+		app.Window.Reagents:SetScript("OnClick", function(self)
+			local children = {self:GetChildren()}
+
+			if showReagents == true then
+				for _, child in ipairs(children) do child:Hide() end
+				app.Window.Cooldowns:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, -2)
+				showReagents = false
+			else
+				for _, child in ipairs(children) do child:Show() end
+				local offset = -2
+				if #reagentRow >= 1 then offset = -16*#reagentRow end
+				app.Window.Cooldowns:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, offset)
+				showReagents = true
+			end
+		end)
+
+		reagentsSorted = {}
+		for k, v in pairs(app.ReagentQuantities) do
+			if not ProfessionShoppingList_Cache.Reagents[k] then
+				C_Timer.After(1, function() app.UpdateRecipes() end)
+				do return end
+			end
+			reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = ProfessionShoppingList_Cache.Reagents[k].icon, link = ProfessionShoppingList_Cache.Reagents[k].link}
+		end
+
+		for _, reagentInfo in ipairs(reagentsSorted) do
+			rowNo2 = rowNo2 + 1
+
+			local row = CreateFrame("Button", nil, app.Window.Reagents, "", reagentInfo.reagentID)
+			row:SetSize(0,16)
+			row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+			row:RegisterForDrag("LeftButton")
+			row:SetScript("OnDragStart", function() app.MoveWindow() end)
+			row:SetScript("OnDragStop", function() app.SaveWindow() end)
+			row:SetScript("OnEnter", function()
+				-- Show item tooltip if hovering over the actual row
+				GameTooltip:ClearLines()
+				
+				-- Set the tooltip to either the left or right, depending on where the window is placed
+				if GetScreenWidth()/2-ProfessionShoppingList_Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+					GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
+					GameTooltip:SetPoint("LEFT", app.Window, "RIGHT")
+				else
+					GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
+					GameTooltip:SetPoint("RIGHT", app.Window, "LEFT")
+				end
+				GameTooltip:SetHyperlink(reagentInfo.link)
+				GameTooltip:Show()
+			end)
+			row:SetScript("OnLeave", function()
+				GameTooltip:ClearLines()
+				GameTooltip:Hide()
+			end)
+			row:SetScript("OnClick", function(self, button)
+				local function trackSubreagent(recipeID, itemID)
+					-- Define the amount of recipes to be tracked
+					local quantityMade = C_TradeSkillUI.GetRecipeSchematic(recipeID, false).quantityMin
+					local amount = math.max(0, math.ceil((app.ReagentQuantities[itemID] - app.GetReagentCount(itemID)) / quantityMade))
+					if ProfessionShoppingList_Data.Recipes[recipeID] then amount = math.max(0, (amount - ProfessionShoppingList_Data.Recipes[recipeID].quantity)) end
+
+					-- Track the recipe (don't track if 0)
+					if amount > 0 then app.TrackRecipe(recipeID, amount) end
+				end
+
+				-- Control+click on reagent
+				if button == "LeftButton" and IsControlKeyDown() == true then
+					-- Get itemIDs
+					local itemID = reagentInfo.reagentID
+					if ProfessionShoppingList_Cache.ReagentTiers[itemID] then itemID = ProfessionShoppingList_Cache.ReagentTiers[itemID].one end
+
+					-- Get possible recipeIDs
+					local recipeIDs = {}
+					local no = 0
+
+					for recipe, recipeInfo in pairs(ProfessionShoppingList_Library) do
+						if type(recipeInfo) ~= "number" then	-- Because of old ProfessionShoppingList_Library
+							if recipeInfo.itemID == itemID and not app.nyiRecipes[recipe] then
+								no = no + 1
+								recipeIDs[no] = recipe
+							end
+						end
+					end
+
+					-- If there is only one possible recipe, use that
+					if no == 1 then
+						trackSubreagent(recipeIDs[1], itemID)
+					-- If there is more than one possible recipe, provide options
+					elseif no > 1 then
+						-- Create popup frame
+						local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+						f:SetPoint("CENTER")
+						f:SetBackdrop({
+							bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+							edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+							edgeSize = 16,
+							insets = { left = 4, right = 4, top = 4, bottom = 4 },
+						})
+						f:SetBackdropColor(0, 0, 0, 1)
+						f:EnableMouse(true)
+						f:SetMovable(true)
+						f:RegisterForDrag("LeftButton")
+						f:SetScript("OnDragStart", function(self, button) self:StartMoving() end)
+						f:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)	 
+						f:Show()
+
+						-- Close button
+						local close = CreateFrame("Button", "pslOptionCloseButton", f, "UIPanelCloseButton")
+						close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
+						close:SetScript("OnClick", function()
+							f:Hide()
+						end)
+
+						-- Text
+						local pslOptionText = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+						pslOptionText:SetPoint("CENTER", f, "CENTER", 0, 0)
+						pslOptionText:SetPoint("TOP", f, "TOP", 0, -10)
+						pslOptionText:SetJustifyH("CENTER")
+						pslOptionText:SetText("|cffFFFFFFThere are multiple recipes which can create\n"..reagentInfo.link..".\n\nPlease select one of the following:")
+
+						-- Text
+						local pslOption1 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+						pslOption1:SetPoint("LEFT", f, "LEFT", 10, 0)
+						pslOption1:SetPoint("TOP", pslOptionText, "BOTTOM", 0, -40)
+						pslOption1:SetWidth(200)
+						pslOption1:SetJustifyH("LEFT")
+						pslOption1:SetText("|cffFFFFFF")
+
+						-- Get reagents #1
+						local reagentsTable = {}
+						app.GetReagents(reagentsTable, recipeIDs[1], 1, false)
+
+						-- Create text #1
+						for reagentID, reagentAmount in pairs(reagentsTable) do
+							-- Get info
+							local function getInfo()
+								-- Cache item
+								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+
+								-- Get item info
+								local itemName, itemLink = C_Item.GetItemInfo(reagentID)
+
+								-- Try again if error
+								if itemName == nil or itemLink == nil then
+									RunNextFrame(getInfo)
+									do return end
+								end
+
+								-- Add text
+								oldText = pslOption1:GetText()
+								pslOption1:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+							end
+							getInfo()
+						end
+
+						-- Button #1
+						pslOptionButton1 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).name)
+						pslOptionButton1:SetPoint("BOTTOM", pslOption1, "TOP", 0, 5)
+						pslOptionButton1:SetPoint("CENTER", pslOption1, "CENTER", 0, 0)
+						pslOptionButton1:SetScript("OnClick", function()
+							trackSubreagent(recipeIDs[1], itemID)
+
+							-- Hide the subreagents window
+							f:Hide()
+						end)
+						
+						-- If two options
+						if no >= 2 then
+							-- Adjust popup frame
+							f:SetSize(430, 205)
+
+							-- Text
+							local pslOption2 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+							pslOption2:SetPoint("LEFT", pslOption1, "RIGHT", 10, 0)
+							pslOption2:SetPoint("TOP", pslOption1, "TOP", 0, 0)
+							pslOption2:SetWidth(200)
+							pslOption2:SetJustifyH("LEFT")
+							pslOption2:SetText("|cffFFFFFF")
+
+							-- Get reagents #2
+							local reagentsTable = {}
+							app.GetReagents(reagentsTable, recipeIDs[2], 1, false)
+
+							-- Create text #2
+							for reagentID, reagentAmount in pairs(reagentsTable) do
+								-- Get info
+								local function getInfo()
+									-- Cache item
+									if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+
+									-- Get item info
+									local itemName, itemLink = C_Item.GetItemInfo(reagentID)
+
+									-- Try again if error
+									if itemName == nil or itemLink == nil then
+										RunNextFrame(getInfo)
+										do return end
+									end
+
+									-- Add text
+									oldText = pslOption2:GetText()
+									pslOption2:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+								end
+								getInfo()
+							end
+
+							-- Button #2
+							pslOptionButton2 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).name)
+							pslOptionButton2:SetPoint("BOTTOM", pslOption2, "TOP", 0, 5)
+							pslOptionButton2:SetPoint("CENTER", pslOption2, "CENTER", 0, 0)
+							pslOptionButton2:SetScript("OnClick", function()
+								trackSubreagent(recipeIDs[2], itemID)
+
+								-- Hide the subreagents window
+								f:Hide()
+							end)
+						end
+
+						-- If three options
+						if no >= 3 then
+							-- Adjust popup frame
+							f:SetSize(640, 200)
+
+							-- Text
+							local pslOption3 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+							pslOption3:SetPoint("LEFT", pslOption1, "RIGHT", 220, 0)
+							pslOption3:SetPoint("TOP", pslOption1, "TOP", 0, 0)
+							pslOption3:SetWidth(200)
+							pslOption3:SetJustifyH("LEFT")
+							pslOption3:SetText("|cffFFFFFF")
+
+							-- Get reagents #3
+							local reagentsTable = {}
+							app.GetReagents(reagentsTable, recipeIDs[3], 1, false)
+
+							-- Create text #3
+							for reagentID, reagentAmount in pairs(reagentsTable) do
+								-- Get info
+								local function getInfo()
+									-- Cache item
+									if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+									
+									-- Get item info
+									local itemName, itemLink = C_Item.GetItemInfo(reagentID)
+
+									-- Try again if error
+									if itemName == nil or itemLink == nil then
+										RunNextFrame(getInfo)
+										do return end
+									end
+
+									-- Add text
+									oldText = pslOption3:GetText()
+									pslOption3:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+								end
+								getInfo()
+							end
+
+							-- Button #3
+							pslOptionButton3 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).name)
+							pslOptionButton3:SetPoint("BOTTOM", pslOption3, "TOP", 0, 5)
+							pslOptionButton3:SetPoint("CENTER", pslOption3, "CENTER", 0, 0)
+							pslOptionButton3:SetScript("OnClick", function()
+								trackSubreagent(recipeIDs[3], itemID)
+
+								-- Hide the subreagents window
+								f:Hide()
+							end)
+						end
+
+						-- If four options
+						if no >= 4 then
+							-- Adjust popup frame
+							f:SetSize(640, 335)
+
+							-- Text
+							local pslOption4 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+							pslOption4:SetPoint("LEFT", pslOption1, "LEFT", 0, 0)
+							pslOption4:SetPoint("TOP", pslOption1, "TOP", 0, -130)
+							pslOption4:SetWidth(200)
+							pslOption4:SetJustifyH("LEFT")
+							pslOption4:SetText("|cffFFFFFF")
+
+							-- Get reagents #4
+							local reagentsTable = {}
+							app.GetReagents(reagentsTable, recipeIDs[4], 1, false)
+
+							-- Create text #4
+							for reagentID, reagentAmount in pairs(reagentsTable) do
+								-- Get info
+								local function getInfo()
+									-- Cache item
+									if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+
+									-- Get item info
+									local itemName, itemLink = C_Item.GetItemInfo(reagentID)
+
+									-- Try again if error
+									if itemName == nil or itemLink == nil then
+										RunNextFrame(getInfo)
+										do return end
+									end
+
+									-- Add text
+									oldText = pslOption4:GetText()
+									pslOption4:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+								end
+								getInfo()
+							end
+
+							-- Button #4
+							pslOptionButton4 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).name)
+							pslOptionButton4:SetPoint("BOTTOM", pslOption4, "TOP", 0, 5)
+							pslOptionButton4:SetPoint("CENTER", pslOption4, "CENTER", 0, 0)
+							pslOptionButton4:SetScript("OnClick", function()
+								trackSubreagent(recipeIDs[4], itemID)
+
+								-- Hide the subreagents window
+								f:Hide()
+							end)
+						end
+
+						-- If five options
+						if no >= 5 then
+							-- Text
+							local pslOption5 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+							pslOption5:SetPoint("LEFT", pslOption1, "RIGHT", 10, 0)
+							pslOption5:SetPoint("TOP", pslOption1, "TOP", 0, -130)
+							pslOption5:SetWidth(200)
+							pslOption5:SetJustifyH("LEFT")
+							pslOption5:SetText("|cffFFFFFF")
+
+							-- Get reagents #5
+							local reagentsTable = {}
+							app.GetReagents(reagentsTable, recipeIDs[5], 1, false)
+
+							-- Create text #5
+							for reagentID, reagentAmount in pairs(reagentsTable) do
+								-- Get info
+								local function getInfo()
+									-- Cache item
+									if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+
+									-- Get item info
+									local itemName, itemLink = C_Item.GetItemInfo(reagentID)
+
+									-- Try again if error
+									if itemName == nil or itemLink == nil then
+										RunNextFrame(getInfo)
+										do return end
+									end
+
+									-- Add text
+									oldText = pslOption5:GetText()
+									pslOption5:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+								end
+								getInfo()
+							end
+
+							-- Button #5
+							pslOptionButton5 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).name)
+							pslOptionButton5:SetPoint("BOTTOM", pslOption5, "TOP", 0, 5)
+							pslOptionButton5:SetPoint("CENTER", pslOption5, "CENTER", 0, 0)
+							pslOptionButton5:SetScript("OnClick", function()
+								trackSubreagent(recipeIDs[5], itemID)
+
+								-- Hide the subreagents window
+								f:Hide()
+							end)
+						end
+
+						-- If six options
+						if no >= 6 then
+							-- Text
+							local pslOption6 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
+							pslOption6:SetPoint("LEFT", pslOption1, "RIGHT", 220, 0)
+							pslOption6:SetPoint("TOP", pslOption1, "TOP", 0, -130)
+							pslOption6:SetWidth(200)
+							pslOption6:SetJustifyH("LEFT")
+							pslOption6:SetText("|cffFFFFFF")
+
+							-- Get reagents #6
+							local reagentsTable = {}
+							app.GetReagents(reagentsTable, recipeIDs[6], 1, false)
+
+							-- Create text #6
+							for reagentID, reagentAmount in pairs(reagentsTable) do
+								-- Get info
+								local function getInfo()
+									-- Cache item
+									if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+
+									-- Get item info
+									local itemName, itemLink = C_Item.GetItemInfo(reagentID)
+
+									-- Try again if error
+									if itemName == nil or itemLink == nil then
+										RunNextFrame(getInfo)
+										do return end
+									end
+
+									-- Add text
+									oldText = pslOption6:GetText()
+									pslOption6:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+								end
+								getInfo()
+							end
+
+							-- Button #6
+							pslOptionButton6 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).name)
+							pslOptionButton6:SetPoint("BOTTOM", pslOption6, "TOP", 0, 5)
+							pslOptionButton6:SetPoint("CENTER", pslOption6, "CENTER", 0, 0)
+							pslOptionButton6:SetScript("OnClick", function()
+								trackSubreagent(recipeIDs[6], itemID)
+
+								-- Hide the subreagents window
+								f:Hide()
+							end)
+						end
+					end
+				-- Activate if Shift+clicking on the reagent
+				elseif button == "LeftButton" and IsShiftKeyDown() == true then
+					ChatEdit_InsertLink(reagentInfo.link)
+				end
+			end)
+
+			reagentRow[rowNo2] = row
+
+			local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+			icon1:SetPoint("LEFT", row)
+			icon1:SetScale(1.2)
+			icon1:SetText("|T"..reagentInfo.icon..":0|t")
+			row.icon = icon1
+
+			local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+			text2:SetPoint("CENTER", icon1)
+			text2:SetPoint("RIGHT", app.Window.Child)
+			text2:SetJustifyH("RIGHT")
+			text2:SetTextColor(1, 1, 1)
+			text2:SetText(reagentInfo.quantity)
+			row.text2 = text2
+
+			local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+			text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
+			text1:SetPoint("RIGHT", text2, "LEFT")
+			text1:SetTextColor(1, 1, 1)
+			text1:SetText(reagentInfo.link)
+			text1:SetJustifyH("LEFT")
+			text1:SetWordWrap(false)
+			row.text1 = text1
+
+			maxLength2 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength2)
+		end
+
+		-- Check what is being tracked
+		local trackRecipes = false
+		local trackItems = false
+		for k, v in pairs(ProfessionShoppingList_Data.Recipes) do
+			if type(k) == "number" or string.sub(k, 1, 6) == "order:" then
+				trackRecipes = true
+			else
+				trackItems = true
+			end
+		end
+
+		-- Set the header title accordingly
+		if trackRecipes == true and trackItems == true then
+			app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB.." & "..ITEMS.." ("..#recipeRow..")")
+			app.ReagentHeader:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS.." & Costs")
+		elseif trackRecipes == false and trackItems == true then
+			app.RecipeHeader:SetText(ITEMS.." ("..#recipeRow..")")
+			app.ReagentHeader:SetText("Costs")
+		else
+			if #recipeRow == 0 then
+				app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB)
+			else
+				app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB.." ("..#recipeRow..")")
+			end
+			app.ReagentHeader:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS)
+		end
+
+		local rowNo3 = 0
+		local showCooldowns = true
+
+		-- TODO: Use offset like with reagents
+		if not app.Window.Cooldowns then
+			app.Window.Cooldowns = CreateFrame("Button", nil, app.Window.Child)
+			app.Window.Cooldowns:SetSize(0,16)
+			app.Window.Cooldowns:SetPoint("RIGHT", app.Window.Child)
+			app.Window.Cooldowns:RegisterForDrag("LeftButton")
+			app.Window.Cooldowns:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+			app.Window.Cooldowns:SetScript("OnDragStart", function() app.MoveWindow() end)
+			app.Window.Cooldowns:SetScript("OnDragStop", function() app.SaveWindow() end)
+			app.Window.Cooldowns:SetScript("OnEnter", function()
+				app.WindowTooltipShow(app.CooldownsHeaderTooltip)
+			end)
+			app.Window.Cooldowns:SetScript("OnLeave", function()
+				app.CooldownsHeaderTooltip:Hide()
+			end)
+			
+			local cooldowns1 = app.Window.Cooldowns:CreateFontString("ARTWORK", nil, "GameFontNormal")
+			cooldowns1:SetPoint("LEFT", app.Window.Cooldowns)
+			cooldowns1:SetText("Cooldowns")
+			cooldowns1:SetScale(1.1)
+		end
+
+		local next = next
+		if next(ProfessionShoppingList_Data.Cooldowns) == nil or ProfessionShoppingList_Settings["showRecipeCooldowns"] == false then
+			app.Window.Cooldowns:Hide()
+			showCooldowns = false
+		else
+			app.Window.Cooldowns:Show()
+		end
+
+		local offset = -2
+		if rowNo2 >= 1 then offset = -16*#reagentRow end
+		app.Window.Cooldowns:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, offset)
+
+		app.Window.Cooldowns:SetScript("OnClick", function(self)
+			local children = {self:GetChildren()}
+
+			if showCooldowns == true then
+				for i_, child in ipairs(children) do child:Hide() end
+				showCooldowns = false
+			else
+				for i_, child in ipairs(children) do child:Show() end
+				showCooldowns = true
+			end
+		end)
+
+		cooldownsSorted = {}
+		for k, v in pairs(ProfessionShoppingList_Data.Cooldowns) do
+			local timedone = v.start + v.cooldown
+			cooldownsSorted[#cooldownsSorted+1] = {id = k, recipeID = v.recipeID, start = v.start, cooldown = v.cooldown, name = v.name, user = v.user, time = timedone, maxCharges = v.maxCharges, charges = v.charges}
+		end
+		table.sort(cooldownsSorted, function(a, b) return a.time > b.time end)
+
+		for _, cooldownInfo in pairs(cooldownsSorted) do
+			rowNo3 = rowNo3 + 1
+
+			local row = CreateFrame("Button", nil, app.Window.Cooldowns, "", cooldownInfo.id)
+			row:SetSize(0,16)
+			row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+			row:RegisterForDrag("LeftButton")
+			row:RegisterForClicks("AnyUp")
+			row:SetScript("OnDragStart", function() app.MoveWindow() end)
+			row:SetScript("OnDragStop", function() app.SaveWindow() end)
+			row:SetScript("OnEnter", function()
+				if not app.CooldownTooltip then
+					app.CooldownTooltip = CreateFrame("Frame", nil, app.Window, "BackdropTemplate")
+					app.CooldownTooltip:SetPoint("CENTER")
+					app.CooldownTooltip:SetFrameStrata("TOOLTIP")
+					app.CooldownTooltip:SetBackdrop({
 						bgFile = "Interface/Tooltips/UI-Tooltip-Background",
 						edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 						edgeSize = 16,
 						insets = { left = 4, right = 4, top = 4, bottom = 4 },
 					})
-					f:SetBackdropColor(0, 0, 0, 1)
-					f:EnableMouse(true)
-					f:SetMovable(true)
-					f:RegisterForDrag("LeftButton")
-					f:SetScript("OnDragStart", function(self, button) self:StartMoving() end)
-					f:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)	 
-					f:Show()
+					app.CooldownTooltip:SetBackdropColor(0, 0, 0, 0.9)
+					app.CooldownTooltip:EnableMouse(false)
+					app.CooldownTooltip:SetMovable(false)
+					app.CooldownTooltip:Hide()
 
-					-- Close button
-					local close = CreateFrame("Button", "pslOptionCloseButton", f, "UIPanelCloseButton")
-					close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
-					close:SetScript("OnClick", function()
-						f:Hide()
-					end)
+					app.CooldownTooltip.Text = app.CooldownTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
+					app.CooldownTooltip.Text:SetPoint("TOPLEFT", app.CooldownTooltip, "TOPLEFT", 10, -10)
+					app.CooldownTooltip.Text:SetJustifyH("LEFT")
+				end
 
-					-- Text
-					local pslOptionText = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-					pslOptionText:SetPoint("CENTER", f, "CENTER", 0, 0)
-					pslOptionText:SetPoint("TOP", f, "TOP", 0, -10)
-					pslOptionText:SetJustifyH("CENTER")
-					pslOptionText:SetText("|cffFFFFFFThere are multiple recipes which can create\n"..reagentInfo.link..".\n\nPlease select one of the following:")
+				-- Set the tooltip text
+				app.CooldownTooltip.Text:SetText("|cffFFFFFF"..cooldownInfo.user)
 
-					-- Text
-					local pslOption1 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-					pslOption1:SetPoint("LEFT", f, "LEFT", 10, 0)
-					pslOption1:SetPoint("TOP", pslOptionText, "BOTTOM", 0, -40)
-					pslOption1:SetWidth(200)
-					pslOption1:SetJustifyH("LEFT")
-					pslOption1:SetText("|cffFFFFFF")
+				-- Set the tooltip size to fit its contents
+				app.CooldownTooltip:SetHeight(app.CooldownTooltip.Text:GetStringHeight()+20)
+				app.CooldownTooltip:SetWidth(app.CooldownTooltip.Text:GetStringWidth()+20)
 
-					-- Get reagents #1
-					local reagentsTable = {}
-					app.GetReagents(reagentsTable, recipeIDs[1], 1, false)
+				-- Set the tooltip to either the left or right, depending on where the window is placed
+				if GetScreenWidth()/2-ProfessionShoppingList_Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
+					app.CooldownTooltip:ClearAllPoints()
+					app.CooldownTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
+				else
+					app.CooldownTooltip:ClearAllPoints()
+					app.CooldownTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
+				end	
 
-					-- Create text #1
-					for reagentID, reagentAmount in pairs(reagentsTable) do
-						-- Get info
-						local function getInfo()
-							-- Cache item
-							if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
-
-							-- Get item info
-							local itemName, itemLink = C_Item.GetItemInfo(reagentID)
-
-							-- Try again if error
-							if itemName == nil or itemLink == nil then
-								RunNextFrame(getInfo)
-								do return end
-							end
-
-							-- Add text
-							oldText = pslOption1:GetText()
-							pslOption1:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+				-- Show item tooltip if hovering over the actual row
+				app.CooldownTooltip:Show()
+			end)
+			row:SetScript("OnLeave", function()
+				app.CooldownTooltip:ClearAllPoints()
+				app.CooldownTooltip:Hide()
+			end)
+			row:SetScript("OnClick", function(self, button)
+				if button == "RightButton" and IsShiftKeyDown() then
+					table.remove(ProfessionShoppingList_Data.Cooldowns, cooldownInfo.id)
+					app.UpdateRecipes()
+				elseif button == "LeftButton" then
+					-- If Control is held also
+					if IsControlKeyDown() == true then
+						C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
+						C_TradeSkillUI.OpenRecipe(cooldownInfo.recipeID)
+					-- If Alt is held also
+					elseif IsAltKeyDown() == true then
+						C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
+						C_TradeSkillUI.OpenRecipe(cooldownInfo.recipeID)
+						-- Make sure the tradeskill frame is loaded
+						if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
+							C_TradeSkillUI.CraftRecipe(cooldownInfo.recipeID)
 						end
-						getInfo()
-					end
-
-					-- Button #1
-					pslOptionButton1 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[1], false).name)
-					pslOptionButton1:SetPoint("BOTTOM", pslOption1, "TOP", 0, 5)
-					pslOptionButton1:SetPoint("CENTER", pslOption1, "CENTER", 0, 0)
-					pslOptionButton1:SetScript("OnClick", function()
-						trackSubreagent(recipeIDs[1], itemID)
-
-						-- Hide the subreagents window
-						f:Hide()
-					end)
-					
-					-- If two options
-					if no >= 2 then
-						-- Adjust popup frame
-						f:SetSize(430, 205)
-
-						-- Text
-						local pslOption2 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-						pslOption2:SetPoint("LEFT", pslOption1, "RIGHT", 10, 0)
-						pslOption2:SetPoint("TOP", pslOption1, "TOP", 0, 0)
-						pslOption2:SetWidth(200)
-						pslOption2:SetJustifyH("LEFT")
-						pslOption2:SetText("|cffFFFFFF")
-
-						-- Get reagents #2
-						local reagentsTable = {}
-						app.GetReagents(reagentsTable, recipeIDs[2], 1, false)
-
-						-- Create text #2
-						for reagentID, reagentAmount in pairs(reagentsTable) do
-							-- Get info
-							local function getInfo()
-								-- Cache item
-								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
-
-								-- Get item info
-								local itemName, itemLink = C_Item.GetItemInfo(reagentID)
-
-								-- Try again if error
-								if itemName == nil or itemLink == nil then
-									RunNextFrame(getInfo)
-									do return end
-								end
-
-								-- Add text
-								oldText = pslOption2:GetText()
-								pslOption2:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
-							end
-							getInfo()
-						end
-
-						-- Button #2
-						pslOptionButton2 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[2], false).name)
-						pslOptionButton2:SetPoint("BOTTOM", pslOption2, "TOP", 0, 5)
-						pslOptionButton2:SetPoint("CENTER", pslOption2, "CENTER", 0, 0)
-						pslOptionButton2:SetScript("OnClick", function()
-							trackSubreagent(recipeIDs[2], itemID)
-
-							-- Hide the subreagents window
-							f:Hide()
-						end)
-					end
-
-					-- If three options
-					if no >= 3 then
-						-- Adjust popup frame
-						f:SetSize(640, 200)
-
-						-- Text
-						local pslOption3 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-						pslOption3:SetPoint("LEFT", pslOption1, "RIGHT", 220, 0)
-						pslOption3:SetPoint("TOP", pslOption1, "TOP", 0, 0)
-						pslOption3:SetWidth(200)
-						pslOption3:SetJustifyH("LEFT")
-						pslOption3:SetText("|cffFFFFFF")
-
-						-- Get reagents #3
-						local reagentsTable = {}
-						app.GetReagents(reagentsTable, recipeIDs[3], 1, false)
-
-						-- Create text #3
-						for reagentID, reagentAmount in pairs(reagentsTable) do
-							-- Get info
-							local function getInfo()
-								-- Cache item
-								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
-								
-								-- Get item info
-								local itemName, itemLink = C_Item.GetItemInfo(reagentID)
-
-								-- Try again if error
-								if itemName == nil or itemLink == nil then
-									RunNextFrame(getInfo)
-									do return end
-								end
-
-								-- Add text
-								oldText = pslOption3:GetText()
-								pslOption3:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
-							end
-							getInfo()
-						end
-
-						-- Button #3
-						pslOptionButton3 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[3], false).name)
-						pslOptionButton3:SetPoint("BOTTOM", pslOption3, "TOP", 0, 5)
-						pslOptionButton3:SetPoint("CENTER", pslOption3, "CENTER", 0, 0)
-						pslOptionButton3:SetScript("OnClick", function()
-							trackSubreagent(recipeIDs[3], itemID)
-
-							-- Hide the subreagents window
-							f:Hide()
-						end)
-					end
-
-					-- If four options
-					if no >= 4 then
-						-- Adjust popup frame
-						f:SetSize(640, 335)
-
-						-- Text
-						local pslOption4 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-						pslOption4:SetPoint("LEFT", pslOption1, "LEFT", 0, 0)
-						pslOption4:SetPoint("TOP", pslOption1, "TOP", 0, -130)
-						pslOption4:SetWidth(200)
-						pslOption4:SetJustifyH("LEFT")
-						pslOption4:SetText("|cffFFFFFF")
-
-						-- Get reagents #4
-						local reagentsTable = {}
-						app.GetReagents(reagentsTable, recipeIDs[4], 1, false)
-
-						-- Create text #4
-						for reagentID, reagentAmount in pairs(reagentsTable) do
-							-- Get info
-							local function getInfo()
-								-- Cache item
-								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
-
-								-- Get item info
-								local itemName, itemLink = C_Item.GetItemInfo(reagentID)
-
-								-- Try again if error
-								if itemName == nil or itemLink == nil then
-									RunNextFrame(getInfo)
-									do return end
-								end
-
-								-- Add text
-								oldText = pslOption4:GetText()
-								pslOption4:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
-							end
-							getInfo()
-						end
-
-						-- Button #4
-						pslOptionButton4 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[4], false).name)
-						pslOptionButton4:SetPoint("BOTTOM", pslOption4, "TOP", 0, 5)
-						pslOptionButton4:SetPoint("CENTER", pslOption4, "CENTER", 0, 0)
-						pslOptionButton4:SetScript("OnClick", function()
-							trackSubreagent(recipeIDs[4], itemID)
-
-							-- Hide the subreagents window
-							f:Hide()
-						end)
-					end
-
-					-- If five options
-					if no >= 5 then
-						-- Text
-						local pslOption5 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-						pslOption5:SetPoint("LEFT", pslOption1, "RIGHT", 10, 0)
-						pslOption5:SetPoint("TOP", pslOption1, "TOP", 0, -130)
-						pslOption5:SetWidth(200)
-						pslOption5:SetJustifyH("LEFT")
-						pslOption5:SetText("|cffFFFFFF")
-
-						-- Get reagents #5
-						local reagentsTable = {}
-						app.GetReagents(reagentsTable, recipeIDs[5], 1, false)
-
-						-- Create text #5
-						for reagentID, reagentAmount in pairs(reagentsTable) do
-							-- Get info
-							local function getInfo()
-								-- Cache item
-								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
-
-								-- Get item info
-								local itemName, itemLink = C_Item.GetItemInfo(reagentID)
-
-								-- Try again if error
-								if itemName == nil or itemLink == nil then
-									RunNextFrame(getInfo)
-									do return end
-								end
-
-								-- Add text
-								oldText = pslOption5:GetText()
-								pslOption5:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
-							end
-							getInfo()
-						end
-
-						-- Button #5
-						pslOptionButton5 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[5], false).name)
-						pslOptionButton5:SetPoint("BOTTOM", pslOption5, "TOP", 0, 5)
-						pslOptionButton5:SetPoint("CENTER", pslOption5, "CENTER", 0, 0)
-						pslOptionButton5:SetScript("OnClick", function()
-							trackSubreagent(recipeIDs[5], itemID)
-
-							-- Hide the subreagents window
-							f:Hide()
-						end)
-					end
-
-					-- If six options
-					if no >= 6 then
-						-- Text
-						local pslOption6 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
-						pslOption6:SetPoint("LEFT", pslOption1, "RIGHT", 220, 0)
-						pslOption6:SetPoint("TOP", pslOption1, "TOP", 0, -130)
-						pslOption6:SetWidth(200)
-						pslOption6:SetJustifyH("LEFT")
-						pslOption6:SetText("|cffFFFFFF")
-
-						-- Get reagents #6
-						local reagentsTable = {}
-						app.GetReagents(reagentsTable, recipeIDs[6], 1, false)
-
-						-- Create text #6
-						for reagentID, reagentAmount in pairs(reagentsTable) do
-							-- Get info
-							local function getInfo()
-								-- Cache item
-								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
-
-								-- Get item info
-								local itemName, itemLink = C_Item.GetItemInfo(reagentID)
-
-								-- Try again if error
-								if itemName == nil or itemLink == nil then
-									RunNextFrame(getInfo)
-									do return end
-								end
-
-								-- Add text
-								oldText = pslOption6:GetText()
-								pslOption6:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
-							end
-							getInfo()
-						end
-
-						-- Button #6
-						pslOptionButton6 = app.Button(f, C_TradeSkillUI.GetRecipeSchematic(recipeIDs[6], false).name)
-						pslOptionButton6:SetPoint("BOTTOM", pslOption6, "TOP", 0, 5)
-						pslOptionButton6:SetPoint("CENTER", pslOption6, "CENTER", 0, 0)
-						pslOptionButton6:SetScript("OnClick", function()
-							trackSubreagent(recipeIDs[6], itemID)
-
-							-- Hide the subreagents window
-							f:Hide()
-						end)
 					end
 				end
-			-- Activate if Shift+clicking on the reagent
-			elseif button == "LeftButton" and IsShiftKeyDown() == true then
-				ChatEdit_InsertLink(reagentInfo.link)
-			end
-		end)
+			end)
 
-		reagentRow[rowNo2] = row
-
-		local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		icon1:SetPoint("LEFT", row)
-		icon1:SetScale(1.2)
-		icon1:SetText("|T"..reagentInfo.icon..":0|t")
-		row.icon = icon1
-
-		local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		text2:SetPoint("CENTER", icon1)
-		text2:SetPoint("RIGHT", app.Window.Child)
-		text2:SetJustifyH("RIGHT")
-		text2:SetTextColor(1, 1, 1)
-		text2:SetText(reagentInfo.quantity)
-		row.text2 = text2
-
-		local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
-		text1:SetPoint("RIGHT", text2, "LEFT")
-		text1:SetTextColor(1, 1, 1)
-		text1:SetText(reagentInfo.link)
-		text1:SetJustifyH("LEFT")
-		text1:SetWordWrap(false)
-		row.text1 = text1
-
-		maxLength2 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength2)
-	end
-
-	-- Check what is being tracked
-	local trackRecipes = false
-	local trackItems = false
-	for k, v in pairs(ProfessionShoppingList_Data.Recipes) do
-		if type(k) == "number" or string.sub(k, 1, 6) == "order:" then
-			trackRecipes = true
-		else
-			trackItems = true
-		end
-	end
-
-	-- Set the header title accordingly
-	if trackRecipes == true and trackItems == true then
-		app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB.." & "..ITEMS.." ("..#recipeRow..")")
-		app.ReagentHeader:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS.." & Costs")
-	elseif trackRecipes == false and trackItems == true then
-		app.RecipeHeader:SetText(ITEMS.." ("..#recipeRow..")")
-		app.ReagentHeader:SetText("Costs")
-	else
-		if #recipeRow == 0 then
-			app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB)
-		else
-			app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB.." ("..#recipeRow..")")
-		end
-		app.ReagentHeader:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS)
-	end
-
-	local rowNo3 = 0
-	local showCooldowns = true
-
-	-- TODO: Use offset like with reagents
-	if not app.Window.Cooldowns then
-		app.Window.Cooldowns = CreateFrame("Button", nil, app.Window.Child)
-		app.Window.Cooldowns:SetSize(0,16)
-		app.Window.Cooldowns:SetPoint("RIGHT", app.Window.Child)
-		app.Window.Cooldowns:RegisterForDrag("LeftButton")
-		app.Window.Cooldowns:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-		app.Window.Cooldowns:SetScript("OnDragStart", function() app.MoveWindow() end)
-		app.Window.Cooldowns:SetScript("OnDragStop", function() app.SaveWindow() end)
-		app.Window.Cooldowns:SetScript("OnEnter", function()
-			app.WindowTooltipShow(app.CooldownsHeaderTooltip)
-		end)
-		app.Window.Cooldowns:SetScript("OnLeave", function()
-			app.CooldownsHeaderTooltip:Hide()
-		end)
-		
-		local cooldowns1 = app.Window.Cooldowns:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		cooldowns1:SetPoint("LEFT", app.Window.Cooldowns)
-		cooldowns1:SetText("Cooldowns")
-		cooldowns1:SetScale(1.1)
-	end
-
-	local next = next
-	if next(ProfessionShoppingList_Data.Cooldowns) == nil or ProfessionShoppingList_Settings["showRecipeCooldowns"] == false then
-		app.Window.Cooldowns:Hide()
-		showCooldowns = false
-	else
-		app.Window.Cooldowns:Show()
-	end
-
-	local offset = -2
-	if rowNo2 >= 1 then offset = -16*#reagentRow end
-	app.Window.Cooldowns:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, offset)
-
-	app.Window.Cooldowns:SetScript("OnClick", function(self)
-		local children = {self:GetChildren()}
-
-		if showCooldowns == true then
-			for i_, child in ipairs(children) do child:Hide() end
-			showCooldowns = false
-		else
-			for i_, child in ipairs(children) do child:Show() end
-			showCooldowns = true
-		end
-	end)
-
-	cooldownsSorted = {}
-	for k, v in pairs(ProfessionShoppingList_Data.Cooldowns) do
-		local timedone = v.start + v.cooldown
-		cooldownsSorted[#cooldownsSorted+1] = {id = k, recipeID = v.recipeID, start = v.start, cooldown = v.cooldown, name = v.name, user = v.user, time = timedone, maxCharges = v.maxCharges, charges = v.charges}
-	end
-	table.sort(cooldownsSorted, function(a, b) return a.time > b.time end)
-
-	for _, cooldownInfo in pairs(cooldownsSorted) do
-		rowNo3 = rowNo3 + 1
-
-		local row = CreateFrame("Button", nil, app.Window.Cooldowns, "", cooldownInfo.id)
-		row:SetSize(0,16)
-		row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-		row:RegisterForDrag("LeftButton")
-		row:RegisterForClicks("AnyUp")
-		row:SetScript("OnDragStart", function() app.MoveWindow() end)
-		row:SetScript("OnDragStop", function() app.SaveWindow() end)
-		row:SetScript("OnEnter", function()
-			if not cooldownTooltip then
-				cooldownTooltip = CreateFrame("Frame", nil, app.Window, "BackdropTemplate")
-				cooldownTooltip:SetPoint("CENTER")
-				cooldownTooltip:SetFrameStrata("TOOLTIP")
-				cooldownTooltip:SetBackdrop({
-					bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-					edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-					edgeSize = 16,
-					insets = { left = 4, right = 4, top = 4, bottom = 4 },
-				})
-				cooldownTooltip:SetBackdropColor(0, 0, 0, 0.9)
-				cooldownTooltip:EnableMouse(false)
-				cooldownTooltip:SetMovable(false)
-				cooldownTooltip:Hide()
-
-				cooldownTooltipText = cooldownTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-				cooldownTooltipText:SetPoint("TOPLEFT", cooldownTooltip, "TOPLEFT", 10, -10)
-				cooldownTooltipText:SetJustifyH("LEFT")
-			end
-
-			-- Set the tooltip text
-			cooldownTooltipText:SetText("|cffFFFFFF"..cooldownInfo.user)
-
-			-- Set the tooltip size to fit its contents
-			cooldownTooltip:SetHeight(cooldownTooltipText:GetStringHeight()+20)
-			cooldownTooltip:SetWidth(cooldownTooltipText:GetStringWidth()+20)
-
-			-- Set the tooltip to either the left or right, depending on where the window is placed
-			if GetScreenWidth()/2-ProfessionShoppingList_Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-				cooldownTooltip:ClearAllPoints()
-				cooldownTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
+			cooldownRow[rowNo3] = row
+			if rowNo3 == 1 then
+				row:SetPoint("TOPLEFT", app.Window.Cooldowns, "BOTTOMLEFT")
+				row:SetPoint("TOPRIGHT", app.Window.Cooldowns, "BOTTOMRIGHT")
 			else
-				cooldownTooltip:ClearAllPoints()
-				cooldownTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
-			end	
-
-			-- Show item tooltip if hovering over the actual row
-			cooldownTooltip:Show()
-		end)
-		row:SetScript("OnLeave", function()
-			cooldownTooltip:ClearAllPoints()
-			cooldownTooltip:Hide()
-		end)
-		row:SetScript("OnClick", function(self, button)
-			if button == "RightButton" and IsShiftKeyDown() then
-				table.remove(ProfessionShoppingList_Data.Cooldowns, cooldownInfo.id)
-				app.UpdateRecipes()
-			elseif button == "LeftButton" then
-				-- If Control is held also
-				if IsControlKeyDown() == true then
-					C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
-					C_TradeSkillUI.OpenRecipe(cooldownInfo.recipeID)
-				-- If Alt is held also
-				elseif IsAltKeyDown() == true then
-					C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
-					C_TradeSkillUI.OpenRecipe(cooldownInfo.recipeID)
-					-- Make sure the tradeskill frame is loaded
-					if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
-						C_TradeSkillUI.CraftRecipe(cooldownInfo.recipeID)
-					end
-				end
+				row:SetPoint("TOPLEFT", cooldownRow[rowNo3-1], "BOTTOMLEFT")
+				row:SetPoint("TOPRIGHT", cooldownRow[rowNo3-1], "BOTTOMRIGHT")
 			end
+
+			local tradeskill = ProfessionShoppingList_Library[cooldownInfo.recipeID].tradeskillID or 999
+
+			local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+			icon1:SetPoint("LEFT", row)
+			icon1:SetScale(1.2)
+			icon1:SetText("|T"..app.iconProfession[tradeskill]..":0|t")
+			row.icon = icon1
+
+			local cooldownRemaining = cooldownInfo.start + cooldownInfo.cooldown - GetServerTime()
+			local days, hours, minutes
+
+			days = math.floor(cooldownRemaining/(60*60*24))
+			hours = math.floor((cooldownRemaining - (days*60*60*24))/(60*60))
+			minutes = math.floor((cooldownRemaining - ((days*60*60*24) + (hours*60*60)))/60)
+
+			local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+			text2:SetPoint("CENTER", icon1)
+			text2:SetPoint("RIGHT", app.Window.Child)
+			text2:SetJustifyH("RIGHT")
+			text2:SetTextColor(1, 1, 1)
+			if cooldownRemaining <= 0 then
+				text2:SetText("Ready")
+			elseif cooldownRemaining < 60*60 then
+				text2:SetText(minutes.."m")
+			elseif cooldownRemaining < 60*60*24 then
+				text2:SetText(hours.."h "..minutes.."m")
+			else
+				text2:SetText(days.."d "..hours.."h "..minutes.."m")
+			end
+			row.text2 = text2
+
+			local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
+			text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
+			text1:SetPoint("RIGHT", text2, "LEFT")
+			text1:SetTextColor(1, 1, 1)
+			if cooldownInfo.maxCharges > 0 then
+				text1:SetText(cooldownInfo.name .. " (" .. cooldownInfo.charges .. "/" .. cooldownInfo.maxCharges .. ")")
+			else
+				text1:SetText(cooldownInfo.name)
+			end
+			text1:SetJustifyH("LEFT")
+			text1:SetWordWrap(false)
+			row.text1 = text1
+
+			maxLength3 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength3)
+		end
+		
+		app.Window.Corner:SetScript("OnDoubleClick", function (self, button)
+			local windowHeight = 62
+			local windowWidth = 0
+			if next(ProfessionShoppingList_Data.Cooldowns) == nil or ProfessionShoppingList_Settings["showRecipeCooldowns"] == false then
+				windowHeight = windowHeight - 16
+			elseif showCooldowns == true then
+				windowHeight = windowHeight + rowNo3 * 16
+				windowWidth = math.max(windowWidth, maxLength3, app.UpdatedCooldownWidth)
+			end
+			if showReagents == true then
+				windowHeight = windowHeight + rowNo2 * 16
+				windowWidth = math.max(windowWidth, maxLength2, app.UpdatedReagentWidth)
+			end
+			if showRecipes == true then
+				windowHeight = windowHeight + rowNo * 16
+				windowWidth = math.max(windowWidth, maxLength1)
+			end
+			if showRecipes == false or #ProfessionShoppingList_Data.Recipes < 1 then
+				windowHeight = windowHeight + 2	-- Not sure why this is needed, but whatever
+			end
+			if windowHeight > math.floor(GetScreenHeight()*0.8) then windowHeight = math.floor(GetScreenHeight()*0.8) end
+			if windowWidth > math.floor(GetScreenWidth()*0.8) then windowWidth = math.floor(GetScreenWidth()*0.8) end
+			app.Window:SetHeight(math.max(140,windowHeight))
+			app.Window:SetWidth(math.max(140,windowWidth+40))
+			app.Window.ScrollFrame:SetVerticalScroll(0)
+			app.SaveWindow()
+		end)
+		app.Window.Corner:SetScript("OnEnter", function()
+			app.WindowTooltipShow(app.CornerButtonTooltip)
+		end)
+		app.Window.Corner:SetScript("OnLeave", function()
+			app.CornerButtonTooltip:Hide()
 		end)
 
-		cooldownRow[rowNo3] = row
-		if rowNo3 == 1 then
-			row:SetPoint("TOPLEFT", app.Window.Cooldowns, "BOTTOMLEFT")
-			row:SetPoint("TOPRIGHT", app.Window.Cooldowns, "BOTTOMRIGHT")
-		else
-			row:SetPoint("TOPLEFT", cooldownRow[rowNo3-1], "BOTTOMLEFT")
-			row:SetPoint("TOPRIGHT", cooldownRow[rowNo3-1], "BOTTOMRIGHT")
-		end
-
-		local tradeskill = ProfessionShoppingList_Library[cooldownInfo.recipeID].tradeskillID or 999
-
-		local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		icon1:SetPoint("LEFT", row)
-		icon1:SetScale(1.2)
-		icon1:SetText("|T"..app.iconProfession[tradeskill]..":0|t")
-		row.icon = icon1
-
-		local cooldownRemaining = cooldownInfo.start + cooldownInfo.cooldown - GetServerTime()
-		local days, hours, minutes
-
-		days = math.floor(cooldownRemaining/(60*60*24))
-		hours = math.floor((cooldownRemaining - (days*60*60*24))/(60*60))
-		minutes = math.floor((cooldownRemaining - ((days*60*60*24) + (hours*60*60)))/60)
-
-		local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		text2:SetPoint("CENTER", icon1)
-		text2:SetPoint("RIGHT", app.Window.Child)
-		text2:SetJustifyH("RIGHT")
-		text2:SetTextColor(1, 1, 1)
-		if cooldownRemaining <= 0 then
-			text2:SetText("Ready")
-		elseif cooldownRemaining < 60*60 then
-			text2:SetText(minutes.."m")
-		elseif cooldownRemaining < 60*60*24 then
-			text2:SetText(hours.."h "..minutes.."m")
-		else
-			text2:SetText(days.."d "..hours.."h "..minutes.."m")
-		end
-		row.text2 = text2
-
-		local text1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		text1:SetPoint("LEFT", icon1, "RIGHT", 3, 0)
-		text1:SetPoint("RIGHT", text2, "LEFT")
-		text1:SetTextColor(1, 1, 1)
-		if cooldownInfo.maxCharges > 0 then
-			text1:SetText(cooldownInfo.name .. " (" .. cooldownInfo.charges .. "/" .. cooldownInfo.maxCharges .. ")")
-		else
-			text1:SetText(cooldownInfo.name)
-		end
-		text1:SetJustifyH("LEFT")
-		text1:SetWordWrap(false)
-		row.text1 = text1
-
-		maxLength3 = math.max(icon1:GetStringWidth()+text1:GetStringWidth()+text2:GetStringWidth(), maxLength3)
+		-- Update numbers tracked and assets like buttons
+		app.UpdateNumbers()
+		app.UpdateAssets()
 	end
-	
-	app.Window.Corner:SetScript("OnDoubleClick", function (self, button)
-		local windowHeight = 62
-		local windowWidth = 0
-		if next(ProfessionShoppingList_Data.Cooldowns) == nil or ProfessionShoppingList_Settings["showRecipeCooldowns"] == false then
-			windowHeight = windowHeight - 16
-		elseif showCooldowns == true then
-			windowHeight = windowHeight + rowNo3 * 16
-			windowWidth = math.max(windowWidth, maxLength3, app.UpdatedCooldownWidth)
-		end
-		if showReagents == true then
-			windowHeight = windowHeight + rowNo2 * 16
-			windowWidth = math.max(windowWidth, maxLength2, app.UpdatedReagentWidth)
-		end
-		if showRecipes == true then
-			windowHeight = windowHeight + rowNo * 16
-			windowWidth = math.max(windowWidth, maxLength1)
-		end
-		if showRecipes == false or #ProfessionShoppingList_Data.Recipes < 1 then
-			windowHeight = windowHeight + 2	-- Not sure why this is needed, but whatever
-		end
-		if windowHeight > math.floor(GetScreenHeight()*0.8) then windowHeight = math.floor(GetScreenHeight()*0.8) end
-		if windowWidth > math.floor(GetScreenWidth()*0.8) then windowWidth = math.floor(GetScreenWidth()*0.8) end
-		app.Window:SetHeight(math.max(140,windowHeight))
-		app.Window:SetWidth(math.max(140,windowWidth+40))
-		app.Window.ScrollFrame:SetVerticalScroll(0)
-		app.SaveWindow()
-	end)
-	app.Window.Corner:SetScript("OnEnter", function()
-		app.WindowTooltipShow(app.CornerButtonTooltip)
-	end)
-	app.Window.Corner:SetScript("OnLeave", function()
-		app.CornerButtonTooltip:Hide()
-	end)
-
-	-- Check if the Untrack button should be enabled
-	if not ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID] or ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID].quantity == 0 then
-		if app.Flag["tradeskillAssets"] == true then
-			app.UntrackProfessionButton:Disable()
-		end
-		if app.Flag["craftingOrderAssets"] == true then
-			app.UntrackPlaceOrderButton:Disable()
-		end
-	else
-		if app.Flag["tradeskillAssets"] == true then
-			app.UntrackProfessionButton:Enable()
-		end
-		if app.Flag["craftingOrderAssets"] == true then
-			app.UntrackPlaceOrderButton:Enable()
-		end
-	end
-
-	app.UpdateNumbers()
 end
 
 -- Show window and update numbers
@@ -2840,7 +1924,7 @@ end
 
 -- When the player gains currency
 app.Event:Register("CHAT_MSG_CURRENCY", function()
-	if UnitAffectingCombat("player") == false then
+	if not UnitAffectingCombat("player") then
 		-- If any recipes are tracked
 		local next = next
 		if next(ProfessionShoppingList_Data.Recipes) ~= nil then
@@ -2851,7 +1935,7 @@ end)
 
 -- When bag changes occur (out of combat)
 app.Event:Register("BAG_UPDATE_DELAYED", function()
-	if UnitAffectingCombat("player") == false then
+	if not UnitAffectingCombat("player") then
 		-- If any recipes are tracked
 		local next = next
 		if next(ProfessionShoppingList_Data.Recipes) ~= nil then
@@ -2873,9 +1957,877 @@ app.Event:Register("BAG_UPDATE_DELAYED", function()
 	end
 end)
 
+------------
+-- ASSETS --
+------------
+
+-- Create assets
+function app.CreateTradeskillAssets()
+	-- Hide and disable existing tracking buttons
+	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckbox:SetAlpha(0)
+	ProfessionsFrame.CraftingPage.SchematicForm.TrackRecipeCheckbox:EnableMouse(false)
+	ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.TrackRecipeCheckbox:SetAlpha(0)
+	ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.TrackRecipeCheckbox:EnableMouse(false)
+
+	-- Create the profession UI track button
+	if not app.TrackProfessionButton then
+		app.TrackProfessionButton = app.Button(ProfessionsFrame.CraftingPage, "Track")
+		app.TrackProfessionButton:SetPoint("TOPRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "TOPRIGHT", -9, -10)
+		app.TrackProfessionButton:SetScript("OnClick", function()
+			local craftSim = false
+
+			-- If CraftSim is active (thanks Blaez)
+			if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
+				craftSim = true
+				
+				-- Grab the reagents it provides
+				local craftSimSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
+				craftSimRequiredReagents = craftSimSimulationMode.recipeData.reagentData.requiredReagents
+
+				if craftSimRequiredReagents then
+					local reagents = {}
+					for k, v in pairs(craftSimRequiredReagents) do
+						-- For reagents without quality
+						if not v.hasQuality then
+							reagents[v.items[1].item.itemID] = v.requiredQuantity
+						-- For reagents with quality
+						else
+							for k2, v2 in pairs(v.items) do
+								if v2.quantity > 0 then
+									reagents[v2.item.itemID] = v2.quantity
+								end
+							end
+						end
+					end
+
+					-- Save the reagents into a fake recipe
+					ProfessionShoppingList_Cache.CraftSimRecipes[app.SelectedRecipe.Profession.recipeID] = reagents
+				else
+					app.Print("Could not read the information from CraftSim.")
+				end
+			else
+				craftSim = false
+			end
+
+			app.TrackRecipe(app.SelectedRecipe.Profession.recipeID, 1, app.SelectedRecipe.Profession.recraft, nil, craftSim)
+		end)
+	end
+	
+	-- Create the profession UI quantity editbox
+	local function ebRecipeQuantityUpdate(self, newValue)
+		local craftSim = false
+
+		-- If CraftSim is active (thanks Blaez)
+		if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
+			craftSim = true
+		end
+
+		-- Get the entered number cleanly
+		newValue = math.floor(self:GetNumber())
+		-- If the value is positive, change the number of recipes tracked
+		if newValue >= 0 then
+			app.UntrackRecipe(app.SelectedRecipe.Profession.recipeID, 0)
+			if newValue >0 then
+				app.TrackRecipe(app.SelectedRecipe.Profession.recipeID, newValue, app.SelectedRecipe.Profession.recraft, nil, craftSim)
+			end
+		end
+	end
+	if not app.RecipeQuantityBox then
+		app.RecipeQuantityBox = CreateFrame("EditBox", nil, ProfessionsFrame.CraftingPage, "InputBoxTemplate")
+		app.RecipeQuantityBox:SetSize(25,20)
+		app.RecipeQuantityBox:SetPoint("CENTER", app.TrackProfessionButton, "CENTER", 0, 0)
+		app.RecipeQuantityBox:SetPoint("RIGHT", app.TrackProfessionButton, "LEFT", -4, 0)
+		app.RecipeQuantityBox:SetAutoFocus(false)
+		app.RecipeQuantityBox:SetText(0)
+		app.RecipeQuantityBox:SetCursorPosition(0)
+		app.RecipeQuantityBox:SetScript("OnEditFocusGained", function(self, newValue)
+			app.TrackProfessionButton:Disable()
+			app.UntrackProfessionButton:Disable()
+		end)
+		app.RecipeQuantityBox:SetScript("OnEditFocusLost", function(self, newValue)
+			ebRecipeQuantityUpdate(self, newValue)
+			app.TrackProfessionButton:Enable()
+			if type(newValue) == "number" and newValue >= 1 then
+				app.UntrackProfessionButton:Enable()
+			end
+		end)
+		app.RecipeQuantityBox:SetScript("OnEnterPressed", function(self, newValue)
+			ebRecipeQuantityUpdate(self, newValue)
+			self:ClearFocus()
+		end)
+		app.RecipeQuantityBox:SetScript("OnEscapePressed", function(self, newValue)
+			self:SetText(ProfessionShoppingList_Data.Recipes[app.SelectedRecipe.Profession.recipeID].quantity)
+		end)
+		app.Border(app.RecipeQuantityBox, -6, 1, 2, -2)
+	end
+
+	-- Create the profession UI untrack button
+	if not app.UntrackProfessionButton then
+		app.UntrackProfessionButton = app.Button(ProfessionsFrame.CraftingPage, "Untrack")
+		app.UntrackProfessionButton:SetPoint("TOP", app.TrackProfessionButton, "TOP", 0, 0)
+		app.UntrackProfessionButton:SetPoint("RIGHT", app.RecipeQuantityBox, "LEFT", -8, 0)
+		app.UntrackProfessionButton:SetFrameStrata("HIGH")
+		app.UntrackProfessionButton:SetScript("OnClick", function()
+			app.UntrackRecipe(app.SelectedRecipe.Profession.recipeID, 1)
+	
+			-- Show window
+			app.Show()
+		end)
+	end
+
+	-- Create the rank editbox for SL legendary recipes
+	if not app.ShadowlandsRankBox then
+		app.ShadowlandsRankBox = CreateFrame("EditBox", nil, ProfessionsFrame.CraftingPage, "InputBoxTemplate")
+		app.ShadowlandsRankBox:SetSize(25,20)
+		app.ShadowlandsRankBox:SetPoint("CENTER", app.RecipeQuantityBox, "CENTER", 0, 0)
+		app.ShadowlandsRankBox:SetPoint("TOP", app.RecipeQuantityBox, "BOTTOM", 0, -4)
+		app.ShadowlandsRankBox:SetAutoFocus(false)
+		app.ShadowlandsRankBox:SetCursorPosition(0)
+		app.ShadowlandsRankBox:Hide()
+		app.Border(app.ShadowlandsRankBox, -6, 1, 2, -2)
+	end
+	if not app.ShadowlandsRankText then
+		app.ShadowlandsRankText = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.ShadowlandsRankText:SetPoint("RIGHT", app.ShadowlandsRankBox, "LEFT", -10, 0)
+		app.ShadowlandsRankText:SetJustifyH("LEFT")
+		app.ShadowlandsRankText:SetText("Rank:")
+		app.ShadowlandsRankText:Hide()
+	end
+
+	-- Create the Track Unlearned Mogs button
+	if not app.TrackUnlearnedMogsButton then
+		local modeText = "N/A"
+		if ProfessionShoppingList_Settings["collectMode"] == 1 then
+			modeText = "new appearances"
+		elseif ProfessionShoppingList_Settings["collectMode"] == 2 then
+			modeText = "new appearances and sources"
+		end
+
+		app.TrackUnlearnedMogsButton = app.Button(ProfessionsFrame.CraftingPage, "Track unlearned mogs")
+		app.TrackUnlearnedMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 0, -4)
+		app.TrackUnlearnedMogsButton:SetFrameStrata("HIGH")
+		app.TrackUnlearnedMogsButton:SetScript("OnClick", function()
+			local recipes = app.GetVisibleRecipes()
+
+			StaticPopupDialogs["TRACK_NEW_MOGS"] = {
+				text = app.NameLong.."\n\nThis will check the ".. #recipes .. " visible recipes for\n" .. modeText .. ".\n\nYour game may freeze for a few seconds.\nDo you wish to proceed?",
+				button1 = YES,
+				button2 = NO,
+				OnAccept = function()
+					app.TrackUnlearnedMog()
+				end,
+				timeout = 0,
+				whileDead = true,
+				hideOnEscape = true,
+				showAlert = true,
+			}
+			StaticPopup_Show("TRACK_NEW_MOGS")
+		end)
+
+		local tooltip = app.Tooltip(app.TrackUnlearnedMogsButton, "Current setting: "..modeText)
+		tooltip:SetPoint("TOP", app.TrackUnlearnedMogsButton, "BOTTOM")
+		app.TrackUnlearnedMogsButton:SetScript("OnEnter", function()
+			tooltip:Show()
+		end)
+		app.TrackUnlearnedMogsButton:SetScript("OnLeave", function()
+			tooltip:Hide()
+		end)
+
+		-- Move the button if CraftScan or TestFlight is enabled, because we're nice
+		if C_AddOns.IsAddOnLoaded("CraftScan") or C_AddOns.IsAddOnLoaded("TestFlight") then
+			app.TrackUnlearnedMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 2, 24)
+		end
+	end
+
+	-- Create Cooking Fire button
+	if not app.CookingFireButton then
+		app.CookingFireButton = CreateFrame("Button", "CookingFireButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
+		app.CookingFireButton:SetWidth(40)
+		app.CookingFireButton:SetHeight(40)
+		app.CookingFireButton:SetNormalTexture(135805)
+		app.CookingFireButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		app.CookingFireButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
+		app.CookingFireButton:SetFrameStrata("HIGH")
+		app.CookingFireButton:RegisterForClicks("AnyDown", "AnyUp")
+		app.CookingFireButton:SetAttribute("type", "spell")
+		app.CookingFireButton:SetAttribute("spell1", 818)
+		app.CookingFireButton:SetAttribute("unit1", "player")
+		app.CookingFireButton:SetAttribute("spell2", 818)
+		app.CookingFireButton:Hide()
+		app.Border(app.CookingFireButton, -1, 2, 2, -1)
+
+		app.CookingFireCooldown = CreateFrame("Cooldown", "CookingFireCooldown", app.CookingFireButton, "CooldownFrameTemplate")
+		app.CookingFireCooldown:SetAllPoints(app.CookingFireButton)
+		app.CookingFireCooldown:SetSwipeColor(1, 1, 1)
+
+	end
+
+	-- Create Chef's Hat button
+	if not app.ChefsHatButton then
+		app.ChefsHatButton = CreateFrame("Button", "ChefsHatButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
+		app.ChefsHatButton:SetWidth(40)
+		app.ChefsHatButton:SetHeight(40)
+		app.ChefsHatButton:SetNormalTexture(236571)
+		app.ChefsHatButton:GetNormalTexture():SetDesaturated(true)
+		app.ChefsHatButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		app.ChefsHatButton:SetPoint("BOTTOMRIGHT", app.CookingFireButton, "BOTTOMLEFT", -3, 0)
+		app.ChefsHatButton:SetFrameStrata("HIGH")
+		app.ChefsHatButton:RegisterForClicks("AnyDown", "AnyUp")
+		app.ChefsHatButton:SetAttribute("type1", "toy")
+		app.ChefsHatButton:SetAttribute("toy", 134020)
+		app.Border(app.ChefsHatButton, -1, 2, 2, -1)
+
+		app.ChefsHatCooldown = CreateFrame("Cooldown", "ChefsHatCooldown", app.ChefsHatButton, "CooldownFrameTemplate")
+		app.ChefsHatCooldown:SetAllPoints(app.ChefsHatButton)
+		app.ChefsHatCooldown:SetSwipeColor(1, 1, 1)
+	end
+
+	-- Create Thermal Anvil button
+	if not app.ThermalAnvilButton then
+		app.ThermalAnvilButton = CreateFrame("Button", "ThermalAnvilButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
+		app.ThermalAnvilButton:SetWidth(40)
+		app.ThermalAnvilButton:SetHeight(40)
+		app.ThermalAnvilButton:SetNormalTexture(136241)
+		app.ThermalAnvilButton:GetNormalTexture():SetDesaturated(true)
+		app.ThermalAnvilButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		app.ThermalAnvilButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
+		app.ThermalAnvilButton:SetFrameStrata("HIGH")
+		app.ThermalAnvilButton:RegisterForClicks("AnyDown", "AnyUp")
+		app.ThermalAnvilButton:SetAttribute("type1", "macro")
+		app.ThermalAnvilButton:SetAttribute("macrotext1", "/use item:87216")
+		app.Border(app.ThermalAnvilButton, -1, 2, 2, -1)
+
+		app.ThermalAnvilCooldown = CreateFrame("Cooldown", "ThermalAnvilCooldown", app.ThermalAnvilButton, "CooldownFrameTemplate")
+		app.ThermalAnvilCooldown:SetAllPoints(app.ThermalAnvilButton)
+		app.ThermalAnvilCooldown:SetSwipeColor(1, 1, 1)
+
+		app.ThermalAnvilCharges = app.ThermalAnvilButton:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.ThermalAnvilCharges:SetPoint("BOTTOMRIGHT", app.ThermalAnvilButton, "BOTTOMRIGHT", 0, 0)
+		app.ThermalAnvilCharges:SetJustifyH("RIGHT")
+		if not C_Item.IsItemDataCachedByID(87216) then local item = Item:CreateFromItemID(87216) end
+		local anvilCharges = C_Item.GetItemCount(87216, false, true, false, false)
+		app.ThermalAnvilCharges:SetText(anvilCharges)
+	end
+
+	-- Create Alvin the Anvil button
+	if not app.AlvinButton then
+		app.AlvinButton = CreateFrame("Button", "AlvinButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
+		app.AlvinButton:SetWidth(40)
+		app.AlvinButton:SetHeight(40)
+		app.AlvinButton:SetNormalTexture(1020356)
+		app.AlvinButton:GetNormalTexture():SetDesaturated(true)
+		app.AlvinButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		app.AlvinButton:SetPoint("BOTTOMRIGHT", app.ThermalAnvilButton, "BOTTOMLEFT", -3, 0)
+		app.AlvinButton:SetFrameStrata("HIGH")
+		app.AlvinButton:RegisterForClicks("AnyDown", "AnyUp")
+		app.AlvinButton:SetAttribute("type1", "macro")
+		app.Border(app.AlvinButton, -1, 2, 2, -1)
+
+		app.AlvinCooldown = CreateFrame("Cooldown", "AlvinCooldown", app.AlvinButton, "CooldownFrameTemplate")
+		app.AlvinCooldown:SetAllPoints(app.AlvinButton)
+		app.AlvinCooldown:SetSwipeColor(1, 1, 1)
+	end
+
+	-- Create Lil' Ragnaros button
+	if not app.RagnarosButton then
+		app.RagnarosButton = CreateFrame("Button", "RagnarosButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
+		app.RagnarosButton:SetWidth(40)
+		app.RagnarosButton:SetHeight(40)
+		app.RagnarosButton:SetNormalTexture(254652)
+		app.RagnarosButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		app.RagnarosButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
+		app.RagnarosButton:SetFrameStrata("HIGH")
+		app.RagnarosButton:RegisterForClicks("AnyDown", "AnyUp")
+		app.RagnarosButton:SetAttribute("type1", "macro")
+		app.RagnarosButton:Hide()
+		app.Border(app.RagnarosButton, -1, 2, 2, -1)
+
+		app.RagnarosCooldown = CreateFrame("Cooldown", "RagnarosCooldown", app.RagnarosButton, "CooldownFrameTemplate")
+		app.RagnarosCooldown:SetAllPoints(app.RagnarosButton)
+		app.RagnarosCooldown:SetSwipeColor(1, 1, 1)
+	end
+
+	-- Create Lightforged Draenei Lightforge button
+	if not app.LightforgeButton then
+		app.LightforgeButton = CreateFrame("Button", "LightforgeButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
+		app.LightforgeButton:SetWidth(40)
+		app.LightforgeButton:SetHeight(40)
+		app.LightforgeButton:SetNormalTexture(1723995)
+		app.LightforgeButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		app.LightforgeButton:SetPoint("BOTTOMRIGHT", app.AlvinButton, "BOTTOMLEFT", -3, 0)
+		app.LightforgeButton:SetFrameStrata("HIGH")
+		app.LightforgeButton:RegisterForClicks("AnyDown", "AnyUp")
+		app.LightforgeButton:SetAttribute("type", "spell")
+		app.LightforgeButton:SetAttribute("spell", 259930)
+		app.LightforgeButton:Hide()
+		app.Border(app.LightforgeButton, -1, 2, 2, -1)
+
+		app.LightforgeCooldown = CreateFrame("Cooldown", "LightforgeCooldown", app.LightforgeButton, "CooldownFrameTemplate")
+		app.LightforgeCooldown:SetAllPoints(app.LightforgeButton)
+		app.LightforgeCooldown:SetSwipeColor(1, 1, 1)
+	end
+
+	-- Create Classic Milling info
+	if not app.MillingClassic then
+		app.MillingClassic = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.MillingClassic:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		app.MillingClassic:SetJustifyH("LEFT")
+		app.MillingClassic:SetText(app.Colour("Milling information").."\n|cffFFFFFFSapphire Pigment: 25% from Golden Sansam, Dreamfoil, Mountain Silversage, Sorrowmoss, Icecap\nSilvery Pigment: 75% from Golden Sansam, Dreamfoil, Mountain Silversage, Sorrowmoss, Icecap\n\nRuby Pigment: 25% from Firebloom, Purple Lotus, Arthas' Tears, Sungrass, Blindweed,\n      Ghost Mushroom, Gromsblood\nViolet Pigment: 75% from Firebloom, Purple Lotus, Arthas' Tears, Sungrass, Blindweed,\n      Ghost Mushroom, Gromsblood\n\nIndigo Pigment: 25% from Fadeleaf, Goldthorn, Khadgar's Whisker, Dragon's Teeth\nEmerald Pigment: 75% from Fadeleaf, Goldthorn, Khadgar's Whisker, Dragon's Teeth\n\nBurnt Pigment: 25% from Wild Steelbloom, Grave Moss, Kingsblood, Liferoot\nGolden Pigment: 75% from Wild Steelbloom, Grave Moss, Kingsblood, Liferoot\n\nVerdant Pigment: 25% from Mageroyal, Briarthorn, Swiftthistle, Bruiseweed, Stranglekelp\nDusky Pigment: 75% from Mageroyal, Briarthorn, Swiftthistle, Bruiseweed, Stranglekelp\n\nAlabaster Pigment: 100% from Peacebloom, Silverleaf, Earthroot")
+	end
+
+	-- Create The Burning Crusade Milling info
+	if not app.MillingTheBurningCrusade then
+		app.MillingTheBurningCrusade = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.MillingTheBurningCrusade:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		app.MillingTheBurningCrusade:SetJustifyH("LEFT")
+		app.MillingTheBurningCrusade:SetText(app.Colour("Milling information").."\n|cffFFFFFFEbon Pigment: 25%\nNether Pigment: 100%")
+	end
+
+	-- Create Wrath of the Lich King Milling info
+	if not app.MillingWrathOfTheLichKing then
+		app.MillingWrathOfTheLichKing = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.MillingWrathOfTheLichKing:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		app.MillingWrathOfTheLichKing:SetJustifyH("LEFT")
+		app.MillingWrathOfTheLichKing:SetText(app.Colour("Milling information").."\n|cffFFFFFFIcy Pigment: 25%\nAzure Pigment: 100%")
+	end
+
+	-- Create Cataclysm Milling info
+	if not app.MillingCataclysm then
+		app.MillingCataclysm = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.MillingCataclysm:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		app.MillingCataclysm:SetJustifyH("LEFT")
+		app.MillingCataclysm:SetText(app.Colour("Milling information").."\n|cffFFFFFFBurning Embers: 25%, 50% from Twilight Jasmine and Whiptail\nAshen Pigment: 100%")
+	end
+
+	-- Create Mists of Pandaria Milling info
+	if not app.MillingMistsOfPandaria then
+		app.MillingMistsOfPandaria = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.MillingMistsOfPandaria:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		app.MillingMistsOfPandaria:SetJustifyH("LEFT")
+		app.MillingMistsOfPandaria:SetText(app.Colour("Milling information").."\n|cffFFFFFFMisty Pigment: 25%, 50% from Fool's Cap\nShadow Pigment: 100%")
+	end
+
+	-- Create Warlords of Draenor Milling info
+	if not app.MillingWarlordsOfDraenor then
+		app.MillingWarlordsOfDraenor = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.MillingWarlordsOfDraenor:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		app.MillingWarlordsOfDraenor:SetJustifyH("LEFT")
+		app.MillingWarlordsOfDraenor:SetText(app.Colour("Milling information").."\n|cffFFFFFFCerulean Pigment: 100%")
+	end
+
+	-- Create Legion Milling info
+	if not app.MillingLegion then
+		app.MillingLegion = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.MillingLegion:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		app.MillingLegion:SetJustifyH("LEFT")
+		app.MillingLegion:SetText(app.Colour("Milling information").."\n|cffFFFFFFSallow Pigment: 10%, 80% from Felwort\nRoseate Pigment: 90%")
+	end
+
+	-- Create Battle for Azeroth Milling info
+	if not app.MillingBattleForAzeroth then
+		app.MillingBattleForAzeroth = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.MillingBattleForAzeroth:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		app.MillingBattleForAzeroth:SetJustifyH("LEFT")
+		app.MillingBattleForAzeroth:SetText(app.Colour("Milling information").."\n|cffFFFFFFViridescent Pigment: 10%, 30% from Anchor Weed\nUltramarine Pigment: 25%\nCrimson Pigment: 75%")
+	end
+
+	-- Create Shadowlands Milling info
+	if not app.MillingShadowlands then
+		app.MillingShadowlands = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.MillingShadowlands:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		app.MillingShadowlands:SetJustifyH("LEFT")
+		app.MillingShadowlands:SetText(app.Colour("Milling information").."\n|cffFFFFFFTranquil Pigment: Nightshade\nLuminous Pigment: Death Blossom, Rising Glory, Vigil's Torch\nUmbral Pigment: Death's Blossom, Marrowroot, Widowbloom")
+	end
+
+	-- Create Dragonflight Milling info
+	if not app.MillingDragonflight then
+		app.MillingDragonflight = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.MillingDragonflight:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		app.MillingDragonflight:SetJustifyH("LEFT")
+		app.MillingDragonflight:SetText(app.Colour("Milling information").."\n|cffFFFFFFBlazing Pigment: Saxifrage\nFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nShimmering Pigment: Hochenblume")
+	end
+
+	-- Create The War Within Milling info
+	if not app.MillingTheWarWithin then
+		app.MillingTheWarWithin = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.MillingTheWarWithin:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		app.MillingTheWarWithin:SetJustifyH("LEFT")
+		app.MillingTheWarWithin:SetText(app.Colour("Milling information").."\n|cffFFFFFFBlossom Pigment: Blessing Blossom\nLuredrop Pigment: Luredrop\nOrbinid Pigment: Orbinid\nNacreous Pigment: Mycobloom")
+	end
+
+	-- Create The War Within Thaumaturgy info
+	if not app.ThaumaturgyTheWarWithin then
+		app.ThaumaturgyTheWarWithin = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.ThaumaturgyTheWarWithin:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
+		app.ThaumaturgyTheWarWithin:SetJustifyH("LEFT")
+		app.ThaumaturgyTheWarWithin:SetText(app.Colour("Thaumaturgy information").."\n|cffFFFFFFMercurial Transmutagen: Aqirite, Gloom Chitin, Luredrop, Orbinid\nOminous Transmutagen: Bismuth, Mycobloom, Storm Dust, Weavercloth\nVolatile Transmutagen: Arathor's Spear, Blessing Blossom, Ironclaw Ore, Stormcharged Leather")
+	end
+
+	-- Grab the order information when opening a crafting order (THANK YOU PLUSMOUSE <3)
+	hooksecurefunc(ProfessionsFrame.OrdersPage, "ViewOrder", function(_, orderDetails)
+		app.SelectedRecipe.MakeOrder = orderDetails
+
+		local key = "order:" .. app.SelectedRecipe.MakeOrder.orderID .. ":" .. app.SelectedRecipe.MakeOrder.spellID
+
+		if ProfessionShoppingList_Data.Recipes[key] then
+			app.TrackMakeOrderButton:SetText("Untrack")
+			app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
+		else
+			app.TrackMakeOrderButton:SetText("Track")
+			app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
+		end
+	end)
+
+	-- Create the fulfil crafting orders UI (Un)track button
+	if not app.TrackMakeOrderButton then
+		app.TrackMakeOrderButton = app.Button(ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "Track")
+		app.TrackMakeOrderButton:SetPoint("TOPRIGHT", ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "TOPRIGHT", -9, -10)
+		app.TrackMakeOrderButton:SetScript("OnClick", function()
+			local key = "order:" .. app.SelectedRecipe.MakeOrder.orderID .. ":" .. app.SelectedRecipe.MakeOrder.spellID
+			local craftSim = false
+			
+			-- If CraftSim is active (thanks Blaez)
+			if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
+				craftSim = true
+				
+				-- Grab the reagents it provides
+				local craftSimSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
+				craftSimRequiredReagents = craftSimSimulationMode.recipeData.reagentData.requiredReagents
+
+				if craftSimRequiredReagents then
+					local reagents = {}
+					for k, v in pairs(craftSimRequiredReagents) do
+						-- For reagents without quality
+						if not v.hasQuality then
+							reagents[v.items[1].item.itemID] = v.requiredQuantity
+						-- For reagents with quality
+						else
+							for k2, v2 in pairs(v.items) do
+								if v2.quantity > 0 then
+									reagents[v2.item.itemID] = v2.quantity
+								end
+							end
+						end
+					end
+
+					-- Save the reagents into a fake recipe
+					ProfessionShoppingList_Cache.CraftSimRecipes[key] = reagents
+				else
+					app.Print("Could not read the information from CraftSim.")
+				end
+			else
+				craftSim = false
+			end
+
+			if ProfessionShoppingList_Data.Recipes[key] then
+				-- Untrack the recipe
+				app.UntrackRecipe(key, 1)
+
+				-- Change button text
+				app.TrackMakeOrderButton:SetText("Track")
+				app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
+			else
+				-- Track the recipe
+				app.TrackRecipe(app.SelectedRecipe.MakeOrder.spellID, 1, app.SelectedRecipe.MakeOrder.isRecraft, app.SelectedRecipe.MakeOrder.orderID, craftSim)
+
+				-- Change button text
+				app.TrackMakeOrderButton:SetText("Untrack")
+				app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
+			end
+
+			-- Show window
+			app.Show()
+		end)
+	end
+
+	-- Create Concentration info
+	if not app.Concentration1 then
+		ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.ConcentrationDisplay.Icon, "TOPRIGHT", 6, 0)
+
+		app.Concentration1 = ProfessionsFrame.CraftingPage.ConcentrationDisplay:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.Concentration1:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount, "BOTTOMLEFT", 0, 0)
+		app.Concentration1:SetJustifyH("LEFT")
+	end
+
+	if not app.Concentration2 then
+		ProfessionsFrame.OrdersPage.OrderView.ConcentrationDisplay.Amount:SetPoint("TOPLEFT", ProfessionsFrame.OrdersPage.OrderView.ConcentrationDisplay.Icon, "TOPRIGHT", 6, 0)
+
+		app.Concentration2 = ProfessionsFrame.OrdersPage.OrderView.ConcentrationDisplay:CreateFontString("ARTWORK", nil, "GameFontNormal")
+		app.Concentration2:SetPoint("TOPLEFT", ProfessionsFrame.OrdersPage.OrderView.ConcentrationDisplay.Amount, "BOTTOMLEFT", 0, 0)
+		app.Concentration2:SetJustifyH("LEFT")
+	end
+
+	-- Set the flag for assets created to true
+	app.Flag["tradeskillAssets"] = true
+end
+
+-- Update assets
+function app.UpdateAssets()
+	-- Profession window
+	if app.Flag["tradeskillAssets"] then
+		-- Enable Profession tracking for 1 = Item, 3 = Enchant
+		if app.SelectedRecipe.Profession.recipeType == 1 or app.SelectedRecipe.Profession.recipeType == 3 then
+			app.TrackProfessionButton:Enable()
+			app.RecipeQuantityBox:Enable()
+		end
+
+		-- Disable Profession tracking for 2 = Salvage, recipes without reagents
+		if app.SelectedRecipe.Profession.recipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(app.SelectedRecipe.Profession.recipeID,false).reagentSlotSchematics[1] == nil then
+			app.TrackProfessionButton:Disable()
+			app.UntrackProfessionButton:Disable()
+			app.RecipeQuantityBox:Disable()
+		end
+
+		-- Enable Profession untracking for tracked recipes
+		if not ProfessionShoppingList_Data.Recipes[app.SelectedRecipe.Profession.recipeID] or ProfessionShoppingList_Data.Recipes[app.SelectedRecipe.Profession.recipeID].quantity == 0 then
+			app.UntrackProfessionButton:Disable()
+		else
+			app.UntrackProfessionButton:Enable()
+		end
+
+		-- Update the Profession quantity editbox
+		if ProfessionShoppingList_Data.Recipes[app.SelectedRecipe.Profession.recipeID] then
+			app.RecipeQuantityBox:SetText(ProfessionShoppingList_Data.Recipes[app.SelectedRecipe.Profession.recipeID].quantity or 0)
+		else
+			app.RecipeQuantityBox:SetText(0)
+		end
+
+		-- Make the Chef's Hat button not desaturated if it can be used
+		if PlayerHasToy(134020) then
+			app.ChefsHatButton:GetNormalTexture():SetDesaturated(false)
+		end
+
+		-- Check how many thermal anvils the player has
+		if not C_Item.IsItemDataCachedByID(87216) then local item = Item:CreateFromItemID(87216) end
+		local anvilCount = C_Item.GetItemCount(87216, false, false, false, false)
+		-- (De)saturate based on that
+		if anvilCount >= 1 then
+			app.ThermalAnvilButton:GetNormalTexture():SetDesaturated(false)
+		else
+			app.ThermalAnvilButton:GetNormalTexture():SetDesaturated(true)
+		end
+		-- Update charges
+		local anvilCharges = C_Item.GetItemCount(87216, false, true, false, false)
+		app.ThermalAnvilCharges:SetText(anvilCharges)
+
+		-- Cooking Fire button cooldown
+		local startTime = C_Spell.GetSpellCooldown(818).startTime
+		local duration = C_Spell.GetSpellCooldown(818).duration
+		app.CookingFireCooldown:SetCooldown(startTime, duration)
+
+		-- Chef's Hat button cooldown
+		startTime, duration = C_Item.GetItemCooldown(134020)
+		app.ChefsHatCooldown:SetCooldown(startTime, duration)
+
+		-- Thermal Anvil button cooldown
+		startTime, duration = C_Item.GetItemCooldown(87216)
+		app.ThermalAnvilCooldown:SetCooldown(startTime, duration)
+
+		-- Make the Alvin the Anvil button not desaturated if it can be used
+		if C_PetJournal.PetIsSummonable(ProfessionShoppingList_Settings["alvinGUID"]) == true then
+			app.AlvinButton:GetNormalTexture():SetDesaturated(false)
+		end
+
+		-- Alvin button cooldown
+		startTime = C_Spell.GetSpellCooldown(61304).startTime
+		duration = C_Spell.GetSpellCooldown(61304).duration
+		app.AlvinCooldown:SetCooldown(startTime, duration)
+
+		-- Ragnaros button cooldown
+		startTime = C_Spell.GetSpellCooldown(61304).startTime
+		duration = C_Spell.GetSpellCooldown(61304).duration
+		app.RagnarosCooldown:SetCooldown(startTime, duration)
+
+		-- Lightforge cooldown
+		startTime = C_Spell.GetSpellCooldown(259930).startTime
+		duration = C_Spell.GetSpellCooldown(259930).duration
+		app.LightforgeCooldown:SetCooldown(startTime, duration)
+	end
+
+	-- Crafting orders window
+	if app.Flag["craftingOrderAssets"] then
+		-- Disable tracking for recrafts without a cached recipe
+		if app.SelectedRecipe.PlaceOrder.recraft and app.SelectedRecipe.PlaceOrder.recipeID == 0 then
+			app.TrackPlaceOrderButton:Disable()
+		else
+			app.TrackPlaceOrderButton:Enable()
+		end
+
+		-- Disable untracking for untracked recipes
+		if not ProfessionShoppingList_Data.Recipes[app.SelectedRecipe.PlaceOrder.recipeID] or ProfessionShoppingList_Data.Recipes[app.SelectedRecipe.PlaceOrder.recipeID].quantity == 0 then
+			app.UntrackPlaceOrderButton:Disable()
+		else
+			app.UntrackPlaceOrderButton:Enable()
+		end
+
+		-- Remove the personal order entry if the value is ""
+		if ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipe.PlaceOrder.recipeID] == "" then
+			ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipe.PlaceOrder.recipeID] = nil
+		end
+
+		-- Enable the quick order button if recipe is cached and target are known
+		if ProfessionShoppingList_Library[app.SelectedRecipe.PlaceOrder.recipeID] and ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipe.PlaceOrder.recipeID] then
+			app.QuickOrderButton:Enable()
+		else
+			app.QuickOrderButton:Disable()
+		end
+
+		-- Update the personal order name textbox
+		if ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipe.PlaceOrder.recipeID] then
+			app.QuickOrderTargetBox:SetText(ProfessionShoppingList_CharacterData.Orders[app.SelectedRecipe.PlaceOrder.recipeID])
+		else
+			app.QuickOrderTargetBox:SetText("")
+		end
+	end
+end
+
+-- When a tradeskill window is opened
+app.Event:Register("TRADE_SKILL_SHOW", function()
+	if not UnitAffectingCombat("player") then
+		if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
+			app.CreateTradeskillAssets()
+		end
+
+		-- Get Alvin the Anvil's GUID
+		for i=1, 9999 do
+			local petID, speciesID = C_PetJournal.GetPetInfoByIndex(i)
+			if speciesID == 3274 then
+				if petID then ProfessionShoppingList_Settings["alvinGUID"] = petID end
+				break
+			elseif speciesID == nil then
+				break
+			end
+		end
+
+		-- Get Lil' Ragnaros's GUID
+		for i=1, 9999 do
+			local petID, speciesID = C_PetJournal.GetPetInfoByIndex(i)
+			if speciesID == 297 then
+				if petID then ProfessionShoppingList_Settings["ragnarosGUID"] = petID end
+				break
+			elseif speciesID == nil then
+				break
+			end
+		end
+
+		if app.Flag["tradeskillAssets"] == true then
+			-- Alvin button
+			if ProfessionShoppingList_Settings["alvinGUID"] ~= "unknown" then
+				app.AlvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..ProfessionShoppingList_Settings["alvinGUID"].."')")
+			else
+				app.AlvinButton:SetAttribute("macrotext1", "")
+			end
+
+			-- Lil' Ragnaros button
+			if ProfessionShoppingList_Settings["ragnarosGUID"] ~= "unknown" then
+				app.RagnarosButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..ProfessionShoppingList_Settings["ragnarosGUID"].."')")
+			end
+
+			-- Recharge timer
+			C_Timer.After(1, function()
+				if ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount:GetText() then
+					local concentration = string.match(ProfessionsFrame.CraftingPage.ConcentrationDisplay.Amount:GetText(), "%d+")
+				
+					if concentration then
+						-- 250 Concentration per 24 hours
+						local timeLeft = math.ceil((1000 - concentration) / 250 * 24)
+
+						app.Concentration1:SetText("|cffFFFFFFFully recharged:|r "..timeLeft.."h")
+						app.Concentration2:SetText("|cffFFFFFFFully recharged:|r "..timeLeft.."h")
+					else
+						app.Concentration1:SetText("|cffFFFFFFFully recharged:|r ?")
+						app.Concentration2:SetText("|cffFFFFFFFully recharged:|r ?")
+					end
+				end
+			end)
+		end
+	end
+end)
+
+-- When a recipe is selected
+app.Event:Register("SPELL_DATA_LOAD_RESULT", function(spellID, success)
+	if not UnitAffectingCombat("player") then
+		-- Recipe-specific assets
+		local function recipeAssets()
+			if spellID == 444181 then	-- The War Within Thaumaturgy
+				app.MillingTheWarWithin:Show()
+			else
+				app.MillingTheWarWithin:Hide()
+			end
+
+			if spellID == 430315 then	-- The War Within Milling
+				app.ThaumaturgyTheWarWithin:Show()
+			else
+				app.ThaumaturgyTheWarWithin:Hide()
+			end
+
+			if spellID == 382981 then	-- Dragonflight Milling
+				app.MillingDragonflight:Show()
+			else
+				app.MillingDragonflight:Hide()
+			end
+
+			if spellID == 382982 then	-- Shadowlands Milling
+				app.MillingShadowlands:Show()
+			else
+				app.MillingShadowlands:Hide()
+			end
+
+			if spellID == 382984 then	-- Battle for Azeroth Milling
+				app.MillingBattleForAzeroth:Show()
+			else
+				app.MillingBattleForAzeroth:Hide()
+			end
+
+			if spellID == 382986 then	-- Legion Milling
+				app.MillingLegion:Show()
+			else
+				app.MillingLegion:Hide()
+			end
+
+			if spellID == 382987 then	-- Warlords of Draenor Milling
+				app.MillingWarlordsOfDraenor:Show()
+			else
+				app.MillingWarlordsOfDraenor:Hide()
+			end
+
+			if spellID == 382988 then	-- Mists of Pandaria Milling
+				app.MillingMistsOfPandaria:Show()
+			else
+				app.MillingMistsOfPandaria:Hide()
+			end
+
+			if spellID == 382989 then	-- Cataclysm Milling
+				app.MillingCataclysm:Show()
+			else
+				app.MillingCataclysm:Hide()
+			end
+
+			if spellID == 382990 then	-- Wrath of the Lich King Milling
+				app.MillingWrathOfTheLichKing:Show()
+			else
+				app.MillingWrathOfTheLichKing:Hide()
+			end
+
+			if spellID == 382991 then	-- The Burning Crusade Milling
+				app.MillingTheBurningCrusade:Show()
+			else
+				app.MillingTheBurningCrusade:Hide()
+			end
+
+			if spellID == 382994 then	-- Classic Milling
+				app.MillingClassic:Show()
+			else
+				app.MillingClassic:Hide()
+			end
+
+			if app.slLegendaryRecipeIDs[app.SelectedRecipe.Profession.recipeID] then	-- Shadowlands Legendary recipes
+				app.ShadowlandsRankText:Show()
+				app.ShadowlandsRankBox:Show()
+				app.ShadowlandsRankBox:SetText(app.slLegendaryRecipeIDs[app.SelectedRecipe.Profession.recipeID].rank)
+			else
+				app.ShadowlandsRankText:Hide()
+				app.ShadowlandsRankBox:Hide()
+			end
+		end
+
+		-- Profession buttons
+		local function professionButtons()
+			-- Show stuff depending on which profession is opened
+			local skillLineID = C_TradeSkillUI.GetProfessionChildSkillLineID()
+			local professionID = C_TradeSkillUI.GetProfessionInfoBySkillLineID(skillLineID).profession
+
+			-- Cooking Fire and Chef's Hat buttons
+			if professionID == 5 then
+				if ProfessionShoppingList_Settings["ragnarosGUID"] ~= "unknown" then
+					app.RagnarosButton:Show()
+				else
+					app.CookingFireButton:Show()
+				end
+				app.ChefsHatButton:Show()
+			else
+				app.CookingFireButton:Hide()
+				app.RagnarosButton:Hide()
+				app.ChefsHatButton:Hide()
+			end
+
+			-- Thermal Anvil button
+			if professionID == 1 or professionID == 6 or professionID == 8 then
+				app.ThermalAnvilButton:Show()
+				app.AlvinButton:Show()
+				local _, _, raceID = UnitRace("player")
+				if raceID == 30 then
+					app.LightforgeButton:Show()
+				end
+			else
+				app.ThermalAnvilButton:Hide()
+				app.AlvinButton:Hide()
+				app.LightforgeButton:Hide()
+			end
+		end
+
+		if app.Flag["tradeskillAssets"] == true then
+			recipeAssets()
+			professionButtons()
+		end
+	end
+end)
+
+-- When a spell is succesfully cast by the player (for updating profession buttons)
+app.Event:Register("UNIT_SPELLCAST_SUCCEEDED", function(unitTarget, castGUID, spellID)
+	if not UnitAffectingCombat("player") and unitTarget == "player" then
+		-- Profession button stuff
+		if spellID == 818 or spellID == 67556 or spellID == 126462 or spellID == 279205 or spellID == 259930 then
+			C_Timer.After(0.1, function()
+				app.UpdateAssets()
+			end)
+		end
+	end
+end)
+
 ------------------------
 -- RECIPE INFORMATION --
 ------------------------
+
+-- Register a recipe's information
+function app.RegisterRecipe(recipeID)
+	-- If there is an output item
+	local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID
+	local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
+	local ability = C_TradeSkillUI.GetRecipeInfo(recipeID).skillLineAbilityID
+
+	-- Register if the recipe is known
+	local recipeLearned = C_TradeSkillUI.GetRecipeInfo(recipeID).learned
+
+	-- Set the itemID to 0 if there is no output item
+	if item == nil then
+		itemID = 0
+	end
+
+	if ProfessionShoppingList_Library[recipeID] then
+		ProfessionShoppingList_Library[recipeID].itemID = item
+		ProfessionShoppingList_Library[recipeID].abilityID = ability
+		ProfessionShoppingList_Library[recipeID].tradeskillID = tradeskill
+
+		if not ProfessionShoppingList_Library[recipeID].learned then
+			ProfessionShoppingList_Library[recipeID].learned = recipeLearned
+		end
+	else
+		ProfessionShoppingList_Library[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill, learned = recipeLearned }
+	end
+end
+
+-- When a tradeskill window is opened
+app.Event:Register("TRADE_SKILL_SHOW", function()
+	if not UnitAffectingCombat("player") then
+		-- Register all recipes for this profession, on a delay so we give all this info time to load.
+		C_Timer.After(2, function()
+			for _, recipeID in pairs(C_TradeSkillUI.GetAllRecipeIDs()) do
+				app.RegisterRecipe(recipeID)
+			end
+		end)
+	end
+end)
 
 -- Get reagents for recipe
 function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qualityTier)
@@ -3157,7 +3109,7 @@ end
 --------------------------------
 
 -- Track recipe
-function app.TrackRecipe(recipeID, recipeQuantity, orderID, craftSim)
+function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID, craftSim)
 	-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
 	if C_TradeSkillUI.GetRecipeSchematic(recipeID,false).recipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(recipeID,false).reagentSlotSchematics[1] == nil then
 		do return end
@@ -3197,7 +3149,7 @@ function app.TrackRecipe(recipeID, recipeQuantity, orderID, craftSim)
 
 			-- Try again if error
 			if itemLink == nil then
-				RunNextFrame(function() app.TrackRecipe(recipeID, recipeQuantity) end)
+				RunNextFrame(function() app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID, craftSim) end)
 				do return end
 			end
 		-- Exception for stuff like Abominable Stitching
@@ -3227,6 +3179,7 @@ function app.TrackRecipe(recipeID, recipeQuantity, orderID, craftSim)
 
 	-- Track recipe
 	if orderID then
+		-- Process Patron Orders
 		local ordersTable = C_CraftingOrders.GetCrafterOrders()
 		local reagents = {}
 		local key
@@ -3244,21 +3197,28 @@ function app.TrackRecipe(recipeID, recipeQuantity, orderID, craftSim)
 				recipeID = key
 			end
 		end
+
+		-- Process Personal/Guild Orders
+		if not ProfessionShoppingList_Cache.FakeRecipes[key] then
+			key = "order:" .. orderID .. ":" .. recipeID
+
+			ProfessionShoppingList_Cache.FakeRecipes[key] = {
+				["spellID"] = recipeID,
+				["tradeskillID"] = 1,	-- Crafting order
+				["reagents"] = app.SelectedRecipe.MakeOrder.reagents
+			}
+
+			recipeID = key
+		end
 	end
 
 	if not ProfessionShoppingList_Data.Recipes[recipeID] then
-		ProfessionShoppingList_Data.Recipes[recipeID] = { quantity = 0, recraft = app.Flag["recraft"], link = recipeLink, craftSim = craftSim }
+		ProfessionShoppingList_Data.Recipes[recipeID] = { quantity = 0, recraft = recraft, link = recipeLink, craftSim = craftSim }
 	end
 	ProfessionShoppingList_Data.Recipes[recipeID].quantity = ProfessionShoppingList_Data.Recipes[recipeID].quantity + recipeQuantity
 
 	-- Show window
 	app.Show()	-- This also triggers the recipe update
-
-	-- Update the editbox
-	if app.Flag["tradeskillAssets"] == true then
-		app.RecipeQuantity = ProfessionShoppingList_Data.Recipes[recipeID].quantity or 0
-		app.RecipeQuantityBox:SetText(app.RecipeQuantity)
-	end
 end
 
 -- Untrack recipe
@@ -3283,21 +3243,6 @@ function app.UntrackRecipe(recipeID, recipeQuantity)
 
 	-- Update numbers
 	app.UpdateRecipes()
-
-	-- Update the editbox
-	if app.Flag["tradeskillAssets"] == true then
-		if ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID] then
-			app.RecipeQuantity = ProfessionShoppingList_Data.Recipes[app.SelectedRecipeID].quantity
-		else
-			app.RecipeQuantity = 0
-		end
-		app.RecipeQuantityBox:SetText(app.RecipeQuantity)
-
-		if app.OrderInfo and app.OrderInfo.orderID == tonumber(string.match(recipeID, ":(%d+):")) then
-			app.TrackMakeOrderButton:SetText("Track")
-			app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
-		end
-	end
 end
 
 -- Clear everything except the recipe cache
@@ -3328,27 +3273,16 @@ end
 -- Replace the in-game tracking of shift+clicking a recipe with PSL's
 app.Event:Register("TRACKED_RECIPE_UPDATE", function(recipeID, tracked)
 	if tracked == true then
-		app.TrackRecipe(recipeID,1)
+		app.TrackRecipe(recipeID, 1)
 		C_TradeSkillUI.SetRecipeTracked(recipeID, false, false)
 		C_TradeSkillUI.SetRecipeTracked(recipeID, false, true)
 	end
 end)
 
--- When a recipe is selected (very for realsies, although this doesn't work for crafting orders, which is why I still use SPELL_DATA_LOAD_RESULT)
+-- When a recipe is selected in the tradeskillUI
 EventRegistry:RegisterCallback("ProfessionsRecipeListMixin.Event.OnRecipeSelected", function(_, recipeInfo)
-	if recipeInfo["isRecraft"] == true then app.Flag["recraft"] = true
-	elseif recipeInfo["isRecraft"] == false then app.Flag["recraft"] = false
-	end
-end)
-
--- When opening the recrafting order window
-EventRegistry:RegisterCallback("ProfessionsCustomerOrders.RecraftCategorySelected", function()
-	app.Flag["recraft"] = true
-end)
-
--- When selecting a non-recrafting order
-EventRegistry:RegisterCallback("ProfessionsCustomerOrders.RecipeSelected", function()
-	app.Flag["recraft"] = false
+	app.SelectedRecipe.Profession = { recipeID = recipeInfo["recipeID"], recraft = recipeInfo["isRecraft"], recipeType = C_TradeSkillUI.GetRecipeSchematic(recipeInfo["recipeID"],false).recipeType }
+	app.UpdateAssets()
 end)
 
 -- When a vendor window is opened
@@ -3442,7 +3376,7 @@ end)
 
 -- When a spell is succesfully cast by the player (for  removing crafted recipes)
 app.Event:Register("UNIT_SPELLCAST_SUCCEEDED", function(unitTarget, castGUID, spellID)
-	if UnitAffectingCombat("player") == false and unitTarget == "player" then
+	if not UnitAffectingCombat("player") and unitTarget == "player" then
 		-- Run only when crafting a tracked recipe, and if the remove craft option is enabled
 		if ProfessionShoppingList_Data.Recipes[spellID] and ProfessionShoppingList_Settings["removeCraft"] then
 			-- Remove 1 tracked recipe when it has been crafted (if the option is enabled)
@@ -3495,7 +3429,7 @@ end)
 
 -- When a spell is succesfully cast by the player
 app.Event:Register("UNIT_SPELLCAST_SUCCEEDED", function(unitTarget, castGUID, spellID)
-	if UnitAffectingCombat("player") == false and unitTarget == "player" then	
+	if not UnitAffectingCombat("player") and unitTarget == "player" then	
 		-- Run only when the spell cast is a known recipe
 		if ProfessionShoppingList_Library[spellID] then
 			-- With a delay due to how quickly that info is updated after UNIT_SPELLCAST_SUCCEEDED

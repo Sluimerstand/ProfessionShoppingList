@@ -45,7 +45,7 @@ end)
 
 -- When bag changes occur (out of combat)
 app.Event:Register("BAG_UPDATE_DELAYED", function()
-	if UnitAffectingCombat("player") == false then
+	if not UnitAffectingCombat("player") then
 		-- If the setting for split reagent bag count is enabled
 		if ProfessionShoppingList_Settings["backpackCount"] == true then
 			-- Get number of free bag slots
