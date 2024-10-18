@@ -158,11 +158,11 @@ function app.CreateCraftingOrdersAssets()
 		end
 
 		-- Only add the reagentInfo if the option is enabled
-		if ProfessionShoppingList_Settings["useLocalReagents"] == true then localReagentsOrder() end
+		if ProfessionShoppingList_Settings["useLocalReagents"] then localReagentsOrder() end
 
 		-- Signal that PSL is currently working on a quick order with tiered local reagents, if applicable
 		local next = next
-		if next(craftingReagentInfo) ~= nil and ProfessionShoppingList_Settings["useLocalReagents"] == true then
+		if next(craftingReagentInfo) ~= nil and ProfessionShoppingList_Settings["useLocalReagents"] then
 			app.Flag["quickOrder"] = 2
 		end
 
@@ -177,7 +177,7 @@ function app.CreateCraftingOrdersAssets()
 		
 		-- If there are tiered reagents and the user wants to use local reagents, adjust the dataSlotIndex and try again in case the first one failed
 		local next = next
-		if next(craftingReagentInfo) ~= nil and ProfessionShoppingList_Settings["useLocalReagents"] == true then
+		if next(craftingReagentInfo) ~= nil and ProfessionShoppingList_Settings["useLocalReagents"] then
 			for i, _ in ipairs(craftingReagentInfo) do
 				craftingReagentInfo[i].dataSlotIndex = math.max(craftingReagentInfo[i].dataSlotIndex - 1, 0)
 			end
@@ -238,7 +238,7 @@ function app.CreateCraftingOrdersAssets()
 
 			if ProfessionShoppingList_CharacterData.Orders["last"] ~= nil and ProfessionShoppingList_CharacterData.Orders["last"] ~= 0 then
 				app.RepeatQuickOrderTooltip.Reagents = L.FALSE
-				if ProfessionShoppingList_Settings["useLocalReagents"] == true then
+				if ProfessionShoppingList_Settings["useLocalReagents"] then
 					app.RepeatQuickOrderTooltip.Reagents = L.TRUE
 				end
 			end
@@ -281,7 +281,7 @@ function app.CreateCraftingOrdersAssets()
 
 	if ProfessionShoppingList_CharacterData.Orders["last"] ~= nil and ProfessionShoppingList_CharacterData.Orders["last"] ~= 0 then
 		app.RepeatQuickOrderTooltip.Reagents = L.FALSE
-		if ProfessionShoppingList_Settings["useLocalReagents"] == true then
+		if ProfessionShoppingList_Settings["useLocalReagents"] then
 			app.RepeatQuickOrderTooltip.Reagents = L.TRUE
 		end
 		app.RepeatQuickOrderTooltip.Text = L.QUICKORDER_REPEAT_TOOLTIP .. "\n" .. L.RECIPIENT  .. ": " .. ProfessionShoppingList_CharacterData.Orders[ProfessionShoppingList_CharacterData.Orders["last"]] .. "\n" .. L.LOCALREAGENTS_LABEL .. ": " .. app.RepeatQuickOrderTooltip.Reagents
@@ -328,7 +328,7 @@ end)
 
 -- When fulfilling an order
 app.Event:Register("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE", function(result, orderID)
-	if ProfessionShoppingList_Settings["removeCraft"] == true then
+	if ProfessionShoppingList_Settings["removeCraft"] then
 		for k, v in pairs (ProfessionShoppingList_Data.Recipes) do
 			if tonumber(string.match(k, ":(%d+):")) == orderID then
 				-- Remove 1 tracked recipe when it has been crafted (if the option is enabled)
@@ -390,7 +390,7 @@ app.Event:Register("CRAFTINGORDERS_ORDER_PLACEMENT_RESPONSE", function(result)
 		-- Check for the name if there has been a last order
 		if ProfessionShoppingList_CharacterData.Orders["last"] ~= nil and ProfessionShoppingList_CharacterData.Orders["last"] ~= 0 then
 			app.RepeatQuickOrderTooltip.Reagents = L.FALSE
-			if ProfessionShoppingList_Settings["useLocalReagents"] == true then
+			if ProfessionShoppingList_Settings["useLocalReagents"] then
 				app.RepeatQuickOrderTooltip.Reagents = L.TRUE
 			end
 			app.RepeatQuickOrderTooltip.Text = L.QUICKORDER_REPEAT_TOOLTIP .. "\n" .. L.RECIPIENT  .. ": " .. ProfessionShoppingList_CharacterData.Orders[ProfessionShoppingList_CharacterData.Orders["last"]] .. "\n" .. L.LOCALREAGENTS_LABEL .. ": " .. app.RepeatQuickOrderTooltip.Reagents

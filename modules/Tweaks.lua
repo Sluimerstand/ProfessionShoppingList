@@ -48,7 +48,7 @@ end)
 app.Event:Register("BAG_UPDATE_DELAYED", function()
 	if not UnitAffectingCombat("player") then
 		-- If the setting for split reagent bag count is enabled
-		if ProfessionShoppingList_Settings["backpackCount"] == true then
+		if ProfessionShoppingList_Settings["backpackCount"] then
 			-- Get number of free bag slots
 			local freeSlots1 = C_Container.GetContainerNumFreeSlots(0) + C_Container.GetContainerNumFreeSlots(1) + C_Container.GetContainerNumFreeSlots(2) + C_Container.GetContainerNumFreeSlots(3) + C_Container.GetContainerNumFreeSlots(4)
 			local freeSlots2 = C_Container.GetContainerNumFreeSlots(5)
@@ -69,7 +69,7 @@ end)
 -- Play the DBM-style queue sound
 function app.QueueSound()
 	-- If the setting is enabled
-	if ProfessionShoppingList_Settings["queueSound"] == true then
+	if ProfessionShoppingList_Settings["queueSound"] then
 		PlaySoundFile(567478, "Master")
 	end
 end
@@ -96,7 +96,7 @@ end)
 -- Set the Vendor filter to 'All'
 function app.MerchantFilter()
 	-- If the setting is enabled
-	if ProfessionShoppingList_Settings["vendorAll"] == true then
+	if ProfessionShoppingList_Settings["vendorAll"] then
 		RunNextFrame(function()
 			SetMerchantFilter(1)
 			MerchantFrame_Update()
@@ -125,10 +125,10 @@ function app.UnderminePrices()
 		local _, itemLink = C_Item.GetItemInfo(itemID)
 
 		-- Only run this if the setting is enabled
-		if ProfessionShoppingList_Settings["underminePrices"] == true then
+		if ProfessionShoppingList_Settings["underminePrices"] then
 			-- If Oribos Exchange is loaded
 			local loaded, finished = C_AddOns.IsAddOnLoaded("OribosExchange")
-			if finished == true then
+			if finished then
 				-- Grab the pricing information
 				local marketPrice = 0
 				local regionPrice = 0
@@ -178,10 +178,10 @@ end
 local LibBattlePetTooltipLine = LibStub("LibBattlePetTooltipLine-1-0")	-- Load this library
 hooksecurefunc("BattlePetToolTip_Show", function(...)
 	-- Only run this if the setting is enabled
-	if ProfessionShoppingList_Settings["underminePrices"] == true then
+	if ProfessionShoppingList_Settings["underminePrices"] then
 		-- If Oribos Exchange is loaded
 		local loaded, finished = C_AddOns.IsAddOnLoaded("OribosExchange")
-		if finished == true then
+		if finished then
 			local speciesID1, level, breedQuality, maxHealth, power, speed, bracketName =  ...
 
 			-- Make itemLink if it grabs the proper pet
@@ -224,10 +224,10 @@ end)
 
 function app.HideOribos()
 	-- Only run this if the setting is enabled
-	if ProfessionShoppingList_Settings["underminePrices"] == true then
+	if ProfessionShoppingList_Settings["underminePrices"] then
 		-- If Oribos Exchange is loaded
 		local loaded, finished = C_AddOns.IsAddOnLoaded("OribosExchange")
-		if finished == true then
+		if finished then
 			-- Disable the original tooltip
 			OETooltip(false)
 
@@ -314,7 +314,7 @@ function app.SettingsTweaks()
 		local freeSlots2 = C_Container.GetContainerNumFreeSlots(5)
 
 		-- If the setting for split reagent bag count is enabled and the player has a reagent bag
-		if ProfessionShoppingList_Settings["backpackCount"] == true and C_Container.GetContainerNumSlots(5) ~= 0 then
+		if ProfessionShoppingList_Settings["backpackCount"] and C_Container.GetContainerNumSlots(5) ~= 0 then
 			-- Replace the bag count text
 			MainMenuBarBackpackButtonCount:SetText("(" .. freeSlots1 .. "+" .. freeSlots2 .. ")")
 		else

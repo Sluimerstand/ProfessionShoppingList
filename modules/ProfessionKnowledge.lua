@@ -280,21 +280,21 @@ end
 
 -- When a tradeskill window is opened
 app.Event:Register("TRADE_SKILL_SHOW", function()
-	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
+	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") then
 		app.CreateProfessionKnowledgeAssets()
 	end
 end)
 
 -- When a recipe is selected (also used to determine professionID, which TRADE_SKILL_SHOW() is too quick for)
 app.Event:Register("SPELL_DATA_LOAD_RESULT", function(spellID, success)
-	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true and app.Flag["knowledgeAssets"] == true then
+	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") and app.Flag["knowledgeAssets"] then
 		app.KnowledgeTracker()
 	end
 end)
 
 -- When profession knowledge is spent
 app.Event:Register("TRAIT_CONFIG_UPDATED", function(spellID, success)
-	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true and app.Flag["knowledgeAssets"] == true then
+	if C_AddOns.IsAddOnLoaded("Blizzard_Professions") and app.Flag["knowledgeAssets"] then
 		app.KnowledgeTracker()
 	end
 end)

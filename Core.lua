@@ -102,7 +102,7 @@ function app.Popup(show, text)
 	})
 	frame:SetBackdropColor(0, 0, 0, 1)
 	frame:EnableMouse(true)
-	if show == true then
+	if show then
 		frame:Show()
 	else
 		frame:Hide()
@@ -208,7 +208,7 @@ function app.InitialiseCore()
 	if ProfessionShoppingList_Settings["debug"] == nil then ProfessionShoppingList_Settings["debug"] = false end
 
 	-- Load personal recipes, if the setting is enabled
-	if ProfessionShoppingList_Settings["pcRecipes"] == true then
+	if ProfessionShoppingList_Settings["pcRecipes"] then
 		ProfessionShoppingList_Data.Recipes = ProfessionShoppingList_CharacterData.Recipes
 	end
 
@@ -943,7 +943,7 @@ function app.UpdateRecipes()
 		app.Window.Recipes:SetScript("OnClick", function(self)
 			local children = {self:GetChildren()}
 
-			if showRecipes == true then
+			if showRecipes then
 				for _, child in ipairs(children) do child:Hide() end
 				app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, -2)
 				showRecipes = false
@@ -1029,7 +1029,7 @@ function app.UpdateRecipes()
 				-- Right-click on recipe amount
 				if button == "RightButton" then
 					-- Untrack the recipe
-					if IsControlKeyDown() == true then
+					if IsControlKeyDown() then
 						app.UntrackRecipe(recipeInfo.recipeID, 0)
 					else
 						app.UntrackRecipe(recipeInfo.recipeID, 1)
@@ -1040,19 +1040,19 @@ function app.UpdateRecipes()
 				-- Left-click on recipe
 				elseif button == "LeftButton" then
 					-- If Shift is held also
-					if IsShiftKeyDown() == true then
+					if IsShiftKeyDown() then
 						-- Try write link to chat
 						ChatEdit_InsertLink(recipeInfo.link)
 					-- If Control is held also
-					elseif IsControlKeyDown() == true and type(recipeInfo.recipeID) == "number" then
+					elseif IsControlKeyDown() and type(recipeInfo.recipeID) == "number" then
 							C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
 							C_TradeSkillUI.OpenRecipe(recipeInfo.recipeID)
 					-- If Alt is held also
-					elseif IsAltKeyDown() == true and type(recipeInfo.recipeID) == "number" then
+					elseif IsAltKeyDown() and type(recipeInfo.recipeID) == "number" then
 						C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
 						C_TradeSkillUI.OpenRecipe(recipeInfo.recipeID)
 						-- Make sure the tradeskill frame is loaded
-						if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
+						if C_AddOns.IsAddOnLoaded("Blizzard_Professions") then
 							C_TradeSkillUI.CraftRecipe(recipeInfo.recipeID, ProfessionShoppingList_Data.Recipes[recipeInfo.recipeID].quantity)
 						end
 					end
@@ -1123,7 +1123,7 @@ function app.UpdateRecipes()
 		app.Window.Reagents:SetScript("OnClick", function(self)
 			local children = {self:GetChildren()}
 
-			if showReagents == true then
+			if showReagents then
 				for _, child in ipairs(children) do child:Hide() end
 				app.Window.Cooldowns:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, -2)
 				showReagents = false
@@ -1173,7 +1173,7 @@ function app.UpdateRecipes()
 				end
 
 				-- Control+click on reagent
-				if button == "LeftButton" and IsControlKeyDown() == true then
+				if button == "LeftButton" and IsControlKeyDown() then
 					-- Get itemIDs
 					local itemID = reagentInfo.reagentID
 					if ProfessionShoppingList_Cache.ReagentTiers[itemID] then itemID = ProfessionShoppingList_Cache.ReagentTiers[itemID].one end
@@ -1522,7 +1522,7 @@ function app.UpdateRecipes()
 						end
 					end
 				-- Activate if Shift+clicking on the reagent
-				elseif button == "LeftButton" and IsShiftKeyDown() == true then
+				elseif button == "LeftButton" and IsShiftKeyDown() then
 					ChatEdit_InsertLink(reagentInfo.link)
 				end
 			end)
@@ -1567,10 +1567,10 @@ function app.UpdateRecipes()
 		end
 
 		-- Set the header title accordingly
-		if trackRecipes == true and trackItems == true then
+		if trackRecipes and trackItems then
 			app.RecipeHeader:SetText(L.WINDOW_HEADER_RECIPES .. " & " .. L.WINDOW_HEADER_ITEMS .. " (" .. #recipeRow .. ")")
 			app.ReagentHeader:SetText(L.WINDOW_HEADER_REAGENTS .. "&" .. L.WINDOW_HEADER_COSTS)
-		elseif trackRecipes == false and trackItems == true then
+		elseif trackRecipes == false and trackItems then
 			app.RecipeHeader:SetText(L.WINDOW_HEADER_ITEMS .. " (" .. #recipeRow .. ")")
 			app.ReagentHeader:SetText(L.WINDOW_HEADER_COSTS)
 		else
@@ -1622,7 +1622,7 @@ function app.UpdateRecipes()
 		app.Window.Cooldowns:SetScript("OnClick", function(self)
 			local children = {self:GetChildren()}
 
-			if showCooldowns == true then
+			if showCooldowns then
 				for i_, child in ipairs(children) do child:Hide() end
 				showCooldowns = false
 			else
@@ -1660,15 +1660,15 @@ function app.UpdateRecipes()
 					app.UpdateRecipes()
 				elseif button == "LeftButton" then
 					-- If Control is held also
-					if IsControlKeyDown() == true then
+					if IsControlKeyDown() then
 						C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
 						C_TradeSkillUI.OpenRecipe(cooldownInfo.recipeID)
 					-- If Alt is held also
-					elseif IsAltKeyDown() == true then
+					elseif IsAltKeyDown() then
 						C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
 						C_TradeSkillUI.OpenRecipe(cooldownInfo.recipeID)
 						-- Make sure the tradeskill frame is loaded
-						if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
+						if C_AddOns.IsAddOnLoaded("Blizzard_Professions") then
 							C_TradeSkillUI.CraftRecipe(cooldownInfo.recipeID)
 						end
 					end
@@ -1736,15 +1736,15 @@ function app.UpdateRecipes()
 			local windowWidth = 0
 			if next(ProfessionShoppingList_Data.Cooldowns) == nil or ProfessionShoppingList_Settings["showRecipeCooldowns"] == false then
 				windowHeight = windowHeight - 16
-			elseif showCooldowns == true then
+			elseif showCooldowns then
 				windowHeight = windowHeight + rowNo3 * 16
 				windowWidth = math.max(windowWidth, maxLength3, app.UpdatedCooldownWidth)
 			end
-			if showReagents == true then
+			if showReagents then
 				windowHeight = windowHeight + rowNo2 * 16
 				windowWidth = math.max(windowWidth, maxLength2, app.UpdatedReagentWidth)
 			end
-			if showRecipes == true then
+			if showRecipes then
 				windowHeight = windowHeight + rowNo * 16
 				windowWidth = math.max(windowWidth, maxLength1)
 			end
@@ -1775,7 +1775,7 @@ end
 function app.Show()
 	-- Set window to its proper position and size
 	app.Window:ClearAllPoints()
-	if ProfessionShoppingList_Settings["pcWindows"] == true then
+	if ProfessionShoppingList_Settings["pcWindows"] then
 		app.Window:SetSize(ProfessionShoppingList_Settings["pcWindowPosition"].width, ProfessionShoppingList_Settings["pcWindowPosition"].height)
 		app.Window:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", ProfessionShoppingList_Settings["pcWindowPosition"].left, ProfessionShoppingList_Settings["pcWindowPosition"].bottom)
 	else
@@ -1821,7 +1821,7 @@ app.Event:Register("BAG_UPDATE_DELAYED", function()
 		end
 
 		-- If the setting for split reagent bag count is enabled
-		if ProfessionShoppingList_Settings["backpackCount"] == true then
+		if ProfessionShoppingList_Settings["backpackCount"] then
 			-- Get number of free bag slots
 			local freeSlots1 = C_Container.GetContainerNumFreeSlots(0) + C_Container.GetContainerNumFreeSlots(1) + C_Container.GetContainerNumFreeSlots(2) + C_Container.GetContainerNumFreeSlots(3) + C_Container.GetContainerNumFreeSlots(4)
 			local freeSlots2 = C_Container.GetContainerNumFreeSlots(5)
@@ -1905,7 +1905,7 @@ function app.CreateTradeskillAssets()
 		-- If the value is positive, change the number of recipes tracked
 		if newValue >= 0 then
 			app.UntrackRecipe(app.SelectedRecipe.Profession.recipeID, 0)
-			if newValue >0 then
+			if newValue > 0 then
 				app.TrackRecipe(app.SelectedRecipe.Profession.recipeID, newValue, app.SelectedRecipe.Profession.recraft, nil, craftSim)
 			end
 		end
@@ -2401,7 +2401,7 @@ function app.UpdateAssets()
 		app.ThermalAnvilCooldown:SetCooldown(startTime, duration)
 
 		-- Make the Alvin the Anvil button not desaturated if it can be used
-		if C_PetJournal.PetIsSummonable(ProfessionShoppingList_Settings["alvinGUID"]) == true then
+		if C_PetJournal.PetIsSummonable(ProfessionShoppingList_Settings["alvinGUID"]) then
 			app.AlvinButton:GetNormalTexture():SetDesaturated(false)
 		end
 
@@ -2461,7 +2461,7 @@ end
 -- When a tradeskill window is opened
 app.Event:Register("TRADE_SKILL_SHOW", function()
 	if not UnitAffectingCombat("player") then
-		if C_AddOns.IsAddOnLoaded("Blizzard_Professions") == true then
+		if C_AddOns.IsAddOnLoaded("Blizzard_Professions") then
 			app.CreateTradeskillAssets()
 		end
 
@@ -2487,7 +2487,7 @@ app.Event:Register("TRADE_SKILL_SHOW", function()
 			end
 		end
 
-		if app.Flag["tradeskillAssets"] == true then
+		if app.Flag["tradeskillAssets"] then
 			-- Alvin button
 			if ProfessionShoppingList_Settings["alvinGUID"] ~= "unknown" then
 				app.AlvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('" .. ProfessionShoppingList_Settings["alvinGUID"] .. "')")
@@ -2643,7 +2643,7 @@ app.Event:Register("SPELL_DATA_LOAD_RESULT", function(spellID, success)
 			end
 		end
 
-		if app.Flag["tradeskillAssets"] == true then
+		if app.Flag["tradeskillAssets"] then
 			recipeAssets()
 			professionButtons()
 		end
@@ -3137,12 +3137,12 @@ function app.Clear()
 	app.Window.ScrollFrame:SetVerticalScroll(0)
 
 	-- Disable remove button
-	if app.Flag["tradeskillAssets"] == true then
+	if app.Flag["tradeskillAssets"] then
 		app.UntrackProfessionButton:Disable()
 		app.TrackMakeOrderButton:SetText(L.TRACK)
 		app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
 	end
-	if app.Flag["craftingOrderAssets"] == true then
+	if app.Flag["craftingOrderAssets"] then
 		app.UntrackPlaceOrderButton:Disable()
 	end
 	-- Set the quantity box to 0
@@ -3153,7 +3153,7 @@ end
 
 -- Replace the in-game tracking of shift+clicking a recipe with PSL's
 app.Event:Register("TRACKED_RECIPE_UPDATE", function(recipeID, tracked)
-	if tracked == true then
+	if tracked then
 		app.TrackRecipe(recipeID, 1)
 		C_TradeSkillUI.SetRecipeTracked(recipeID, false, false)
 		C_TradeSkillUI.SetRecipeTracked(recipeID, false, true)
@@ -3170,7 +3170,7 @@ end)
 app.Event:Register("MERCHANT_SHOW", function()
 	-- When the user Alt+clicks a vendor item
 	local function TrackMerchantItem()
-		if IsAltKeyDown() == true then
+		if IsAltKeyDown() then
 			-- Get merchant info
 			local merchant = MerchantFrameTitleText:GetText()
 
@@ -3279,7 +3279,7 @@ end)
 -- When the user encounters a loading screen
 app.Event:Register("PLAYER_ENTERING_WORLD", function(isInitialLogin, isReloadingUi)
 	-- Only on initialLoad
-	if isInitialLogin == true then
+	if isInitialLogin then
 		-- Check all tracked recipe cooldowns
 		for k, recipeInfo in pairs(ProfessionShoppingList_Data.Cooldowns) do
 			-- Check the remaining cooldown
@@ -3299,7 +3299,7 @@ app.Event:Register("PLAYER_ENTERING_WORLD", function(isInitialLogin, isReloading
 				end
 
 				-- If the option to show recipe cooldowns is enabled and all charges are full (or 0 = 0 for recipes without charges)
-				if ProfessionShoppingList_Settings["showRecipeCooldowns"] == true and ProfessionShoppingList_Data.Cooldowns[k].charges == ProfessionShoppingList_Data.Cooldowns[k].maxCharges then
+				if ProfessionShoppingList_Settings["showRecipeCooldowns"] and ProfessionShoppingList_Data.Cooldowns[k].charges == ProfessionShoppingList_Data.Cooldowns[k].maxCharges then
 					-- Show the reminder
 					app.Print(recipeInfo.name .. " " .. L.READY_TO_CRAFT .. " " .. recipeInfo.user .. ".")
 				end
@@ -3529,7 +3529,7 @@ function app.Settings()
 	local icon = LibStub("LibDBIcon-1.0", true)
 	icon:Register("ProfessionShoppingList", miniButton, ProfessionShoppingList_Settings)
 
-	if ProfessionShoppingList_Settings["minimapIcon"] == true then
+	if ProfessionShoppingList_Settings["minimapIcon"] then
 		ProfessionShoppingList_Settings["hide"] = false
 		icon:Show("ProfessionShoppingList")
 	else
@@ -3548,7 +3548,7 @@ function app.Settings()
 	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	setting:SetValueChangedCallback(function()
-		if ProfessionShoppingList_Settings["minimapIcon"] == true then
+		if ProfessionShoppingList_Settings["minimapIcon"] then
 			ProfessionShoppingList_Settings["hide"] = false
 			icon:Show("ProfessionShoppingList")
 		else
