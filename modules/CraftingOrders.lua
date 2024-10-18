@@ -329,7 +329,7 @@ end)
 -- When fulfilling an order
 app.Event:Register("CRAFTINGORDERS_FULFILL_ORDER_RESPONSE", function(result, orderID)
 	if ProfessionShoppingList_Settings["removeCraft"] then
-		for k, v in pairs (ProfessionShoppingList_Data.Recipes) do
+		for k, v in pairs(ProfessionShoppingList_Data.Recipes) do
 			if tonumber(string.match(k, ":(%d+):")) == orderID then
 				-- Remove 1 tracked recipe when it has been crafted (if the option is enabled)
 				app.UntrackRecipe(k, 1)

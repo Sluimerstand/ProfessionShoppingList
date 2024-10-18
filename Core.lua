@@ -192,7 +192,7 @@ function app.InitialiseCore()
 	if not ProfessionShoppingList_Cache.ReagentTiers then ProfessionShoppingList_Cache.ReagentTiers = {} end
 	if not ProfessionShoppingList_Cache.Reagents then ProfessionShoppingList_Cache.Reagents = {} end
 	if not ProfessionShoppingList_Cache.FakeRecipes then ProfessionShoppingList_Cache.FakeRecipes = {} end
-	if not ProfessionShoppingList_Cache.CraftSimRecipes then ProfessionShoppingList_Cache.CraftSimRecipes = {} end
+	if not ProfessionShoppingList_Cache.SimulatedRecipes then ProfessionShoppingList_Cache.SimulatedRecipes = {} end
 	
 	if not ProfessionShoppingList_CharacterData then ProfessionShoppingList_CharacterData = {} end
 	if not ProfessionShoppingList_CharacterData.Recipes then ProfessionShoppingList_CharacterData.Recipes = {} end
@@ -227,9 +227,16 @@ function app.InitialiseCore()
 	app.UpdatedCooldownWidth = 0
 	app.UpdatedReagentWidth = 0
 	app.IncludeWarbank = true	-- Temporary flag until Blizz fixes their shit
+	app.SimAddOns = {"CraftSim", "TestFlight"}
 
 	-- Register our AddOn communications channel
 	C_ChatInfo.RegisterAddonMessagePrefix("ProfShopList")
+
+	-- Legacy compatibility
+	if ProfessionShoppingList_Cache.CraftSimRecipes then
+		ProfessionShoppingList_Cache.SimulatedRecipes = ProfessionShoppingList_Cache.CraftSimRecipes
+		ProfessionShoppingList_Cache.CraftSimRecipes = nil
+	end
 end
 
 -- When the AddOn is fully loaded, actually run the components
@@ -624,6 +631,7 @@ function app.UpdateNumbers()
 			if not C_Item.IsItemDataCachedByID(reagentID) then
 				app.CacheItem(reagentID, true)
 				RunNextFrame(app.UpdateNumbers)
+				app.Debug("app.UpdateNumbers()")
 				do return end
 			end
 		else
@@ -1247,6 +1255,7 @@ function app.UpdateRecipes()
 								-- Try again if error
 								if itemName == nil or itemLink == nil then
 									RunNextFrame(getInfo)
+									app.Debug("getInfo()")
 									do return end
 								end
 
@@ -1297,6 +1306,7 @@ function app.UpdateRecipes()
 									-- Try again if error
 									if itemName == nil or itemLink == nil then
 										RunNextFrame(getInfo)
+										app.Debug("getInfo()")
 										do return end
 									end
 
@@ -1348,6 +1358,7 @@ function app.UpdateRecipes()
 									-- Try again if error
 									if itemName == nil or itemLink == nil then
 										RunNextFrame(getInfo)
+										app.Debug("getInfo()")
 										do return end
 									end
 
@@ -1399,6 +1410,7 @@ function app.UpdateRecipes()
 									-- Try again if error
 									if itemName == nil or itemLink == nil then
 										RunNextFrame(getInfo)
+										app.Debug("getInfo()")
 										do return end
 									end
 
@@ -1447,6 +1459,7 @@ function app.UpdateRecipes()
 									-- Try again if error
 									if itemName == nil or itemLink == nil then
 										RunNextFrame(getInfo)
+										app.Debug("getInfo()")
 										do return end
 									end
 
@@ -1495,6 +1508,7 @@ function app.UpdateRecipes()
 									-- Try again if error
 									if itemName == nil or itemLink == nil then
 										RunNextFrame(getInfo)
+										app.Debug("getInfo()")
 										do return end
 									end
 
@@ -1847,61 +1861,19 @@ function app.CreateTradeskillAssets()
 		app.TrackProfessionButton = app.Button(ProfessionsFrame.CraftingPage, L.TRACK)
 		app.TrackProfessionButton:SetPoint("TOPRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "TOPRIGHT", -9, -10)
 		app.TrackProfessionButton:SetScript("OnClick", function()
-			local craftSim = false
-
-			-- If CraftSim is active (thanks Blaez)
-			if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
-				craftSim = true
-				
-				-- Grab the reagents it provides
-				local craftSimSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
-				craftSimRequiredReagents = craftSimSimulationMode.recipeData.reagentData.requiredReagents
-
-				if craftSimRequiredReagents then
-					local reagents = {}
-					for k, v in pairs(craftSimRequiredReagents) do
-						-- For reagents without quality
-						if not v.hasQuality then
-							reagents[v.items[1].item.itemID] = v.requiredQuantity
-						-- For reagents with quality
-						else
-							for k2, v2 in pairs(v.items) do
-								if v2.quantity > 0 then
-									reagents[v2.item.itemID] = v2.quantity
-								end
-							end
-						end
-					end
-
-					-- Save the reagents into a fake recipe
-					ProfessionShoppingList_Cache.CraftSimRecipes[app.SelectedRecipe.Profession.recipeID] = reagents
-				else
-					app.Print(L.ERROR_CRAFTSIM)
-				end
-			else
-				craftSim = false
-			end
-
-			app.TrackRecipe(app.SelectedRecipe.Profession.recipeID, 1, app.SelectedRecipe.Profession.recraft, nil, craftSim)
+			app.TrackRecipe(app.SelectedRecipe.Profession.recipeID, 1, app.SelectedRecipe.Profession.recraft)
 		end)
 	end
 	
 	-- Create the profession UI quantity editbox
 	local function ebRecipeQuantityUpdate(self, newValue)
-		local craftSim = false
-
-		-- If CraftSim is active (thanks Blaez)
-		if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
-			craftSim = true
-		end
-
 		-- Get the entered number cleanly
 		newValue = math.floor(self:GetNumber())
 		-- If the value is positive, change the number of recipes tracked
 		if newValue >= 0 then
 			app.UntrackRecipe(app.SelectedRecipe.Profession.recipeID, 0)
 			if newValue > 0 then
-				app.TrackRecipe(app.SelectedRecipe.Profession.recipeID, newValue, app.SelectedRecipe.Profession.recraft, nil, craftSim)
+				app.TrackRecipe(app.SelectedRecipe.Profession.recipeID, newValue, app.SelectedRecipe.Profession.recraft)
 			end
 		end
 	end
@@ -2256,41 +2228,7 @@ function app.CreateTradeskillAssets()
 		app.TrackMakeOrderButton:SetPoint("TOPRIGHT", ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "TOPRIGHT", -9, -10)
 		app.TrackMakeOrderButton:SetScript("OnClick", function()
 			local key = "order:" .. app.SelectedRecipe.MakeOrder.orderID .. ":" .. app.SelectedRecipe.MakeOrder.spellID
-			local craftSim = false
 			
-			-- If CraftSim is active (thanks Blaez)
-			if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
-				craftSim = true
-				
-				-- Grab the reagents it provides
-				local craftSimSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
-				craftSimRequiredReagents = craftSimSimulationMode.recipeData.reagentData.requiredReagents
-
-				if craftSimRequiredReagents then
-					local reagents = {}
-					for k, v in pairs(craftSimRequiredReagents) do
-						-- For reagents without quality
-						if not v.hasQuality then
-							reagents[v.items[1].item.itemID] = v.requiredQuantity
-						-- For reagents with quality
-						else
-							for k2, v2 in pairs(v.items) do
-								if v2.quantity > 0 then
-									reagents[v2.item.itemID] = v2.quantity
-								end
-							end
-						end
-					end
-
-					-- Save the reagents into a fake recipe
-					ProfessionShoppingList_Cache.CraftSimRecipes[key] = reagents
-				else
-					app.Print(L.ERROR_CRAFTSIM)
-				end
-			else
-				craftSim = false
-			end
-
 			if ProfessionShoppingList_Data.Recipes[key] then
 				-- Untrack the recipe
 				app.UntrackRecipe(key, 1)
@@ -2300,7 +2238,7 @@ function app.CreateTradeskillAssets()
 				app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
 			else
 				-- Track the recipe
-				app.TrackRecipe(app.SelectedRecipe.MakeOrder.spellID, 1, app.SelectedRecipe.MakeOrder.isRecraft, app.SelectedRecipe.MakeOrder.orderID, craftSim)
+				app.TrackRecipe(app.SelectedRecipe.MakeOrder.spellID, 1, app.SelectedRecipe.MakeOrder.isRecraft, app.SelectedRecipe.MakeOrder.orderID)
 
 				-- Change button text
 				app.TrackMakeOrderButton:SetText(L.UNTRACK)
@@ -2718,10 +2656,6 @@ end
 
 -- Get reagents for recipe
 function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qualityTier)
-	if not recraft then
-		recraft = false
-	end
-
 	-- Grab all the reagent info from the API
 	local reagentsTable
 
@@ -2737,7 +2671,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 	if app.slLegendaryRecipeIDs[recipeID] then
 		reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, false, app.slLegendaryRecipeIDs[recipeID].rank).reagentSlotSchematics
 	else
-		reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, recraft).reagentSlotSchematics
+		reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, recraft or false).reagentSlotSchematics
 	end
 
 	-- Check which quality to use
@@ -2765,8 +2699,8 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 			end
 
 			-- Adjust the numbers for crafting orders
-			if craftingOrder and not ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim then
-				for k, v in pairs (ProfessionShoppingList_Cache.FakeRecipes[craftingRecipeID].reagents) do
+			if craftingOrder and not ProfessionShoppingList_Data.Recipes[craftingRecipeID].simRecipe then
+				for k, v in pairs(ProfessionShoppingList_Cache.FakeRecipes[craftingRecipeID].reagents) do
 					if v.reagent.itemID == reagentID1 or v.reagent.itemID == reagentID2 or v.reagent.itemID == reagentID3 then
 						reagentAmount = reagentAmount - v.reagent.quantity
 					end
@@ -2797,7 +2731,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 			end
 
 			-- Add the info to the specified variable, if it's not 0 and not a CraftSim recipe
-			if (ProfessionShoppingList_Data.Recipes[craftingRecipeID] and not ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim and reagentAmount > 0) or not ProfessionShoppingList_Data.Recipes[craftingRecipeID] then
+			if (ProfessionShoppingList_Data.Recipes[craftingRecipeID] and not ProfessionShoppingList_Data.Recipes[craftingRecipeID].simRecipe and reagentAmount > 0) or not ProfessionShoppingList_Data.Recipes[craftingRecipeID] then
 				if reagentVariable[reagentID] == nil then reagentVariable[reagentID] = 0 end
 				reagentVariable[reagentID] = reagentVariable[reagentID] + ( reagentAmount * recipeQuantity )
 			end
@@ -2805,8 +2739,8 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 	end
 
 	-- Manually insert the reagents if it's a CraftSim recipe
-	if ProfessionShoppingList_Data.Recipes[craftingRecipeID] and ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim then
-		for k, v in pairs(ProfessionShoppingList_Cache.CraftSimRecipes[craftingRecipeID]) do
+	if ProfessionShoppingList_Data.Recipes[craftingRecipeID] and ProfessionShoppingList_Data.Recipes[craftingRecipeID].simRecipe then
+		for k, v in pairs(ProfessionShoppingList_Cache.SimulatedRecipes[craftingRecipeID]) do
 			-- Check if the reagent isn't provided if it's a crafting order
 			local providedReagents = {}
 			if ProfessionShoppingList_Cache.FakeRecipes[craftingRecipeID] then
@@ -2835,7 +2769,7 @@ function app.GetReagentCount(reagentID)
 
 	-- Index CraftSim reagents, whose quality is not subject to our quality setting
 	local craftSimReagents = {}
-	for k, v in pairs(ProfessionShoppingList_Cache.CraftSimRecipes) do
+	for k, v in pairs(ProfessionShoppingList_Cache.SimulatedRecipes) do
 		for k2, v2 in pairs(v) do
 			craftSimReagents[k2] = v2
 		end
@@ -2958,7 +2892,7 @@ function app.TooltipInfo()
 
 			-- Check for crafting info
 			if ProfessionShoppingList_Settings["showCraftTooltip"] then
-				for k, v in pairs (ProfessionShoppingList_Library) do
+				for k, v in pairs(ProfessionShoppingList_Library) do
 					if type(v) ~= "number" and v.itemID == itemID then	-- No clue why these non-table values are here, tbh
 						if emptyLine == false then
 							tooltip:AddLine(" ")
@@ -2982,7 +2916,9 @@ end
 --------------------------------
 
 -- Track recipe
-function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID, craftSim)
+function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID)
+	local originalRecipeID = recipeID
+
 	-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
 	if C_TradeSkillUI.GetRecipeSchematic(recipeID,false).recipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(recipeID,false).reagentSlotSchematics[1] == nil then
 		do return end
@@ -3022,7 +2958,10 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID, craftSim)
 
 			-- Try again if error
 			if itemLink == nil then
-				RunNextFrame(function() app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID, craftSim) end)
+				RunNextFrame(function()
+					app.TrackRecipe(recipeID, recipeQuantity, recraft or false, orderID)
+					app.Debug("TrackRecipe()")
+				end)
 				do return end
 			end
 		-- Exception for stuff like Abominable Stitching
@@ -3050,13 +2989,13 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID, craftSim)
 	elseif recipeType == 3 then recipeLink = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
 	end
 
-	-- Track recipe
+	-- Order recipes
 	if orderID then
 		-- Process Patron Orders
 		local ordersTable = C_CraftingOrders.GetCrafterOrders()
 		local reagents = {}
 		local key
-
+		
 		for i, orderInfo in pairs(ordersTable) do
 			if orderID == orderInfo.orderID then
 				key = "order:" .. orderID .. ":" .. recipeID
@@ -3085,8 +3024,64 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID, craftSim)
 		end
 	end
 
+	-- List custom reagents for simulated recipes
+	local simRecipe = false
+	if app.SimCount() == 1 then
+		if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
+			simRecipe = true
+			
+			-- Grab the reagents it provides
+			local craftSimSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
+			craftSimRequiredReagents = craftSimSimulationMode.recipeData.reagentData.requiredReagents
+	
+			if craftSimRequiredReagents then
+				local reagents = {}
+				for k, v in pairs(craftSimRequiredReagents) do
+					-- For reagents without quality
+					if not v.hasQuality then
+						reagents[v.items[1].item.itemID] = v.requiredQuantity
+					-- For reagents with quality
+					else
+						for k2, v2 in pairs(v.items) do
+							if v2.quantity > 0 then
+								reagents[v2.item.itemID] = v2.quantity
+							end
+						end
+					end
+				end
+	
+				-- Save the reagents into a fake recipe
+				ProfessionShoppingList_Cache.SimulatedRecipes[recipeID] = reagents
+			else
+				app.Print(L.ERROR_CRAFTSIM)
+			end
+		elseif C_AddOns.IsAddOnLoaded("TestFlight") then
+			-- Let the game track the recipe temporarily, so we can grab TestFlight's info
+			app.Flag["trackingRecipes"] = true
+			C_TradeSkillUI.SetRecipeTracked(originalRecipeID, true, recraft or false)
+
+			-- Save the reagents into a fake recipe
+			simRecipe = true
+			ProfessionShoppingList_Cache.SimulatedRecipes[recipeID] = TestFlight.Reagents:GetTrackedBySource()
+
+			-- Untrack the recipe from the game
+			C_TradeSkillUI.SetRecipeTracked(originalRecipeID, false, recraft or false)
+			app.Flag["trackingRecipes"] = false
+		end
+	elseif app.SimCount() > 1 then
+		local addons = ""
+		for k, v in pairs(app.SimAddOns) do
+			if k > 1 then
+				addons = addons .. ", "
+			end
+			addons = addons .. v
+		end
+		app.Print(L.ERROR_MULTISIM, addons)
+	end
+
+	-- Track recipe
 	if not ProfessionShoppingList_Data.Recipes[recipeID] then
-		ProfessionShoppingList_Data.Recipes[recipeID] = { quantity = 0, recraft = recraft, link = recipeLink, craftSim = craftSim }
+		ProfessionShoppingList_Data.Recipes[recipeID] = { quantity = 0, recraft = recraft or false, link = recipeLink, simRecipe = simRecipe }
 	end
 	ProfessionShoppingList_Data.Recipes[recipeID].quantity = ProfessionShoppingList_Data.Recipes[recipeID].quantity + recipeQuantity
 
@@ -3106,7 +3101,7 @@ function app.UntrackRecipe(recipeID, recipeQuantity)
 		-- Set numbers to nil if it doesn't exist anymore
 		if ProfessionShoppingList_Data.Recipes[recipeID].quantity <= 0 then
 			ProfessionShoppingList_Data.Recipes[recipeID] = nil
-			ProfessionShoppingList_Cache.CraftSimRecipes[recipeID] = nil
+			ProfessionShoppingList_Cache.SimulatedRecipes[recipeID] = nil
 		end
 	end
 
@@ -3124,7 +3119,7 @@ function app.Clear()
 	ProfessionShoppingList_Cache.ReagentTiers = {}
 	ProfessionShoppingList_Cache.Reagents = {}
 	ProfessionShoppingList_Cache.FakeRecipes = {}
-	ProfessionShoppingList_Cache.CraftSimRecipes = {}
+	ProfessionShoppingList_Cache.SimulatedRecipes = {}
 	app.UpdateRecipes()
 	app.Window.ScrollFrame:SetVerticalScroll(0)
 
@@ -3145,7 +3140,7 @@ end
 
 -- Replace the in-game tracking of shift+clicking a recipe with PSL's
 app.Event:Register("TRACKED_RECIPE_UPDATE", function(recipeID, tracked)
-	if tracked then
+	if not app.Flag["trackingRecipes"] and tracked then
 		app.TrackRecipe(recipeID, 1)
 		C_TradeSkillUI.SetRecipeTracked(recipeID, false, false)
 		C_TradeSkillUI.SetRecipeTracked(recipeID, false, true)
@@ -3263,6 +3258,19 @@ app.Event:Register("UNIT_SPELLCAST_SUCCEEDED", function(unitTarget, castGUID, sp
 		end
 	end
 end)
+
+-- Count how many supported sim addons are enabled
+function app.SimCount()
+	local addonCount = 0
+
+	for k, v in pairs(app.SimAddOns) do
+		if C_AddOns.IsAddOnLoaded(v) then
+			addonCount = addonCount + 1
+		end
+	end
+
+	return addonCount
+end
 
 -----------------------
 -- COOLDOWN TRACKING --
