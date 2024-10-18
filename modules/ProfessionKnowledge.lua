@@ -52,28 +52,6 @@ function app.CreateProfessionKnowledgeAssets()
 		app.KnowledgePointTracker.Text:SetTextColor(1, 1, 1, 1)
 	end
 
-	-- Create Knowledge Point tracker tooltip
-	if not app.KnowledgePointTooltip then
-		app.KnowledgePointTooltip = CreateFrame("Frame", nil, app.KnowledgePointTracker, "BackdropTemplate")
-		app.KnowledgePointTooltip:SetPoint("CENTER")
-		app.KnowledgePointTooltip:SetPoint("TOP", app.KnowledgePointTracker, "BOTTOM", 0, 0)
-		app.KnowledgePointTooltip:SetFrameStrata("TOOLTIP")
-		app.KnowledgePointTooltip:SetBackdrop({
-			bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-			edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-			edgeSize = 16,
-			insets = { left = 4, right = 4, top = 4, bottom = 4 },
-		})
-		app.KnowledgePointTooltip:SetBackdropColor(0, 0, 0, 0.9)
-		app.KnowledgePointTooltip:EnableMouse(false)
-		app.KnowledgePointTooltip:SetMovable(false)
-		app.KnowledgePointTooltip:Hide()
-
-		app.KnowledgePointTooltip.Text = app.KnowledgePointTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-		app.KnowledgePointTooltip.Text:SetPoint("TOPLEFT", app.KnowledgePointTooltip, "TOPLEFT", 10, -10)
-		app.KnowledgePointTooltip.Text:SetJustifyH("LEFT")
-	end
-
 	app.Flag["knowledgeAssets"] = true
 end
 
@@ -167,7 +145,7 @@ function app.KnowledgeTracker()
 			local renownCount = 0
 			
 			-- Vendors
-			local text = "Vendors"
+			app.KnowledgePointTooltip = "Vendors"
 
 			for k, v in ipairs(app.ProfessionKnowledge[skillLineID]) do
 				-- Completion status
@@ -200,11 +178,11 @@ function app.KnowledgeTracker()
 
 					-- Add text
 					if v.renown then
-						text = text .. "\n" .. "|T"..icon..":0|t " .. itemLink .. "|cffffffff ("..factionName.." - "..status..RENOWN_LEVEL_LABEL..v.renown.."|r)|r"
+						app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. "|T"..icon..":0|t " .. itemLink .. "|cffffffff ("..factionName.." - "..status..RENOWN_LEVEL_LABEL..v.renown.."|r)|r"
 					elseif v.sourceType == "zone" then
-						text = text .. "\n" .. "|T"..icon..":0|t " .. itemLink .. "|cffffffff ("..zoneName..")|r"
+						app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. "|T"..icon..":0|t " .. itemLink .. "|cffffffff ("..zoneName..")|r"
 					elseif v.sourceType == "static" then
-						text = text .. "\n" .. "|T"..icon..":0|t " .. itemLink .. "|cffffffff ("..v.source..")|r"
+						app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. "|T"..icon..":0|t " .. itemLink .. "|cffffffff ("..v.source..")|r"
 					end
 				end
 
@@ -216,7 +194,7 @@ function app.KnowledgeTracker()
 
 			-- Renown
 			if renownCount > 0 then
-				text = text .. "\n\n" .. "Renown"
+				app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n\n" .. "Renown"
 
 				for k, v in ipairs(app.ProfessionKnowledge[skillLineID]) do
 					-- Completion status
@@ -242,13 +220,13 @@ function app.KnowledgeTracker()
 						end
 	
 						-- Add text
-						text = text .. "\n" .. "|T"..icon ..":0|t " .. "|cffffff00|Hquest:"..v.quest.."62|h["..questTitle.."]|h|r" .. "|cffffffff ("..factionTitle.." - "..status..RENOWN_LEVEL_LABEL..v.renown.."|r)|r"
+						app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. "|T"..icon ..":0|t " .. "|cffffff00|Hquest:"..v.quest.."62|h["..questTitle.."]|h|r" .. "|cffffffff ("..factionTitle.." - "..status..RENOWN_LEVEL_LABEL..v.renown.."|r)|r"
 					end
 				end
 			end
 
 			-- World
-			text = text .. "\n\n" .. "World"
+			app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n\n" .. "World"
 
 			for k, v in ipairs(app.ProfessionKnowledge[skillLineID]) do
 				-- Completion status
@@ -277,26 +255,25 @@ function app.KnowledgeTracker()
 					end
 
 					-- Add text
-					text = text .. "\n" .. "|T"..icon..":0|t |cffffffff" .. itemLink .. " ("..zone..")|r"
+					app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. "|T"..icon..":0|t |cffffffff" .. itemLink .. " ("..zone..")|r"
 				end
 			end
-
-			-- Set the tooltip text
-			app.KnowledgePointTooltip.Text:SetText(text)
-			-- Set the tooltip size to fit its contents
-			app.KnowledgePointTooltip:SetHeight(app.KnowledgePointTooltip.Text:GetStringHeight()+20)
-			app.KnowledgePointTooltip:SetWidth(app.KnowledgePointTooltip.Text:GetStringWidth()+20)
 		end
 	end
 
 	-- Refresh and show the tooltip on mouse-over
-	app.KnowledgePointTracker:SetScript("OnEnter", function()
+	app.KnowledgePointTracker:SetScript("OnEnter", function(self)
 		kpTooltip()
-		app.KnowledgePointTooltip:Show()
+		-- Add a slight delay, which is needed to compile the tooltip
+		C_Timer.After(0.2, function()
+			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+			GameTooltip:SetText(app.KnowledgePointTooltip)
+			GameTooltip:Show()
+		end)
 	end)
 	-- Hide the tooltip when not mouse-over
 	app.KnowledgePointTracker:SetScript("OnLeave", function()
-		app.KnowledgePointTooltip:Hide()
+		GameTooltip:Hide()
 	end)
 end
 

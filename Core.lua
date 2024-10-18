@@ -155,45 +155,25 @@ function app.Button(parent, text)
 	return frame
 end
 
--- Window tooltip body
-function app.Tooltip(parent, text)
-	-- Tooltip
-	local frame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-	frame:SetFrameStrata("TOOLTIP")
-	frame:SetBackdrop({
-		bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-		edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-		edgeSize = 16,
-		insets = { left = 4, right = 4, top = 4, bottom = 4 },
-	})
-	frame:SetBackdropColor(0, 0, 0, 0.9)
-	frame:EnableMouse(false)
-	frame:SetMovable(false)
-	frame:Hide()
-
-	local string = frame:CreateFontString("ARTWORK", nil, "GameFontNormal")
-	string:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -10)
-	string:SetJustifyH("LEFT")
-	string:SetText(text)
-
-	-- Set the tooltip size to fit its contents
-	frame:SetHeight(string:GetStringHeight()+20)
-	frame:SetWidth(string:GetStringWidth()+20)
-
-	return frame
-end
-
 -- Window tooltip show/hide
-function app.WindowTooltipShow(frame)
+function app.WindowTooltipShow(text, hyperlink)
 	-- Set the tooltip to either the left or right, depending on where the window is placed
+	GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
 	if GetScreenWidth()/2-ProfessionShoppingList_Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-		frame:ClearAllPoints()
-		frame:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
+		GameTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
 	else
-		frame:ClearAllPoints()
-		frame:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
+		GameTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
 	end
-	frame:Show()
+
+	-- Set the text
+	if hyperlink then
+		GameTooltip:SetHyperlink(hyperlink)
+	else
+		GameTooltip:SetText(text)
+	end
+
+	-- Show the tooltip
+	GameTooltip:Show()
 end
 
 ------------------
@@ -260,7 +240,6 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 	if addOnName == appName then
 		app.InitialiseCore()
 		app.CreateWindow()
-		app.CreateWindowAssets()
 		app.TooltipInfo()		
 		app.Settings()
 
@@ -459,10 +438,10 @@ function app.CreateWindow()
 		app.Window:Hide()
 	end)
 	close:SetScript("OnEnter", function()
-		app.WindowTooltipShow(app.CloseButtonTooltip)
+		app.WindowTooltipShow("Close the window")
 	end)
 	close:SetScript("OnLeave", function()
-		app.CloseButtonTooltip:Hide()
+		GameTooltip:Hide()
 	end)
 
 	-- Lock button
@@ -481,10 +460,10 @@ function app.CreateWindow()
 		app.UnlockButton:Show()
 	end)
 	app.LockButton:SetScript("OnEnter", function()
-		app.WindowTooltipShow(app.LockButtonTooltip)
+		app.WindowTooltipShow("Lock the window")
 	end)
 	app.LockButton:SetScript("OnLeave", function()
-		app.LockButtonTooltip:Hide()
+		GameTooltip:Hide()
 	end)
 
 	-- Unlock button
@@ -503,10 +482,10 @@ function app.CreateWindow()
 		app.UnlockButton:Hide()
 	end)
 	app.UnlockButton:SetScript("OnEnter", function()
-		app.WindowTooltipShow(app.UnlockButtonTooltip)
+		app.WindowTooltipShow("Unlock the window")
 	end)
 	app.UnlockButton:SetScript("OnLeave", function()
-		app.UnlockButtonTooltip:Hide()
+		GameTooltip:Hide()
 	end)
 
 	if ProfessionShoppingList_Settings["windowLocked"] then
@@ -532,10 +511,10 @@ function app.CreateWindow()
 		app.OpenSettings()
 	end)
 	app.SettingsButton:SetScript("OnEnter", function()
-		app.WindowTooltipShow(app.SettingsButtonTooltip)
+		app.WindowTooltipShow("Open the settings")
 	end)
 	app.SettingsButton:SetScript("OnLeave", function()
-		app.SettingsButtonTooltip:Hide()
+		GameTooltip:Hide()
 	end)
 
 	-- Clear button
@@ -563,10 +542,10 @@ function app.CreateWindow()
 		StaticPopup_Show("CLEAR_RECIPES")
 	end)
 	app.ClearButton:SetScript("OnEnter", function()
-		app.WindowTooltipShow(app.ClearButtonTooltip)
+		app.WindowTooltipShow("Clear all tracked recipes")
 	end)
 	app.ClearButton:SetScript("OnLeave", function()
-		app.ClearButtonTooltip:Hide()
+		GameTooltip:Hide()
 	end)
 
 	-- ScrollFrame inside the popup frame
@@ -603,37 +582,6 @@ function app.CreateWindow()
 		app.UpdateNumbers()
 	end)
 	checkBox:SetChecked(app.IncludeWarbank)
-end
-
--- Create window assets
-function app.CreateWindowAssets()
-	-- Create Recipes header tooltip
-	app.RecipesHeaderTooltip = app.Tooltip(app.Window, "Shift+LMB|cffFFFFFF: Link the recipe\n|RCtrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RAlt+LMB|cffFFFFFF: Attempt to craft this recipe (as many times as you have it tracked)\n|RRMB|cffFFFFFF: Untrack 1 of the selected recipe\n|RCtrl+RMB|cffFFFFFF: Untrack all of the selected recipe")
-
-	-- Create Reagents header tooltip
-	app.ReagentsHeaderTooltip = app.Tooltip(app.Window, "Shift+LMB|cffFFFFFF: Link the reagent\n|RCtrl+LMB|cffFFFFFF: Add recipe for the selected subreagent, if it exists\n(This only works for professions that have been opened with "..app.NameShort.." active)")
-
-	-- Create Cooldowns header tooltip
-	app.CooldownsHeaderTooltip = app.Tooltip(app.Window, "Ctrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RAlt+LMB|cffFFFFFF: Attempt to craft this recipe\n|RShift+RMB|cffFFFFFF: Remove this specific cooldown reminder")
-
-	-- Create Close button tooltip
-	app.CloseButtonTooltip = app.Tooltip(app.Window, "Close the window")
-
-	-- Create Lock/Unlock button tooltip
-	app.LockButtonTooltip = app.Tooltip(app.Window, "Lock the window")
-	app.UnlockButtonTooltip = app.Tooltip(app.Window, "Unlock the window")
-	
-	-- Create Settings button tooltip
-	app.SettingsButtonTooltip = app.Tooltip(app.Window, "Open the settings")
-
-	-- Create Clear button tooltip
-	app.ClearButtonTooltip = app.Tooltip(app.Window, "Clear all tracked recipes")
-
-	-- Create Auctionator button tooltip
-	app.AuctionatorButtonTooltip = app.Tooltip(app.Window, "Create an Auctionator shopping list\nAlso initiates a search if you have the Shopping tab open at the Auction House")
-
-	-- Create corner button tooltip
-	app.CornerButtonTooltip = app.Tooltip(app.Window, "Double-click|cffFFFFFF: Autosize to fit the window")
 end
 
 -- Move the main window
@@ -982,10 +930,10 @@ function app.UpdateRecipes()
 			app.Window.Recipes:SetScript("OnDragStart", function() app.MoveWindow()	end)
 			app.Window.Recipes:SetScript("OnDragStop", function() app.SaveWindow() end)
 			app.Window.Recipes:SetScript("OnEnter", function()
-				app.WindowTooltipShow(app.RecipesHeaderTooltip)
+				app.WindowTooltipShow("Shift+LMB|cffFFFFFF: Link the recipe\n|RCtrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RAlt+LMB|cffFFFFFF: Attempt to craft this recipe (as many times as you have it tracked)\n|RRMB|cffFFFFFF: Untrack 1 of the selected recipe\n|RCtrl+RMB|cffFFFFFF: Untrack all of the selected recipe")
 			end)
 			app.Window.Recipes:SetScript("OnLeave", function()
-				app.RecipesHeaderTooltip:Hide()
+			GameTooltip:Hide()
 			end)
 			
 			local recipes1 = app.Window.Recipes:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -1073,19 +1021,7 @@ function app.UpdateRecipes()
 			row:SetScript("OnDragStart", function() app.MoveWindow() end)
 			row:SetScript("OnDragStop", function() app.SaveWindow() end)
 			row:SetScript("OnEnter", function()
-				-- Show item tooltip if hovering over the actual row
-				GameTooltip:ClearLines()
-
-				-- Set the tooltip to either the left or right, depending on where the window is placed
-				if GetScreenWidth()/2-ProfessionShoppingList_Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-					GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
-					GameTooltip:SetPoint("LEFT", app.Window, "RIGHT")
-				else
-					GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
-					GameTooltip:SetPoint("RIGHT", app.Window, "LEFT")
-				end
-				GameTooltip:SetHyperlink(recipeInfo.link)
-				GameTooltip:Show()
+				app.WindowTooltipShow(recipeInfo.link)
 			end)
 			row:SetScript("OnLeave", function()
 				GameTooltip:ClearLines()
@@ -1169,10 +1105,10 @@ function app.UpdateRecipes()
 			app.Window.Reagents:SetScript("OnDragStart", function() app.MoveWindow() end)
 			app.Window.Reagents:SetScript("OnDragStop", function() app.SaveWindow() end)
 			app.Window.Reagents:SetScript("OnEnter", function()
-				app.WindowTooltipShow(app.ReagentsHeaderTooltip)
+				app.WindowTooltipShow("Shift+LMB|cffFFFFFF: Link the reagent\n|RCtrl+LMB|cffFFFFFF: Add recipe for the selected subreagent, if it exists\n(This only works for professions that have been opened with "..app.NameShort.." active)")
 			end)
 			app.Window.Reagents:SetScript("OnLeave", function()
-				app.ReagentsHeaderTooltip:Hide()
+				GameTooltip:Hide()
 			end)
 			
 			local reagents1 = app.Window.Reagents:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -1221,19 +1157,7 @@ function app.UpdateRecipes()
 			row:SetScript("OnDragStart", function() app.MoveWindow() end)
 			row:SetScript("OnDragStop", function() app.SaveWindow() end)
 			row:SetScript("OnEnter", function()
-				-- Show item tooltip if hovering over the actual row
-				GameTooltip:ClearLines()
-				
-				-- Set the tooltip to either the left or right, depending on where the window is placed
-				if GetScreenWidth()/2-ProfessionShoppingList_Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-					GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
-					GameTooltip:SetPoint("LEFT", app.Window, "RIGHT")
-				else
-					GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
-					GameTooltip:SetPoint("RIGHT", app.Window, "LEFT")
-				end
-				GameTooltip:SetHyperlink(reagentInfo.link)
-				GameTooltip:Show()
+				app.WindowTooltipShow(reagentInfo.link)
 			end)
 			row:SetScript("OnLeave", function()
 				GameTooltip:ClearLines()
@@ -1679,10 +1603,10 @@ function app.UpdateRecipes()
 			app.Window.Cooldowns:SetScript("OnDragStart", function() app.MoveWindow() end)
 			app.Window.Cooldowns:SetScript("OnDragStop", function() app.SaveWindow() end)
 			app.Window.Cooldowns:SetScript("OnEnter", function()
-				app.WindowTooltipShow(app.CooldownsHeaderTooltip)
+				app.WindowTooltipShow("Ctrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RAlt+LMB|cffFFFFFF: Attempt to craft this recipe\n|RShift+RMB|cffFFFFFF: Remove this specific cooldown reminder")
 			end)
 			app.Window.Cooldowns:SetScript("OnLeave", function()
-				app.CooldownsHeaderTooltip:Hide()
+				GameTooltip:Hide()
 			end)
 			
 			local cooldowns1 = app.Window.Cooldowns:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -1733,48 +1657,10 @@ function app.UpdateRecipes()
 			row:SetScript("OnDragStart", function() app.MoveWindow() end)
 			row:SetScript("OnDragStop", function() app.SaveWindow() end)
 			row:SetScript("OnEnter", function()
-				if not app.CooldownTooltip then
-					app.CooldownTooltip = CreateFrame("Frame", nil, app.Window, "BackdropTemplate")
-					app.CooldownTooltip:SetPoint("CENTER")
-					app.CooldownTooltip:SetFrameStrata("TOOLTIP")
-					app.CooldownTooltip:SetBackdrop({
-						bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-						edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-						edgeSize = 16,
-						insets = { left = 4, right = 4, top = 4, bottom = 4 },
-					})
-					app.CooldownTooltip:SetBackdropColor(0, 0, 0, 0.9)
-					app.CooldownTooltip:EnableMouse(false)
-					app.CooldownTooltip:SetMovable(false)
-					app.CooldownTooltip:Hide()
-
-					app.CooldownTooltip.Text = app.CooldownTooltip:CreateFontString("ARTWORK", nil, "GameFontNormal")
-					app.CooldownTooltip.Text:SetPoint("TOPLEFT", app.CooldownTooltip, "TOPLEFT", 10, -10)
-					app.CooldownTooltip.Text:SetJustifyH("LEFT")
-				end
-
-				-- Set the tooltip text
-				app.CooldownTooltip.Text:SetText("|cffFFFFFF"..cooldownInfo.user)
-
-				-- Set the tooltip size to fit its contents
-				app.CooldownTooltip:SetHeight(app.CooldownTooltip.Text:GetStringHeight()+20)
-				app.CooldownTooltip:SetWidth(app.CooldownTooltip.Text:GetStringWidth()+20)
-
-				-- Set the tooltip to either the left or right, depending on where the window is placed
-				if GetScreenWidth()/2-ProfessionShoppingList_Settings["windowPosition"].width/2-app.Window:GetLeft() >= 0 then
-					app.CooldownTooltip:ClearAllPoints()
-					app.CooldownTooltip:SetPoint("LEFT", app.Window, "RIGHT", 0, 0)
-				else
-					app.CooldownTooltip:ClearAllPoints()
-					app.CooldownTooltip:SetPoint("RIGHT", app.Window, "LEFT", 0, 0)
-				end	
-
-				-- Show item tooltip if hovering over the actual row
-				app.CooldownTooltip:Show()
+				app.WindowTooltipShow("|cffFFFFFF"..cooldownInfo.user)
 			end)
 			row:SetScript("OnLeave", function()
-				app.CooldownTooltip:ClearAllPoints()
-				app.CooldownTooltip:Hide()
+				GameTooltip:Hide()
 			end)
 			row:SetScript("OnClick", function(self, button)
 				if button == "RightButton" and IsShiftKeyDown() then
@@ -1881,10 +1767,10 @@ function app.UpdateRecipes()
 			app.SaveWindow()
 		end)
 		app.Window.Corner:SetScript("OnEnter", function()
-			app.WindowTooltipShow(app.CornerButtonTooltip)
+			app.WindowTooltipShow("Double-click|cffFFFFFF: Autosize to fit the window")
 		end)
 		app.Window.Corner:SetScript("OnLeave", function()
-			app.CornerButtonTooltip:Hide()
+			GameTooltip:Hide()
 		end)
 
 		-- Update numbers tracked and assets like buttons
@@ -2123,14 +2009,13 @@ function app.CreateTradeskillAssets()
 			}
 			StaticPopup_Show("TRACK_NEW_MOGS")
 		end)
-
-		local tooltip = app.Tooltip(app.TrackUnlearnedMogsButton, "Current setting: "..modeText)
-		tooltip:SetPoint("TOP", app.TrackUnlearnedMogsButton, "BOTTOM")
-		app.TrackUnlearnedMogsButton:SetScript("OnEnter", function()
-			tooltip:Show()
+		app.TrackUnlearnedMogsButton:SetScript("OnEnter", function(self)
+			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+			GameTooltip:SetText("Current setting: "..modeText)
+			GameTooltip:Show()
 		end)
 		app.TrackUnlearnedMogsButton:SetScript("OnLeave", function()
-			tooltip:Hide()
+			GameTooltip:Hide()
 		end)
 
 		-- Move the button if CraftScan or TestFlight is enabled, because we're nice
