@@ -164,7 +164,7 @@ function app.WindowTooltipShow(text, hyperlink)
 
 	-- Set the text
 	if hyperlink then
-		GameTooltip:SetHyperlink(hyperlink)
+		GameTooltip:SetHyperlink(text)
 	else
 		GameTooltip:SetText(text)
 	end
@@ -1019,7 +1019,7 @@ function app.UpdateRecipes()
 			row:SetScript("OnDragStart", function() app.MoveWindow() end)
 			row:SetScript("OnDragStop", function() app.SaveWindow() end)
 			row:SetScript("OnEnter", function()
-				app.WindowTooltipShow(recipeInfo.link)
+				app.WindowTooltipShow(recipeInfo.link, true)
 			end)
 			row:SetScript("OnLeave", function()
 				GameTooltip:ClearLines()
@@ -1155,7 +1155,7 @@ function app.UpdateRecipes()
 			row:SetScript("OnDragStart", function() app.MoveWindow() end)
 			row:SetScript("OnDragStop", function() app.SaveWindow() end)
 			row:SetScript("OnEnter", function()
-				app.WindowTooltipShow(reagentInfo.link)
+				app.WindowTooltipShow(reagentInfo.link, true)
 			end)
 			row:SetScript("OnLeave", function()
 				GameTooltip:ClearLines()
