@@ -4,7 +4,8 @@
 -- Profession Knowledge module
 
 -- Initialisation
-local appName, app = ...	-- Returns the AddOn name and a unique table
+local appName, app =  ...	-- Returns the AddOn name and a unique table
+local L = app.locales
 
 ------------------
 -- INITIAL LOAD --
@@ -111,10 +112,10 @@ function app.KnowledgeTracker()
 		end
 
 		-- Set text, background, and progress, then show bar
-		app.KnowledgePointTracker.Text:SetText(perksEarned.."/"..perkCount.." perks unlocked ("..knowledgeSpent.."/"..knowledgeMax.." knowledge)")
+		app.KnowledgePointTracker.Text:SetText(perksEarned .. "/" .. perkCount .. " " .. L.PERKS_UNLOCKED .. " (" .. knowledgeSpent .. "/" .. knowledgeMax .. " " .. L.PROFESSION_KNOWLEDGE .. ")")
 		app.KnowledgePointTracker.Bar:SetMinMaxSmoothedValue(0, knowledgeMax)
 		app.KnowledgePointTracker.Bar:SetSmoothedValue(knowledgeSpent)
-		app.KnowledgePointTracker.Bar:SetStatusBarTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\profbars\\"..professionID..".blp")
+		app.KnowledgePointTracker.Bar:SetStatusBarTexture("Interface\\AddOns\\ProfessionShoppingList\\assets\\profbars\\" .. professionID .. ".blp")
 		app.KnowledgePointTracker:Show()
 	end
 
@@ -145,13 +146,13 @@ function app.KnowledgeTracker()
 			local renownCount = 0
 			
 			-- Vendors
-			app.KnowledgePointTooltip = "Vendors"
+			app.KnowledgePointTooltip = L.VENDORS
 
 			for k, v in ipairs(app.ProfessionKnowledge[skillLineID]) do
 				-- Completion status
-				local icon = app.iconNotReady
+				local icon = app.IconNotReady
 				if C_QuestLog.IsQuestFlaggedCompleted(v.quest) then
-					icon = app.iconReady
+					icon = app.IconReady
 				end
 
 				if v.type == "vendor" then
@@ -178,11 +179,11 @@ function app.KnowledgeTracker()
 
 					-- Add text
 					if v.renown then
-						app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. "|T"..icon..":0|t " .. itemLink .. "|cffffffff ("..factionName.." - "..status..RENOWN_LEVEL_LABEL..v.renown.."|r)|r"
+						app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. icon .. itemLink .. "|cffffffff (" .. factionName .. " - " .. status .. L.RENOWN .. v.renown .. "|r)|r"
 					elseif v.sourceType == "zone" then
-						app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. "|T"..icon..":0|t " .. itemLink .. "|cffffffff ("..zoneName..")|r"
+						app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. icon .. itemLink .. "|cffffffff (" .. zoneName .. ")|r"
 					elseif v.sourceType == "static" then
-						app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. "|T"..icon..":0|t " .. itemLink .. "|cffffffff ("..v.source..")|r"
+						app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. icon .. itemLink .. "|cffffffff (" .. v.source .. ")|r"
 					end
 				end
 
@@ -194,13 +195,13 @@ function app.KnowledgeTracker()
 
 			-- Renown
 			if renownCount > 0 then
-				app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n\n" .. "Renown"
+				app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n\n" .. L.RENOWN
 
 				for k, v in ipairs(app.ProfessionKnowledge[skillLineID]) do
 					-- Completion status
-					local icon = app.iconNotReady
+					local icon = app.IconNotReady
 					if C_QuestLog.IsQuestFlaggedCompleted(v.quest) then
-						icon = app.iconReady
+						icon = app.IconReady
 					end
 	
 					if v.type == "renown" then
@@ -220,19 +221,19 @@ function app.KnowledgeTracker()
 						end
 	
 						-- Add text
-						app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. "|T"..icon ..":0|t " .. "|cffffff00|Hquest:"..v.quest.."62|h["..questTitle.."]|h|r" .. "|cffffffff ("..factionTitle.." - "..status..RENOWN_LEVEL_LABEL..v.renown.."|r)|r"
+						app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. icon .. " " .. "|cffffff00|Hquest:" .. v.quest .. "62|h[" .. questTitle .. "]|h|r" .. "|cffffffff (" .. factionTitle .. " - " .. status .. L.RENOWN .. v.renown .. "|r)|r"
 					end
 				end
 			end
 
 			-- World
-			app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n\n" .. "World"
+			app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n\n" .. L.WORLD
 
 			for k, v in ipairs(app.ProfessionKnowledge[skillLineID]) do
 				-- Completion status
-				local icon = app.iconNotReady
+				local icon = app.IconNotReady
 				if C_QuestLog.IsQuestFlaggedCompleted(v.quest) then
-					icon = app.iconReady
+					icon = app.IconReady
 				end
 
 				if v.type == "world" then
@@ -251,11 +252,11 @@ function app.KnowledgeTracker()
 							do return end
 						end
 					else
-						itemLink = "Hidden Profession Master"
+						itemLink = L.HIDDEN_PROFESSION_MASTER
 					end
 
 					-- Add text
-					app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. "|T"..icon..":0|t |cffffffff" .. itemLink .. " ("..zone..")|r"
+					app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. icon .. " |cffffffff" .. itemLink .. " (" .. zone .. ")|r"
 				end
 			end
 		end

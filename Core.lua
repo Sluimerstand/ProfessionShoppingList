@@ -4,15 +4,12 @@
 -- Main AddOn code
 
 -- Initialisation
-local appName, app = ...	-- Returns the AddOn name and a unique table
-
--------------
--- OUR API -- 
--------------
-
+local appName, app =  ...	-- Returns the AddOn name and a unique table
 app.api = {}	-- Create a table to use for our API
 ProfessionShoppingList = app.api	-- Create a namespace for our API
 local api = app.api	-- Our API prefix
+app.locales = {}	-- Localisation table
+local L = app.locales
 
 ---------------------------
 -- WOW API EVENT HANDLER --
@@ -49,8 +46,8 @@ function app.Dump(table)
 		if type(o) == 'table' then
 			local s = '{ '
 			for k,v in pairs(o) do
-				if type(k) ~= 'number' then k = '"'..k..'"' end
-				s = s .. '['..k..'] = ' .. dumpTable(v) .. ','
+				if type(k) ~= 'number' then k = '"' .. k .. '"' end
+				s = s .. '[' .. k .. '] = ' .. dumpTable(v) .. ','
 			end
 		return s .. '} '
 		else
@@ -77,18 +74,18 @@ end
 
 -- App colour
 function app.Colour(string)
-	return "|cffC69B6D"..string.."|r"
+	return "|cffC69B6D" .. string .. "|r"
 end
 
 -- Print with AddOn prefix
 function app.Print(...)
-	print(app.NameShort..":", ...)
+	print(app.NameShort .. ":", ...)
 end
 
 -- Debug print with AddOn prefix
 function app.Debug(...)
 	if ProfessionShoppingList_Settings["debug"] then
-		print(app.NameShort..app.Colour(" Debug")..":", ...)
+		print(app.NameShort .. app.Colour(" Debug") .. ":", ...)
 	end
 end
 
@@ -155,7 +152,7 @@ function app.Button(parent, text)
 	return frame
 end
 
--- Window tooltip show/hide
+-- Window tooltip show
 function app.WindowTooltipShow(text, hyperlink)
 	-- Set the tooltip to either the left or right, depending on where the window is placed
 	GameTooltip:SetOwner(app.Window, "ANCHOR_NONE")
@@ -281,10 +278,10 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 					if type(recipeQuantity) == "number" and recipeQuantity ~= 0 then
 						app.TrackRecipe(recipeID, recipeQuantity)
 					else
-						app.Print("Invalid parameters. Please enter a valid recipe quantity.")
+						app.Print(L.INVALID_RECIPEQUANTITY)
 					end
 				else
-					app.Print("Invalid parameters. Please enter a cached recipe ID.")
+					app.Print(L.INVALID_RECIPEID)
 				end
 			elseif command == 'untrack' then
 				-- Split entered recipeID and recipeQuantity and turn them into real numbers
@@ -305,19 +302,19 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 						-- Show window
 						app.Show()
 					else
-						app.Print("Invalid parameters. Please enter a valid recipe quantity.")
+						app.Print(L.INVALID_RECIPEQUANTITY)
 					end
 				else
-					app.Print("Invalid parameters. Please enter a tracked recipe ID.")
+					app.Print(L.INVALID_RECIPE_TRACKED)
 				end
 			-- Toggle debug mode
 			elseif command == 'debug' then
 				if ProfessionShoppingList_Settings["debug"] then
 					ProfessionShoppingList_Settings["debug"] = false
-					app.Print("Debug mode disabled.")
+					app.Print(L.DEBUG_DISABLED)
 				else
 					ProfessionShoppingList_Settings["debug"] = true
-					app.Print("Debug mode enabled.")
+					app.Print(L.DEBUG_ENABLED)
 				end
 			-- No command
 			elseif command == "" then
@@ -347,11 +344,7 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 									numTrack = reqQuantity - quantity
 								end
 								-- Add the recipe
-								if ProfessionShoppingList_Library[assetID] then
-									app.TrackRecipe(assetID, numTrack)
-								else
-									app.Print("Recipe does not exist, or is not cached. No recipes were added.")
-								end
+								app.TrackRecipe(assetID, numTrack)
 							end
 						end
 					-- Chromatic Calibration: Cranial Cannons
@@ -378,10 +371,10 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 							if completed == false then app.TrackRecipe(assetID, 1) end
 						end
 					else
-						app.Print("This is not a crafting achievement. No recipes were added.")
+						app.Print(L.INVALID_ACHIEVEMENT)
 					end
 				else
-					app.Print("Invalid command. See /psl settings for more info.")
+					app.Print(L.INVALID_COMMAND)
 				end
 			end
 		end
@@ -411,25 +404,30 @@ function app.CreateWindow()
 	app.Window:SetResizable(true)
 	app.Window:SetResizeBounds(140, 140)
 	app.Window:RegisterForDrag("LeftButton")
-	app.Window:SetScript("OnDragStart", function() app.MoveWindow() end)
-	app.Window:SetScript("OnDragStop", function() app.SaveWindow() end)
+	app.Window:SetScript("OnDragStart", function()
+		app.MoveWindow()
+	end)
+	app.Window:SetScript("OnDragStop", function()
+		app.SaveWindow()
+	end)
 	app.Window:Hide()
 
 	-- Resize corner
-	local corner = CreateFrame("Button", nil, app.Window)
-	corner:EnableMouse("true")
-	corner:SetPoint("BOTTOMRIGHT")
-	corner:SetSize(16,16)
-	corner:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-	corner:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
-	corner:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-	corner:SetScript("OnMouseDown", function()
+	app.Window.Corner = CreateFrame("Button", nil, app.Window)
+	app.Window.Corner:EnableMouse("true")
+	app.Window.Corner:SetPoint("BOTTOMRIGHT")
+	app.Window.Corner:SetSize(16,16)
+	app.Window.Corner:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+	app.Window.Corner:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+	app.Window.Corner:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+	app.Window.Corner:SetScript("OnMouseDown", function()
 		app.Window:StartSizing("BOTTOMRIGHT")
 		GameTooltip:ClearLines()
 		GameTooltip:Hide()
 	end)
-	corner:SetScript("OnMouseUp", function() app.SaveWindow() end)
-	app.Window.Corner = corner
+	app.Window.Corner:SetScript("OnMouseUp", function()
+		app.SaveWindow()
+	end)
 
 	-- Close button
 	local close = CreateFrame("Button", "", app.Window, "UIPanelCloseButton")
@@ -438,7 +436,7 @@ function app.CreateWindow()
 		app.Window:Hide()
 	end)
 	close:SetScript("OnEnter", function()
-		app.WindowTooltipShow("Close the window")
+		app.WindowTooltipShow(L.WINDOW_BUTTON_CLOSE)
 	end)
 	close:SetScript("OnLeave", function()
 		GameTooltip:Hide()
@@ -460,7 +458,7 @@ function app.CreateWindow()
 		app.UnlockButton:Show()
 	end)
 	app.LockButton:SetScript("OnEnter", function()
-		app.WindowTooltipShow("Lock the window")
+		app.WindowTooltipShow(L.WINDOW_BUTTON_LOCK)
 	end)
 	app.LockButton:SetScript("OnLeave", function()
 		GameTooltip:Hide()
@@ -482,7 +480,7 @@ function app.CreateWindow()
 		app.UnlockButton:Hide()
 	end)
 	app.UnlockButton:SetScript("OnEnter", function()
-		app.WindowTooltipShow("Unlock the window")
+		app.WindowTooltipShow(L.WINDOW_BUTTON_UNLOCK)
 	end)
 	app.UnlockButton:SetScript("OnLeave", function()
 		GameTooltip:Hide()
@@ -511,7 +509,7 @@ function app.CreateWindow()
 		app.OpenSettings()
 	end)
 	app.SettingsButton:SetScript("OnEnter", function()
-		app.WindowTooltipShow("Open the settings")
+		app.WindowTooltipShow(L.WINDOW_BUTTON_SETTINGS)
 	end)
 	app.SettingsButton:SetScript("OnLeave", function()
 		GameTooltip:Hide()
@@ -528,7 +526,7 @@ function app.CreateWindow()
 	app.ClearButton:GetPushedTexture():SetTexCoord(1/256, 37/256, 81/128, 119/128)
 	app.ClearButton:SetScript("OnClick", function()
 		StaticPopupDialogs["CLEAR_RECIPES"] = {
-			text = app.NameLong.."\n\nDo you want to clear all recipes?",
+			text = app.NameLong .. "\n\n" .. L.CLEAR_CONFIRMATION .. "\n" .. L.CONFIRMATION,
 			button1 = YES,
 			button2 = NO,
 			OnAccept = function()
@@ -542,7 +540,7 @@ function app.CreateWindow()
 		StaticPopup_Show("CLEAR_RECIPES")
 	end)
 	app.ClearButton:SetScript("OnEnter", function()
-		app.WindowTooltipShow("Clear all tracked recipes")
+		app.WindowTooltipShow(L.WINDOW_BUTTON_CLEAR)
 	end)
 	app.ClearButton:SetScript("OnLeave", function()
 		GameTooltip:Hide()
@@ -575,8 +573,8 @@ function app.CreateWindow()
 	-- Temporary checkbox until Blizz fixes their shit
 	local checkBox = CreateFrame("CheckButton", nil, app.Window, "ChatConfigCheckButtonTemplate")
 	checkBox:SetPoint("TOPLEFT", app.Window, "BOTTOMLEFT", 2, 0)
-	checkBox.Text:SetText("Include Warbank")
-	checkBox.tooltip = "Because crafting orders cannot use items stored in the Warbank currently, you can disable tracking them."
+	checkBox.Text:SetText(L.WARBANK_CHECKBOX)
+	checkBox.tooltip = L.WARBANK_TOOLTIP
 	checkBox:HookScript("OnClick", function()
 		app.IncludeWarbank = checkBox:GetChecked()
 		app.UpdateNumbers()
@@ -643,7 +641,7 @@ function app.UpdateNumbers()
 		end
 
 		local itemAmount = ""
-		local itemIcon = ProfessionShoppingList_Cache.Reagents[reagentID].icon
+		local itemIcon = "|T" .. ProfessionShoppingList_Cache.Reagents[reagentID].icon .. ":0|t"
 
 		if type(reagentID) == "number" then
 			-- Get needed/owned number of reagents
@@ -651,7 +649,7 @@ function app.UpdateNumbers()
 
 			-- Make stuff grey and add a checkmark if 0 are needed
 			if math.max(0,amount-reagentAmountHave) == 0 then
-				itemIcon = app.iconReady
+				itemIcon = app.IconReady
 				itemAmount = "|cff9d9d9d"
 				itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|cff9d9d9d|") -- Poor
 				itemLink = string.gsub(itemLink, "|cffffffff|", "|cff9d9d9d|") -- Common
@@ -664,9 +662,9 @@ function app.UpdateNumbers()
 			else
 				for k, v in pairs(ProfessionShoppingList_Data.Recipes) do
 					if ProfessionShoppingList_Library[k] and ProfessionShoppingList_Library[k].itemID == reagentID then
-						itemIcon = app.iconArrow
+						itemIcon = app.IconArrow
 						-- Set the itemlink to be Artifact colour and then its original colour, to force it being sorted at the top
-						itemLink = "|cff000000|r"..itemLink
+						itemLink = "|cff000000|r" .. itemLink
 						break
 					end
 				end
@@ -674,24 +672,24 @@ function app.UpdateNumbers()
 
 			-- Set the displayed amount based on settings
 			if ProfessionShoppingList_Settings["showRemaining"] == false then
-				itemAmount = itemAmount..reagentAmountHave.."/"..amount
+				itemAmount = itemAmount .. reagentAmountHave .. "/" .. amount
 			else
-				itemAmount = itemAmount..math.max(0,amount-reagentAmountHave)
+				itemAmount = itemAmount .. math.max(0,amount-reagentAmountHave)
 			end
 		elseif reagentID == "gold" then
 			-- Set the colour of both strings and the icon
 			local colour = ""
 			if math.max(0,amount-GetMoney()) == 0 then
-				itemIcon = app.iconReady
+				itemIcon = app.IconReady
 				colour = "|cff9d9d9d"
-				itemLink = colour..itemLink
+				itemLink = colour .. itemLink
 			end
 
 			-- Set the displayed amount based on settings
 			if ProfessionShoppingList_Settings["showRemaining"] == false then
-				itemAmount = colour..GetCoinTextureString(amount)
+				itemAmount = colour .. GetCoinTextureString(amount)
 			else
-				itemAmount = colour..GetCoinTextureString(math.max(0,amount-GetMoney()))
+				itemAmount = colour .. GetCoinTextureString(math.max(0,amount-GetMoney()))
 			end
 		elseif string.find(reagentID, "currency") then
 			local number = string.gsub(reagentID, "currency:", "")
@@ -700,7 +698,7 @@ function app.UpdateNumbers()
 			-- Set the colour of both strings and the icon
 			local colour = ""
 			if math.max(0,amount-quantity) == 0 then
-				itemIcon = app.iconReady
+				itemIcon = app.IconReady
 				colour = "|cff9d9d9d"
 				itemLink = string.gsub(itemLink, "|cff9d9d9d|", "|cff9d9d9d|") -- Poor
 				itemLink = string.gsub(itemLink, "|cffffffff|", "|cff9d9d9d|") -- Common
@@ -713,17 +711,17 @@ function app.UpdateNumbers()
 
 			-- Set the displayed amount based on settings
 			if ProfessionShoppingList_Settings["showRemaining"] == false then
-				itemAmount = colour..quantity.."/"..amount
+				itemAmount = colour .. quantity .. "/" .. amount
 			else
-				itemAmount = colour..math.max(0,amount-quantity)
+				itemAmount = colour .. math.max(0,amount-quantity)
 			end
 		end
 
 		-- Push the info to the window
 		if reagentRow then
 			for i, row in pairs(reagentRow) do
-				if row:GetID() == reagentID or (reagentID == "gold" and row.text1:GetText() == BONUS_ROLL_REWARD_MONEY) then
-					row.icon:SetText("|T"..itemIcon..":0|t")
+				if row:GetID() == reagentID or (reagentID == "gold" and row.text1:GetText() == L.GOLD) then
+					row.icon:SetText(itemIcon)
 					row.text1:SetText(itemLink)
 					row.text2:SetText(itemAmount)
 					app.UpdatedReagentWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.UpdatedReagentWidth)
@@ -731,7 +729,7 @@ function app.UpdateNumbers()
 					local number = string.gsub(reagentID, "currency:", "")
 					local name = C_CurrencyInfo.GetCurrencyLink(tonumber(number))
 					if name == row.text1:GetText() then
-						row.icon:SetText("|T"..itemIcon..":0|t")
+						row.icon:SetText(itemIcon)
 						row.text1:SetText(itemLink)
 						row.text2:SetText(itemAmount)
 						app.UpdatedReagentWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.UpdatedReagentWidth)
@@ -836,13 +834,13 @@ function app.UpdateCooldowns()
 				minutes = math.floor((cooldownRemaining - ((days*60*60*24) + (hours*60*60)))/60)
 
 				if cooldownRemaining <= 0 then
-					row.text2:SetText("Ready")
+					row.text2:SetText(L.READY)
 				elseif cooldownRemaining < 60*60 then
-					row.text2:SetText(minutes.."m")
+					row.text2:SetText(minutes .. L.MINUTES)
 				elseif cooldownRemaining < 60*60*24 then
-					row.text2:SetText(hours.."h "..minutes.."m")
+					row.text2:SetText(hours .. L.HOURS .. " " .. minutes .. L.MINUTES)
 				else
-					row.text2:SetText(days.."d "..hours.."h "..minutes.."m")
+					row.text2:SetText(days .. L.DAYS .. " " .. hours .. L.HOURS .. " " .. minutes .. L.MINUTES)
 				end
 
 				app.UpdatedCooldownWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.UpdatedCooldownWidth)
@@ -884,7 +882,7 @@ function app.UpdateRecipes()
 				end
 				-- Add currency costs
 				for currencyID, currencyAmount in pairs(ProfessionShoppingList_Cache.FakeRecipes[recipeID].costCurrency) do
-					local key = "currency:"..currencyID
+					local key = "currency:" .. currencyID
 					if app.ReagentQuantities[key] == nil then app.ReagentQuantities[key] = 0 end
 					app.ReagentQuantities[key] = app.ReagentQuantities[key] + ( currencyAmount * ProfessionShoppingList_Data.Recipes[recipeID].quantity )
 				end
@@ -930,7 +928,7 @@ function app.UpdateRecipes()
 			app.Window.Recipes:SetScript("OnDragStart", function() app.MoveWindow()	end)
 			app.Window.Recipes:SetScript("OnDragStop", function() app.SaveWindow() end)
 			app.Window.Recipes:SetScript("OnEnter", function()
-				app.WindowTooltipShow("Shift+LMB|cffFFFFFF: Link the recipe\n|RCtrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RAlt+LMB|cffFFFFFF: Attempt to craft this recipe (as many times as you have it tracked)\n|RRMB|cffFFFFFF: Untrack 1 of the selected recipe\n|RCtrl+RMB|cffFFFFFF: Untrack all of the selected recipe")
+				app.WindowTooltipShow(L.WINDOW_TOOLTIP_RECIPES)
 			end)
 			app.Window.Recipes:SetScript("OnLeave", function()
 			GameTooltip:Hide()
@@ -1073,7 +1071,7 @@ function app.UpdateRecipes()
 			local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 			icon1:SetPoint("LEFT", row)
 			icon1:SetScale(1.2)
-			icon1:SetText("|T"..app.iconProfession[tradeskill]..":0|t")
+			icon1:SetText(app.IconProfession[tradeskill])
 
 			local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 			text2:SetPoint("CENTER", icon1)
@@ -1105,7 +1103,7 @@ function app.UpdateRecipes()
 			app.Window.Reagents:SetScript("OnDragStart", function() app.MoveWindow() end)
 			app.Window.Reagents:SetScript("OnDragStop", function() app.SaveWindow() end)
 			app.Window.Reagents:SetScript("OnEnter", function()
-				app.WindowTooltipShow("Shift+LMB|cffFFFFFF: Link the reagent\n|RCtrl+LMB|cffFFFFFF: Add recipe for the selected subreagent, if it exists\n(This only works for professions that have been opened with "..app.NameShort.." active)")
+				app.WindowTooltipShow(L.WINDOW_TOOLTIP_REAGENTS)
 			end)
 			app.Window.Reagents:SetScript("OnLeave", function()
 				GameTooltip:Hide()
@@ -1113,7 +1111,7 @@ function app.UpdateRecipes()
 			
 			local reagents1 = app.Window.Reagents:CreateFontString("ARTWORK", nil, "GameFontNormal")
 			reagents1:SetPoint("LEFT", app.Window.Reagents)
-			reagents1:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS)
+			reagents1:SetText(L.WINDOW_HEADER_REAGENTS)
 			reagents1:SetScale(1.1)
 			app.ReagentHeader = reagents1
 		end
@@ -1227,7 +1225,7 @@ function app.UpdateRecipes()
 						pslOptionText:SetPoint("CENTER", f, "CENTER", 0, 0)
 						pslOptionText:SetPoint("TOP", f, "TOP", 0, -10)
 						pslOptionText:SetJustifyH("CENTER")
-						pslOptionText:SetText("|cffFFFFFFThere are multiple recipes which can create\n"..reagentInfo.link..".\n\nPlease select one of the following:")
+						pslOptionText:SetText("|cffFFFFFF" .. L.SUBREAGENTS1 .. ":\n" .. reagentInfo.link .. "\n\n" .. L.SUBREAGENTS2 .. ":")
 
 						-- Text
 						local pslOption1 = f:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -1258,8 +1256,7 @@ function app.UpdateRecipes()
 								end
 
 								-- Add text
-								oldText = pslOption1:GetText()
-								pslOption1:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+								pslOption1:SetText(pslOption1:GetText() .. reagentAmount .. "× " .. itemLink .. "\n")
 							end
 							getInfo()
 						end
@@ -1309,8 +1306,7 @@ function app.UpdateRecipes()
 									end
 
 									-- Add text
-									oldText = pslOption2:GetText()
-									pslOption2:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+									pslOption2:SetText(pslOption2:GetText() .. reagentAmount .. "× " .. itemLink .. "\n")
 								end
 								getInfo()
 							end
@@ -1361,8 +1357,7 @@ function app.UpdateRecipes()
 									end
 
 									-- Add text
-									oldText = pslOption3:GetText()
-									pslOption3:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+									pslOption3:SetText(pslOption3:GetText() .. reagentAmount .. "× " .. itemLink .. "\n")
 								end
 								getInfo()
 							end
@@ -1413,8 +1408,7 @@ function app.UpdateRecipes()
 									end
 
 									-- Add text
-									oldText = pslOption4:GetText()
-									pslOption4:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+									pslOption4:SetText(pslOption4:GetText() .. reagentAmount .. "× " .. itemLink .. "\n")
 								end
 								getInfo()
 							end
@@ -1462,8 +1456,7 @@ function app.UpdateRecipes()
 									end
 
 									-- Add text
-									oldText = pslOption5:GetText()
-									pslOption5:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+									pslOption5:SetText(pslOption5:GetText() .. reagentAmount .. "× " .. itemLink .. "\n")
 								end
 								getInfo()
 							end
@@ -1511,8 +1504,7 @@ function app.UpdateRecipes()
 									end
 
 									-- Add text
-									oldText = pslOption6:GetText()
-									pslOption6:SetText(oldText..reagentAmount.."x "..itemLink.."\n")
+									pslOption6:SetText(pslOption6:GetText() .. reagentAmount .. "× " .. itemLink .. "\n")
 								end
 								getInfo()
 							end
@@ -1540,7 +1532,7 @@ function app.UpdateRecipes()
 			local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 			icon1:SetPoint("LEFT", row)
 			icon1:SetScale(1.2)
-			icon1:SetText("|T"..reagentInfo.icon..":0|t")
+			icon1:SetText("|T" .. reagentInfo.icon .. ":0|t")
 			row.icon = icon1
 
 			local text2 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
@@ -1576,18 +1568,18 @@ function app.UpdateRecipes()
 
 		-- Set the header title accordingly
 		if trackRecipes == true and trackItems == true then
-			app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB.." & "..ITEMS.." ("..#recipeRow..")")
-			app.ReagentHeader:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS.." & Costs")
+			app.RecipeHeader:SetText(L.WINDOW_HEADER_RECIPES .. " & " .. L.WINDOW_HEADER_ITEMS .. " (" .. #recipeRow .. ")")
+			app.ReagentHeader:SetText(L.WINDOW_HEADER_REAGENTS .. "&" .. L.WINDOW_HEADER_COSTS)
 		elseif trackRecipes == false and trackItems == true then
-			app.RecipeHeader:SetText(ITEMS.." ("..#recipeRow..")")
-			app.ReagentHeader:SetText("Costs")
+			app.RecipeHeader:SetText(L.WINDOW_HEADER_ITEMS .. " (" .. #recipeRow .. ")")
+			app.ReagentHeader:SetText(L.WINDOW_HEADER_COSTS)
 		else
 			if #recipeRow == 0 then
-				app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB)
+				app.RecipeHeader:SetText(L.WINDOW_HEADER_RECIPES)
 			else
-				app.RecipeHeader:SetText(PROFESSIONS_RECIPES_TAB.." ("..#recipeRow..")")
+				app.RecipeHeader:SetText(L.WINDOW_HEADER_RECIPES .. " (" .. #recipeRow .. ")")
 			end
-			app.ReagentHeader:SetText(PROFESSIONS_COLUMN_HEADER_REAGENTS)
+			app.ReagentHeader:SetText(L.WINDOW_HEADER_REAGENTS)
 		end
 
 		local rowNo3 = 0
@@ -1603,7 +1595,7 @@ function app.UpdateRecipes()
 			app.Window.Cooldowns:SetScript("OnDragStart", function() app.MoveWindow() end)
 			app.Window.Cooldowns:SetScript("OnDragStop", function() app.SaveWindow() end)
 			app.Window.Cooldowns:SetScript("OnEnter", function()
-				app.WindowTooltipShow("Ctrl+LMB|cffFFFFFF: Open the recipe (if known on current character)\n|RAlt+LMB|cffFFFFFF: Attempt to craft this recipe\n|RShift+RMB|cffFFFFFF: Remove this specific cooldown reminder")
+				app.WindowTooltipShow(L.WINDOW_TOOLTIP_COOLDOWNS)
 			end)
 			app.Window.Cooldowns:SetScript("OnLeave", function()
 				GameTooltip:Hide()
@@ -1657,7 +1649,7 @@ function app.UpdateRecipes()
 			row:SetScript("OnDragStart", function() app.MoveWindow() end)
 			row:SetScript("OnDragStop", function() app.SaveWindow() end)
 			row:SetScript("OnEnter", function()
-				app.WindowTooltipShow("|cffFFFFFF"..cooldownInfo.user)
+				app.WindowTooltipShow("|cffFFFFFF" .. cooldownInfo.user)
 			end)
 			row:SetScript("OnLeave", function()
 				GameTooltip:Hide()
@@ -1697,7 +1689,7 @@ function app.UpdateRecipes()
 			local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 			icon1:SetPoint("LEFT", row)
 			icon1:SetScale(1.2)
-			icon1:SetText("|T"..app.iconProfession[tradeskill]..":0|t")
+			icon1:SetText(app.IconProfession[tradeskill])
 			row.icon = icon1
 
 			local cooldownRemaining = cooldownInfo.start + cooldownInfo.cooldown - GetServerTime()
@@ -1713,13 +1705,13 @@ function app.UpdateRecipes()
 			text2:SetJustifyH("RIGHT")
 			text2:SetTextColor(1, 1, 1)
 			if cooldownRemaining <= 0 then
-				text2:SetText("Ready")
+				text2:SetText(L.READY)
 			elseif cooldownRemaining < 60*60 then
-				text2:SetText(minutes.."m")
+				text2:SetText(minutes .. L.MINUTES)
 			elseif cooldownRemaining < 60*60*24 then
-				text2:SetText(hours.."h "..minutes.."m")
+				text2:SetText(hours .. L.HOURS .. " " .. minutes .. L.MINUTES)
 			else
-				text2:SetText(days.."d "..hours.."h "..minutes.."m")
+				text2:SetText(days .. L.DAYS .. " " .. hours .. L.HOURS .. " " .. minutes .. L.MINUTES)
 			end
 			row.text2 = text2
 
@@ -1767,7 +1759,7 @@ function app.UpdateRecipes()
 			app.SaveWindow()
 		end)
 		app.Window.Corner:SetScript("OnEnter", function()
-			app.WindowTooltipShow("Double-click|cffFFFFFF: Autosize to fit the window")
+			app.WindowTooltipShow(L.WINDOW_BUTTON_CORNER)
 		end)
 		app.Window.Corner:SetScript("OnLeave", function()
 			GameTooltip:Hide()
@@ -1857,7 +1849,7 @@ function app.CreateTradeskillAssets()
 
 	-- Create the profession UI track button
 	if not app.TrackProfessionButton then
-		app.TrackProfessionButton = app.Button(ProfessionsFrame.CraftingPage, "Track")
+		app.TrackProfessionButton = app.Button(ProfessionsFrame.CraftingPage, L.TRACK)
 		app.TrackProfessionButton:SetPoint("TOPRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "TOPRIGHT", -9, -10)
 		app.TrackProfessionButton:SetScript("OnClick", function()
 			local craftSim = false
@@ -1889,7 +1881,7 @@ function app.CreateTradeskillAssets()
 					-- Save the reagents into a fake recipe
 					ProfessionShoppingList_Cache.CraftSimRecipes[app.SelectedRecipe.Profession.recipeID] = reagents
 				else
-					app.Print("Could not read the information from CraftSim.")
+					app.Print(L.ERROR_CRAFTSIM)
 				end
 			else
 				craftSim = false
@@ -1949,7 +1941,7 @@ function app.CreateTradeskillAssets()
 
 	-- Create the profession UI untrack button
 	if not app.UntrackProfessionButton then
-		app.UntrackProfessionButton = app.Button(ProfessionsFrame.CraftingPage, "Untrack")
+		app.UntrackProfessionButton = app.Button(ProfessionsFrame.CraftingPage, L.UNTRACK)
 		app.UntrackProfessionButton:SetPoint("TOP", app.TrackProfessionButton, "TOP", 0, 0)
 		app.UntrackProfessionButton:SetPoint("RIGHT", app.RecipeQuantityBox, "LEFT", -8, 0)
 		app.UntrackProfessionButton:SetFrameStrata("HIGH")
@@ -1976,27 +1968,27 @@ function app.CreateTradeskillAssets()
 		app.ShadowlandsRankText = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		app.ShadowlandsRankText:SetPoint("RIGHT", app.ShadowlandsRankBox, "LEFT", -10, 0)
 		app.ShadowlandsRankText:SetJustifyH("LEFT")
-		app.ShadowlandsRankText:SetText("Rank:")
+		app.ShadowlandsRankText:SetText(L.RANK .. ":")
 		app.ShadowlandsRankText:Hide()
 	end
 
 	-- Create the Track Unlearned Mogs button
 	if not app.TrackUnlearnedMogsButton then
-		local modeText = "N/A"
+		local modeText = ""
 		if ProfessionShoppingList_Settings["collectMode"] == 1 then
-			modeText = "new appearances"
+			modeText = L.MODE_APPEARANCES
 		elseif ProfessionShoppingList_Settings["collectMode"] == 2 then
-			modeText = "new appearances and sources"
+			modeText = L.MODE_SOURCES
 		end
 
-		app.TrackUnlearnedMogsButton = app.Button(ProfessionsFrame.CraftingPage, "Track unlearned mogs")
+		app.TrackUnlearnedMogsButton = app.Button(ProfessionsFrame.CraftingPage, L.BUTTON_TRACKNEW)
 		app.TrackUnlearnedMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 0, -4)
 		app.TrackUnlearnedMogsButton:SetFrameStrata("HIGH")
 		app.TrackUnlearnedMogsButton:SetScript("OnClick", function()
 			local recipes = app.GetVisibleRecipes()
 
 			StaticPopupDialogs["TRACK_NEW_MOGS"] = {
-				text = app.NameLong.."\n\nThis will check the ".. #recipes .. " visible recipes for\n" .. modeText .. ".\n\nYour game may freeze for a few seconds.\nDo you wish to proceed?",
+				text = app.NameLong .. "\n\n" .. L.TRACK_NEW1 .. " " .. #recipes .. " " .. L.TRACK_NEW2 .. "\n" .. modeText .. ".\n\n" .. L.TRACK_NEW3 .. "\n" .. L.CONFIRMATION,
 				button1 = YES,
 				button2 = NO,
 				OnAccept = function()
@@ -2011,7 +2003,7 @@ function app.CreateTradeskillAssets()
 		end)
 		app.TrackUnlearnedMogsButton:SetScript("OnEnter", function(self)
 			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-			GameTooltip:SetText("Current setting: "..modeText)
+			GameTooltip:SetText(L.CURRENT_SETTING .. ": " .. modeText)
 			GameTooltip:Show()
 		end)
 		app.TrackUnlearnedMogsButton:SetScript("OnLeave", function()
@@ -2157,7 +2149,7 @@ function app.CreateTradeskillAssets()
 		app.MillingClassic = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		app.MillingClassic:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
 		app.MillingClassic:SetJustifyH("LEFT")
-		app.MillingClassic:SetText(app.Colour("Milling information").."\n|cffFFFFFFSapphire Pigment: 25% from Golden Sansam, Dreamfoil, Mountain Silversage, Sorrowmoss, Icecap\nSilvery Pigment: 75% from Golden Sansam, Dreamfoil, Mountain Silversage, Sorrowmoss, Icecap\n\nRuby Pigment: 25% from Firebloom, Purple Lotus, Arthas' Tears, Sungrass, Blindweed,\n      Ghost Mushroom, Gromsblood\nViolet Pigment: 75% from Firebloom, Purple Lotus, Arthas' Tears, Sungrass, Blindweed,\n      Ghost Mushroom, Gromsblood\n\nIndigo Pigment: 25% from Fadeleaf, Goldthorn, Khadgar's Whisker, Dragon's Teeth\nEmerald Pigment: 75% from Fadeleaf, Goldthorn, Khadgar's Whisker, Dragon's Teeth\n\nBurnt Pigment: 25% from Wild Steelbloom, Grave Moss, Kingsblood, Liferoot\nGolden Pigment: 75% from Wild Steelbloom, Grave Moss, Kingsblood, Liferoot\n\nVerdant Pigment: 25% from Mageroyal, Briarthorn, Swiftthistle, Bruiseweed, Stranglekelp\nDusky Pigment: 75% from Mageroyal, Briarthorn, Swiftthistle, Bruiseweed, Stranglekelp\n\nAlabaster Pigment: 100% from Peacebloom, Silverleaf, Earthroot")
+		app.MillingClassic:SetText(app.Colour(L.MILLING_INFO) .. "\n|cffFFFFFF" .. L.MILLING_CLASSIC)
 	end
 
 	-- Create The Burning Crusade Milling info
@@ -2165,7 +2157,7 @@ function app.CreateTradeskillAssets()
 		app.MillingTheBurningCrusade = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		app.MillingTheBurningCrusade:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
 		app.MillingTheBurningCrusade:SetJustifyH("LEFT")
-		app.MillingTheBurningCrusade:SetText(app.Colour("Milling information").."\n|cffFFFFFFEbon Pigment: 25%\nNether Pigment: 100%")
+		app.MillingTheBurningCrusade:SetText(app.Colour(L.MILLING_INFO) .. "\n|cffFFFFFF" .. L.MILLING_TBC)
 	end
 
 	-- Create Wrath of the Lich King Milling info
@@ -2173,7 +2165,7 @@ function app.CreateTradeskillAssets()
 		app.MillingWrathOfTheLichKing = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		app.MillingWrathOfTheLichKing:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
 		app.MillingWrathOfTheLichKing:SetJustifyH("LEFT")
-		app.MillingWrathOfTheLichKing:SetText(app.Colour("Milling information").."\n|cffFFFFFFIcy Pigment: 25%\nAzure Pigment: 100%")
+		app.MillingWrathOfTheLichKing:SetText(app.Colour(L.MILLING_INFO) .. "\n|cffFFFFFF" .. L.MILLING_WOTLK)
 	end
 
 	-- Create Cataclysm Milling info
@@ -2181,7 +2173,7 @@ function app.CreateTradeskillAssets()
 		app.MillingCataclysm = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		app.MillingCataclysm:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
 		app.MillingCataclysm:SetJustifyH("LEFT")
-		app.MillingCataclysm:SetText(app.Colour("Milling information").."\n|cffFFFFFFBurning Embers: 25%, 50% from Twilight Jasmine and Whiptail\nAshen Pigment: 100%")
+		app.MillingCataclysm:SetText(app.Colour(L.MILLING_INFO) .. "\n|cffFFFFFF" .. L.MILLING_CATA)
 	end
 
 	-- Create Mists of Pandaria Milling info
@@ -2189,7 +2181,7 @@ function app.CreateTradeskillAssets()
 		app.MillingMistsOfPandaria = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		app.MillingMistsOfPandaria:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
 		app.MillingMistsOfPandaria:SetJustifyH("LEFT")
-		app.MillingMistsOfPandaria:SetText(app.Colour("Milling information").."\n|cffFFFFFFMisty Pigment: 25%, 50% from Fool's Cap\nShadow Pigment: 100%")
+		app.MillingMistsOfPandaria:SetText(app.Colour(L.MILLING_INFO) .. "\n|cffFFFFFF" .. L.MILLING_MOP)
 	end
 
 	-- Create Warlords of Draenor Milling info
@@ -2197,7 +2189,7 @@ function app.CreateTradeskillAssets()
 		app.MillingWarlordsOfDraenor = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		app.MillingWarlordsOfDraenor:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
 		app.MillingWarlordsOfDraenor:SetJustifyH("LEFT")
-		app.MillingWarlordsOfDraenor:SetText(app.Colour("Milling information").."\n|cffFFFFFFCerulean Pigment: 100%")
+		app.MillingWarlordsOfDraenor:SetText(app.Colour(L.MILLING_INFO) .. "\n|cffFFFFFF" .. L.MILLING_WOD)
 	end
 
 	-- Create Legion Milling info
@@ -2205,7 +2197,7 @@ function app.CreateTradeskillAssets()
 		app.MillingLegion = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		app.MillingLegion:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
 		app.MillingLegion:SetJustifyH("LEFT")
-		app.MillingLegion:SetText(app.Colour("Milling information").."\n|cffFFFFFFSallow Pigment: 10%, 80% from Felwort\nRoseate Pigment: 90%")
+		app.MillingLegion:SetText(app.Colour(L.MILLING_INFO) .. "\n|cffFFFFFF" .. L.MILLING_LEGION)
 	end
 
 	-- Create Battle for Azeroth Milling info
@@ -2213,7 +2205,7 @@ function app.CreateTradeskillAssets()
 		app.MillingBattleForAzeroth = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		app.MillingBattleForAzeroth:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
 		app.MillingBattleForAzeroth:SetJustifyH("LEFT")
-		app.MillingBattleForAzeroth:SetText(app.Colour("Milling information").."\n|cffFFFFFFViridescent Pigment: 10%, 30% from Anchor Weed\nUltramarine Pigment: 25%\nCrimson Pigment: 75%")
+		app.MillingBattleForAzeroth:SetText(app.Colour(L.MILLING_INFO) .. "\n|cffFFFFFF" .. L.MILLING_BFA)
 	end
 
 	-- Create Shadowlands Milling info
@@ -2221,7 +2213,7 @@ function app.CreateTradeskillAssets()
 		app.MillingShadowlands = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		app.MillingShadowlands:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
 		app.MillingShadowlands:SetJustifyH("LEFT")
-		app.MillingShadowlands:SetText(app.Colour("Milling information").."\n|cffFFFFFFTranquil Pigment: Nightshade\nLuminous Pigment: Death Blossom, Rising Glory, Vigil's Torch\nUmbral Pigment: Death's Blossom, Marrowroot, Widowbloom")
+		app.MillingShadowlands:SetText(app.Colour(L.MILLING_INFO) .. "\n|cffFFFFFF" .. L.MILLING_SL)
 	end
 
 	-- Create Dragonflight Milling info
@@ -2229,7 +2221,7 @@ function app.CreateTradeskillAssets()
 		app.MillingDragonflight = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		app.MillingDragonflight:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
 		app.MillingDragonflight:SetJustifyH("LEFT")
-		app.MillingDragonflight:SetText(app.Colour("Milling information").."\n|cffFFFFFFBlazing Pigment: Saxifrage\nFlourishing Pigment: Writhebark\nSerene Pigment: Bubble Poppy\nShimmering Pigment: Hochenblume")
+		app.MillingDragonflight:SetText(app.Colour(L.MILLING_INFO) .. "\n|cffFFFFFF" .. L.MILLING_DF)
 	end
 
 	-- Create The War Within Milling info
@@ -2237,7 +2229,7 @@ function app.CreateTradeskillAssets()
 		app.MillingTheWarWithin = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		app.MillingTheWarWithin:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
 		app.MillingTheWarWithin:SetJustifyH("LEFT")
-		app.MillingTheWarWithin:SetText(app.Colour("Milling information").."\n|cffFFFFFFBlossom Pigment: Blessing Blossom\nLuredrop Pigment: Luredrop\nOrbinid Pigment: Orbinid\nNacreous Pigment: Mycobloom")
+		app.MillingTheWarWithin:SetText(app.Colour(L.MILLING_INFO) .. "\n|cffFFFFFF" .. L.MILLING_TWW)
 	end
 
 	-- Create The War Within Thaumaturgy info
@@ -2245,7 +2237,7 @@ function app.CreateTradeskillAssets()
 		app.ThaumaturgyTheWarWithin = ProfessionsFrame.CraftingPage.SchematicForm:CreateFontString("ARTWORK", nil, "GameFontNormal")
 		app.ThaumaturgyTheWarWithin:SetPoint("BOTTOMLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 35, 50)
 		app.ThaumaturgyTheWarWithin:SetJustifyH("LEFT")
-		app.ThaumaturgyTheWarWithin:SetText(app.Colour("Thaumaturgy information").."\n|cffFFFFFFMercurial Transmutagen: Aqirite, Gloom Chitin, Luredrop, Orbinid\nOminous Transmutagen: Bismuth, Mycobloom, Storm Dust, Weavercloth\nVolatile Transmutagen: Arathor's Spear, Blessing Blossom, Ironclaw Ore, Stormcharged Leather")
+		app.ThaumaturgyTheWarWithin:SetText(app.Colour(L.THAUMATURGY_INFO) .. "\n|cffFFFFFF" .. L.THAUMATURGY_TWW)
 	end
 
 	-- Grab the order information when opening a crafting order (THANK YOU PLUSMOUSE <3)
@@ -2255,17 +2247,17 @@ function app.CreateTradeskillAssets()
 		local key = "order:" .. app.SelectedRecipe.MakeOrder.orderID .. ":" .. app.SelectedRecipe.MakeOrder.spellID
 
 		if ProfessionShoppingList_Data.Recipes[key] then
-			app.TrackMakeOrderButton:SetText("Untrack")
+			app.TrackMakeOrderButton:SetText(L.UNTRACK)
 			app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
 		else
-			app.TrackMakeOrderButton:SetText("Track")
+			app.TrackMakeOrderButton:SetText(L.TRACK)
 			app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
 		end
 	end)
 
 	-- Create the fulfil crafting orders UI (Un)track button
 	if not app.TrackMakeOrderButton then
-		app.TrackMakeOrderButton = app.Button(ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "Track")
+		app.TrackMakeOrderButton = app.Button(ProfessionsFrame.OrdersPage.OrderView.OrderDetails, L.TRACK)
 		app.TrackMakeOrderButton:SetPoint("TOPRIGHT", ProfessionsFrame.OrdersPage.OrderView.OrderDetails, "TOPRIGHT", -9, -10)
 		app.TrackMakeOrderButton:SetScript("OnClick", function()
 			local key = "order:" .. app.SelectedRecipe.MakeOrder.orderID .. ":" .. app.SelectedRecipe.MakeOrder.spellID
@@ -2298,7 +2290,7 @@ function app.CreateTradeskillAssets()
 					-- Save the reagents into a fake recipe
 					ProfessionShoppingList_Cache.CraftSimRecipes[key] = reagents
 				else
-					app.Print("Could not read the information from CraftSim.")
+					app.Print(L.ERROR_CRAFTSIM)
 				end
 			else
 				craftSim = false
@@ -2309,14 +2301,14 @@ function app.CreateTradeskillAssets()
 				app.UntrackRecipe(key, 1)
 
 				-- Change button text
-				app.TrackMakeOrderButton:SetText("Track")
+				app.TrackMakeOrderButton:SetText(L.TRACK)
 				app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
 			else
 				-- Track the recipe
 				app.TrackRecipe(app.SelectedRecipe.MakeOrder.spellID, 1, app.SelectedRecipe.MakeOrder.isRecraft, app.SelectedRecipe.MakeOrder.orderID, craftSim)
 
 				-- Change button text
-				app.TrackMakeOrderButton:SetText("Untrack")
+				app.TrackMakeOrderButton:SetText(L.UNTRACK)
 				app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
 			end
 
@@ -2498,14 +2490,14 @@ app.Event:Register("TRADE_SKILL_SHOW", function()
 		if app.Flag["tradeskillAssets"] == true then
 			-- Alvin button
 			if ProfessionShoppingList_Settings["alvinGUID"] ~= "unknown" then
-				app.AlvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..ProfessionShoppingList_Settings["alvinGUID"].."')")
+				app.AlvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('" .. ProfessionShoppingList_Settings["alvinGUID"] .. "')")
 			else
 				app.AlvinButton:SetAttribute("macrotext1", "")
 			end
 
 			-- Lil' Ragnaros button
 			if ProfessionShoppingList_Settings["ragnarosGUID"] ~= "unknown" then
-				app.RagnarosButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('"..ProfessionShoppingList_Settings["ragnarosGUID"].."')")
+				app.RagnarosButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('" .. ProfessionShoppingList_Settings["ragnarosGUID"] .. "')")
 			end
 
 			-- Recharge timer
@@ -2517,11 +2509,11 @@ app.Event:Register("TRADE_SKILL_SHOW", function()
 						-- 250 Concentration per 24 hours
 						local timeLeft = math.ceil((1000 - concentration) / 250 * 24)
 
-						app.Concentration1:SetText("|cffFFFFFFFully recharged:|r "..timeLeft.."h")
-						app.Concentration2:SetText("|cffFFFFFFFully recharged:|r "..timeLeft.."h")
+						app.Concentration1:SetText("|cffFFFFFF" .. L.RECHARGED .. ":|r " .. timeLeft .. L.HOURS)
+						app.Concentration2:SetText("|cffFFFFFF" .. L.RECHARGED .. ":|r " .. timeLeft .. L.HOURS)
 					else
-						app.Concentration1:SetText("|cffFFFFFFFully recharged:|r ?")
-						app.Concentration2:SetText("|cffFFFFFFFully recharged:|r ?")
+						app.Concentration1:SetText("|cffFFFFFF" .. L.RECHARGED .. ":|r ?")
+						app.Concentration2:SetText("|cffFFFFFF" .. L.RECHARGED .. ":|r ?")
 					end
 				end
 			end)
@@ -2716,6 +2708,10 @@ end)
 
 -- Get reagents for recipe
 function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qualityTier)
+	if not recraft then
+		recraft = false
+	end
+
 	-- Grab all the reagent info from the API
 	local reagentsTable
 
@@ -2811,7 +2807,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 	if ProfessionShoppingList_Data.Recipes[craftingRecipeID] and ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim then
 		-- Debug to try and troubleshoot this dumbass issue
 		if ProfessionShoppingList_Settings["debug"] then
-			app.Debug("craftingRecipeID: "..craftingRecipeID)
+			app.Debug("craftingRecipeID: " .. craftingRecipeID)
 			app.Debug("ProfessionShoppingList_Data.Recipes[craftingRecipeID]:")
 			app.Dump(ProfessionShoppingList_Data.Recipes[craftingRecipeID])
 			app.Debug("ProfessionShoppingList_Cache.CraftSimRecipes[craftingRecipeID]:")
@@ -2965,20 +2961,20 @@ function app.TooltipInfo()
 				local reagentAmountHave = app.GetReagentCount(itemID)
 				tooltip:AddLine(" ")
 				emptyLine = true
-				tooltip:AddLine("|TInterface\\AddOns\\ProfessionShoppingList\\assets\\psl_icon.blp:0|t "..reagentAmountHave.."/"..reagentAmountNeed.." ("..math.max(0,reagentAmountNeed-reagentAmountHave).." more needed)")
+				tooltip:AddLine(app.IconPSL .. " " .. reagentAmountHave .. "/" .. reagentAmountNeed  .. " (" .. math.max(0,reagentAmountNeed-reagentAmountHave)  .. " " .. L.MORE_NEEDED .. ")")
 			end
 
 			-- Check for crafting info
-			if ProfessionShoppingList_Settings["showCraftTooltip"] and C_Item.IsEquippableItem(itemID) then
+			if ProfessionShoppingList_Settings["showCraftTooltip"] then
 				for k, v in pairs (ProfessionShoppingList_Library) do
 					if type(v) ~= "number" and v.itemID == itemID then	-- No clue why these non-table values are here, tbh
 						if emptyLine == false then
 							tooltip:AddLine(" ")
 						end
 						if v.learned and v.tradeskillID then
-							tooltip:AddLine("|TInterface\\AddOns\\ProfessionShoppingList\\assets\\psl_icon.blp:0|t Made with  |T" .. app.iconProfession[v.tradeskillID] .. ":0|t " .. app.ProfessionName[v.tradeskillID] .. " (recipe learned)")
+							tooltip:AddLine(app.IconPSL .. " " .. L.MADE_WITH .. "  " .. app.IconProfession[v.tradeskillID] .. " " .. C_TradeSkillUI.GetTradeSkillDisplayName(v.tradeskillID) .. " (" .. L.RECIPE_LEARNED .. ")")
 						elseif v.tradeskillID then
-							tooltip:AddLine("|TInterface\\AddOns\\ProfessionShoppingList\\assets\\psl_icon.blp:0|t Made with  |T" .. app.iconProfession[v.tradeskillID] .. ":0|t " .. app.ProfessionName[v.tradeskillID] .. " (recipe not learned)")
+							tooltip:AddLine(app.IconPSL .. " " .. L.MADE_WITH .. "  " .. app.IconProfession[v.tradeskillID] .. " " .. C_TradeSkillUI.GetTradeSkillDisplayName(v.tradeskillID) .. " (" .. L.RECIPE_UNLEARNED .. ")")
 						end
 						break
 					end
@@ -3044,16 +3040,16 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID, craftSim)
 
 		-- Exceptions for SL legendary crafts
 		if app.slLegendaryRecipeIDs[recipeID] then
-			itemLink = itemLink.." (Rank "..app.slLegendaryRecipeIDs[recipeID].rank..")" -- Append the rank
+			itemLink = itemLink .. " (" ..  L.RANK .. " " .. app.slLegendaryRecipeIDs[recipeID].rank .. ")" -- Append the rank
 		else
 			itemLink = string.gsub(itemLink, " |A:Professions%-ChatIcon%-Quality%-Tier1:17:15::1|a", "") -- Remove the quality from the item string
 		end
 
 		-- Add quantity
 		if recipeMin == recipeMax and recipeMin ~= 1 then
-			itemLink = itemLink.." ×"..recipeMin
+			itemLink = itemLink .. " ×" .. recipeMin
 		elseif recipeMin ~= 1 then
-			itemLink = itemLink.." ×"..recipeMin.."-"..recipeMax
+			itemLink = itemLink .. " ×" .. recipeMin .. "-" .. recipeMax
 		end
 
 		recipeLink = itemLink
@@ -3143,7 +3139,7 @@ function app.Clear()
 	-- Disable remove button
 	if app.Flag["tradeskillAssets"] == true then
 		app.UntrackProfessionButton:Disable()
-		app.TrackMakeOrderButton:SetText("Track")
+		app.TrackMakeOrderButton:SetText(L.TRACK)
 		app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
 	end
 	if app.Flag["craftingOrderAssets"] == true then
@@ -3206,8 +3202,8 @@ app.Event:Register("MERCHANT_SHOW", function()
 			if itemPrice then
 				ProfessionShoppingList_Cache.FakeRecipes[key].costCopper = itemPrice
 				ProfessionShoppingList_Cache.Reagents["gold"] = { 
-					icon = app.iconProfession[0],
-					link = BONUS_ROLL_REWARD_MONEY,
+					icon = app.IconProfession[0],
+					link = L.GOLD,
 				}
 			end
 
@@ -3218,7 +3214,7 @@ app.Event:Register("MERCHANT_SHOW", function()
 					local currencyID = C_CurrencyInfo.GetCurrencyIDFromLink(itemLink)
 
 					ProfessionShoppingList_Cache.FakeRecipes[key].costCurrency[currencyID] = itemValue
-					ProfessionShoppingList_Cache.Reagents["currency:"..currencyID] = { 
+					ProfessionShoppingList_Cache.Reagents["currency:" .. currencyID] = { 
 						icon = itemTexture,
 						link = C_CurrencyInfo.GetCurrencyLink(currencyID),
 					}
@@ -3248,7 +3244,7 @@ app.Event:Register("MERCHANT_SHOW", function()
 	-- Hook the script onto the merchant buttons (once)
 	if app.Flag["merchantAssets"] == false then
 		for i = 1, 99 do	-- Works for AddOns that expand the vendor frame up to 99 slots
-			local itemButton = _G["MerchantItem"..i.."ItemButton"]
+			local itemButton = _G["MerchantItem" .. i .. "ItemButton"]
 			if itemButton then
 				itemButton:HookScript("OnClick", function() TrackMerchantItem() end)
 			end
@@ -3269,7 +3265,7 @@ app.Event:Register("UNIT_SPELLCAST_SUCCEEDED", function(unitTarget, castGUID, sp
 			
 			-- Close window if no recipes are left and the option is enabled
 			local next = next
-			if next(ProfessionShoppingList_Data.Recipes) == nil and ProfessionShoppingList_Settings["closeWhenDone"] then
+			if #ProfessionShoppingList_Data.Recipes < 1 and ProfessionShoppingList_Settings["closeWhenDone"] then
 				app.Window:Hide()
 			end
 		end
@@ -3305,7 +3301,7 @@ app.Event:Register("PLAYER_ENTERING_WORLD", function(isInitialLogin, isReloading
 				-- If the option to show recipe cooldowns is enabled and all charges are full (or 0 = 0 for recipes without charges)
 				if ProfessionShoppingList_Settings["showRecipeCooldowns"] == true and ProfessionShoppingList_Data.Cooldowns[k].charges == ProfessionShoppingList_Data.Cooldowns[k].maxCharges then
 					-- Show the reminder
-					app.Print(recipeInfo.name .. " is ready to craft again on " .. recipeInfo.user .. ".")
+					app.Print(recipeInfo.name .. " " .. L.READY_TO_CRAFT .. " " .. recipeInfo.user .. ".")
 				end
 			end
 		end
@@ -3470,7 +3466,7 @@ function app.TrackUnlearnedMog()
 				if i == #recipes then
 					app.Flag["changingRecipes"] = false
 					app.UpdateRecipes()
-					app.Print("Added ".. added .." eligible recipes.")
+					app.Print(L.ADDED_RECIPES1 .. " " .. added .. " " .. L.ADDED_RECIPES2 .. ".")
 				end
 			end)
 		end
@@ -3499,7 +3495,7 @@ end
 function ProfessionShoppingList_Enter(self, button)
 	GameTooltip:ClearLines()
 	GameTooltip:SetOwner(type(self) ~= "string" and self or button, "ANCHOR_LEFT")
-	GameTooltip:AddLine(app.NameLong.."\nLMB|cffFFFFFF: Toggle the window\n|RRMB|cffFFFFFF: Show the settings|R")
+	GameTooltip:AddLine(app.NameLong .. "\n" .. L.SETTINGS_TOOLTIP)
 	GameTooltip:Show()
 end
 
@@ -3526,7 +3522,7 @@ function app.Settings()
 		
 		OnTooltipShow = function(tooltip)
 			if not tooltip or not tooltip.AddLine then return end
-			tooltip:AddLine(app.NameLong.."\nLMB|cffFFFFFF: Toggle the window\n|RRMB|cffFFFFFF: Show the settings|R")
+			tooltip:AddLine(app.NameLong .. "\n" .. L.SETTINGS_TOOLTIP)
 		end,
 	})
 	
@@ -3548,8 +3544,8 @@ function app.Settings()
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(C_AddOns.GetAddOnMetadata(appName, "Version")))
 
-	local variable, name, tooltip = "minimapIcon", "Show minimap icon", "Show the minimap icon. If you disable this, "..app.NameShort.." is still available from the AddOn Compartment."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	local variable, name, tooltip = "minimapIcon", L.SETTINGS_MINIMAP_TITLE, L.SETTINGS_MINIMAP_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	setting:SetValueChangedCallback(function()
 		if ProfessionShoppingList_Settings["minimapIcon"] == true then
@@ -3561,117 +3557,116 @@ function app.Settings()
 		end
 	end)
 
-	local variable, name, tooltip = "showRecipeCooldowns", "Track recipe cooldowns", "Enable the tracking of recipe cooldowns. These will show in the tracking window, and in chat upon login if ready."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	local variable, name, tooltip = "showRecipeCooldowns", L.SETTINGS_COOLDOWNS_TITLE, L.SETTINGS_COOLDOWNS_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	setting:SetValueChangedCallback(function()
 		app.UpdateRecipes()
 	end)
 
-	local variable, name, tooltip = "showTooltip", "Show tooltip information", "Show how many of a reagent you have/need on the item's tooltip."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	local variable, name, tooltip = "showTooltip", L.SETTINGS_TOOLTIP_TITLE, L.SETTINGS_TOOLTIP_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	local parentSetting = Settings.CreateCheckbox(category, setting, tooltip)
 
-	local variable, name, tooltip = "showCraftTooltip", "Show crafting information", "Show with which profession a piece of gear is made, and if the recipe is known on your account."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	local variable, name, tooltip = "showCraftTooltip", L.SETTINGS_CRAFTTOOLTIP_TITLE, L.SETTINGS_CRAFTTOOLTIP_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	local subSetting = Settings.CreateCheckbox(category, setting, tooltip)
 	subSetting:SetParentInitializer(parentSetting, function() return ProfessionShoppingList_Settings["showTooltip"] end)
 
-	local variable, name, tooltip = "reagentQuality", "Minimum reagent quality", "Set the minimum quality reagents need to be before "..app.NameShort.." includes them in the item count. CraftSim results will still override this."
+	local variable, name, tooltip = "reagentQuality", L.SETTINGS_REAGENTQUALITY_TITLE, L.SETTINGS_REAGENTQUALITY_TOOLTIP
 	local function GetOptions()
 		local container = Settings.CreateControlTextContainer()
-		container:Add(1, "|A:Professions-ChatIcon-Quality-Tier1:17:15::1|a Tier 1")
-		container:Add(2, "|A:Professions-ChatIcon-Quality-Tier2:17:15::1|a Tier 2")
-		container:Add(3, "|A:Professions-ChatIcon-Quality-Tier3:17:15::1|a Tier 3")
+		container:Add(1, "|A:Professions-ChatIcon-Quality-Tier1:17:15::1|a" .. L.SETTINGS_REAGENTTIER .. " 1")
+		container:Add(2, "|A:Professions-ChatIcon-Quality-Tier2:17:15::1|a" .. L.SETTINGS_REAGENTTIER .. " 2")
+		container:Add(3, "|A:Professions-ChatIcon-Quality-Tier3:17:15::1|a" .. L.SETTINGS_REAGENTTIER .. " 3")
 		return container:GetData()
 	end
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 	setting:SetValueChangedCallback(function()
 		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
 	end)
 
-	local variable, name, tooltip = "includeHigher", "Include higher quality", "Set which higher qualities to include when tracking lower quality reagents. (I.e. whether to include tier 3 reagents in the owned count when tracking tier 1 reagents.)"
+	local variable, name, tooltip = "includeHigher", L.SETTINGS_INCLUDEHIGHER_TITLE, L.SETTINGS_INCLUDEHIGHER_TOOLTIP
 	local function GetOptions()
 		local container = Settings.CreateControlTextContainer()
-		container:Add(1, "Include |A:Professions-ChatIcon-Quality-Tier3:17:15::1|a Tier 3 and |A:Professions-ChatIcon-Quality-Tier2:17:15::1|a Tier 2")
-		container:Add(2, "Only include |A:Professions-ChatIcon-Quality-Tier2:17:15::1|a Tier 2")
-		container:Add(3, "Don't include higher qualities")
+		container:Add(1, L.SETTINGS_INCLUDE .. "|A:Professions-ChatIcon-Quality-Tier3:17:15::1|a " .. L.SETTINGS_REAGENTTIER .. " 3 & " ..  "|A:Professions-ChatIcon-Quality-Tier2:17:15::1|a " .. L.SETTINGS_REAGENTTIER .. " 2")
+		container:Add(2, L.SETTINGS_ONLY_INCLUDE .. " |A:Professions-ChatIcon-Quality-Tier2:17:15::1|a " .. L.SETTINGS_REAGENTTIER .. " 2")
+		container:Add(3, L.SETTINGS_DONT_INCLUDE)
 		return container:GetData()
 	end
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 	setting:SetValueChangedCallback(function()
 		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
 	end)
 
-	local variable, name, tooltip = "collectMode", "Collection mode", "Set which items are included when using the " .. app.Colour("Track unlearned mogs") .. " button."
+	local variable, name, tooltip = "collectMode", L.SETTINGS_COLLECTMODE_TITLE, L.SETTINGS_COLLECTMODE_TOOLTIP
 	local function GetOptions()
 		local container = Settings.CreateControlTextContainer()
-		container:Add(1, "Appearances", "Include items only if they have a new appearance.")
-		container:Add(2, "Sources", "Include items if they are a new source, including for known appearances.")
+		container:Add(1, L.SETTINGS_APPEARANCES_TITLE, L.SETTINGS_APPEARANCES_TEXT)
+		container:Add(2, L.SETTINGS_SOURCES_TITLE, L.SETTINGS_SOURCES_TEXT)
 		return container:GetData()
 	end
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 
-	local variable, name, tooltip = "quickOrderDuration", "Quick order duration", "Set the duration for placing quick orders with " .. app.NameShort .. "."
+	local variable, name, tooltip = "quickOrderDuration", L.SETTINGS_QUICKORDER_TITLE, L.SETTINGS_QUICKORDER_TOOLTIP
 	local function GetOptions()
 		local container = Settings.CreateControlTextContainer()
-		container:Add(0, "Short (12 hours)")
-		container:Add(1, "Medium (24 hours)")
-		container:Add(2, "Long (48 hours)")
+		container:Add(0, L.SETTINGS_DURATION_SHORT)
+		container:Add(1, L.SETTINGS_DURATION_MEDIUM)
+		container:Add(2, L.SETTINGS_DURATION_LONG)
 		return container:GetData()
 	end
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 0)
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 0)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 
-	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Tracking window"))
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L.SETTINGS_HEADER_TRACK))
 
-	local variable, name, tooltip = "pcWindows", "Window position per character", "Save the window position per character, instead of account-wide."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
+	local variable, name, tooltip = "pcWindows", L.SETTINGS_PERSONALWINDOWS_TITLE, L.SETTINGS_PERSONALWINDOWS_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
 	Settings.CreateCheckbox(category, setting, tooltip)
 
-	local variable, name, tooltip = "pcRecipes", "Track recipes per character", "Track recipes per character, instead of account-wide."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
+	local variable, name, tooltip = "pcRecipes", L.SETTINGS_PERSONALRECIPES_TITLE, L.SETTINGS_PERSONALRECIPES_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	setting:SetValueChangedCallback(function()
 		app.UpdateRecipes()
 	end)
 
-	local variable, name, tooltip = "showRemaining", "Show remaining reagents", "Only show how many reagents you still need in the tracking window, instead of have/need."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
+	local variable, name, tooltip = "showRemaining", L.SETTINGS_SHOWREMAINING_TITLE, L.SETTINGS_SHOWREMAINING_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	setting:SetValueChangedCallback(function()
 		C_Timer.After(0.5, function() app.UpdateRecipes() end) -- Toggling this setting seems buggy? This fixes it. :)
 	end)
 
-	local variable, name, tooltip = "removeCraft", "Untrack on craft", "Remove one of a tracked recipe when you successfully craft it."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	local variable, name, tooltip = "removeCraft", L.SETTINGS_REMOVECRAFT_TITLE, L.SETTINGS_REMOVECRAFT_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	local parentSetting = Settings.CreateCheckbox(category, setting, tooltip)
 
-	local variable, name, tooltip = "closeWhenDone", "Close window when done", "Close the tracking window after crafting the last tracked recipe."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
+	local variable, name, tooltip = "closeWhenDone", L.SETTINGS_CLOSEWHENDONE_TITLE, L.SETTINGS_CLOSEWHENDONE_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
 	local subSetting = Settings.CreateCheckbox(category, setting, tooltip)
 	subSetting:SetParentInitializer(parentSetting, function() return ProfessionShoppingList_Settings["removeCraft"] end)
 
-	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Information"))
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L.SETTINGS_HEADER_INFO))
 
-	local variable, name, tooltip = "", "Slash commands", "Type these in chat to use them!"
+	local variable, name, tooltip = "", L.SETTINGS_SLASHCOMMANDS_TITLE, L.SETTINGS_SLASHCOMMANDS_TOOLTIP
 	local function GetOptions()
 		local container = Settings.CreateControlTextContainer()
-		container:Add(1, "/psl", "Toggle the tracking window.")
-		container:Add(2, "/psl resetpos", "Reset the tracking window position.")
-		container:Add(3, "/psl settings", "Go to the settings.")
-		container:Add(4, "/psl clear", "Clear all tracked recipes.")
-		container:Add(5, "/psl track " .. app.Colour("recipeID quantity"), "Track a recipe.")
-		container:Add(6, "/psl untrack " .. app.Colour("recipeID quantity"), "Untrack a recipe.")
-		container:Add(7, "/psl untrack " .. app.Colour("recipeID") .. " all", "Untrack all of a recipe.")
-		container:Add(8, "/psl " .. app.Colour("[crafting achievement]"), "Track the recipes needed for the linked achievement.")
-		container:Add(9, "/psl duration " .. app.Colour("number"), "Set the default quick order duration.")
+		container:Add(1, "/psl", L.SETTINGS_SLASH_TOGGLE)
+		container:Add(2, "/psl resetpos", L.SETTINGS_SLASH_RESETPOS)
+		container:Add(3, "/psl settings", L.SETTINGS_SLASH_SETTINGS)
+		container:Add(4, "/psl clear", L.WINDOW_BUTTON_CLEAR)
+		container:Add(5, "/psl track " .. app.Colour(L.SETTINGS_SLASH_RECIPEID .. " " .. L.SETTINGS_SLASH_QUANTITY), L.SETTINGS_SLASH_TRACK)
+		container:Add(6, "/psl untrack " .. app.Colour(L.SETTINGS_SLASH_RECIPEID .. " " .. L.SETTINGS_SLASH_QUANTITY), L.SETTINGS_SLASH_UNTRACK)
+		container:Add(7, "/psl untrack " .. app.Colour(L.SETTINGS_SLASH_RECIPEID) .. " all", L.SETTINGS_SLASH_UNTRACKALL)
+		container:Add(8, "/psl " .. app.Colour("[" .. L.SETTINGS_SLASH_CRAFTINGACHIE .. "]"), L.SETTINGS_SLASH_TRACKACHIE)
 		return container:GetData()
 	end
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 end
 
@@ -3697,7 +3692,7 @@ end
 -- When joining a group
 app.Event:Register("GROUP_ROSTER_UPDATE", function(category, partyGUID)
 	-- Share our AddOn version with other users
-	local message = "version:"..C_AddOns.GetAddOnMetadata("ProfessionShoppingList", "Version")
+	local message = "version:" .. C_AddOns.GetAddOnMetadata("ProfessionShoppingList", "Version")
 	app.SendAddonMessage(message)
 end)
 
@@ -3714,7 +3709,7 @@ app.Event:Register("CHAT_MSG_ADDON", function(prefix, text, channel, sender, tar
 				expansion = string.format("%02d", expansion)
 				major = string.format("%02d", major)
 				minor = string.format("%02d", minor)
-				local otherGameVersion = tonumber(expansion..major..minor)
+				local otherGameVersion = tonumber(expansion .. major .. minor)
 				local otherAddonVersion = tonumber(iteration)
 
 				-- Do the same for our local version
@@ -3724,14 +3719,14 @@ app.Event:Register("CHAT_MSG_ADDON", function(prefix, text, channel, sender, tar
 					expansion = string.format("%02d", expansion)
 					major = string.format("%02d", major)
 					minor = string.format("%02d", minor)
-					local localGameVersion = tonumber(expansion..major..minor)
+					local localGameVersion = tonumber(expansion .. major .. minor)
 					local localAddonVersion = tonumber(iteration)
 
 					-- Now compare our versions
 					if otherGameVersion > localGameVersion or (otherGameVersion == localGameVersion and otherAddonVersion > localAddonVersion) then
 						-- But only send the message once every 10 minutes
 						if GetServerTime() - app.Flag["versionCheck"] > 600 then
-							app.Print("There is a newer version of "..app.NameLong.." available: "..version)
+							app.Print(L.VERSION_CHECK .. ": " .. version)
 							app.Flag["versionCheck"] = GetServerTime()
 						end
 					end

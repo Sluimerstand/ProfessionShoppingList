@@ -22,3 +22,14 @@ modules\AuctionHouse.lua
 modules\CraftingOrders.lua
 modules\ProfessionKnowledge.lua
 modules\Tweaks.lua
+locales\enUS.lua
+locales\koKR.lua
+locales\frFR.lua
+locales\deDE.lua
+locales\zhCN.lua
+locales\esES.lua
+locales\zhTW.lua
+locales\esMX.lua
+locales\ruRU.lua
+locales\ptBR.lua
+locales\itIT.lua

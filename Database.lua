@@ -4,7 +4,7 @@
 -- Raw information to refer to
 
 -- Initialisation
-local appName, app = ...	-- Returns the AddOn name and a unique table
+local appName, app =  ...	-- Returns the AddOn name and a unique table
 
 -- Used strings
 app.Name = "Profession Shopping List"
@@ -12,41 +12,30 @@ app.NameLong = app.Colour("Profession Shopping List")
 app.NameShort = app.Colour("PSL")
 
 -- Used textures
-app.iconWaiting = "Interface\\RaidFrame\\ReadyCheck-Waiting"
-app.iconReady = "Interface\\RaidFrame\\ReadyCheck-Ready"
-app.iconNotReady = "Interface\\RaidFrame\\ReadyCheck-NotReady"
-app.iconArrow = "Interface\\AddOns\\ProfessionShoppingList\\assets\\UI-RaidFrame-Arrow-Cropped"
-app.iconProfession = {}
-app.iconProfession[0] = "Interface\\MoneyFrame\\UI-GoldIcon"	-- Vendor
-app.iconProfession[1] = "Interface\\AddOns\\ProfessionShoppingList\\assets\\hammer-32"	-- Crafting order
-app.iconProfession[164] = "Interface\\Icons\\ui_profession_blacksmithing"
-app.iconProfession[165] = "Interface\\Icons\\ui_profession_leatherworking"
-app.iconProfession[171] = "Interface\\Icons\\ui_profession_alchemy"
-app.iconProfession[182] = "Interface\\Icons\\ui_profession_herbalism"
-app.iconProfession[185] = "Interface\\Icons\\ui_profession_cooking"
-app.iconProfession[186] = "Interface\\Icons\\ui_profession_mining"
-app.iconProfession[197] = "Interface\\Icons\\ui_profession_tailoring"
-app.iconProfession[202] = "Interface\\Icons\\ui_profession_engineering"
-app.iconProfession[333] = "Interface\\Icons\\ui_profession_enchanting"
-app.iconProfession[356] = "Interface\\Icons\\ui_profession_fishing"
-app.iconProfession[393] = "Interface\\Icons\\ui_profession_skinning"
-app.iconProfession[755] = "Interface\\Icons\\ui_profession_jewelcrafting"
-app.iconProfession[773] = "Interface\\Icons\\ui_profession_inscription"
-app.iconProfession[999] = "Interface\\Icons\\inv_misc_questionmark"
-app.ProfessionName = {}
-app.ProfessionName[164] = "Blacksmithing"
-app.ProfessionName[165] = "Leatherworking"
-app.ProfessionName[171] = "Alchemy"
-app.ProfessionName[182] = "Herbalism"
-app.ProfessionName[185] = "Cooking"
-app.ProfessionName[186] = "Mining"
-app.ProfessionName[197] = "Tailoring"
-app.ProfessionName[202] = "Engineering"
-app.ProfessionName[333] = "Enchanting"
-app.ProfessionName[356] = "Fishing"
-app.ProfessionName[393] = "Skinning"
-app.ProfessionName[755] = "Jewelcrafting"
-app.ProfessionName[773] = "Inscription"
+app.IconPSL = "|TInterface\\AddOns\\ProfessionShoppingList\\assets\\psl_icon.blp:0|t"
+app.IconWaiting = "|TInterface\\RaidFrame\\ReadyCheck-Waiting:0|t"
+app.IconReady = "|TInterface\\RaidFrame\\ReadyCheck-Ready:0|t"
+app.IconNotReady = "|TInterface\\RaidFrame\\ReadyCheck-NotReady:0|t"
+app.IconArrow = "|TInterface\\AddOns\\ProfessionShoppingList\\assets\\UI-RaidFrame-Arrow-Cropped:0|t"
+app.IconLMB = "|TInterface\\TutorialFrame\\UI-Tutorial-Frame:12:12:0:0:512:512:10:65:228:283|t"
+app.IconRMB = "|TInterface\\TutorialFrame\\UI-Tutorial-Frame:12:12:0:0:512:512:10:65:330:385|t"
+app.IconProfession = {}
+app.IconProfession[0] = "|TInterface\\MoneyFrame\\UI-GoldIcon:0|t"	-- Vendor
+app.IconProfession[1] = "|TInterface\\AddOns\\ProfessionShoppingList\\assets\\hammer-32:0|t"	-- Crafting order
+app.IconProfession[164] = "|TInterface\\Icons\\ui_profession_blacksmithing:0|t"
+app.IconProfession[165] = "|TInterface\\Icons\\ui_profession_leatherworking:0|t"
+app.IconProfession[171] = "|TInterface\\Icons\\ui_profession_alchemy:0|t"
+app.IconProfession[182] = "|TInterface\\Icons\\ui_profession_herbalism:0|t"
+app.IconProfession[185] = "|TInterface\\Icons\\ui_profession_cooking:0|t"
+app.IconProfession[186] = "|TInterface\\Icons\\ui_profession_mining:0|t"
+app.IconProfession[197] = "|TInterface\\Icons\\ui_profession_tailoring:0|t"
+app.IconProfession[202] = "|TInterface\\Icons\\ui_profession_engineering:0|t"
+app.IconProfession[333] = "|TInterface\\Icons\\ui_profession_enchanting:0|t"
+app.IconProfession[356] = "|TInterface\\Icons\\ui_profession_fishing:0|t"
+app.IconProfession[393] = "|TInterface\\Icons\\ui_profession_skinning:0|t"
+app.IconProfession[755] = "|TInterface\\Icons\\ui_profession_jewelcrafting:0|t"
+app.IconProfession[773] = "|TInterface\\Icons\\ui_profession_inscription:0|t"
+app.IconProfession[999] = "|TInterface\\Icons\\inv_misc_questionmark:0|t"
 
 -- Shadowlands Legendary craft SpellIDs
 app.slLegendaryRecipeIDs = {}

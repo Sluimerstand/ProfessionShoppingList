@@ -4,7 +4,8 @@
 -- Auction House module
 
 -- Initialisation
-local appName, app = ...	-- Returns the AddOn name and a unique table
+local appName, app =  ...	-- Returns the AddOn name and a unique table
+local L = app.locales
 
 ------------------------
 -- AUCTIONATOR IMPORT --
@@ -90,7 +91,7 @@ function app.CreateAuctionatorButton()
 		end)
 	end)
 	app.AuctionatorButton:SetScript("OnEnter", function(self)
-		app.WindowTooltipShow("Create an Auctionator shopping list\nAlso initiates a search if you have the Shopping tab open at the Auction House")
+		app.WindowTooltipShow(L.WINDOW_BUTTON_AUCTIONATOR)
 	end)
 	app.AuctionatorButton:SetScript("OnLeave", function()
 		GameTooltip:Hide()

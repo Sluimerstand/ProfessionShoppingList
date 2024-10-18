@@ -4,7 +4,8 @@
 -- Tweaks module
 
 -- Initialisation
-local appName, app = ...	-- Returns the AddOn name and a unique table
+local appName, app =  ...	-- Returns the AddOn name and a unique table
+local L = app.locales
 
 ------------------
 -- INITIAL LOAD --
@@ -135,7 +136,7 @@ function app.UnderminePrices()
 				-- Check both links for pricing data
 				local oeData = {}
 				OEMarketInfo(itemLink,oeData)
-				if oeData['market'] == nil and oeData['region'] == nil then
+				if oeData["market"] == nil and oeData["region"] == nil then
 					-- Unless the item is BoP (BoP recipes for example)
 					local bindType = select(14, C_Item.GetItemInfo(itemID))
 					if bindType ~= 1 then
@@ -143,11 +144,11 @@ function app.UnderminePrices()
 					end
 				end
 				
-				if oeData['market'] ~= nil then
-					marketPrice = oeData['market']
+				if oeData["market"] ~= nil then
+					marketPrice = oeData["market"]
 				end
-				if oeData['region'] ~= nil then
-					regionPrice = oeData['region']
+				if oeData["region"] ~= nil then
+					regionPrice = oeData["region"]
 				end
 
 				-- Process the pricing information
@@ -165,7 +166,7 @@ function app.UnderminePrices()
 						tooltip:AddDoubleLine(GetNormalizedRealmName(),GetMoneyString(marketPrice, true))
 					end
 					if regionPrice > 0 then
-						tooltip:AddDoubleLine(GetCurrentRegionName().." Region",GetMoneyString(regionPrice, true))
+						tooltip:AddDoubleLine(GetCurrentRegionName() .. " " .. L.REGION,GetMoneyString(regionPrice, true))
 					end
 				end
 			end
@@ -181,10 +182,10 @@ hooksecurefunc("BattlePetToolTip_Show", function(...)
 		-- If Oribos Exchange is loaded
 		local loaded, finished = C_AddOns.IsAddOnLoaded("OribosExchange")
 		if finished == true then
-			local speciesID1, level, breedQuality, maxHealth, power, speed, bracketName = ...
+			local speciesID1, level, breedQuality, maxHealth, power, speed, bracketName =  ...
 
 			-- Make itemLink if it grabs the proper pet
-			local itemLink = "|cff0070dd|Hbattlepet:"..speciesID1..":"..level..":"..breedQuality..":"..maxHealth..":"..power..":"..speed.."|h"..bracketName.."|h|r"
+			local itemLink = "|cff0070dd|Hbattlepet:" .. speciesID1 .. ":" .. level .. ":" .. breedQuality .. ":" .. maxHealth .. ":" .. power .. ":" .. speed .. "|h" .. bracketName .. "|h|r"
 
 			-- Stop if error, it will try again on its own REAL soon
 			if itemLink == nil then return end
@@ -195,11 +196,11 @@ hooksecurefunc("BattlePetToolTip_Show", function(...)
 			local marketPrice = 0
 			local regionPrice = 0
 
-			if oeData['market'] ~= nil then
-				marketPrice = oeData['market']
+			if oeData["market"] ~= nil then
+				marketPrice = oeData["market"]
 			end
-			if oeData['region'] ~= nil then
-				regionPrice = oeData['region']
+			if oeData["region"] ~= nil then
+				regionPrice = oeData["region"]
 			end
 
 			-- Process the pricing information
@@ -214,7 +215,7 @@ hooksecurefunc("BattlePetToolTip_Show", function(...)
 					LibBattlePetTooltipLine:AddDoubleLine(BattlePetTooltip, GetNormalizedRealmName(), GetMoneyString(marketPrice, true))
 				end
 				if regionPrice > 0 then
-					LibBattlePetTooltipLine:AddDoubleLine(BattlePetTooltip, GetCurrentRegionName().." Region", GetMoneyString(regionPrice, true))
+					LibBattlePetTooltipLine:AddDoubleLine(BattlePetTooltip, GetCurrentRegionName() .. " " .. L.REGION, GetMoneyString(regionPrice, true))
 				end
 			end
 		end
@@ -277,7 +278,7 @@ app.Event:Register("PLAYER_INTERACTION_MANAGER_FRAME_SHOW", function(type)
 	-- Only run this if the setting is enabled
 	if ProfessionShoppingList_Settings["catalystButton"] then
 		if type == 44 and not app.CatalystSkipButton then
-			app.CatalystSkipButton = app.Button(ItemInteractionFrame, "Instantly Catalyze")
+			app.CatalystSkipButton = app.Button(ItemInteractionFrame, L.CATALYSTBUTTON_LABEL)
 			app.CatalystSkipButton:SetPoint("CENTER", ItemInteractionFrameTitleText, 0, -30)
 			app.CatalystSkipButton:SetScript("OnClick", function()
 				ItemInteractionFrame:CompleteItemInteraction()
@@ -299,13 +300,13 @@ end)
 --------------
 
 function app.SettingsTweaks()
-	local category, layout = Settings.RegisterVerticalLayoutSubcategory(app.Category, "Tweaks")
+	local category, layout = Settings.RegisterVerticalLayoutSubcategory(app.Category, L.SETTINGS_HEADER_TWEAKS)
 	Settings.RegisterAddOnCategory(category)
 
 	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(BAG_NAME_BACKPACK))
 
-	local variable, name, tooltip = "backpackCount", "Split reagent bag count", "Shows the free slots of your regular bags and your reagent bag separately on top of the backpack icon."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	local variable, name, tooltip = "backpackCount", L.SETTINGS_SPLITBAG_TITLE, L.SETTINGS_SPLITBAG_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	setting:SetValueChangedCallback(function()
 		-- Get number of free bag slots
@@ -322,16 +323,16 @@ function app.SettingsTweaks()
 		end
 	end)
 
-	local variable, name, tooltip = "backpackCleanup", "Clean up bags", "Let ".. app.NameShort.." enforce cleanup sorting direction.\n- Default means "..app.NameShort.." won't touch the game's default behaviour;\n- The other options let "..app.NameShort.." enforce that particular setting."
+	local variable, name, tooltip = "backpackCleanup", L.SETTINGS_CLEANBAG_TITLE, L.SETTINGS_CLEANBAG_TOOLTIP
 	local function GetOptions()
 		local container = Settings.CreateControlTextContainer()
-		container:Add(0, "Default")
-		container:Add(1, "Left-to-Right")
-		container:Add(2, "Right-to-Left")
+		container:Add(0, L.SETTINGS_DEFAULT)
+		container:Add(1, L.SETTINGS_LTOR)
+		container:Add(2, L.SETTINGS_RTOL)
 		return container:GetData()
 	end
 	local defaultValue = 0
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 0)
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 0)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 	setting:SetValueChangedCallback(function()
 		if ProfessionShoppingList_Settings["backpackCleanup"] == 1 then
@@ -339,19 +340,18 @@ function app.SettingsTweaks()
 		elseif ProfessionShoppingList_Settings["backpackCleanup"] == 2 then
 			C_Container.SetSortBagsRightToLeft(true)
 		end
-		
 	end)
 
-	local variable, name, tooltip = "backpackLoot", "Loot order", "Let ".. app.NameShort.." enforce loot sorting direction.\n- Default means "..app.NameShort.." won't touch the game's default behaviour;\n- The other options let "..app.NameShort.." enforce that particular setting."
+	local variable, name, tooltip = "backpackLoot", L.SETTINGS_LOOTBAG_TITLE, L.SETTINGS_LOOTBAG_TOOLTIP
 	local function GetOptions()
 		local container = Settings.CreateControlTextContainer()
-		container:Add(0, "Default")
-		container:Add(1, "Left-to-Right")
-		container:Add(2, "Right-to-Left")
+		container:Add(0, L.SETTINGS_DEFAULT)
+		container:Add(1, L.SETTINGS_LTOR)
+		container:Add(2, L.SETTINGS_RTOL)
 		return container:GetData()
 	end
 	local defaultValue = 0
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 0)
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 0)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
 	setting:SetValueChangedCallback(function()
 		if ProfessionShoppingList_Settings["backpackLoot"] == 1 then
@@ -361,26 +361,26 @@ function app.SettingsTweaks()
 		end
 	end)
 
-	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer("Other tweaks"))
+	layout:AddInitializer(CreateSettingsListSectionHeaderInitializer(L.SETTINGS_HEADER_OTHERTWEAKS))
 
-	local variable, name, tooltip = "vendorAll", "Disable vendor filter", "Automatically set all vendor filters to |cffFFFFFFAll|R to display items normally not shown to your class."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	local variable, name, tooltip = "vendorAll", L.SETTINGS_VENDORFILTER_TITLE, L.SETTINGS_VENDORFILTER_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 
-	local variable, name, tooltip = "catalystButton", "Show catalyst button", "Show a button on the Revival Catalyst that allows you to instantly catalyze an item, skipping the 5 second confirmation timer."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	local variable, name, tooltip = "catalystButton", L.SETTINGS_CATALYSTBUTTON_TITLE, L.SETTINGS_CATALYSTBUTTON_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 
-	local variable, name, tooltip = "queueSound", "Play queue sound", "Play the Deadly Boss Mods style queue sound when any queue pops, including battlegrounds and pet battles."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
+	local variable, name, tooltip = "queueSound", L.SETTINGS_QUEUESOUND_TITLE, L.SETTINGS_QUEUESOUND_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
 	Settings.CreateCheckbox(category, setting, tooltip)
 
-	local variable, name, tooltip = "handyNotes", "Disable HandyNotes Alt+RMB", "Let "..app.NameShort.." disable this keybind on the map, re-enabling it for TomTom waypoints instead.\n\n|cffFF0000"..REQUIRES_RELOAD
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	local variable, name, tooltip = "handyNotes", L.SETTINGS_HANDYNOTESFIX_TITLE, L.SETTINGS_HANDYNOTESFIX_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 
-	local variable, name, tooltip = "underminePrices", "Fix Oribos Exchange tooltip", "Let "..app.NameShort.." simplify and fix the tooltip provided by the Oribos Exchange AddOn:\n- Round to the nearest gold;\n- Fix recipe prices;\n- Fix profession window prices;\n- Show battle pet prices inside the existing tooltip."
-	local setting = Settings.RegisterAddOnSetting(category, appName.."_"..variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	local variable, name, tooltip = "underminePrices", L.SETTINGS_ORIBOSEXCHANGEFIX_TITLE, L.SETTINGS_ORIBOSEXCHANGEFIX_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 	setting:SetValueChangedCallback(function()
 		app.HideOribos()
