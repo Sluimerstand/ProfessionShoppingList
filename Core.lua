@@ -621,19 +621,11 @@ function app.UpdateNumbers()
 
 		if not ProfessionShoppingList_Cache.Reagents[reagentID] then
 			-- Cache item
-			if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
-
-			-- Get item info
-			_, itemLink, _, _, _, _, _, _, _, fileID = C_Item.GetItemInfo(reagentID)
-
-			-- Try again if error
-			if itemLink == nil then
+			if not C_Item.IsItemDataCachedByID(reagentID) then
+				app.CacheItem(reagentID, true)
 				RunNextFrame(app.UpdateNumbers)
 				do return end
 			end
-
-			-- Write the info to the cache
-			ProfessionShoppingList_Cache.Reagents[reagentID] = {link = itemLink, icon = fileID}
 		else
 			-- Read the info from the cache
 			itemLink = ProfessionShoppingList_Cache.Reagents[reagentID].link
@@ -1139,7 +1131,10 @@ function app.UpdateRecipes()
 		reagentsSorted = {}
 		for k, v in pairs(app.ReagentQuantities) do
 			if not ProfessionShoppingList_Cache.Reagents[k] then
-				C_Timer.After(1, function() app.UpdateRecipes() end)
+				C_Timer.After(1, function()
+					app.CacheItem(k, true)
+					app.UpdateRecipes()
+				end)
 				do return end
 			end
 			reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = ProfessionShoppingList_Cache.Reagents[k].icon, link = ProfessionShoppingList_Cache.Reagents[k].link}
@@ -2706,6 +2701,21 @@ app.Event:Register("TRADE_SKILL_SHOW", function()
 	end
 end)
 
+function app.CacheItem(itemID, save)
+	local item = Item:CreateFromItemID(itemID)
+			
+	-- And when the item is cached
+	if save then
+		item:ContinueOnItemLoad(function()
+			-- Get item info
+			_, itemLink, _, _, _, _, _, _, _, fileID = C_Item.GetItemInfo(itemID)
+
+			-- Write the info to the cache
+			ProfessionShoppingList_Cache.Reagents[itemID] = {link = itemLink, icon = fileID}
+		end)
+	end
+end
+
 -- Get reagents for recipe
 function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qualityTier)
 	if not recraft then
@@ -2783,16 +2793,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 
 			-- Add the reagentID to the reagent cache
 			if not ProfessionShoppingList_Cache.Reagents[reagentID] then
-				local item = Item:CreateFromItemID(reagentID)
-			
-				-- And when the item is cached
-				item:ContinueOnItemLoad(function()
-					-- Get item info
-					_, itemLink, _, _, _, _, _, _, _, fileID = C_Item.GetItemInfo(reagentID)
-
-					-- Write the info to the cache
-					ProfessionShoppingList_Cache.Reagents[reagentID] = {link = itemLink, icon = fileID}
-				end)
+				app.CacheItem(reagentID, true)
 			end
 
 			-- Add the info to the specified variable, if it's not 0 and not a CraftSim recipe
@@ -2805,15 +2806,6 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 
 	-- Manually insert the reagents if it's a CraftSim recipe
 	if ProfessionShoppingList_Data.Recipes[craftingRecipeID] and ProfessionShoppingList_Data.Recipes[craftingRecipeID].craftSim then
-		-- Debug to try and troubleshoot this dumbass issue
-		if ProfessionShoppingList_Settings["debug"] then
-			app.Debug("craftingRecipeID: " .. craftingRecipeID)
-			app.Debug("ProfessionShoppingList_Data.Recipes[craftingRecipeID]:")
-			app.Dump(ProfessionShoppingList_Data.Recipes[craftingRecipeID])
-			app.Debug("ProfessionShoppingList_Cache.CraftSimRecipes[craftingRecipeID]:")
-			app.Dump(ProfessionShoppingList_Cache.CraftSimRecipes[craftingRecipeID])
-			print("-----")
-		end
 		for k, v in pairs(ProfessionShoppingList_Cache.CraftSimRecipes[craftingRecipeID]) do
 			-- Check if the reagent isn't provided if it's a crafting order
 			local providedReagents = {}
