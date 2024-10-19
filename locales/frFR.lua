@@ -69,7 +69,7 @@ if GetLocale() ~= "frFR" then return end
 -- L.QUICKORDER_REPEAT_TOOLTIP =			"Repeat the last " .. L.QUICKORDER .. " done on this character."
 -- L.RECIPIENT =							"Recipient"
 
--- Recipe information
+-- Profession window
 -- L.FROM =									"from"	-- I will convert this whole section to item links, then this is the only localisation needed. I recommend skipping this section, other than the two headers. :)
 -- L.MILLING_INFO =							"Milling information"
 -- L.MILLING_CLASSIC =						"Sapphire Pigment: 25% from Golden Sansam, Dreamfoil, Mountain Silversage, Sorrowmoss, Icecap\n" ..
@@ -113,6 +113,11 @@ if GetLocale() ~= "frFR" then return end
 -- 											"Ominous Transmutagen: Bismuth, Mycobloom, Storm Dust, Weavercloth\n" ..
 -- 											"Volatile Transmutagen: Arathor's Spear, Blessing Blossom, Ironclaw Ore, Stormcharged Leather"
 
+-- L.BUTTON_COOKINGFIRE =					app.IconLMB .. ": " .. BINDING_NAME_TARGETSELF .. ".\n" ..
+-- 											app.IconRMB .. ": " .. STATUS_TEXT_TARGET .. "."
+-- L.BUTTON_COOKINGPET =					app.IconLMB .. ": Summon this pet.\n" ..
+-- 											app.IconRMB .. ": Switch between available pets."
+
 -- Track new mogs
 -- L.BUTTON_TRACKNEW =						"Track new mogs"
 -- L.CURRENT_SETTING =						"Current setting"
@@ -124,14 +129,14 @@ if GetLocale() ~= "frFR" then return end
 -- L.ADDED_RECIPES1 =						"Added"	-- Followed by a number
 -- L.ADDED_RECIPES2 =						"eligible recipes"	-- Preceded by a number
 
--- -- Tooltip info
+-- Tooltip info
 -- L.MORE_NEEDED =							"more needed" -- Preceded by a number
 -- L.MADE_WITH =							"Made with"	-- Followed by a profession name such as "Blacksmithing" or "Leatherworking"
 -- L.RECIPE_LEARNED =						"recipe learned"
 -- L.RECIPE_UNLEARNED =						"recipe not learned"
 -- L.REGION =								"Region"	-- Preceded by an abbreviated region name such as "EU" or "US"
 
--- -- Profession knowledge
+-- Profession knowledge
 -- L.PERKS_UNLOCKED =						"perks unlocked"
 -- L.PROFESSION_KNOWLEDGE =					"knowledge"
 -- L.VENDORS =								"Vendors"
@@ -139,7 +144,7 @@ if GetLocale() ~= "frFR" then return end
 -- L.WORLD =								"World"
 -- L.HIDDEN_PROFESSION_MASTER =				"Hidden Profession Master"
 
--- -- Tweaks
+-- Tweaks
 -- L.CATALYSTBUTTON_LABEL =					"Instantly Catalyze"
 
 -- Chat feedback

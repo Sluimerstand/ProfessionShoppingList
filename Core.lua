@@ -185,6 +185,7 @@ function app.InitialiseCore()
 	if not ProfessionShoppingList_Data then ProfessionShoppingList_Data = {} end
 	if not ProfessionShoppingList_Data.Recipes then ProfessionShoppingList_Data.Recipes = {} end
 	if not ProfessionShoppingList_Data.Cooldowns then ProfessionShoppingList_Data.Cooldowns = {} end
+	if not ProfessionShoppingList_Data.Pets then ProfessionShoppingList_Data.Pets = {} end
 
 	if not ProfessionShoppingList_Library then ProfessionShoppingList_Library = {} end
 
@@ -203,8 +204,6 @@ function app.InitialiseCore()
 	if ProfessionShoppingList_Settings["windowPosition"] == nil then ProfessionShoppingList_Settings["windowPosition"] = { ["left"] = 1295, ["bottom"] = 836, ["width"] = 200, ["height"] = 200, } end
 	if ProfessionShoppingList_Settings["pcWindowPosition"] == nil then ProfessionShoppingList_Settings["pcWindowPosition"] = ProfessionShoppingList_Settings["windowPosition"] end
 	if ProfessionShoppingList_Settings["windowLocked"] == nil then ProfessionShoppingList_Settings["windowLocked"] = false end
-	if ProfessionShoppingList_Settings["alvinGUID"] == nil then ProfessionShoppingList_Settings["alvinGUID"] = "unknown" end
-	if ProfessionShoppingList_Settings["ragnarosGUID"] == nil then ProfessionShoppingList_Settings["ragnarosGUID"] = "unknown" end
 	if ProfessionShoppingList_Settings["debug"] == nil then ProfessionShoppingList_Settings["debug"] = false end
 
 	-- Load personal recipes, if the setting is enabled
@@ -237,6 +236,8 @@ function app.InitialiseCore()
 		ProfessionShoppingList_Cache.SimulatedRecipes = ProfessionShoppingList_Cache.CraftSimRecipes
 		ProfessionShoppingList_Cache.CraftSimRecipes = nil
 	end
+	if ProfessionShoppingList_Settings["alvinGUID"] then ProfessionShoppingList_Settings["alvinGUID"] = nil end
+	if ProfessionShoppingList_Settings["ragnarosGUID"] then ProfessionShoppingList_Settings["ragnarosGUID"] = nil end
 end
 
 -- When the AddOn is fully loaded, actually run the components
@@ -1998,6 +1999,14 @@ function app.CreateTradeskillAssets()
 		app.CookingFireButton:SetAttribute("unit1", "player")
 		app.CookingFireButton:SetAttribute("spell2", 818)
 		app.CookingFireButton:Hide()
+		app.CookingFireButton:SetScript("OnEnter", function(self)
+			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+			GameTooltip:SetText(L.BUTTON_COOKINGFIRE)
+			GameTooltip:Show()
+		end)
+		app.CookingFireButton:SetScript("OnLeave", function()
+			GameTooltip:Hide()
+		end)
 		app.Border(app.CookingFireButton, -1, 2, 2, -1)
 
 		app.CookingFireCooldown = CreateFrame("Cooldown", "CookingFireCooldown", app.CookingFireButton, "CooldownFrameTemplate")
@@ -2064,7 +2073,6 @@ function app.CreateTradeskillAssets()
 		app.AlvinButton:SetPoint("BOTTOMRIGHT", app.ThermalAnvilButton, "BOTTOMLEFT", -3, 0)
 		app.AlvinButton:SetFrameStrata("HIGH")
 		app.AlvinButton:RegisterForClicks("AnyDown", "AnyUp")
-		app.AlvinButton:SetAttribute("type1", "macro")
 		app.Border(app.AlvinButton, -1, 2, 2, -1)
 
 		app.AlvinCooldown = CreateFrame("Cooldown", "AlvinCooldown", app.AlvinButton, "CooldownFrameTemplate")
@@ -2082,13 +2090,46 @@ function app.CreateTradeskillAssets()
 		app.RagnarosButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
 		app.RagnarosButton:SetFrameStrata("HIGH")
 		app.RagnarosButton:RegisterForClicks("AnyDown", "AnyUp")
-		app.RagnarosButton:SetAttribute("type1", "macro")
 		app.RagnarosButton:Hide()
+		app.RagnarosButton:SetScript("OnEnter", function(self)
+			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+			GameTooltip:SetText("|cffFFFFFF" .. L.BUTTON_COOKINGPET)
+			GameTooltip:Show()
+		end)
+		app.RagnarosButton:SetScript("OnLeave", function()
+			GameTooltip:Hide()
+		end)
 		app.Border(app.RagnarosButton, -1, 2, 2, -1)
 
 		app.RagnarosCooldown = CreateFrame("Cooldown", "RagnarosCooldown", app.RagnarosButton, "CooldownFrameTemplate")
 		app.RagnarosCooldown:SetAllPoints(app.RagnarosButton)
 		app.RagnarosCooldown:SetSwipeColor(1, 1, 1)
+	end
+
+	-- Create Pierre button
+	if not app.PierreButton then
+		app.PierreButton = CreateFrame("Button", "PierreButton", ProfessionsFrame.CraftingPage, "SecureActionButtonTemplate")
+		app.PierreButton:SetWidth(40)
+		app.PierreButton:SetHeight(40)
+		app.PierreButton:SetNormalTexture(798062)
+		app.PierreButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
+		app.PierreButton:SetPoint("BOTTOMRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMRIGHT", -5, 4)
+		app.PierreButton:SetFrameStrata("HIGH")
+		app.PierreButton:RegisterForClicks("AnyDown", "AnyUp")
+		app.PierreButton:Hide()
+		app.PierreButton:SetScript("OnEnter", function(self)
+			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+			GameTooltip:SetText("|cffFFFFFF" .. L.BUTTON_COOKINGPET)
+			GameTooltip:Show()
+		end)
+		app.PierreButton:SetScript("OnLeave", function()
+			GameTooltip:Hide()
+		end)
+		app.Border(app.PierreButton, -1, 2, 2, -1)
+
+		app.PierreCooldown = CreateFrame("Cooldown", "PierreCooldown", app.PierreButton, "CooldownFrameTemplate")
+		app.PierreCooldown:SetAllPoints(app.PierreButton)
+		app.PierreCooldown:SetSwipeColor(1, 1, 1)
 	end
 
 	-- Create Lightforged Draenei Lightforge button
@@ -2334,19 +2375,16 @@ function app.UpdateAssets()
 		app.ThermalAnvilCooldown:SetCooldown(startTime, duration)
 
 		-- Make the Alvin the Anvil button not desaturated if it can be used
-		if C_PetJournal.PetIsSummonable(ProfessionShoppingList_Settings["alvinGUID"]) then
+		if ProfessionShoppingList_Data.Pets["alvin"] and C_PetJournal.PetIsSummonable(ProfessionShoppingList_Data.Pets["alvin"].guid) then
 			app.AlvinButton:GetNormalTexture():SetDesaturated(false)
 		end
 
-		-- Alvin button cooldown
+		-- Pet buttons cooldown
 		startTime = C_Spell.GetSpellCooldown(61304).startTime
 		duration = C_Spell.GetSpellCooldown(61304).duration
 		app.AlvinCooldown:SetCooldown(startTime, duration)
-
-		-- Ragnaros button cooldown
-		startTime = C_Spell.GetSpellCooldown(61304).startTime
-		duration = C_Spell.GetSpellCooldown(61304).duration
 		app.RagnarosCooldown:SetCooldown(startTime, duration)
+		app.PierreCooldown:SetCooldown(startTime, duration)
 
 		-- Lightforge cooldown
 		startTime = C_Spell.GetSpellCooldown(259930).startTime
@@ -2398,39 +2436,47 @@ app.Event:Register("TRADE_SKILL_SHOW", function()
 			app.CreateTradeskillAssets()
 		end
 
-		-- Get Alvin the Anvil's GUID
-		for i=1, 9999 do
-			local petID, speciesID = C_PetJournal.GetPetInfoByIndex(i)
-			if speciesID == 3274 then
-				if petID then ProfessionShoppingList_Settings["alvinGUID"] = petID end
-				break
-			elseif speciesID == nil then
-				break
+		local function getGUID(id, name)
+			if not ProfessionShoppingList_Data.Pets[name] then
+				for i=1, 9999 do
+					C_PetJournal.ClearSearchFilter()
+					local petID, speciesID = C_PetJournal.GetPetInfoByIndex(i)
+					if speciesID == id and petID then
+						ProfessionShoppingList_Data.Pets[name] = {guid = petID, enabled = true}
+						break
+					elseif speciesID == nil then
+						break
+					end
+				end
 			end
 		end
 
-		-- Get Lil' Ragnaros's GUID
-		for i=1, 9999 do
-			local petID, speciesID = C_PetJournal.GetPetInfoByIndex(i)
-			if speciesID == 297 then
-				if petID then ProfessionShoppingList_Settings["ragnarosGUID"] = petID end
-				break
-			elseif speciesID == nil then
-				break
-			end
-		end
+		--ProfessionShoppingList_Data.Pets[name]
+		getGUID(297, "ragnaros")
+		getGUID(1204, "pierre")
+		getGUID(3274, "alvin")
 
 		if app.Flag["tradeskillAssets"] then
 			-- Alvin button
-			if ProfessionShoppingList_Settings["alvinGUID"] ~= "unknown" then
-				app.AlvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('" .. ProfessionShoppingList_Settings["alvinGUID"] .. "')")
-			else
-				app.AlvinButton:SetAttribute("macrotext1", "")
+			if ProfessionShoppingList_Data.Pets["alvin"] then
+				app.AlvinButton:SetAttribute("type1", "macro")
+				app.AlvinButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('" .. ProfessionShoppingList_Data.Pets["alvin"].guid .. "')")
 			end
 
 			-- Lil' Ragnaros button
-			if ProfessionShoppingList_Settings["ragnarosGUID"] ~= "unknown" then
-				app.RagnarosButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('" .. ProfessionShoppingList_Settings["ragnarosGUID"] .. "')")
+			if ProfessionShoppingList_Data.Pets["ragnaros"] then
+				app.RagnarosButton:SetAttribute("type1", "macro")
+				app.RagnarosButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('" .. ProfessionShoppingList_Data.Pets["ragnaros"].guid .. "')")
+				app.RagnarosButton:SetAttribute("type2", "macro")
+				app.RagnarosButton:SetAttribute("macrotext2", "/run ProfessionShoppingList.SwapCookingPet()")
+			end
+
+			-- Pierre button
+			if ProfessionShoppingList_Data.Pets["pierre"] then
+				app.PierreButton:SetAttribute("type1", "macro")
+				app.PierreButton:SetAttribute("macrotext1", "/run C_PetJournal.SummonPetByGUID('" .. ProfessionShoppingList_Data.Pets["pierre"].guid .. "')")
+				app.PierreButton:SetAttribute("type2", "macro")
+				app.PierreButton:SetAttribute("macrotext2", "/run ProfessionShoppingList.SwapCookingPet()")
 			end
 
 			-- Recharge timer
@@ -2453,6 +2499,23 @@ app.Event:Register("TRADE_SKILL_SHOW", function()
 		end
 	end
 end)
+
+function api.SwapCookingPet()
+	-- Only do things if there's something to swap
+	if ProfessionShoppingList_Data.Pets["ragnaros"] and ProfessionShoppingList_Data.Pets["pierre"] then
+		if ProfessionShoppingList_Data.Pets["ragnaros"].enabled then
+			ProfessionShoppingList_Data.Pets["ragnaros"].enabled = false
+			app.RagnarosButton:Hide()
+			ProfessionShoppingList_Data.Pets["pierre"].enabled = true
+			app.PierreButton:Show()
+		else
+			ProfessionShoppingList_Data.Pets["ragnaros"].enabled = true
+			app.RagnarosButton:Show()
+			ProfessionShoppingList_Data.Pets["pierre"].enabled = false
+			app.PierreButton:Hide()
+		end
+	end
+end
 
 -- When a recipe is selected
 app.Event:Register("SPELL_DATA_LOAD_RESULT", function(spellID, success)
@@ -2549,8 +2612,10 @@ app.Event:Register("SPELL_DATA_LOAD_RESULT", function(spellID, success)
 
 			-- Cooking Fire and Chef's Hat buttons
 			if professionID == 5 then
-				if ProfessionShoppingList_Settings["ragnarosGUID"] ~= "unknown" then
+				if ProfessionShoppingList_Data.Pets["ragnaros"] and ProfessionShoppingList_Data.Pets["ragnaros"].enabled then
 					app.RagnarosButton:Show()
+				elseif ProfessionShoppingList_Data.Pets["pierre"] and ProfessionShoppingList_Data.Pets["pierre"].enabled then
+					app.PierreButton:Show()
 				else
 					app.CookingFireButton:Show()
 				end
@@ -2558,6 +2623,7 @@ app.Event:Register("SPELL_DATA_LOAD_RESULT", function(spellID, success)
 			else
 				app.CookingFireButton:Hide()
 				app.RagnarosButton:Hide()
+				app.PierreButton:Hide()
 				app.ChefsHatButton:Hide()
 			end
 

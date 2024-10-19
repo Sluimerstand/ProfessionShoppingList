@@ -66,7 +66,7 @@ L.LOCALREAGENTS_TOOLTIP =				"Use (the lowest quality) available local reagents.
 L.QUICKORDER_REPEAT_TOOLTIP =			"Repeat the last " .. L.QUICKORDER .. " done on this character."
 L.RECIPIENT =							"Recipient"
 
--- Recipe information
+-- Profession window
 L.FROM =								"from"	-- I will convert this whole section to item links, then this is the only localisation needed. I recommend skipping this section, other than the two headers. :)
 L.MILLING_INFO =						"Milling information"
 L.MILLING_CLASSIC =						"Sapphire Pigment: 25% from Golden Sansam, Dreamfoil, Mountain Silversage, Sorrowmoss, Icecap\n" ..
@@ -109,6 +109,11 @@ L.THAUMATURGY_INFO =					"Thaumaturgy information"
 L.THAUMATURGY_TWW =						"Mercurial Transmutagen: Aqirite, Gloom Chitin, Luredrop, Orbinid\n" ..
 										"Ominous Transmutagen: Bismuth, Mycobloom, Storm Dust, Weavercloth\n" ..
 										"Volatile Transmutagen: Arathor's Spear, Blessing Blossom, Ironclaw Ore, Stormcharged Leather"
+
+L.BUTTON_COOKINGFIRE =					app.IconLMB .. ": " .. BINDING_NAME_TARGETSELF .. ".\n" ..
+										app.IconRMB .. ": " .. STATUS_TEXT_TARGET .. "."
+L.BUTTON_COOKINGPET =					app.IconLMB .. ": Summon this pet.\n" ..
+										app.IconRMB .. ": Switch between available pets."
 
 -- Track new mogs
 L.BUTTON_TRACKNEW =						"Track new mogs"
