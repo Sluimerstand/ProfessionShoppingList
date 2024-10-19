@@ -2797,7 +2797,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 				app.CacheItem(reagentID, true)
 			end
 
-			-- Add the info to the specified variable, if it's not 0 and not a CraftSim recipe
+			-- Add the info to the specified variable, if it's not 0 and not a simulated recipe
 			if (ProfessionShoppingList_Data.Recipes[craftingRecipeID] and not ProfessionShoppingList_Data.Recipes[craftingRecipeID].simRecipe and reagentAmount > 0) or not ProfessionShoppingList_Data.Recipes[craftingRecipeID] then
 				if reagentVariable[reagentID] == nil then reagentVariable[reagentID] = 0 end
 				reagentVariable[reagentID] = reagentVariable[reagentID] + ( reagentAmount * recipeQuantity )
@@ -2805,7 +2805,7 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 		end
 	end
 
-	-- Manually insert the reagents if it's a CraftSim recipe
+	-- Manually insert the reagents if it's a simulated recipe
 	if ProfessionShoppingList_Data.Recipes[craftingRecipeID] and ProfessionShoppingList_Data.Recipes[craftingRecipeID].simRecipe then
 		for k, v in pairs(ProfessionShoppingList_Cache.SimulatedRecipes[craftingRecipeID]) do
 			-- Check if the reagent isn't provided if it's a crafting order
@@ -2834,11 +2834,11 @@ end
 function app.GetReagentCount(reagentID)
 	local reagentCount = 0
 
-	-- Index CraftSim reagents, whose quality is not subject to our quality setting
-	local craftSimReagents = {}
+	-- Index simulated reagents, whose quality is not subject to our quality setting
+	local simulatedReagents = {}
 	for k, v in pairs(ProfessionShoppingList_Cache.SimulatedRecipes) do
 		for k2, v2 in pairs(v) do
-			craftSimReagents[k2] = v2
+			simulatedReagents[k2] = v2
 		end
 	end
 
@@ -2871,7 +2871,7 @@ function app.GetReagentCount(reagentID)
 	end
 
 	-- Count the right reagents when it's applicable
-	if craftSimReagents[reagentID] then
+	if simulatedReagents[reagentID] then
 		if ProfessionShoppingList_Cache.ReagentTiers[reagentID] then
 			if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three == reagentID then
 				reagentCount = tierThree()
@@ -3098,12 +3098,12 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID)
 			simRecipe = true
 			
 			-- Grab the reagents it provides
-			local craftSimSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
-			craftSimRequiredReagents = craftSimSimulationMode.recipeData.reagentData.requiredReagents
+			local simulatedSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
+			simulatedRequiredReagents = simulatedSimulationMode.recipeData.reagentData.requiredReagents
 	
-			if craftSimRequiredReagents then
+			if simulatedRequiredReagents then
 				local reagents = {}
-				for k, v in pairs(craftSimRequiredReagents) do
+				for k, v in pairs(simulatedRequiredReagents) do
 					-- For reagents without quality
 					if not v.hasQuality then
 						reagents[v.items[1].item.itemID] = v.requiredQuantity

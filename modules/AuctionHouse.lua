@@ -74,18 +74,18 @@ function app.CreateAuctionatorButton()
 							do return end
 						end
 
-						-- Index CraftSim reagents, whose quality is not subject to our quality setting
-						local craftSimReagents = {}
-						for k, v in pairs(ProfessionShoppingList_Cache.CraftSimRecipes) do
+						-- Index simulated reagents, whose quality is not subject to our quality setting
+						local simulatedReagents = {}
+						for k, v in pairs(ProfessionShoppingList_Cache.SimulatedRecipes) do
 							for k2, v2 in pairs(v) do
-								craftSimReagents[k2] = v2
+								simulatedReagents[k2] = v2
 							end
 						end
 
 						-- Set reagent quality to 2 or 3 if applicable and the user has this set, otherwise don't specify quality
 						local reagentQuality = ""
 
-						if craftSimReagents[reagentID] then
+						if simulatedReagents[reagentID] then
 							if ProfessionShoppingList_Cache.ReagentTiers[reagentID].three == reagentID then
 								reagentQuality = 3
 							elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].two == reagentID then
