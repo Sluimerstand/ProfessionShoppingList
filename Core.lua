@@ -2683,7 +2683,7 @@ function app.RegisterRecipe(recipeID)
 
 	-- Create the table entry
 	if not ProfessionShoppingList_Library[recipeID] then
-		ProfessionShoppingList_Library[recipeID]
+		ProfessionShoppingList_Library[recipeID] = {}
 	end
 
 	-- (Over)write the info
