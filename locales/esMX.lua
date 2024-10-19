@@ -40,8 +40,8 @@ if GetLocale() ~= "esMX" then return end
 -- L.CONFIRMATION =							"Do you wish to proceed?"
 -- L.SUBREAGENTS1 =							"There are multiple recipes that can create"	-- Followed by an item link
 -- L.SUBREAGENTS2 =							"Please select one of the following"
-
 -- L.GOLD =									BONUS_ROLL_REWARD_MONEY	-- "Gold"
+
 -- L.WARBANK_CHECKBOX =						"Include Warbank"
 -- L.WARBANK_TOOLTIP =						"Because crafting orders cannot use items stored in the Warbank currently, you can disable tracking them."
 
@@ -70,12 +70,14 @@ if GetLocale() ~= "esMX" then return end
 -- L.RECIPIENT =							"Recipient"
 
 -- Profession window
--- L.FROM =									"from"	-- I will convert this whole section to item links, then this is the only localisation needed. I recommend skipping this section, other than the two headers. :)
--- L.MILLING_INFO =							"Milling information"
+-- L.MILLING_INFO =							"Milling Information"
+-- L.THAUMATURGY_INFO =						"Thaumaturgy Information"
+-- L.FROM =									"from"	-- I will convert this whole section to item links, then this is the only localisation needed. I recommend skipping the rest of this section. :)
+
 -- L.MILLING_CLASSIC =						"Sapphire Pigment: 25% from Golden Sansam, Dreamfoil, Mountain Silversage, Sorrowmoss, Icecap\n" ..
 -- 											"Silvery Pigment: 75% from Golden Sansam, Dreamfoil, Mountain Silversage, Sorrowmoss, Icecap\n\n" ..
--- 											"Ruby Pigment: 25% from Firebloom, Purple Lotus, Arthas' Tears, Sungrass, Blindweed,\n      Ghost Mushroom, Gromsblood\n" ..	-- The spacing here is an indentation because of the line overflow in the profession window
--- 											"Violet Pigment: 75% from Firebloom, Purple Lotus, Arthas' Tears, Sungrass, Blindweed,\n      Ghost Mushroom, Gromsblood\n\n" ..	-- The spacing here is an indentation because of the line overflow in the profession window
+-- 											"Ruby Pigment: 25% from Firebloom, Purple Lotus, Arthas' Tears, Sungrass, Blindweed,\n      Ghost Mushroom, Gromsblood\n" ..
+-- 											"Violet Pigment: 75% from Firebloom, Purple Lotus, Arthas' Tears, Sungrass, Blindweed,\n      Ghost Mushroom, Gromsblood\n\n" ..
 -- 											"Indigo Pigment: 25% from Fadeleaf, Goldthorn, Khadgar's Whisker, Dragon's Teeth\n" ..
 -- 											"Emerald Pigment: 75% from Fadeleaf, Goldthorn, Khadgar's Whisker, Dragon's Teeth\n\n" ..
 -- 											"Burnt Pigment: 25% from Wild Steelbloom, Grave Moss, Kingsblood, Liferoot\n" ..
@@ -108,7 +110,6 @@ if GetLocale() ~= "esMX" then return end
 -- 											"Luredrop Pigment: Luredrop\n" ..
 -- 											"Orbinid Pigment: Orbinid\n" ..
 -- 											"Nacreous Pigment: Mycobloom"
--- L.THAUMATURGY_INFO =						"Thaumaturgy information"
 -- L.THAUMATURGY_TWW =						"Mercurial Transmutagen: Aqirite, Gloom Chitin, Luredrop, Orbinid\n" ..
 -- 											"Ominous Transmutagen: Bismuth, Mycobloom, Storm Dust, Weavercloth\n" ..
 -- 											"Volatile Transmutagen: Arathor's Spear, Blessing Blossom, Ironclaw Ore, Stormcharged Leather"
@@ -148,13 +149,18 @@ if GetLocale() ~= "esMX" then return end
 -- L.CATALYSTBUTTON_LABEL =					"Instantly Catalyze"
 
 -- Chat feedback
--- L.INVALID_RECIPEQUANTITY =				"Invalid parameters. Please enter a valid recipe quantity."
--- L.INVALID_RECIPE_CACHE =					"Invalid parameters. Please enter a cached recipeID."
--- L.INVALID_RECIPE_TRACKED =				"Invalid parameters. Please enter a tracked recipeID."
--- L.INVALID_ACHIEVEMENT =					"Invalid parameters. This is not a crafting achievement. No recipes were added."
+-- L.INVALID_PARAMETERS =					"Invalid parameters."
+-- L.INVALID_RECIPEQUANTITY =				L.INVALID_PARAMETERS .. " Please enter a valid recipe quantity."
+-- L.INVALID_RECIPE_CACHE =					L.INVALID_PARAMETERS .. " Please enter a cached recipeID."
+-- L.INVALID_RECIPE_TRACKED =				L.INVALID_PARAMETERS .. " Please enter a tracked recipeID."
+-- L.INVALID_ACHIEVEMENT =					L.INVALID_PARAMETERS .. " This is not a crafting achievement. No recipes were added."
+-- L.INVALID_RESET_ARG =					L.INVALID_PARAMETERS .. " You can use the following arguments: \n" ..
+-- 											app.Colour("settings") .. ", " .. app.Colour("library") .. ", " .. app.Colour("cache") .. ", " .. app.Colour("character") .. ", " .. app.Colour("all") .. ", " .. app.Colour("pos")	-- Don't translate these arguments, as they are hardcoded
 -- L.INVALID_COMMAND =						"Invalid command. See " .. app.Colour("/psl settings") .. " for more info."
 -- L.DEBUG_ENABLED =						"Debug mode enabled."
 -- L.DEBUG_DISABLED =						"Debug mode disabled."
+-- L.RESET_DONE =							"Data reset performed successfully."
+-- L.REQUIRES_RELOAD =						"|cffFF0000" .. REQUIRES_RELOAD .. ".|r Use |cffFFFFFF/reload|r or relog."	-- "Requires Reload"
 
 -- L.FALSE =								"false"
 -- L.TRUE =									"true"
@@ -172,7 +178,7 @@ if GetLocale() ~= "esMX" then return end
 
 -- Settings
 -- L.SETTINGS_TOOLTIP =						app.IconLMB .. "|cffFFFFFF: Toggle the window.\n" ..
--- 											app.IconRMB .. ": Show the settings."
+-- 											app.IconRMB .. ": " .. L.WINDOW_BUTTON_SETTINGS
 
 -- L.SETTINGS_MINIMAP_TITLE =				"Show Minimap Icon"
 -- L.SETTINGS_MINIMAP_TOOLTIP =				"Show the minimap icon. If you disable this, " .. app.NameShort .. " is still available from the AddOn Compartment."
@@ -220,7 +226,7 @@ if GetLocale() ~= "esMX" then return end
 -- L.SETTINGS_SLASHCOMMANDS_TOOLTIP =		"Type these in chat to use them!"
 -- L.SETTINGS_SLASH_TOGGLE =				"Toggle the tracking window."
 -- L.SETTINGS_SLASH_RESETPOS =				"Reset the tracking window position."
--- L.SETTINGS_SLASH_SETTINGS =				"Go to the settings."
+-- L.SETTINGS_SLASH_RESET =					"Reset saved data."
 -- L.SETTINGS_SLASH_TRACK =					"Track a recipe."
 -- L.SETTINGS_SLASH_UNTRACK =				"Untrack a recipe."
 -- L.SETTINGS_SLASH_UNTRACKALL =			"Untrack all of a recipe."
@@ -250,8 +256,7 @@ if GetLocale() ~= "esMX" then return end
 -- L.SETTINGS_QUEUESOUND_TITLE =			"Play Queue Sound"
 -- L.SETTINGS_QUEUESOUND_TOOLTIP =			"Play the Deadly Boss Mods style queue sound when any queue pops, including battlegrounds and pet battles."
 -- L.SETTINGS_HANDYNOTESFIX_TITLE =			"Disable HandyNotes Alt " .. app.IconRMB
--- L.SETTINGS_HANDYNOTESFIX_TOOLTIP =		"Let " .. app.NameShort .. " disable HandyNotes' keybind on the map, re-enabling it for TomTom waypoints instead.\n\n" ..
--- 											"|cffFF0000" .. REQUIRES_RELOAD	-- "Requires Reload"
+-- L.SETTINGS_HANDYNOTESFIX_TOOLTIP =		"Let " .. app.NameShort .. " disable HandyNotes' keybind on the map, re-enabling it for TomTom waypoints instead.\n\n" .. L.REQUIRES_RELOAD
 -- L.SETTINGS_ORIBOSEXCHANGEFIX_TITLE =		"Fix Oribos Exchange Tooltip"
 -- L.SETTINGS_ORIBOSEXCHANGEFIX_TOOLTIP =	"Let " .. app.NameShort .. " simplify and fix the tooltip provided by the Oribos Exchange AddOn:\n" ..
 -- 											"- Round to the nearest gold.\n" ..

@@ -266,14 +266,9 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 			-- Clear list
 			elseif command == "clear" then
 				app.Clear()
-			-- Reset window positions
-			elseif command == "resetpos" then
-				-- Set the window size and position back to default
-				ProfessionShoppingList_Settings["windowPosition"] = { ["left"] = GetScreenWidth()/2-100, ["bottom"] = GetScreenHeight()/2-100, ["width"] = 200, ["height"] = 200, }
-				ProfessionShoppingList_Settings["pcWindowPosition"] = ProfessionShoppingList_Settings["windowPosition"]
-
-				-- Show the window, which will also run setting its size and position
-				app.Show()
+			-- Reset stuff
+			elseif command == "reset" then
+				app.Reset(rest:match("^(%S*)%s*(.-)$"))
 			-- Track recipe
 			elseif command == 'track' then
 				-- Split entered recipeID and recipeQuantity and turn them into real numbers
@@ -3186,26 +3181,10 @@ end
 -- Clear everything except the recipe cache
 function app.Clear()
 	ProfessionShoppingList_Data.Recipes = {}
-	ProfessionShoppingList_Cache.ReagentTiers = {}
-	ProfessionShoppingList_Cache.Reagents = {}
 	ProfessionShoppingList_Cache.FakeRecipes = {}
 	ProfessionShoppingList_Cache.SimulatedRecipes = {}
 	app.UpdateRecipes()
 	app.Window.ScrollFrame:SetVerticalScroll(0)
-
-	-- Disable remove button
-	if app.Flag["tradeskillAssets"] then
-		app.UntrackProfessionButton:Disable()
-		app.TrackMakeOrderButton:SetText(L.TRACK)
-		app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
-	end
-	if app.Flag["craftingOrderAssets"] then
-		app.UntrackPlaceOrderButton:Disable()
-	end
-	-- Set the quantity box to 0
-	if app.RecipeQuantityBox then
-		app.RecipeQuantityBox:SetText("0")
-	end
 end
 
 -- Replace the in-game tracking of shift+clicking a recipe with PSL's
@@ -3547,11 +3526,6 @@ end
 -- SETTINGS --
 --------------
 
--- Open settings
-function app.OpenSettings()
-	Settings.OpenToCategory(app.Category:GetID())
-end
-
 -- AddOn Compartment click
 function ProfessionShoppingList_Click(self, button)
 	if button == "LeftButton" then
@@ -3574,7 +3548,7 @@ function ProfessionShoppingList_Leave()
 	GameTooltip:Hide()
 end
 
--- Settings and minimap icon
+-- Create settings and minimap icon
 function app.Settings()
 	-- Minimap button
 	local miniButton = LibStub("LibDataBroker-1.1"):NewDataObject("ProfessionShoppingList", {
@@ -3727,17 +3701,56 @@ function app.Settings()
 	local function GetOptions()
 		local container = Settings.CreateControlTextContainer()
 		container:Add(1, "/psl", L.SETTINGS_SLASH_TOGGLE)
-		container:Add(2, "/psl resetpos", L.SETTINGS_SLASH_RESETPOS)
-		container:Add(3, "/psl settings", L.SETTINGS_SLASH_SETTINGS)
-		container:Add(4, "/psl clear", L.WINDOW_BUTTON_CLEAR)
-		container:Add(5, "/psl track " .. app.Colour(L.SETTINGS_SLASH_RECIPEID .. " " .. L.SETTINGS_SLASH_QUANTITY), L.SETTINGS_SLASH_TRACK)
-		container:Add(6, "/psl untrack " .. app.Colour(L.SETTINGS_SLASH_RECIPEID .. " " .. L.SETTINGS_SLASH_QUANTITY), L.SETTINGS_SLASH_UNTRACK)
-		container:Add(7, "/psl untrack " .. app.Colour(L.SETTINGS_SLASH_RECIPEID) .. " all", L.SETTINGS_SLASH_UNTRACKALL)
-		container:Add(8, "/psl " .. app.Colour("[" .. L.SETTINGS_SLASH_CRAFTINGACHIE .. "]"), L.SETTINGS_SLASH_TRACKACHIE)
+		container:Add(2, "/psl reset pos", L.SETTINGS_SLASH_RESETPOS)
+		container:Add(3, "/psl reset " .. app.Colour("arg"), L.SETTINGS_SLASH_RESET)
+		container:Add(4, "/psl settings", L.WINDOW_BUTTON_SETTINGS)
+		container:Add(5, "/psl clear", L.WINDOW_BUTTON_CLEAR)
+		container:Add(6, "/psl track " .. app.Colour(L.SETTINGS_SLASH_RECIPEID .. " " .. L.SETTINGS_SLASH_QUANTITY), L.SETTINGS_SLASH_TRACK)
+		container:Add(7, "/psl untrack " .. app.Colour(L.SETTINGS_SLASH_RECIPEID .. " " .. L.SETTINGS_SLASH_QUANTITY), L.SETTINGS_SLASH_UNTRACK)
+		container:Add(8, "/psl untrack " .. app.Colour(L.SETTINGS_SLASH_RECIPEID) .. " all", L.SETTINGS_SLASH_UNTRACKALL)
+		container:Add(9, "/psl " .. app.Colour("[" .. L.SETTINGS_SLASH_CRAFTINGACHIE .. "]"), L.SETTINGS_SLASH_TRACKACHIE)
 		return container:GetData()
 	end
 	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Number, name, 1)
 	Settings.CreateDropdown(category, setting, GetOptions, tooltip)
+end
+
+-- Open settings
+function app.OpenSettings()
+	Settings.OpenToCategory(app.Category:GetID())
+end
+
+-- Reset SavedVariables
+function app.Reset(arg)
+	if arg == "settings" then
+		ProfessionShoppingList_Settings = {}
+		app.Print(L.RESET_DONE, L.REQUIRES_RELOAD)
+	elseif arg == "library" then
+		ProfessionShoppingList_Library = {}
+		app.Print(L.RESET_DONE)
+	elseif arg == "cache" then
+		ProfessionShoppingList_Cache = nil
+		app.Print(L.RESET_DONE, L.REQUIRES_RELOAD)
+	elseif arg == "character" then
+		ProfessionShoppingList_CharacterData = nil
+		app.Print(L.RESET_DONE, L.REQUIRES_RELOAD)
+	elseif arg == "all" then
+		ProfessionShoppingList_Settings = nil
+		ProfessionShoppingList_Data = nil
+		ProfessionShoppingList_Library = nil
+		ProfessionShoppingList_Cache = nil
+		ProfessionShoppingList_CharacterData = nil
+		app.Print(L.RESET_DONE, L.REQUIRES_RELOAD)
+	elseif arg == "pos" then
+		-- Set the window size and position back to default
+		ProfessionShoppingList_Settings["windowPosition"] = { ["left"] = GetScreenWidth()/2-100, ["bottom"] = GetScreenHeight()/2-100, ["width"] = 200, ["height"] = 200, }
+		ProfessionShoppingList_Settings["pcWindowPosition"] = ProfessionShoppingList_Settings["windowPosition"]
+
+		-- Show the window, which will also set its size and position
+		app.Show()
+	else
+		app.Print(L.INVALID_RESET_ARG)
+	end
 end
 
 -----------------
