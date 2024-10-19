@@ -2441,7 +2441,6 @@ app.Event:Register("TRADE_SKILL_SHOW", function()
 		local function getGUID(id, name)
 			if not ProfessionShoppingList_Data.Pets[name] then
 				for i=1, 9999 do
-					C_PetJournal.ClearSearchFilter()
 					local petID, speciesID = C_PetJournal.GetPetInfoByIndex(i)
 					if speciesID == id and petID then
 						ProfessionShoppingList_Data.Pets[name] = {guid = petID, enabled = true}
