@@ -2681,16 +2681,19 @@ function app.RegisterRecipe(recipeID)
 		itemID = 0
 	end
 
-	if ProfessionShoppingList_Library[recipeID] then
-		ProfessionShoppingList_Library[recipeID].itemID = item
-		ProfessionShoppingList_Library[recipeID].abilityID = ability
-		ProfessionShoppingList_Library[recipeID].tradeskillID = tradeskill
+	-- Create the table entry
+	if not ProfessionShoppingList_Library[recipeID] then
+		ProfessionShoppingList_Library[recipeID]
+	end
 
-		if not ProfessionShoppingList_Library[recipeID].learned then
-			ProfessionShoppingList_Library[recipeID].learned = recipeLearned
-		end
-	else
-		ProfessionShoppingList_Library[recipeID] = {itemID = item, abilityID = ability, tradeskillID = tradeskill, learned = recipeLearned }
+	-- (Over)write the info
+	ProfessionShoppingList_Library[recipeID].itemID = item
+	ProfessionShoppingList_Library[recipeID].abilityID = ability
+	ProfessionShoppingList_Library[recipeID].tradeskillID = tradeskill
+
+	-- But only update the recipe learned info if it's our own profession window, and it's true (to avoid the recipe marking as unlearned from viewing the same profession on alts)
+	if not C_TradeSkillUI.IsTradeSkillLinked() and not C_TradeSkillUI.IsTradeSkillGuild() and recipeLearned then
+		ProfessionShoppingList_Library[recipeID].learned = recipeLearned
 	end
 end
 
