@@ -44,7 +44,7 @@ L.SUBREAGENTS2 =							"Veuillez sélectionner l'un des éléments suivants"
 
 L.GOLD =									BONUS_ROLL_REWARD_MONEY	-- "Or"
 L.WARBANK_CHECKBOX =						"Inclure la Banque de bataillon"
-L.WARBANK_TOOLTIP =							"Comme les commandes d'artisanat ne peuvent pas utiliser les objets stockés dans la Banque de bataillon, vous pouvez désactiver leur suivi."
+L.WARBANK_TOOLTIP =							"Comme les commandes d'artisanat ne peuvent pas utiliser les objets stockés dans la Banque de bataillon pour le moment, vous pouvez désactiver leur suivi."
 
 -- Cooldowns
 L.RECHARGED =								"Entièrement rechargée"
@@ -110,7 +110,7 @@ L.MILLING_TWW =								"Pigment de la floraison : Floraison bénie\n" ..
 											"Pigment d'orbinide : Orbinide\n" ..
 											"Pigment nacré : Champifleur"
 L.THAUMATURGY_INFO =						"Information de Thaumaturgie"
-L.THAUMATURGY_TWW =						    "Transmutagène mercurien : Aqirite, Chitine sinistre, Pose-appât, Orbinide\n" ..
+L.THAUMATURGY_TWW =							"Transmutagène mercurien : Aqirite, Chitine sinistre, Pose-appât, Orbinide\n" ..
 											"Transmutagène sinistre : Bismuth, Champifleur, Poussière de tempête, Tissétoffe\n" ..
 											"Transmutagène instable : Lance d’Arathor, Floraison bénie, Minerai de griffefer, Cuir chargé par la tempête"
 
@@ -159,10 +159,10 @@ L.DEBUG_DISABLED =							"Mode débogage désactivé."
 
 L.FALSE =									"vrai"
 L.TRUE =									"faux"
--- L.NOLASTORDER =							"No last " .. L.QUICKORDER .. " found."
+L.NOLASTORDER =								"Aucune dernière " .. L.QUICKORDER .. " trouvée."
 L.ERROR =									"Erreur"
 L.ERROR_CRAFTSIM =							L.ERROR .. " : Impossible de lire les informations provenant de CraftSim."
-L.ERROR_QUICKORDER =						L.ERROR .. " : La " .. L.QUICKORDER  .. " a échouée ! désolé. :("
+L.ERROR_QUICKORDER =						L.ERROR .. " : La " .. L.QUICKORDER .. " a échouée ! désolé. :("
 L.ERROR_REAGENTS =							L.ERROR .. " : Impossible de créer une " .. L.QUICKORDER .. " pour les objets comportant des composants obligatoires. désolé. :("
 L.ERROR_WARBANK =							L.ERROR .. " : Impossible de créer une " .. L.QUICKORDER .. " avec des objets provenants de la Banque de bataillon."
 L.ERROR_GUILD =								L.ERROR .. " : Impossible de créer une " .. PROFESSIONS_CRAFTING_FORM_ORDER_RECIPIENT_GUILD .. " en dehors d'une guilde."	-- "Guild Order"
@@ -247,10 +247,10 @@ L.SETTINGS_LOOTBAG_TOOLTIP =				"Permettre à " .. app.NameShort .. " d'applique
 
 L.SETTINGS_HEADER_OTHERTWEAKS =				"Autres ajustements"
 L.SETTINGS_VENDORFILTER_TITLE =				"Désactiver le filtre des vendeurs"
-L.SETTINGS_VENDORFILTER_TOOLTIP =			"Définissez automatiquement tous les filtres des vendeurs sur |cffFFFFFFTous|R  pour afficher les objets qui ne sont normalement pas montrés à votre classe."
+L.SETTINGS_VENDORFILTER_TOOLTIP =			"Définissez automatiquement tous les filtres des vendeurs sur |cffFFFFFFTous|R pour afficher les objets qui ne sont normalement pas montrés à votre classe."
 L.SETTINGS_CATALYSTBUTTON_TITLE =			"Afficher le bouton du Catalyseur" -- maybe need review in fr_FR
 
-L.SETTINGS_CATALYSTBUTTON_TOOLTIP =			"Affiche un bouton sur le Revival Catalyst qui vous permet de catalyser instantanément un objet, en sautant le minuteur de confirmation de 5 secondes."
+L.SETTINGS_CATALYSTBUTTON_TOOLTIP =			"Affiche un bouton sur le Catalyseur de renouveau qui vous permet de catalyser instantanément un objet, en sautant le minuteur de confirmation de 5 secondes."
 L.SETTINGS_QUEUESOUND_TITLE =				"Jouer un son pour la file d'attente"
 L.SETTINGS_QUEUESOUND_TOOLTIP =				"Joue le son de la file d'attente comme celui de « Deadly Boss Mods » lorsque n'importe quelle file d'attente s'ouvre, y compris les champs de bataille et les combats de mascottes."
 L.SETTINGS_HANDYNOTESFIX_TITLE =			"Désactiver HandyNotes Alt " .. app.IconRMB
