@@ -1044,6 +1044,7 @@ function app.UpdateRecipes()
 					if IsShiftKeyDown() then
 						-- Try write link to chat
 						ChatEdit_InsertLink(recipeInfo.link)
+						app.SearchAH(recipeInfo.link)
 					-- If Control is held also
 					elseif IsControlKeyDown() and type(recipeInfo.recipeID) == "number" then
 							C_TradeSkillUI.SetRecipeItemNameFilter("")	-- Clear search filter, which can interfere
@@ -1534,6 +1535,7 @@ function app.UpdateRecipes()
 				-- Activate if Shift+clicking on the reagent
 				elseif button == "LeftButton" and IsShiftKeyDown() then
 					ChatEdit_InsertLink(reagentInfo.link)
+					app.SearchAH(reagentInfo.link)
 				end
 			end)
 

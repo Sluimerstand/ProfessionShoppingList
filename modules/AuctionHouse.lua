@@ -7,6 +7,36 @@
 local appName, app =  ...	-- Returns the AddOn name and a unique table
 local L = app.locales
 
+------------------
+-- INITIAL LOAD --
+------------------
+
+app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
+	if addOnName == appName then
+		app.Flag["openAH"] = false
+		app.CreateAuctionatorButton()
+	end
+end)
+
+-----------------
+-- LINK SEARCH --
+-----------------
+
+app.Event:Register("AUCTION_HOUSE_SHOW", function(addOnName, containsBindings)
+	app.Flag["openAH"] = true
+end)
+
+app.Event:Register("AUCTION_HOUSE_CLOSED", function(addOnName, containsBindings)
+	app.Flag["openAH"] = false
+end)
+
+function app.SearchAH(itemLink)
+	if app.Flag["openAH"] then
+		local query = { sorts = { sortOrder = Enum.AuctionHouseSortOrder.Price, reverseSort = false }, filters = {}, searchString = C_Item.GetItemInfo(itemLink) }
+		C_AuctionHouse.SendBrowseQuery(query)
+	end
+end
+
 ------------------------
 -- AUCTIONATOR IMPORT --
 ------------------------
@@ -103,9 +133,3 @@ function app.CreateAuctionatorButton()
 		app.AuctionatorButton:Hide()
 	end
 end
-
-app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
-	if addOnName == appName then
-		app.CreateAuctionatorButton()
-	end
-end)
