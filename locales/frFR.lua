@@ -11,255 +11,254 @@ local L = app.locales
 if GetLocale() ~= "frFR" then return end
 
 -- Main window
--- L.WINDOW_BUTTON_CLOSE =					"Close the window."
--- L.WINDOW_BUTTON_LOCK =					"Lock the window."
--- L.WINDOW_BUTTON_UNLOCK =					"Unlock the window."
--- L.WINDOW_BUTTON_SETTINGS =				"Open the settings."
--- L.WINDOW_BUTTON_CLEAR =					"Clear all tracked recipes."
--- L.WINDOW_BUTTON_AUCTIONATOR =			"Create an Auctionator shopping list.\n" ..
--- 											"Also initiates a search if you have the Shopping tab open at the Auction House."
--- L.WINDOW_BUTTON_CORNER =					"Double " .. app.IconLMB .. "|cffFFFFFF: Autosize to fit the window."
+L.WINDOW_BUTTON_CLOSE =						"Fermer la fenêtre"
+L.WINDOW_BUTTON_LOCK =						"Verrouiller la fenêtre"
+L.WINDOW_BUTTON_UNLOCK =					"Déverrouiller la fenêtre"
+L.WINDOW_BUTTON_SETTINGS =					"Ouvrir les paramètres"
+L.WINDOW_BUTTON_CLEAR =						"Effacer toutes les recettes suivies"
+L.WINDOW_BUTTON_AUCTIONATOR =				"Créer une liste d'achat Auctionator.\n" ..
+											"Lance également une recherche si l'onglet « Achats » est ouvert à l'Hôtel des ventes."
 
--- L.WINDOW_HEADER_RECIPES =				PROFESSIONS_RECIPES_TAB	-- "Recipes"
--- L.WINDOW_HEADER_ITEMS =					ITEMS	-- "Items"
--- L.WINDOW_HEADER_REAGENTS =				PROFESSIONS_COLUMN_HEADER_REAGENTS	-- "Reagents"
--- L.WINDOW_HEADER_COSTS =					"Costs"
+L.WINDOW_BUTTON_CORNER =					"Double " .. app.IconLMB .. "|cffFFFFFF : Dimensionner automatiquement pour s'adapter à la fenêtre"
 
--- L.WINDOW_TOOLTIP_RECIPES =				"Shift " .. app.IconLMB .. "|cffFFFFFF: Link the recipe.\n|r" ..
--- 											"Ctrl " .. app.IconLMB .. "|cffFFFFFF: Open the recipe (if known).\n|r" ..
--- 											"Alt " .. app.IconLMB .. "|cffFFFFFF: Attempt to craft this recipe (as many times as you have it tracked).\n\n|r" ..
--- 											app.IconRMB .. "|cffFFFFFF: Untrack 1 of the selected recipe.\n|r" ..
--- 											"Ctrl " .. app.IconRMB .. "|cffFFFFFF: Untrack all of the selected recipe."
--- L.WINDOW_TOOLTIP_REAGENTS =				"Shift " .. app.IconLMB .. "|cffFFFFFF: Link the reagent.\n|r" ..
--- 											"Ctrl " .. app.IconLMB .. "|cffFFFFFF: Add recipe for the selected subreagent, if it exists and is cached."
--- L.WINDOW_TOOLTIP_COOLDOWNS =				"Shift " .. app.IconRMB .. "|cffFFFFFF: Remove this specific cooldown reminder.\n|r" ..
--- 											"Ctrl " .. app.IconLMB .. "|cffFFFFFF: Open the recipe (if known).\n|r" ..
--- 											"Alt " .. app.IconLMB .. "|cffFFFFFF: Attempt to craft this recipe."
-									
--- L.CLEAR_CONFIRMATION =					"This will clear all recipes."
--- L.CONFIRMATION =							"Do you wish to proceed?"
--- L.SUBREAGENTS1 =							"There are multiple recipes that can create"	-- Followed by an item link
--- L.SUBREAGENTS2 =							"Please select one of the following"
--- L.GOLD =									BONUS_ROLL_REWARD_MONEY	-- "Gold"
+L.WINDOW_HEADER_RECIPES =					PROFESSIONS_RECIPES_TAB	-- "Recettes"
+L.WINDOW_HEADER_ITEMS =						ITEMS	-- "Objets"
+L.WINDOW_HEADER_REAGENTS =					PROFESSIONS_COLUMN_HEADER_REAGENTS	-- "Composants"
+L.WINDOW_HEADER_COSTS =						"Coûts"
 
--- L.WARBANK_CHECKBOX =						"Include Warbank"
--- L.WARBANK_TOOLTIP =						"Because crafting orders cannot use items stored in the Warbank currently, you can disable tracking them."
+L.WINDOW_TOOLTIP_RECIPES =					"Maj " .. app.IconLMB .. "|cffFFFFFF : Poste la recette\n|r" ..
+											"Ctrl " .. app.IconLMB .. "|cffFFFFFF : Ouvre la recette (si connue)\n|r" ..
+											"Alt " .. app.IconLMB .. "|cffFFFFFF : Essaie de créer cette recette (autant de fois que vous l'avez suivie)\n\n|r" ..
+											app.IconRMB .. "|cffFFFFFF : Retire 1 de la recette suivie\n|r" ..
+											"Ctrl " .. app.IconRMB .. "|cffFFFFFF : Retirer toutes les recettes sélectionnées"
+L.WINDOW_TOOLTIP_REAGENTS =					"Maj " .. app.IconLMB .. "|cffFFFFFF : Poste le composant\n|r" ..
+											"Ctrl " .. app.IconLMB .. "|cffFFFFFF : Ajoute une recette pour le sous-composant sélectionné, s'il existe et est mis en cache"
+L.WINDOW_TOOLTIP_COOLDOWNS =				"Maj " .. app.IconRMB .. "|cffFFFFFF : Supprime le rappel de temps de recharge\n|r" ..
+											"Ctrl " .. app.IconLMB .. "|cffFFFFFF : Ouvre la recette (si connue)\n|r" ..
+											"Alt " .. app.IconLMB .. "|cffFFFFFF : Essaie de réaliser cette recette"
+
+L.CLEAR_CONFIRMATION =						"Cela effacera toutes les recettes."
+L.CONFIRMATION =							"Souhaitez-vous poursuivre ?"
+L.SUBREAGENTS1 =							"Il existe de nombreuses recettes qui permettent de créer" -- Followed by an item link
+L.SUBREAGENTS2 =							"Veuillez sélectionner l'un des éléments suivants"
+
+L.GOLD =									BONUS_ROLL_REWARD_MONEY	-- "Or"
+L.WARBANK_CHECKBOX =						"Inclure la Banque de bataillon"
+L.WARBANK_TOOLTIP =							"Comme les commandes d'artisanat ne peuvent pas utiliser les objets stockés dans la Banque de bataillon pour le moment, vous pouvez désactiver leur suivi."
 
 -- Cooldowns
--- L.RECHARGED =							"Fully recharged"
--- L.READY =								"Ready"
--- L.DAYS =									"d"
--- L.HOURS =								"h"
--- L.MINUTES =								"m"
--- L.READY_TO_CRAFT =						"is ready to craft again on"	-- Preceded by a recipe name, followed by a character name
+L.RECHARGED =								"Entièrement rechargée"
+L.READY =									"Prêt"
+L.DAYS =									"j"
+L.HOURS =									"h"
+L.MINUTES =									"m"
+L.READY_TO_CRAFT =							"sera prêt le"	-- Preceded by a recipe name, followed by a character name
 
 -- Recipe tracking
--- L.TRACK =								"Track"
--- L.UNTRACK =								"Untrack"
+L.TRACK =									"Suivre"
+L.UNTRACK =									"Annuler"
 -- L.RANK =									RANK	-- "Rank"
--- L.RECRAFT_TOOLTIP =						"Select an item with a cached recipe to track it.\n" .. 
--- 											"To cache a recipe, open the profession the recipe belongs to on any character\nor view the item as a regular crafting order."
--- L.QUICKORDER =							"Quick Order"
--- L.QUICKORDER_TOOLTIP =					"|cffFF0000Instantly|r create a crafting order for the specified recipient.\n\n" ..
--- 											"Use |cffFFFFFFGUILD|r (all uppercase) to place a " .. PROFESSIONS_CRAFTING_FORM_ORDER_RECIPIENT_GUILD .. ".\n" ..	-- "Guild Order". Don't translate "|cffFFFFFFGUILD|r" as this is hardcoded
--- 											"Use a character name to place a " .. PROFESSIONS_CRAFTING_FORM_ORDER_RECIPIENT_PRIVATE .. ".\n" ..	-- "Personal Order"
--- 											"Recipients are saved per recipe."
--- L.LOCALREAGENTS_LABEL =					"Use local reagents"
--- L.LOCALREAGENTS_TOOLTIP =				"Use (the lowest quality) available local reagents. Which reagents are used |cffFF0000cannot|r be customised."
--- L.QUICKORDER_REPEAT_TOOLTIP =			"Repeat the last " .. L.QUICKORDER .. " done on this character."
--- L.RECIPIENT =							"Recipient"
+L.RECRAFT_TOOLTIP =							"Sélectionnez un objet dont la recette a été mise en cache pour en assurer le suivi.\n" ..
+											"Pour mettre une recette en cache, ouvrez la profession à laquelle la recette appartient (sur n'importe quel personnage)\nou visualisez l'objet comme une commande d'artisanat normale."
+L.QUICKORDER =								"Commande rapide"
+L.QUICKORDER_TOOLTIP =						"|cffFF0000Créer instantanément|r une commande d'artisanat pour le destinataire spécifié.\n\n" ..
+											"Utilisez |cffFFFFFFGUILD|r (tout en majuscules) pour placer une " .. PROFESSIONS_CRAFTING_FORM_ORDER_RECIPIENT_GUILD .. ".\n" ..	-- "Guild Order". Don't translate "|cffFFFFFFGUILD|r" as this is hardcoded
+											"Utilisez un nom de personnage pour placer une " .. PROFESSIONS_CRAFTING_FORM_ORDER_RECIPIENT_PRIVATE .. ".\n" ..	-- "Personal Order"
+											"Les destinataires sont enregistrés par recette."
+L.LOCALREAGENTS_LABEL =						"Utiliser des composants dans les sacs"
+L.LOCALREAGENTS_TOOLTIP =					"Utiliser les composants disponibles dans les sacs (de la plus basse qualité). Les composants utilisés |cffFF0000ne peuvent pas|r être personnalisés."
+L.QUICKORDER_REPEAT_TOOLTIP =				"Répéter la dernière " .. L.QUICKORDER .. " effectuée sur ce personnage."
+L.RECIPIENT =								"Destinataire"
 
 -- Profession window
--- L.MILLING_INFO =							"Milling Information"
--- L.THAUMATURGY_INFO =						"Thaumaturgy Information"
--- L.FROM =									"from"	-- I will convert this whole section to item links, then this is the only localisation needed. I recommend skipping the rest of this section. :)
+L.FROM =									"de"	-- I will convert this whole section to item links, then this is the only localisation needed. I recommend skipping this section, other than the two headers. :)
+L.MILLING_INFO =							"Informations sur le broyage"
+L.MILLING_CLASSIC =							"Pigment saphir : 25% depuis Sansam doré, Feuillerêve, Sauge-argent des montagnes, Chagrinelle, Chapeglace\n" ..
+											"Pigment argenté : 75% depuis Sansam doré, Feuillerêve, Sauge-argent des montagnes, Chagrinelle, Chapeglace\n\n" ..
+											"Pigment rubis : 25% depuis Fleur de feu, Lotus pourpre, Larmes d'Arthas, Soleillette, Aveuglette,\n      Champignon fantôme, Gromsang\n" ..	-- The spacing here is an indentation because of the line overflow in the profession window
+											"Pigment violet : 75% depuis Fleur de feu, Lotus pourpre, Larmes d'Arthas, Soleillette, Aveuglette,\n      Champignon fantôme, Gromsang\n\n" ..	-- The spacing here is an indentation because of the line overflow in the profession window
+											"Pigment indigo : 25% depuis Pâlerette, Dorépine, Moustache de Khadgar, Dents de dragon\n" ..
+											"Pigment émeraude : 75% depuis Pâlerette, Dorépine, Moustache de Khadgar, Dents de dragon\n\n" ..
+											"Pigment brûlé : 25% depuis Aciérite sauvage, Tombeline, Sang-royal, Vietérule\n" ..
+											"Pigment doré : 75% depuis Aciérite sauvage, Tombeline, Sang-royal, Vietérule\n\n" ..
+											"Pigment verdoyant : 25% depuis Mage royal, Eglantine, Chardonnier, Doulourante, Etouffante\n" ..
+											"Pigment crépusculaire : 75% depuis Mage royal, Eglantine, Chardonnier, Doulourante, Etouffante\n\n" ..
+											"Pigment albâtre : 100% depuis Pacifique, Feuillargent, Terrestrine"
+L.MILLING_TBC =								"Pigment ébène : 25%\n" ..
+											"Pigment néantin : 100%"
+L.MILLING_WOTLK =							"Pigment glacé : 25%\n" ..
+											"Pigment azur : 100%"
+L.MILLING_CATA =							"Braises ardentes : 25%, 50% depuis Jasmin crépusculaire, Fouettine\n" ..
+											"Pigment cendreux: 100%"
+L.MILLING_MOP =								"Pigment brumeux : 25%, 50% depuis Berluette\n" ..
+											"Pigment ombreux : 100%"
+L.MILLING_WOD =								"Pigment céruléen : 100%"
+L.MILLING_LEGION =							"Pigment jaunâtre : 10%, 80% depuis Gangrèche\n" ..
+											"Pigment rosé : 90%"
+L.MILLING_BFA =								"Pigment smaragdin : 10%, 30% depuis Ancoracée\n" ..
+											"Pigment bleu outremer : 25%\n" ..
+											"Pigment cramoisi : 75%"
+L.MILLING_SL =								"Pigment paisible : Belladone\n" ..
+											"Pigment lumineux : Fatalée, Belle-de-l’aube, Plante-torche du veilleur\n" ..
+											"Pigment ombreux : Fatalée, Courgineuse, Endeuillée"
+L.MILLING_DF =								"Pigment flamboyant : Saxifrage\n" ..
+											"Pigment florissant : Écorce tordue\n" ..
+											"Pigment serein : Pavot à bulle\n" ..
+											"Pigment chatoyant : Hochenblume"
+L.MILLING_TWW =								"Pigment de la floraison : Floraison bénie\n" ..
+											"Pigment de pose-appât : Pose-appât\n" ..
+											"Pigment d'orbinide : Orbinide\n" ..
+											"Pigment nacré : Champifleur"
+L.THAUMATURGY_INFO =						"Information de Thaumaturgie"
+L.THAUMATURGY_TWW =							"Transmutagène mercurien : Aqirite, Chitine sinistre, Pose-appât, Orbinide\n" ..
+											"Transmutagène sinistre : Bismuth, Champifleur, Poussière de tempête, Tissétoffe\n" ..
+											"Transmutagène instable : Lance d’Arathor, Floraison bénie, Minerai de griffefer, Cuir chargé par la tempête"
 
--- L.MILLING_CLASSIC =						"Sapphire Pigment: 25% from Golden Sansam, Dreamfoil, Mountain Silversage, Sorrowmoss, Icecap\n" ..
--- 											"Silvery Pigment: 75% from Golden Sansam, Dreamfoil, Mountain Silversage, Sorrowmoss, Icecap\n\n" ..
--- 											"Ruby Pigment: 25% from Firebloom, Purple Lotus, Arthas' Tears, Sungrass, Blindweed,\n      Ghost Mushroom, Gromsblood\n" ..
--- 											"Violet Pigment: 75% from Firebloom, Purple Lotus, Arthas' Tears, Sungrass, Blindweed,\n      Ghost Mushroom, Gromsblood\n\n" ..
--- 											"Indigo Pigment: 25% from Fadeleaf, Goldthorn, Khadgar's Whisker, Dragon's Teeth\n" ..
--- 											"Emerald Pigment: 75% from Fadeleaf, Goldthorn, Khadgar's Whisker, Dragon's Teeth\n\n" ..
--- 											"Burnt Pigment: 25% from Wild Steelbloom, Grave Moss, Kingsblood, Liferoot\n" ..
--- 											"Golden Pigment: 75% from Wild Steelbloom, Grave Moss, Kingsblood, Liferoot\n\n" ..
--- 											"Verdant Pigment: 25% from Mageroyal, Briarthorn, Swiftthistle, Bruiseweed, Stranglekelp\n" ..
--- 											"Dusky Pigment: 75% from Mageroyal, Briarthorn, Swiftthistle, Bruiseweed, Stranglekelp\n\n" ..
--- 											"Alabaster Pigment: 100% from Peacebloom, Silverleaf, Earthroot"
--- L.MILLING_TBC =							"Ebon Pigment: 25%\n" ..
--- 											"Nether Pigment: 100%"
--- L.MILLING_WOTLK =						"Icy Pigment: 25%\n" ..
--- 											"Azure Pigment: 100%"
--- L.MILLING_CATA =							"Burning Embers: 25%, 50% from Twilight Jasmine, Whiptail\n" ..
--- 											"Ashen Pigment: 100%"
--- L.MILLING_MOP =							"Misty Pigment: 25%, 50% from Fool's Cap\n" ..
--- 											"Shadow Pigment: 100%"
--- L.MILLING_WOD =							"Cerulean Pigment: 100%"
--- L.MILLING_LEGION =						"Sallow Pigment: 10%, 80% from Felwort\n" ..
--- 											"Roseate Pigment: 90%"
--- L.MILLING_BFA =							"Viridescent Pigment: 10%, 30% from Anchor Weed\n" ..
--- 											"Ultramarine Pigment: 25%\n" ..
--- 											"Crimson Pigment: 75%"
--- L.MILLING_SL =							"Tranquil Pigment: Nightshade\n" ..
--- 											"Luminous Pigment: Death Blossom, Rising Glory, Vigil's Torch\n" ..
--- 											"Umbral Pigment: Death's Blossom, Marrowroot, Widowbloom"
--- L.MILLING_DF =							"Blazing Pigment: Saxifrage\n" ..
--- 											"Flourishing Pigment: Writhebark\n" ..
--- 											"Serene Pigment: Bubble Poppy\n" ..
--- 											"Shimmering Pigment: Hochenblume"
--- L.MILLING_TWW =							"Blossom Pigment: Blessing Blossom\n" ..
--- 											"Luredrop Pigment: Luredrop\n" ..
--- 											"Orbinid Pigment: Orbinid\n" ..
--- 											"Nacreous Pigment: Mycobloom"
--- L.THAUMATURGY_TWW =						"Mercurial Transmutagen: Aqirite, Gloom Chitin, Luredrop, Orbinid\n" ..
--- 											"Ominous Transmutagen: Bismuth, Mycobloom, Storm Dust, Weavercloth\n" ..
--- 											"Volatile Transmutagen: Arathor's Spear, Blessing Blossom, Ironclaw Ore, Stormcharged Leather"
-
--- L.BUTTON_COOKINGFIRE =					app.IconLMB .. ": " .. BINDING_NAME_TARGETSELF .. ".\n" ..
--- 											app.IconRMB .. ": " .. STATUS_TEXT_TARGET .. "."
--- L.BUTTON_COOKINGPET =					app.IconLMB .. ": Summon this pet.\n" ..
--- 											app.IconRMB .. ": Switch between available pets."
-
+L.BUTTON_COOKINGFIRE =						app.IconLMB .. ": " .. BINDING_NAME_TARGETSELF .. ".\n" ..
+											app.IconRMB .. ": " .. STATUS_TEXT_TARGET .. ""
+L.BUTTON_COOKINGPET =						app.IconLMB .. " : Invoquer cette mascotte\n" ..
+											app.IconRMB .. " : Passer d'une mascotte à l'autre"
 -- Track new mogs
--- L.BUTTON_TRACKNEW =						"Track new mogs"
--- L.CURRENT_SETTING =						"Current setting"
--- L.MODE_APPEARANCES =						"new appearances"
--- L.MODE_SOURCES =							"new appearances and sources"
--- L.TRACK_NEW1 =							"This will check the"	-- Followed by a number
--- L.TRACK_NEW2 =							"visible recipes for"	-- Preceded by a number, followed by L.MODE_APPEARANCES or L.MODE_SOURCES
--- L.TRACK_NEW3 =							"Your game may freeze for a few seconds."
--- L.ADDED_RECIPES1 =						"Added"	-- Followed by a number
--- L.ADDED_RECIPES2 =						"eligible recipes"	-- Preceded by a number
+L.BUTTON_TRACKNEW =							"Suivre les apparences inconnues"
+L.CURRENT_SETTING =							"Paramètre actuel"
+L.MODE_APPEARANCES =						"nouvelles apparences"
+L.MODE_SOURCES =							"nouvelles apparences et sources "
+L.TRACK_NEW1 =								"Cela va vérifier"	-- Followed by a number
+L.TRACK_NEW1 =								"Cela va vérifier"	-- Followed by a number
+L.TRACK_NEW2 =								"recettes visibles pour les"	-- Preceded by a number, followed by L.MODE_APPEARANCES or L.MODE_SOURCES
+L.TRACK_NEW3 =								"Le jeu peut se bloquer pendant quelques secondes."
+L.ADDED_RECIPES1 =							"Ajout de"	-- Followed by a number
+L.ADDED_RECIPES2 =							"recettes éligibles"	-- Preceded by a number
 
 -- Tooltip info
--- L.MORE_NEEDED =							"more needed" -- Preceded by a number
--- L.MADE_WITH =							"Made with"	-- Followed by a profession name such as "Blacksmithing" or "Leatherworking"
--- L.RECIPE_LEARNED =						"recipe learned"
--- L.RECIPE_UNLEARNED =						"recipe not learned"
--- L.REGION =								"Region"	-- Preceded by an abbreviated region name such as "EU" or "US"
+L.MORE_NEEDED =								"de plus sont nécessaires" -- Preceded by a number
+L.MADE_WITH =								"Fabriqué via"	-- Followed by a profession name such as "Blacksmithing" or "Leatherworking"
+L.RECIPE_LEARNED =							"recette apprise"
+L.RECIPE_UNLEARNED =						"recette non apprise"
+L.REGION =									"Region"	-- Preceded by an abbreviated region name such as "EU" or "US"
 
 -- Profession knowledge
--- L.PERKS_UNLOCKED =						"perks unlocked"
--- L.PROFESSION_KNOWLEDGE =					"knowledge"
--- L.VENDORS =								"Vendors"
--- L.RENOWN =								RENOWN_LEVEL_LABEL	-- "Renown "
--- L.WORLD =								"World"
--- L.HIDDEN_PROFESSION_MASTER =				"Hidden Profession Master"
+L.PERKS_UNLOCKED =							"avantages débloqués"
+L.PROFESSION_KNOWLEDGE =					"connaissances"
+L.VENDORS =									"Vendeurs"
+--L.RENOWN =									RENOWN_LEVEL_LABEL	-- "Renown "
+L.WORLD =									"Monde"
+L.HIDDEN_PROFESSION_MASTER =				"Hidden Profession Master"
 
 -- Tweaks
--- L.CATALYSTBUTTON_LABEL =					"Instantly Catalyze"
+L.CATALYSTBUTTON_LABEL =					"Catalyseur instantané" -- maybe need review in fr_FR
 
 -- Chat feedback
--- L.INVALID_PARAMETERS =					"Invalid parameters."
--- L.INVALID_RECIPEQUANTITY =				L.INVALID_PARAMETERS .. " Please enter a valid recipe quantity."
--- L.INVALID_RECIPE_CACHE =					L.INVALID_PARAMETERS .. " Please enter a cached recipeID."
--- L.INVALID_RECIPE_TRACKED =				L.INVALID_PARAMETERS .. " Please enter a tracked recipeID."
--- L.INVALID_ACHIEVEMENT =					L.INVALID_PARAMETERS .. " This is not a crafting achievement. No recipes were added."
--- L.INVALID_RESET_ARG =					L.INVALID_PARAMETERS .. " You can use the following arguments: \n" ..
--- 											app.Colour("settings") .. ", " .. app.Colour("library") .. ", " .. app.Colour("cache") .. ", " .. app.Colour("character") .. ", " .. app.Colour("all") .. ", " .. app.Colour("pos")	-- Don't translate these arguments, as they are hardcoded
--- L.INVALID_COMMAND =						"Invalid command. See " .. app.Colour("/psl settings") .. " for more info."
--- L.DEBUG_ENABLED =						"Debug mode enabled."
--- L.DEBUG_DISABLED =						"Debug mode disabled."
--- L.RESET_DONE =							"Data reset performed successfully."
--- L.REQUIRES_RELOAD =						"|cffFF0000" .. REQUIRES_RELOAD .. ".|r Use |cffFFFFFF/reload|r or relog."	-- "Requires Reload"
+L.INVALID_RECIPEQUANTITY =					"Paramètres non valides. Veuillez saisir une quantité de recette valide."
+L.INVALID_RECIPE_CACHE =					"Paramètres non valides. Veuillez saisir un numéro d'identification de recette (recipeID) mis en cache."
+L.INVALID_RECIPE_TRACKED =					"Paramètres non valides. Veuillez saisir un numéro de recette suivi (recipeID)."
+L.INVALID_ACHIEVEMENT =						"Paramètres non valides. Il ne s'agit pas d'un haut fait de métier. Aucune recette n'a été ajoutée."
+L.INVALID_COMMAND =							"Commande non valide. Voir " .. app.Colour("/psl settings") .. " pour plus d'informations."
+L.DEBUG_ENABLED =							"Mode ddébogage activé."
+L.DEBUG_DISABLED =							"Mode débogage désactivé."
 
--- L.FALSE =								"false"
--- L.TRUE =									"true"
--- L.NOLASTORDER =							"No last " .. L.QUICKORDER .. " found."
--- L.ERROR =								"Error"
--- L.ERROR_CRAFTSIM =						L.ERROR .. ": Could not read the information from CraftSim."
--- L.ERROR_QUICKORDER =						L.ERROR .. ": " .. L.QUICKORDER  .. " failed. Sorry. :("
--- L.ERROR_REAGENTS =						L.ERROR .. ": Can't create a " .. L.QUICKORDER .. " for items with mandatory reagents. Sorry. :("
--- L.ERROR_WARBANK =						L.ERROR .. ": Can't create a " .. L.QUICKORDER .. " with items in the Warbank."
--- L.ERROR_GUILD =							L.ERROR .. ": Can't create a " .. PROFESSIONS_CRAFTING_FORM_ORDER_RECIPIENT_GUILD .. " while not in a guild."	-- "Guild Order"
--- L.ERROR_RECIPIENT =						L.ERROR .. ": Target recipient cannot craft that item. Please enter a valid recipient name."
--- L.ERROR_MULTISIM =						L.ERROR .. ": No simulated reagents have been used. Please only enable one of the following supported AddOns:"
+L.FALSE =									"vrai"
+L.TRUE =									"faux"
+L.NOLASTORDER =								"Aucune dernière " .. L.QUICKORDER .. " trouvée."
+L.ERROR =									"Erreur"
+L.ERROR_CRAFTSIM =							L.ERROR .. " : Impossible de lire les informations provenant de CraftSim."
+L.ERROR_QUICKORDER =						L.ERROR .. " : La " .. L.QUICKORDER .. " a échouée ! désolé. :("
+L.ERROR_REAGENTS =							L.ERROR .. " : Impossible de créer une " .. L.QUICKORDER .. " pour les objets comportant des composants obligatoires. désolé. :("
+L.ERROR_WARBANK =							L.ERROR .. " : Impossible de créer une " .. L.QUICKORDER .. " avec des objets provenants de la Banque de bataillon."
+L.ERROR_GUILD =								L.ERROR .. " : Impossible de créer une " .. PROFESSIONS_CRAFTING_FORM_ORDER_RECIPIENT_GUILD .. " en dehors d'une guilde."	-- "Guild Order"
+L.ERROR_RECIPIENT =							L.ERROR .. " : Le destinataire cible ne peut pas fabriquer cet objet. Veuillez saisir un nom de destinataire valide."
+L.ERROR_MULTISIM =							L.ERROR .. " : Aucun composant simulé n'a été utilisé. Veuillez n'activer que l'un des AddOns suivants :"
 
--- L.VERSION_CHECK =						"There is a newer version of " .. app.NameLong .. " available"
+L.VERSION_CHECK =							"Une nouvelle version de " .. app.NameLong .. " est disponible"
 
 -- Settings
--- L.SETTINGS_TOOLTIP =						app.IconLMB .. "|cffFFFFFF: Toggle the window.\n" ..
--- 											app.IconRMB .. ": " .. L.WINDOW_BUTTON_SETTINGS
+L.SETTINGS_TOOLTIP =						app.IconLMB .. "|cffFFFFFF : Afficher / masquer la fenêtre\n" ..
+											app.IconRMB .. " : Afficher les paramètres"
 
--- L.SETTINGS_MINIMAP_TITLE =				"Show Minimap Icon"
--- L.SETTINGS_MINIMAP_TOOLTIP =				"Show the minimap icon. If you disable this, " .. app.NameShort .. " is still available from the AddOn Compartment."
--- L.SETTINGS_COOLDOWNS_TITLE =				"Track Recipe Cooldowns"
--- L.SETTINGS_COOLDOWNS_TOOLTIP =			"Enable the tracking of recipe cooldowns. These will show in the tracking window, and in chat upon login if ready."
--- L.SETTINGS_TOOLTIP_TITLE =				"Show Tooltip Information"
--- L.SETTINGS_TOOLTIP_TOOLTIP =				"Show how many of a reagent you have/need on the item's tooltip."
--- L.SETTINGS_CRAFTTOOLTIP_TITLE =			"Show Crafting Information"
--- L.SETTINGS_CRAFTTOOLTIP_TOOLTIP =		"Show with which profession a piece of gear is made, and if the recipe is known on your account."
--- L.SETTINGS_REAGENTQUALITY_TITLE =		"Minimum Reagent Quality"
--- L.SETTINGS_REAGENTQUALITY_TOOLTIP =		"Set the minimum quality reagents need to be before " .. app.NameShort .. " includes them in the item count. CraftSim results will still override this."
--- L.SETTINGS_INCLUDEHIGHER_TITLE =			"Include Higher Quality"
--- L.SETTINGS_INCLUDEHIGHER_TOOLTIP =		"Set which higher qualities to include when tracking lower quality reagents. (I.e. whether to include owned tier 3 reagents when counting tier 1 reagents.)"
--- L.SETTINGS_COLLECTMODE_TITLE =			"Collection Mode"
--- L.SETTINGS_COLLECTMODE_TOOLTIP =			"Set which items are included when using the " .. app.Colour("Track unlearned mogs") .. " button."
--- L.SETTINGS_QUICKORDER_TITLE =			"Quick Order Duration"
--- L.SETTINGS_QUICKORDER_TOOLTIP =			"Set the duration for placing quick orders with " .. app.NameShort .. "."
+L.SETTINGS_MINIMAP_TITLE =					"Afficher le bouton de la mini-carte"
+L.SETTINGS_MINIMAP_TOOLTIP =				"Afficher le bouton de la mini-carte. Si vous désactivez cette fonction, " .. app.NameShort .. " sera toujours disponible dans la partie AddOn."
+L.SETTINGS_COOLDOWNS_TITLE =				"Suivre le temps de recharge des recettes"
+L.SETTINGS_COOLDOWNS_TOOLTIP =				"Activer le suivi des temps de recharge des recettes. Ceux-ci s'afficheront dans la fenêtre de suivi, et dans le chat lors de la connexion s'ils sont prêts."
+L.SETTINGS_TOOLTIP_TITLE =					"Afficher les informations de l'info-bulle"
+L.SETTINGS_TOOLTIP_TOOLTIP =				"Afficher la quantité de composant que vous avez ou dont vous avez besoin dans l'info-bulle de l'objet."
+L.SETTINGS_CRAFTTOOLTIP_TITLE =				"Afficher les informations de profession"
+L.SETTINGS_CRAFTTOOLTIP_TOOLTIP =			"Afficher avec quelle profession une pièce d'équipement est fabriquée et si la recette est connue sur votre compte."
+L.SETTINGS_REAGENTQUALITY_TITLE =			"Qualité minimum de composant"
+L.SETTINGS_REAGENTQUALITY_TOOLTIP =			"Définit la qualité minimale requise pour que les composants soient inclus dans le décompte des objets par " .. app.NameShort .. ". Les résultats de CraftSim seront toujours prioritaires."
+L.SETTINGS_INCLUDEHIGHER_TITLE =			"Inclure une qualité supérieure"
+L.SETTINGS_INCLUDEHIGHER_TOOLTIP =			"Définir les qualités supérieures à inclure dans le suivi des composants de qualité inférieure. (Par exemple, déterminer si les composants de niveau 3 doivent être pris en compte dans le décompte des composants de niveau 1)."
+L.SETTINGS_COLLECTMODE_TITLE =				"Mode de collection"
+L.SETTINGS_COLLECTMODE_TOOLTIP =			"Définir les objets à inclure lors de l'utilisation du bouton " .. app.Colour("Suivre les apparences inconnues") .. "."
+L.SETTINGS_QUICKORDER_TITLE =				"Durée de la commande rapide"
+L.SETTINGS_QUICKORDER_TOOLTIP =				"Définir la durée pour passer des commandes rapides avec " .. app.NameShort .. "."
 
--- L.SETTINGS_REAGENTTIER =					"Tier"	-- Followed by a number
--- L.SETTINGS_INCLUDE =						"Include"	-- Followed by "Tier X"
--- L.SETTINGS_ONLY_INCLUDE =				"Only include"	-- Followed by "Tier X"
--- L.SETTINGS_DONT_INCLUDE =				"Don't include higher qualities"
--- L.SETTINGS_APPEARANCES_TITLE =			WARDROBE	-- "Appearances"
--- L.SETTINGS_APPEARANCES_TEXT =			"Include items only if they have a new appearance."
--- L.SETTINGS_SOURCES_TITLE =				"Sources"
--- L.SETTINGS_SOURCES_TEXT =				"Include items if they are a new source, including for known appearances."
--- L.SETTINGS_DURATION_SHORT =				"Short (12 hours)"
--- L.SETTINGS_DURATION_MEDIUM =				"Medium (24 hours)"
--- L.SETTINGS_DURATION_LONG =				"Long (48 hours)"
+L.SETTINGS_REAGENTTIER =					"Tier"	-- Followed by a number
+L.SETTINGS_INCLUDE =						"Inclure"	-- Followed by "Tier X"
+L.SETTINGS_ONLY_INCLUDE =					"Inclure seulement"	-- Followed by "Tier X"
+L.SETTINGS_DONT_INCLUDE =					"Ne pas inclure les qualités supérieures"
+L.SETTINGS_APPEARANCES_TITLE =				WARDROBE	-- "Appearances"
+L.SETTINGS_APPEARANCES_TEXT =				"Inclure uniquement les objets que s'ils ont une nouvelle apparence."
+L.SETTINGS_SOURCES_TITLE =					"Sources"
+L.SETTINGS_SOURCES_TEXT =					"Inclure les objets s'il s'agit d'une nouvelle source, y compris pour les apparences connues."
+L.SETTINGS_DURATION_SHORT =					"Court (12 heures)"
+L.SETTINGS_DURATION_MEDIUM =				"Moyen (24 heures)"
+L.SETTINGS_DURATION_LONG =					"Long (48 heures)"
 
--- L.SETTINGS_HEADER_TRACK =				"Tracking Window"
--- L.SETTINGS_PERSONALWINDOWS_TITLE =		"Window Position per Character"
--- L.SETTINGS_PERSONALWINDOWS_TOOLTIP =		"Save the window position per character, instead of account wide."	
--- L.SETTINGS_PERSONALRECIPES_TITLE =		"Track Recipes per Character"
--- L.SETTINGS_PERSONALRECIPES_TOOLTIP =		"Track recipes per character, instead of account wide."	
--- L.SETTINGS_SHOWREMAINING_TITLE =			"Show Remaining Reagents"
--- L.SETTINGS_SHOWREMAINING_TOOLTIP =		"Only show how many reagents you still need in the tracking window, instead of have/need."
--- L.SETTINGS_REMOVECRAFT_TITLE =			"Untrack on Craft"
--- L.SETTINGS_REMOVECRAFT_TOOLTIP =			"Remove one of a tracked recipe when you successfully craft it."
--- L.SETTINGS_CLOSEWHENDONE_TITLE =			"Close Window When Done"	
--- L.SETTINGS_CLOSEWHENDONE_TOOLTIP =		"Close the tracking window after crafting the last tracked recipe."
+L.SETTINGS_HEADER_TRACK =					"Fenêtre de suivi"
 
--- L.SETTINGS_HEADER_INFO =					"Information"
--- L.SETTINGS_SLASHCOMMANDS_TITLE =			"Slash Commands"
--- L.SETTINGS_SLASHCOMMANDS_TOOLTIP =		"Type these in chat to use them!"
--- L.SETTINGS_SLASH_TOGGLE =				"Toggle the tracking window."
--- L.SETTINGS_SLASH_RESETPOS =				"Reset the tracking window position."
--- L.SETTINGS_SLASH_RESET =					"Reset saved data."
--- L.SETTINGS_SLASH_TRACK =					"Track a recipe."
--- L.SETTINGS_SLASH_UNTRACK =				"Untrack a recipe."
--- L.SETTINGS_SLASH_UNTRACKALL =			"Untrack all of a recipe."
--- L.SETTINGS_SLASH_TRACKACHIE =			"Track the recipes needed for the linked achievement."
--- L.SETTINGS_SLASH_CRAFTINGACHIE =			"crafting achievement"
--- L.SETTINGS_SLASH_RECIPEID =				"recipeID"
--- L.SETTINGS_SLASH_QUANTITY =				"quantity"
--- L.SETTINGS_DEFAULT =						CHAT_DEFAULT	-- "Default"
--- L.SETTINGS_LTOR =						"Left-to-Right"
--- L.SETTINGS_RTOL =						"Right-to-Left"
+L.SETTINGS_PERSONALWINDOWS_TITLE =			"Position de la fenêtre par personnage"
+L.SETTINGS_PERSONALWINDOWS_TOOLTIP =		"Enregistrer la position de la fenêtre par personnage, au lieu de l'enregistrer sur l'ensemble du compte."
+L.SETTINGS_PERSONALRECIPES_TITLE =			"Suivre les recettes par personnage"
+L.SETTINGS_PERSONALRECIPES_TOOLTIP =		"Suivre les recettes par personnage, au lieu de les suivre sur l'ensemble du compte."
+L.SETTINGS_SHOWREMAINING_TITLE =			"Afficher les composants restants"
+L.SETTINGS_SHOWREMAINING_TOOLTIP =			"Afficher uniquement le nombre de composants dont vous avez encore besoin dans la fenêtre de suivi."
+L.SETTINGS_REMOVECRAFT_TITLE =				"Arrêter le suivi lors de la fabrication"
+L.SETTINGS_REMOVECRAFT_TOOLTIP =			"Retirer une unité d'une recette suivie lorsqu'elle est fabriquée avec succès."
+L.SETTINGS_CLOSEWHENDONE_TITLE =			"Fermez la fenêtre lorsque vous avez terminé"
+L.SETTINGS_CLOSEWHENDONE_TOOLTIP =			"Fermer la fenêtre de suivi après avoir fabriqué la dernière recette suivie."
 
--- L.SETTINGS_HEADER_TWEAKS =				"Tweaks"
--- L.SETTINGS_SPLITBAG_TITLE =				"Split Reagent Bag Count"
--- L.SETTINGS_SPLITBAG_TOOLTIP =			"Shows the free slots of your regular bags and your reagent bag separately on top of the backpack icon."
--- L.SETTINGS_BAG_EXPLAIN =					"- " .. CHAT_DEFAULT .. " means " .. app.NameShort .. " won't touch the game's default behavior.\n" ..
--- 											"- The other options let " .. app.NameShort .. " enforce that particular setting."
--- L.SETTINGS_CLEANBAG_TITLE =				BAG_CLEANUP_BAGS
--- L.SETTINGS_CLEANBAG_TOOLTIP =			"Let " ..  app.NameShort .. " enforce cleanup sorting direction.\n" .. L.SETTINGS_BAG_EXPLAIN
--- L.SETTINGS_LOOTBAG_TITLE =				"Loot Order"
--- L.SETTINGS_LOOTBAG_TOOLTIP =				"Let " .. app.NameShort .. " enforce loot sorting direction.\n" .. L.SETTINGS_BAG_EXPLAIN
+L.SETTINGS_HEADER_INFO =					"Information"
+L.SETTINGS_SLASHCOMMANDS_TITLE =			"Commandes « Slash »"
+L.SETTINGS_SLASHCOMMANDS_TOOLTIP =			"Tapez-les dans le chat pour les utiliser !"
+L.SETTINGS_SLASH_TOGGLE =					"afficher / masquer la fenêtre de suivi"
+L.SETTINGS_SLASH_RESETPOS =					"réinitialise la position de la fenêtre de suivi"
+L.SETTINGS_SLASH_SETTINGS =					"accédez aux paramètres"
+L.SETTINGS_SLASH_TRACK =					"suivre une recette"
+L.SETTINGS_SLASH_UNTRACK =					"ne pas suivre une recette"
+L.SETTINGS_SLASH_UNTRACKALL =				"ne plus suivre l'ensemble des recettes"
 
--- L.SETTINGS_HEADER_OTHERTWEAKS =			"Other Tweaks"
--- L.SETTINGS_VENDORFILTER_TITLE =			"Disable Vendor Filter"
--- L.SETTINGS_VENDORFILTER_TOOLTIP =		"Automatically set all vendor filters to |cffFFFFFFAll|R to display items normally not shown to your class."
--- L.SETTINGS_CATALYSTBUTTON_TITLE =		"Show Catalyst Button"
--- L.SETTINGS_CATALYSTBUTTON_TOOLTIP =		"Show a button on the Revival Catalyst that allows you to instantly catalyze an item, skipping the 5 second confirmation timer."
--- L.SETTINGS_QUEUESOUND_TITLE =			"Play Queue Sound"
--- L.SETTINGS_QUEUESOUND_TOOLTIP =			"Play the Deadly Boss Mods style queue sound when any queue pops, including battlegrounds and pet battles."
--- L.SETTINGS_HANDYNOTESFIX_TITLE =			"Disable HandyNotes Alt " .. app.IconRMB
--- L.SETTINGS_HANDYNOTESFIX_TOOLTIP =		"Let " .. app.NameShort .. " disable HandyNotes' keybind on the map, re-enabling it for TomTom waypoints instead.\n\n" .. L.REQUIRES_RELOAD
--- L.SETTINGS_ORIBOSEXCHANGEFIX_TITLE =		"Fix Oribos Exchange Tooltip"
--- L.SETTINGS_ORIBOSEXCHANGEFIX_TOOLTIP =	"Let " .. app.NameShort .. " simplify and fix the tooltip provided by the Oribos Exchange AddOn:\n" ..
--- 											"- Round to the nearest gold.\n" ..
--- 											"- Fix recipe prices.\n" ..
--- 											"- Fix profession window prices.\n" ..
--- 											"- Show battle pet prices inside the existing tooltip."
+L.SETTINGS_SLASH_TRACKACHIE =				"Suivre les recettes nécessaires à l'obtention d'un haut fait."
+L.SETTINGS_SLASH_CRAFTINGACHIE =			"haut fait de métier"
+L.SETTINGS_SLASH_RECIPEID =					"recipeID"
+L.SETTINGS_SLASH_QUANTITY =					"quantité"
+L.SETTINGS_DEFAULT =						CHAT_DEFAULT	-- "Default"
+L.SETTINGS_LTOR =							"Gauche-vers-Droite"
+L.SETTINGS_RTOL =							"Droite-vers-Gauche"
+
+L.SETTINGS_HEADER_TWEAKS =					"Ajustements"
+L.SETTINGS_SPLITBAG_TITLE =					"Nombre de composants dans les sacs"
+L.SETTINGS_SPLITBAG_TOOLTIP =				"Affiche les emplacements libres de vos sacs ainsi que votre sac de composants séparément au-dessus de l'icône du sac à dos."
+L.SETTINGS_BAG_EXPLAIN =					"- " .. CHAT_DEFAULT .. ", " .. app.NameShort .. " ne modifiera pas le comportement par défaut du jeu.\n" ..
+											"- Les autres options permettent à " .. app.NameShort .. " d'appliquer ce paramètre spécifique."
+L.SETTINGS_CLEANBAG_TITLE =					BAG_CLEANUP_BAGS
+L.SETTINGS_CLEANBAG_TOOLTIP =				"Permettre à " .. app.NameShort .. " d'appliquer la direction du tri lors du nettoyage.\n" .. L.SETTINGS_BAG_EXPLAIN
+L.SETTINGS_LOOTBAG_TITLE =					"Order du butin"
+L.SETTINGS_LOOTBAG_TOOLTIP =				"Permettre à " .. app.NameShort .. " d'appliquer la direction du tri lors du ramassage.\n" .. L.SETTINGS_BAG_EXPLAIN
+
+L.SETTINGS_HEADER_OTHERTWEAKS =				"Autres ajustements"
+L.SETTINGS_VENDORFILTER_TITLE =				"Désactiver le filtre des vendeurs"
+L.SETTINGS_VENDORFILTER_TOOLTIP =			"Définissez automatiquement tous les filtres des vendeurs sur |cffFFFFFFTous|R pour afficher les objets qui ne sont normalement pas montrés à votre classe."
+L.SETTINGS_CATALYSTBUTTON_TITLE =			"Afficher le bouton du Catalyseur" -- maybe need review in fr_FR
+
+L.SETTINGS_CATALYSTBUTTON_TOOLTIP =			"Affiche un bouton sur le Catalyseur de renouveau qui vous permet de catalyser instantanément un objet, en sautant le minuteur de confirmation de 5 secondes."
+L.SETTINGS_QUEUESOUND_TITLE =				"Jouer un son pour la file d'attente"
+L.SETTINGS_QUEUESOUND_TOOLTIP =				"Joue le son de la file d'attente comme celui de « Deadly Boss Mods » lorsque n'importe quelle file d'attente s'ouvre, y compris les champs de bataille et les combats de mascottes."
+L.SETTINGS_HANDYNOTESFIX_TITLE =			"Désactiver HandyNotes Alt " .. app.IconRMB
+L.SETTINGS_HANDYNOTESFIX_TOOLTIP =			"Permettre à " .. app.NameShort .. " de désactiver le raccourci clavier d'HandyNotes sur la carte, en le réactivant pour les points de passages TomTom à la place.\n\n" ..
+											"|cffFF0000" .. REQUIRES_RELOAD	-- "Nécessite le rechargement du jeu"
+L.SETTINGS_ORIBOSEXCHANGEFIX_TITLE =		"Corriger l'info-bulle de l'échange d'Oribos"
+L.SETTINGS_ORIBOSEXCHANGEFIX_TOOLTIP =		app.NameShort .. " simplifie et corrige l'info-bulle fournie par l'AddOn Oribos Exchange :\n" ..
+											"- Arrondir à l'or le plus proche\n" ..
+											"- Fixe les prix des recettes\n" ..
+											"- Fixe les prix des fenêtres de profession\n" ..
+											"- Afficher les prix des mascottes de combat dans l'info-bulle existante"
