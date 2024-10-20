@@ -7,6 +7,9 @@
 local appName, app =  ...	-- Returns the AddOn name and a unique table
 local L = app.locales
 
+-- Only load this file when the appropriate locale is found
+-- if GetLocale() ~= "enUS" then return end
+
 -- Main window
 L.WINDOW_BUTTON_CLOSE =					"Close the window."
 L.WINDOW_BUTTON_LOCK =					"Lock the window."
@@ -117,8 +120,8 @@ L.BUTTON_COOKINGPET =					app.IconLMB .. ": Summon this pet.\n" ..
 										app.IconRMB .. ": Switch between available pets."
 
 -- Track new mogs
-L.BUTTON_TRACKNEW =						"Track new mogs"
-L.CURRENT_SETTING =						"Current setting"
+L.BUTTON_TRACKNEW =						"Track New Mogs"
+L.CURRENT_SETTING =						"Current setting:"
 L.MODE_APPEARANCES =					"new appearances"
 L.MODE_SOURCES =						"new appearances and sources"
 L.TRACK_NEW1 =							"This will check the"	-- Followed by a number
@@ -151,8 +154,7 @@ L.INVALID_RECIPEQUANTITY =				L.INVALID_PARAMETERS .. " Please enter a valid rec
 L.INVALID_RECIPE_CACHE =				L.INVALID_PARAMETERS .. " Please enter a cached recipeID."
 L.INVALID_RECIPE_TRACKED =				L.INVALID_PARAMETERS .. " Please enter a tracked recipeID."
 L.INVALID_ACHIEVEMENT =					L.INVALID_PARAMETERS .. " This is not a crafting achievement. No recipes were added."
-L.INVALID_RESET_ARG =					L.INVALID_PARAMETERS .. " You can use the following arguments: \n" ..
-										app.Colour("settings") .. ", " .. app.Colour("library") .. ", " .. app.Colour("cache") .. ", " .. app.Colour("character") .. ", " .. app.Colour("all") .. ", " .. app.Colour("pos")	-- Don't translate these arguments, as they are hardcoded
+L.INVALID_RESET_ARG =					L.INVALID_PARAMETERS .. " You can use the following arguments:"
 L.INVALID_COMMAND =						"Invalid command. See " .. app.Colour("/psl settings") .. " for more info."
 L.DEBUG_ENABLED =						"Debug mode enabled."
 L.DEBUG_DISABLED =						"Debug mode disabled."
@@ -171,7 +173,7 @@ L.ERROR_GUILD =							L.ERROR .. ": Can't create a " .. PROFESSIONS_CRAFTING_FOR
 L.ERROR_RECIPIENT =						L.ERROR .. ": Target recipient cannot craft that item. Please enter a valid recipient name."
 L.ERROR_MULTISIM =						L.ERROR .. ": No simulated reagents have been used. Please only enable one of the following supported AddOns:"
 
-L.VERSION_CHECK =						"There is a newer version of " .. app.NameLong .. " available"
+L.VERSION_CHECK =						"There is a newer version of " .. app.NameLong .. " available:"
 
 -- Settings
 L.SETTINGS_TOOLTIP =					app.IconLMB .. "|cffFFFFFF: Toggle the window.\n" ..
@@ -190,7 +192,7 @@ L.SETTINGS_REAGENTQUALITY_TOOLTIP =		"Set the minimum quality reagents need to b
 L.SETTINGS_INCLUDEHIGHER_TITLE =		"Include Higher Quality"
 L.SETTINGS_INCLUDEHIGHER_TOOLTIP =		"Set which higher qualities to include when tracking lower quality reagents. (I.e. whether to include owned tier 3 reagents when counting tier 1 reagents.)"
 L.SETTINGS_COLLECTMODE_TITLE =			"Collection Mode"
-L.SETTINGS_COLLECTMODE_TOOLTIP =		"Set which items are included when using the " .. app.Colour("Track unlearned mogs") .. " button."
+L.SETTINGS_COLLECTMODE_TOOLTIP =		"Set which items are included when using the " .. app.Colour(L.BUTTON_TRACKNEW) .. " button."
 L.SETTINGS_QUICKORDER_TITLE =			"Quick Order Duration"
 L.SETTINGS_QUICKORDER_TOOLTIP =			"Set the duration for placing quick orders with " .. app.NameShort .. "."
 

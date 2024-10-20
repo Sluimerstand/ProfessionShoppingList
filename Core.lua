@@ -1968,7 +1968,7 @@ function app.CreateTradeskillAssets()
 		end)
 		app.TrackUnlearnedMogsButton:SetScript("OnEnter", function(self)
 			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-			GameTooltip:SetText(L.CURRENT_SETTING .. ": " .. modeText)
+			GameTooltip:SetText(L.CURRENT_SETTING .. " " .. modeText)
 			GameTooltip:Show()
 		end)
 		app.TrackUnlearnedMogsButton:SetScript("OnLeave", function()
@@ -3749,7 +3749,7 @@ function app.Reset(arg)
 		-- Show the window, which will also set its size and position
 		app.Show()
 	else
-		app.Print(L.INVALID_RESET_ARG)
+		app.Print(L.INVALID_RESET_ARG .. "\n " .. app.Colour("settings") .. ", " .. app.Colour("library") .. ", " .. app.Colour("cache") .. ", " .. app.Colour("character") .. ", " .. app.Colour("all") .. ", " .. app.Colour("pos"))
 	end
 end
 
@@ -3809,7 +3809,7 @@ app.Event:Register("CHAT_MSG_ADDON", function(prefix, text, channel, sender, tar
 					if otherGameVersion > localGameVersion or (otherGameVersion == localGameVersion and otherAddonVersion > localAddonVersion) then
 						-- But only send the message once every 10 minutes
 						if GetServerTime() - app.Flag["versionCheck"] > 600 then
-							app.Print(L.VERSION_CHECK .. ": " .. version)
+							app.Print(L.VERSION_CHECK .. " " .. version)
 							app.Flag["versionCheck"] = GetServerTime()
 						end
 					end
