@@ -2675,21 +2675,15 @@ end)
 
 -- Register a recipe's information
 function app.RegisterRecipe(recipeID)
-	-- If there is an output item
-	local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID
+	local item = C_TradeSkillUI.GetRecipeOutputItemData(recipeID).itemID or 0
 	local _, _, tradeskill = C_TradeSkillUI.GetTradeSkillLineForRecipe(recipeID)
 	local ability = C_TradeSkillUI.GetRecipeInfo(recipeID).skillLineAbilityID
 
 	-- Register if the recipe is known
 	local recipeLearned = C_TradeSkillUI.GetRecipeInfo(recipeID).learned
 
-	-- Set the itemID to 0 if there is no output item
-	if item == nil then
-		itemID = 0
-	end
-
 	-- Create the table entry
-	if not ProfessionShoppingList_Library[recipeID] then
+	if not ProfessionShoppingList_Library[recipeID] or type(ProfessionShoppingList_Library[recipeID]) == "number" then	-- I still have no idea where these number values come from
 		ProfessionShoppingList_Library[recipeID] = {}
 	end
 
