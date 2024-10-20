@@ -2249,15 +2249,7 @@ function app.CreateTradeskillAssets()
 	hooksecurefunc(ProfessionsFrame.OrdersPage, "ViewOrder", function(_, orderDetails)
 		app.SelectedRecipe.MakeOrder = orderDetails
 
-		local key = "order:" .. app.SelectedRecipe.MakeOrder.orderID .. ":" .. app.SelectedRecipe.MakeOrder.spellID
-
-		if ProfessionShoppingList_Data.Recipes[key] then
-			app.TrackMakeOrderButton:SetText(L.UNTRACK)
-			app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
-		else
-			app.TrackMakeOrderButton:SetText(L.TRACK)
-			app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
-		end
+		app.UpdateAssets()
 	end)
 
 	-- Create the fulfil crafting orders UI (Un)track button
@@ -2338,6 +2330,26 @@ function app.UpdateAssets()
 			app.RecipeQuantityBox:SetText(ProfessionShoppingList_Data.Recipes[app.SelectedRecipe.Profession.recipeID].quantity or 0)
 		else
 			app.RecipeQuantityBox:SetText(0)
+		end
+
+		-- Update the Make Order button
+		if app.SelectedRecipe.MakeOrder.orderID and app.SelectedRecipe.MakeOrder.spellID then
+			-- Enable/Disable the Make Order button depending on if the recipe is learned
+			if app.SelectedRecipe.MakeOrder.spellID and C_TradeSkillUI.GetRecipeInfo(app.SelectedRecipe.MakeOrder.spellID).learned then
+				app.TrackMakeOrderButton:Enable()
+			else
+				app.TrackMakeOrderButton:Disable()
+			end
+
+			-- Set the Make Order button to Track or Untrack depending on if the recipe is tracked or not
+			local key = "order:" .. app.SelectedRecipe.MakeOrder.orderID .. ":" .. app.SelectedRecipe.MakeOrder.spellID
+			if ProfessionShoppingList_Data.Recipes[key] then
+				app.TrackMakeOrderButton:SetText(L.UNTRACK)
+				app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
+			else
+				app.TrackMakeOrderButton:SetText(L.TRACK)
+				app.TrackMakeOrderButton:SetWidth(app.TrackMakeOrderButton:GetTextWidth()+20)
+			end
 		end
 
 		-- Make the Chef's Hat button not desaturated if it can be used
