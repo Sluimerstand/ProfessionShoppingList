@@ -1136,10 +1136,8 @@ function app.UpdateRecipes()
 		reagentsSorted = {}
 		for k, v in pairs(app.ReagentQuantities) do
 			if not ProfessionShoppingList_Cache.Reagents[k] then
-				C_Timer.After(1, function()
-					app.CacheItem(k, true)
-					app.UpdateRecipes()
-				end)
+				app.CacheItem(k, true)
+				app.UpdateRecipes()
 				do return end
 			end
 			reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = ProfessionShoppingList_Cache.Reagents[k].icon, link = ProfessionShoppingList_Cache.Reagents[k].link}
