@@ -14,7 +14,7 @@ if GetLocale() ~= "frFR" then return end
 L.WINDOW_BUTTON_CLOSE =					"Fermer la fenêtre"
 L.WINDOW_BUTTON_LOCK =					"Verrouiller la fenêtre"
 L.WINDOW_BUTTON_UNLOCK =				"Déverrouiller la fenêtre"
-L.WINDOW_BUTTON_SETTINGS =				" Ouvrir les paramètres"
+L.WINDOW_BUTTON_SETTINGS =				"Ouvrir les paramètres"
 L.WINDOW_BUTTON_CLEAR =					"Effacer toutes les recettes suivies"
 L.WINDOW_BUTTON_AUCTIONATOR =			"Créer une liste d'achat Auctionator.\n" ..
 										"Lance également une recherche si l'onglet « Achats » est ouvert à l'Hôtel des ventes."
@@ -177,7 +177,7 @@ L.VERSION_CHECK =						"Une nouvelle version de " .. app.NameLong .. " est dispo
 
 -- Settings
 L.SETTINGS_TOOLTIP =					app.IconLMB .. "|cffFFFFFF : Afficher / masquer la fenêtre\n" ..
-										app.IconRMB .. " :" .. L.WINDOW_BUTTON_SETTINGS
+										app.IconRMB .. " : " .. L.WINDOW_BUTTON_SETTINGS
 
 L.SETTINGS_MINIMAP_TITLE =				"Afficher le bouton de la mini-carte"
 L.SETTINGS_MINIMAP_TOOLTIP =			"Afficher le bouton de la mini-carte. Si vous désactivez cette fonction, " .. app.NameShort .. " sera toujours disponible dans la partie AddOn."
