@@ -2885,7 +2885,7 @@ function app.GetReagentCount(reagentID)
 				reagentCount = tierOne()
 			end
 		else
-			reagentCount =  C_Item.GetItemCount(reagentID)
+			reagentCount = C_Item.GetItemCount(reagentID, true, false, true, app.IncludeWarbank)
 		end
 	-- Use our addon setting if there is no quality specified
 	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].three ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 3 then
