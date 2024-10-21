@@ -1855,7 +1855,7 @@ function app.CreateTradeskillAssets()
 	-- Create the profession UI track button
 	if not app.TrackProfessionButton then
 		app.TrackProfessionButton = app.Button(ProfessionsFrame.CraftingPage, L.TRACK)
-		app.TrackProfessionButton:SetPoint("TOPRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "TOPRIGHT", -9, -10)
+		app.TrackProfessionButton:SetPoint("TOPRIGHT", ProfessionsFrame.CraftingPage.SchematicForm, "TOPRIGHT", -5, -6)
 		app.TrackProfessionButton:SetScript("OnClick", function()
 			app.TrackRecipe(app.SelectedRecipe.Profession.recipeID, 1, app.SelectedRecipe.Profession.recraft)
 		end)
@@ -1936,7 +1936,7 @@ function app.CreateTradeskillAssets()
 	end
 
 	-- Create the Track Unlearned Mogs button
-	if not app.TrackUnlearnedMogsButton then
+	if not app.TrackNewMogsButton then
 		local modeText = ""
 		if ProfessionShoppingList_Settings["collectMode"] == 1 then
 			modeText = L.MODE_APPEARANCES
@@ -1944,10 +1944,10 @@ function app.CreateTradeskillAssets()
 			modeText = L.MODE_SOURCES
 		end
 
-		app.TrackUnlearnedMogsButton = app.Button(ProfessionsFrame.CraftingPage, L.BUTTON_TRACKNEW)
-		app.TrackUnlearnedMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 0, -4)
-		app.TrackUnlearnedMogsButton:SetFrameStrata("HIGH")
-		app.TrackUnlearnedMogsButton:SetScript("OnClick", function()
+		app.TrackNewMogsButton = app.Button(ProfessionsFrame.CraftingPage, L.BUTTON_TRACKNEW)
+		app.TrackNewMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 0, -4)
+		app.TrackNewMogsButton:SetFrameStrata("HIGH")
+		app.TrackNewMogsButton:SetScript("OnClick", function()
 			local recipes = app.GetVisibleRecipes()
 
 			StaticPopupDialogs["TRACK_NEW_MOGS"] = {
@@ -1964,18 +1964,22 @@ function app.CreateTradeskillAssets()
 			}
 			StaticPopup_Show("TRACK_NEW_MOGS")
 		end)
-		app.TrackUnlearnedMogsButton:SetScript("OnEnter", function(self)
+		app.TrackNewMogsButton:SetScript("OnEnter", function(self)
 			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
 			GameTooltip:SetText(L.CURRENT_SETTING .. " " .. modeText)
 			GameTooltip:Show()
 		end)
-		app.TrackUnlearnedMogsButton:SetScript("OnLeave", function()
+		app.TrackNewMogsButton:SetScript("OnLeave", function()
 			GameTooltip:Hide()
 		end)
 
-		-- Move the button if CraftScan or TestFlight is enabled, because we're nice
-		if C_AddOns.IsAddOnLoaded("CraftScan") or C_AddOns.IsAddOnLoaded("TestFlight") then
-			app.TrackUnlearnedMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 2, 24)
+		-- Move the button if CraftScan or TestFlight + a price source is enabled, because we're nice
+		if C_AddOns.IsAddOnLoaded("CraftScan") or
+		(C_AddOns.IsAddOnLoaded("TestFlight") and (C_AddOns.IsAddOnLoaded("TradeSkillMaster") or C_AddOns.IsAddOnLoaded("Auctionator") or C_AddOns.IsAddOnLoaded("RECrystallize") or C_AddOns.IsAddOnLoaded("OribosExchange") or C_AddOns.IsAddOnLoaded("Auctioneer"))) then
+			--app.TrackNewMogsButton:SetPoint("TOPLEFT", ProfessionsFrame.CraftingPage.SchematicForm, "BOTTOMLEFT", 2, 24)
+			app.TrackNewMogsButton:ClearAllPoints()
+			app.TrackNewMogsButton:SetPoint("CENTER", app.UntrackProfessionButton, "CENTER", 0, 0)
+			app.TrackNewMogsButton:SetPoint("RIGHT", app.UntrackProfessionButton, "LEFT", -3, 0)
 		end
 	end
 
@@ -3440,9 +3444,9 @@ app.Event:Register("UNIT_SPELLCAST_SUCCEEDED", function(unitTarget, castGUID, sp
 	end
 end)
 
--------------------------
--- TRACK UNLEARNED MOG --
--------------------------
+--------------------
+-- TRACK NEW MOGS --
+--------------------
 
 -- Scan the tooltip for the appearance text, localised
 function app.GetAppearanceInfo(itemLinkie, searchString)
