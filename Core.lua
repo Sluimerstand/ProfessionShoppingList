@@ -2884,6 +2884,8 @@ function app.GetReagentCount(reagentID)
 			elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].one == reagentID then
 				reagentCount = tierOne()
 			end
+		else
+			reagentCount =  C_Item.GetItemCount(reagentID)
 		end
 	-- Use our addon setting if there is no quality specified
 	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].three ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 3 then
