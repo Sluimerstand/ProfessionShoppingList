@@ -3357,6 +3357,11 @@ app.Event:Register("PLAYER_ENTERING_WORLD", function(isInitialLogin, isReloading
 				if ProfessionShoppingList_Settings["showRecipeCooldowns"] and ProfessionShoppingList_Data.Cooldowns[k].charges == ProfessionShoppingList_Data.Cooldowns[k].maxCharges then
 					-- Show the reminder
 					app.Print(recipeInfo.name .. " " .. L.READY_TO_CRAFT .. " " .. recipeInfo.user .. ".")
+
+					-- And open the window if that setting is enabled
+					if ProfessionShoppingList_Settings["showWindowCooldown"] then
+						app.Show()	-- This can run multiple times, but that doesn't do much harm
+					end
 				end
 			end
 		end
@@ -3609,10 +3614,15 @@ function app.Settings()
 
 	local variable, name, tooltip = "showRecipeCooldowns", L.SETTINGS_COOLDOWNS_TITLE, L.SETTINGS_COOLDOWNS_TOOLTIP
 	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
-	Settings.CreateCheckbox(category, setting, tooltip)
+	local parentSetting = Settings.CreateCheckbox(category, setting, tooltip)
 	setting:SetValueChangedCallback(function()
 		app.UpdateRecipes()
 	end)
+
+	local variable, name, tooltip = "showWindowCooldown", L.SETTINGS_COOLDOWNSWINDOW_TITLE, L.SETTINGS_COOLDOWNSWINDOW_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, false)
+	local subSetting = Settings.CreateCheckbox(category, setting, tooltip)
+	subSetting:SetParentInitializer(parentSetting, function() return ProfessionShoppingList_Settings["showRecipeCooldowns"] end)
 
 	local variable, name, tooltip = "showTooltip", L.SETTINGS_TOOLTIP_TITLE, L.SETTINGS_TOOLTIP_TOOLTIP
 	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
