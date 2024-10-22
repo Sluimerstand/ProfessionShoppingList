@@ -225,7 +225,6 @@ function app.InitialiseCore()
 	app.SelectedRecipe.MakeOrder = {}
 	app.UpdatedCooldownWidth = 0
 	app.UpdatedReagentWidth = 0
-	app.IncludeWarbank = true	-- Temporary flag until Blizz fixes their shit
 	app.SimAddOns = {"CraftSim", "TestFlight"}
 
 	-- Register our AddOn communications channel
@@ -572,17 +571,6 @@ function app.CreateWindow()
 	scrollFrame:SetScript("OnVerticalScroll", function() scrollChild:SetPoint("BOTTOMRIGHT", scrollFrame) end)
 	app.Window.Child = scrollChild
 	app.Window.ScrollFrame = scrollFrame
-
-	-- Temporary checkbox until Blizz fixes their shit
-	local checkBox = CreateFrame("CheckButton", nil, app.Window, "ChatConfigCheckButtonTemplate")
-	checkBox:SetPoint("TOPLEFT", app.Window, "BOTTOMLEFT", 2, 0)
-	checkBox.Text:SetText(L.WARBANK_CHECKBOX)
-	checkBox.tooltip = L.WARBANK_TOOLTIP
-	checkBox:HookScript("OnClick", function()
-		app.IncludeWarbank = checkBox:GetChecked()
-		app.UpdateNumbers()
-	end)
-	checkBox:SetChecked(app.IncludeWarbank)
 end
 
 -- Move the main window
@@ -2850,16 +2838,16 @@ function app.GetReagentCount(reagentID)
 
 	-- Helper functions
 	local function tierThree()
-		local reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank)
+		local reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true)
 		return reagentCount
 	end
 
 	local function tierTwo()
 		local reagentCount
 		if ProfessionShoppingList_Settings["includeHigher"] == 1 then
-			reagentCount = math.max(0, C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank) - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three] or 0)) + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+			reagentCount = math.max(0, C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true) - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three] or 0)) + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, true)
 		elseif ProfessionShoppingList_Settings["includeHigher"] >= 2 then
-			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)
+			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, true)
 		end
 		return reagentCount
 	end
@@ -2867,11 +2855,11 @@ function app.GetReagentCount(reagentID)
 	local function tierOne()
 		local reagentCount
 		if ProfessionShoppingList_Settings["includeHigher"] == 1 then
-			reagentCount = math.max(0, (math.max(0, C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, app.IncludeWarbank) - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three] or 0)) + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank)) - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].two] or 0)) + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
+			reagentCount = math.max(0, (math.max(0, C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].three, true, false, true, true) - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].three] or 0)) + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, true)) - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].two] or 0)) + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, true)
 		elseif ProfessionShoppingList_Settings["includeHigher"] == 2 then
-			reagentCount = math.max(0, C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, app.IncludeWarbank) - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].two] or 0)) + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
+			reagentCount = math.max(0, C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].two, true, false, true, true) - (app.ReagentQuantities[ProfessionShoppingList_Cache.ReagentTiers[reagentID].two] or 0)) + C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, true)
 		elseif ProfessionShoppingList_Settings["includeHigher"] == 3 then
-			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, app.IncludeWarbank)
+			reagentCount = C_Item.GetItemCount(ProfessionShoppingList_Cache.ReagentTiers[reagentID].one, true, false, true, true)
 		end
 		return reagentCount
 	end
@@ -2887,7 +2875,7 @@ function app.GetReagentCount(reagentID)
 				reagentCount = tierOne()
 			end
 		else
-			reagentCount = C_Item.GetItemCount(reagentID, true, false, true, app.IncludeWarbank)
+			reagentCount = C_Item.GetItemCount(reagentID, true, false, true, true)
 		end
 	-- Use our addon setting if there is no quality specified
 	elseif ProfessionShoppingList_Cache.ReagentTiers[reagentID].three ~= 0 and ProfessionShoppingList_Settings["reagentQuality"] == 3 then
@@ -2898,7 +2886,7 @@ function app.GetReagentCount(reagentID)
 		reagentCount = tierOne()
 	-- And use this fallback if nothing even matters anymore
 	else
-		reagentCount = C_Item.GetItemCount(reagentID, true, false, true, app.IncludeWarbank)
+		reagentCount = C_Item.GetItemCount(reagentID, true, false, true, true)
 	end
 
 	return reagentCount

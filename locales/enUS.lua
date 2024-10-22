@@ -42,9 +42,6 @@ L.SUBREAGENTS1 =						"There are multiple recipes that can create"	-- Followed b
 L.SUBREAGENTS2 =						"Please select one of the following"
 L.GOLD =								BONUS_ROLL_REWARD_MONEY	-- "Gold"
 
-L.WARBANK_CHECKBOX =					"Include Warbank"
-L.WARBANK_TOOLTIP =						"Because crafting orders cannot use items stored in the Warbank currently, you can disable tracking them."
-
 -- Cooldowns
 L.RECHARGED =							"Fully recharged"
 L.READY =								"Ready"

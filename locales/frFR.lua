@@ -42,9 +42,6 @@ L.SUBREAGENTS1 =						"Il existe de nombreuses recettes qui permettent de créer
 L.SUBREAGENTS2 =						"Veuillez sélectionner l'un des éléments suivants"
 L.GOLD =								BONUS_ROLL_REWARD_MONEY	-- "Or"
 
-L.WARBANK_CHECKBOX =					"Inclure la Banque de bataillon"
-L.WARBANK_TOOLTIP =						"Comme les commandes d'artisanat ne peuvent pas utiliser les objets stockés dans la Banque de bataillon pour le moment, vous pouvez désactiver leur suivi."
-
 -- Cooldowns
 L.RECHARGED =							"Entièrement rechargée"
 L.READY =								"Prêt"
