@@ -3119,7 +3119,8 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID)
 			else
 				app.Print(L.ERROR_CRAFTSIM)
 			end
-		elseif C_AddOns.IsAddOnLoaded("TestFlight") then
+		-- And don't make it a sim recipe for TestFlight if it's an order, it can't be optimised and returns the wrong quality info :/
+		elseif C_AddOns.IsAddOnLoaded("TestFlight") and originalRecipeID ~= app.SelectedRecipe.MakeOrder.spellID then
 			-- Let the game track the recipe temporarily, so we can grab TestFlight's info
 			app.Flag["trackingRecipes"] = true
 			C_TradeSkillUI.SetRecipeTracked(originalRecipeID, true, recraft or false)
