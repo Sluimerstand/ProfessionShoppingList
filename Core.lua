@@ -3089,7 +3089,8 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID)
 
 	-- List custom reagents for simulated recipes
 	local simRecipe = false
-	if app.SimCount() == 1 then
+	-- Make sure we only do this for the profession window, and to not grab sim reagents for tracking place orders
+	if app.SimCount() == 1 and originalRecipeID ~= app.SelectedRecipe.PlaceOrder.recipeID then
 		if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
 			simRecipe = true
 			
