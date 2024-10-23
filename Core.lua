@@ -1596,7 +1596,7 @@ function app.UpdateRecipes()
 			
 			local cooldowns1 = app.Window.Cooldowns:CreateFontString("ARTWORK", nil, "GameFontNormal")
 			cooldowns1:SetPoint("LEFT", app.Window.Cooldowns)
-			cooldowns1:SetText("Cooldowns")
+			cooldowns1:SetText(L.WINDOW_HEADER_COOLDOWNS)
 			cooldowns1:SetScale(1.1)
 		end
 

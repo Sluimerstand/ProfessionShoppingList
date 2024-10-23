@@ -24,6 +24,7 @@ L.WINDOW_HEADER_RECIPES =				PROFESSIONS_RECIPES_TAB	-- "Recettes"
 L.WINDOW_HEADER_ITEMS =					ITEMS	-- "Objets"
 L.WINDOW_HEADER_REAGENTS =				PROFESSIONS_COLUMN_HEADER_REAGENTS	-- "Composants"
 L.WINDOW_HEADER_COSTS =					"Coûts"
+-- L.WINDOW_HEADER_COOLDOWNS =				"Cooldowns"
 
 L.WINDOW_TOOLTIP_RECIPES =				"Maj " .. app.IconLMB .. "|cffFFFFFF : Poste la recette\n|r" ..
 										"Ctrl " .. app.IconLMB .. "|cffFFFFFF : Ouvre la recette (si connue)\n|r" ..

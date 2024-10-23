@@ -24,6 +24,7 @@ if GetLocale() ~= "koKR" then return end
 -- L.WINDOW_HEADER_ITEMS =					ITEMS	-- "Items"
 -- L.WINDOW_HEADER_REAGENTS =				PROFESSIONS_COLUMN_HEADER_REAGENTS	-- "Reagents"
 -- L.WINDOW_HEADER_COSTS =					"Costs"
+-- L.WINDOW_HEADER_COOLDOWNS =				"Cooldowns"
 
 -- L.WINDOW_TOOLTIP_RECIPES =				"Shift " .. app.IconLMB .. "|cffFFFFFF: Link the recipe.\n|r" ..
 -- 										"Ctrl " .. app.IconLMB .. "|cffFFFFFF: Open the recipe (if known).\n|r" ..
