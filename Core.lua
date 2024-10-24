@@ -671,9 +671,9 @@ function app.UpdateNumbers()
 
 			-- Set the displayed amount based on settings
 			if ProfessionShoppingList_Settings["showRemaining"] == false then
-				itemAmount = colour .. GetCoinTextureString(amount)
+				itemAmount = colour .. C_CurrencyInfo.GetCoinTextureString(amount)
 			else
-				itemAmount = colour .. GetCoinTextureString(math.max(0,amount-GetMoney()))
+				itemAmount = colour .. C_CurrencyInfo.GetCoinTextureString(math.max(0,amount-GetMoney()))
 			end
 		elseif string.find(reagentID, "currency") then
 			local number = string.gsub(reagentID, "currency:", "")
