@@ -82,6 +82,13 @@ function app.CreateAuctionatorButton()
 							end
 						end
 
+						-- Cache item if not cached already
+						if not ProfessionShoppingList_Cache.ReagentTiers[reagentID] then
+							app.CacheItem(reagentID, true)
+							RunNextFrame(makeShoppingList)
+							do return end
+						end
+
 						-- Set reagent quality to 2 or 3 if applicable and the user has this set, otherwise don't specify quality
 						local reagentQuality = ""
 
