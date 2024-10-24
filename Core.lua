@@ -11,16 +11,6 @@ local api = app.api	-- Our API prefix
 app.locales = {}	-- Localisation table
 local L = app.locales
 
-----------------------
--- LOCALIZED TABLES --
-----------------------
-
-local recipeRow = {}
-local reagentRow = {}
-local cooldownRow = {}
-local reagentsSorted = {}
-local cooldownsSorted = {}
-
 ---------------------------
 -- WOW API EVENT HANDLER --
 ---------------------------
@@ -233,8 +223,12 @@ function app.InitialiseCore()
 	app.SelectedRecipe.Profession = { recipeID = 0, recraft = false, recipeType = 0 }
 	app.SelectedRecipe.PlaceOrder = { recipeID = 0, recraft = false, recipeType = 0 }
 	app.SelectedRecipe.MakeOrder = {}
-	app.UpdatedCooldownWidth = 0
-	app.UpdatedReagentWidth = 0
+	app.Rows = {}
+	app.Rows.Recipe = {}
+	app.Rows.Reagent = {}
+	app.Rows.Cooldown = {}
+	app.Rows.CooldownWidth = 0
+	app.Rows.ReagentWidth = 0
 	app.SimAddOns = {"CraftSim", "TestFlight"}
 
 	-- Register our AddOn communications channel
@@ -712,13 +706,13 @@ function app.UpdateNumbers()
 		end
 
 		-- Push the info to the window
-		if reagentRow then
-			for i, row in pairs(reagentRow) do
+		if app.Rows.Reagent then
+			for i, row in pairs(app.Rows.Reagent) do
 				if row:GetID() == reagentID or (reagentID == "gold" and row.text1:GetText() == L.GOLD) then
 					row.icon:SetText(itemIcon)
 					row.text1:SetText(itemLink)
 					row.text2:SetText(itemAmount)
-					app.UpdatedReagentWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.UpdatedReagentWidth)
+					app.Rows.ReagentWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.Rows.ReagentWidth)
 				elseif string.find(reagentID, "currency") then
 					local number = string.gsub(reagentID, "currency:", "")
 					local name = C_CurrencyInfo.GetCurrencyLink(tonumber(number))
@@ -726,7 +720,7 @@ function app.UpdateNumbers()
 						row.icon:SetText(itemIcon)
 						row.text1:SetText(itemLink)
 						row.text2:SetText(itemAmount)
-						app.UpdatedReagentWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.UpdatedReagentWidth)
+						app.Rows.ReagentWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.Rows.ReagentWidth)
 					end
 				end
 			end
@@ -768,9 +762,9 @@ function app.UpdateNumbers()
 		return string.gsub(a.link, ".-(:%|h)", "") < string.gsub(b.link, ".-(:%|h)", "")
 	end
 
-	if recipeRow then
-		if #recipeRow >= 1 then
-			for i, row in ipairs(recipeRow) do
+	if app.Rows.Recipe then
+		if #app.Rows.Recipe >= 1 then
+			for i, row in ipairs(app.Rows.Recipe) do
 				if i == 1 then
 					row:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT")
 					row:SetPoint("TOPRIGHT", app.Window.Recipes, "BOTTOMRIGHT")
@@ -783,10 +777,10 @@ function app.UpdateNumbers()
 		end
 	end
 
-	if reagentRow then
-		if #reagentRow >= 1 then
+	if app.Rows.Reagent then
+		if #app.Rows.Reagent >= 1 then
 			local reagentsSorted = {}
-			for _, row in pairs(reagentRow) do
+			for _, row in pairs(app.Rows.Reagent) do
 				table.insert(reagentsSorted, {["row"] = row, ["link"] = row.text1:GetText()})
 			end
 			table.sort(reagentsSorted, customSort)
@@ -815,10 +809,10 @@ end
 
 -- Update cooldown numbers
 function app.UpdateCooldowns()
-	app.UpdatedCooldownWidth = 0
-	if cooldownRow then
-		if #cooldownRow >= 1 then
-			for i, row in ipairs(cooldownRow) do
+	app.Rows.CooldownWidth = 0
+	if app.Rows.Cooldown then
+		if #app.Rows.Cooldown >= 1 then
+			for i, row in ipairs(app.Rows.Cooldown) do
 				local rowID = row:GetID()
 				local cooldownRemaining = ProfessionShoppingList_Data.Cooldowns[rowID].start + ProfessionShoppingList_Data.Cooldowns[rowID].cooldown - GetServerTime()
 				local days, hours, minutes
@@ -837,7 +831,7 @@ function app.UpdateCooldowns()
 					row.text2:SetText(days .. L.DAYS .. " " .. hours .. L.HOURS .. " " .. minutes .. L.MINUTES)
 				end
 
-				app.UpdatedCooldownWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.UpdatedCooldownWidth)
+				app.Rows.CooldownWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.Rows.CooldownWidth)
 			end
 		end
 	end
@@ -889,24 +883,30 @@ function app.UpdateRecipes()
 		local maxLength2 = 0
 		local maxLength3 = 0
 
-		if recipeRow then
-			for i, row in pairs(recipeRow) do
+		-- Move the existing rows to the Nether
+		if app.Rows.Recipe then
+			for i, row in pairs(app.Rows.Recipe) do
 				row:SetParent(app.Hidden)
 				row:Hide()
 			end
 		end
-		if reagentRow then
-			for i, row in pairs(reagentRow) do
+		if app.Rows.Reagent then
+			for i, row in pairs(app.Rows.Reagent) do
 				row:SetParent(app.Hidden)
 				row:Hide()
 			end
 		end
-		if cooldownRow then
-			for i, row in pairs(cooldownRow) do
+		if app.Rows.Cooldown then
+			for i, row in pairs(app.Rows.Cooldown) do
 				row:SetParent(app.Hidden)
 				row:Hide()
 			end
 		end
+
+		-- And clear our rows entirely
+		app.Rows.Recipe = {}
+		app.Rows.Reagent = {}
+		app.Rows.Cooldown = {}
 
 		if not app.Window.Recipes then
 			app.Window.Recipes = CreateFrame("Button", nil, app.Window.Child)
@@ -940,7 +940,7 @@ function app.UpdateRecipes()
 			else
 				for _, child in ipairs(children) do child:Show() end
 				local offset = -2
-				if #recipeRow >= 1 then offset = -16*#recipeRow end
+				if #app.Rows.Recipe >= 1 then offset = -16*#app.Rows.Recipe end
 				app.Window.Reagents:SetPoint("TOPLEFT", app.Window.Recipes, "BOTTOMLEFT", 0, offset)
 				showRecipes = true
 			end
@@ -1050,7 +1050,7 @@ function app.UpdateRecipes()
 				end
 			end)
 
-			recipeRow[rowNo] = row
+			app.Rows.Recipe[rowNo] = row
 
 			local tradeskill = 999
 			if ProfessionShoppingList_Cache.FakeRecipes[recipeInfo.recipeID] then
@@ -1121,12 +1121,13 @@ function app.UpdateRecipes()
 			else
 				for _, child in ipairs(children) do child:Show() end
 				local offset = -2
-				if #reagentRow >= 1 then offset = -16*#reagentRow end
+				if #app.Rows.Reagent >= 1 then offset = -16*#app.Rows.Reagent end
 				app.Window.Cooldowns:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, offset)
 				showReagents = true
 			end
 		end)
 
+		local reagentsSorted = {}
 		for k, v in pairs(app.ReagentQuantities) do
 			if not ProfessionShoppingList_Cache.Reagents[k] then
 				app.CacheItem(k, true)
@@ -1525,7 +1526,7 @@ function app.UpdateRecipes()
 				end
 			end)
 
-			reagentRow[rowNo2] = row
+			app.Rows.Reagent[rowNo2] = row
 
 			local icon1 = row:CreateFontString("ARTWORK", nil, "GameFontNormal")
 			icon1:SetPoint("LEFT", row)
@@ -1566,16 +1567,16 @@ function app.UpdateRecipes()
 
 		-- Set the header title accordingly
 		if trackRecipes and trackItems then
-			app.RecipeHeader:SetText(L.WINDOW_HEADER_RECIPES .. " & " .. L.WINDOW_HEADER_ITEMS .. " (" .. #recipeRow .. ")")
+			app.RecipeHeader:SetText(L.WINDOW_HEADER_RECIPES .. " & " .. L.WINDOW_HEADER_ITEMS .. " (" .. #app.Rows.Recipe .. ")")
 			app.ReagentHeader:SetText(L.WINDOW_HEADER_REAGENTS .. "&" .. L.WINDOW_HEADER_COSTS)
 		elseif trackRecipes == false and trackItems then
-			app.RecipeHeader:SetText(L.WINDOW_HEADER_ITEMS .. " (" .. #recipeRow .. ")")
+			app.RecipeHeader:SetText(L.WINDOW_HEADER_ITEMS .. " (" .. #app.Rows.Recipe .. ")")
 			app.ReagentHeader:SetText(L.WINDOW_HEADER_COSTS)
 		else
-			if #recipeRow == 0 then
+			if #app.Rows.Recipe == 0 then
 				app.RecipeHeader:SetText(L.WINDOW_HEADER_RECIPES)
 			else
-				app.RecipeHeader:SetText(L.WINDOW_HEADER_RECIPES .. " (" .. #recipeRow .. ")")
+				app.RecipeHeader:SetText(L.WINDOW_HEADER_RECIPES .. " (" .. #app.Rows.Recipe .. ")")
 			end
 			app.ReagentHeader:SetText(L.WINDOW_HEADER_REAGENTS)
 		end
@@ -1614,7 +1615,7 @@ function app.UpdateRecipes()
 		end
 
 		local offset = -2
-		if rowNo2 >= 1 then offset = -16*#reagentRow end
+		if rowNo2 >= 1 then offset = -16*#app.Rows.Reagent end
 		app.Window.Cooldowns:SetPoint("TOPLEFT", app.Window.Reagents, "BOTTOMLEFT", 0, offset)
 
 		app.Window.Cooldowns:SetScript("OnClick", function(self)
@@ -1629,6 +1630,7 @@ function app.UpdateRecipes()
 			end
 		end)
 
+		local cooldownsSorted = {}
 		for k, v in pairs(ProfessionShoppingList_Data.Cooldowns) do
 			local timedone = v.start + v.cooldown
 			cooldownsSorted[#cooldownsSorted+1] = {id = k, recipeID = v.recipeID, start = v.start, cooldown = v.cooldown, name = v.name, user = v.user, time = timedone, maxCharges = v.maxCharges, charges = v.charges}
@@ -1672,13 +1674,13 @@ function app.UpdateRecipes()
 				end
 			end)
 
-			cooldownRow[rowNo3] = row
+			app.Rows.Cooldown[rowNo3] = row
 			if rowNo3 == 1 then
 				row:SetPoint("TOPLEFT", app.Window.Cooldowns, "BOTTOMLEFT")
 				row:SetPoint("TOPRIGHT", app.Window.Cooldowns, "BOTTOMRIGHT")
 			else
-				row:SetPoint("TOPLEFT", cooldownRow[rowNo3-1], "BOTTOMLEFT")
-				row:SetPoint("TOPRIGHT", cooldownRow[rowNo3-1], "BOTTOMRIGHT")
+				row:SetPoint("TOPLEFT", app.Rows.Cooldown[rowNo3-1], "BOTTOMLEFT")
+				row:SetPoint("TOPRIGHT", app.Rows.Cooldown[rowNo3-1], "BOTTOMRIGHT")
 			end
 
 			local tradeskill = ProfessionShoppingList_Library[cooldownInfo.recipeID].tradeskillID or 999
@@ -1735,11 +1737,11 @@ function app.UpdateRecipes()
 				windowHeight = windowHeight - 16
 			elseif showCooldowns then
 				windowHeight = windowHeight + rowNo3 * 16
-				windowWidth = math.max(windowWidth, maxLength3, app.UpdatedCooldownWidth)
+				windowWidth = math.max(windowWidth, maxLength3, app.Rows.CooldownWidth)
 			end
 			if showReagents then
 				windowHeight = windowHeight + rowNo2 * 16
-				windowWidth = math.max(windowWidth, maxLength2, app.UpdatedReagentWidth)
+				windowWidth = math.max(windowWidth, maxLength2, app.Rows.ReagentWidth)
 			end
 			if showRecipes then
 				windowHeight = windowHeight + rowNo * 16
