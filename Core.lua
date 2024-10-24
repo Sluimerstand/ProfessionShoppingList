@@ -11,6 +11,16 @@ local api = app.api	-- Our API prefix
 app.locales = {}	-- Localisation table
 local L = app.locales
 
+----------------------
+-- LOCALIZED TABLES --
+----------------------
+
+local recipeRow = {}
+local reagentRow = {}
+local cooldownRow = {}
+local reagentsSorted = {}
+local cooldownsSorted = {}
+
 ---------------------------
 -- WOW API EVENT HANDLER --
 ---------------------------
@@ -272,8 +282,8 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 			elseif command == 'track' then
 				-- Split entered recipeID and recipeQuantity and turn them into real numbers
 				local part1, part2 = rest:match("^(%S*)%s*(.-)$")
-				recipeID = tonumber(part1)
-				recipeQuantity = tonumber(part2)
+				local recipeID = tonumber(part1)
+				local recipeQuantity = tonumber(part2)
 
 				-- Only run if the recipeID is cached and the quantity is an actual number
 				if ProfessionShoppingList_Library[recipeID] then
@@ -288,8 +298,8 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 			elseif command == 'untrack' then
 				-- Split entered recipeID and recipeQuantity and turn them into real numbers
 				local part1, part2 = rest:match("^(%S*)%s*(.-)$")
-				recipeID = tonumber(part1)
-				recipeQuantity = tonumber(part2)
+				local recipeID = tonumber(part1)
+				local recipeQuantity = tonumber(part2)
 
 				-- Only run if the recipeID is tracked and the quantity is an actual number (with a maximum of the amount of recipes tracked)
 				if ProfessionShoppingList_Data.Recipes[recipeID] then
@@ -608,7 +618,7 @@ end
 function app.UpdateNumbers()
 	-- Update reagents tracked
 	for reagentID, amount in pairs(app.ReagentQuantities) do
-		local itemLink, fileID
+		local itemLink, fileID, icon
 
 		if not ProfessionShoppingList_Cache.Reagents[reagentID] then
 			-- Cache item
@@ -671,9 +681,9 @@ function app.UpdateNumbers()
 
 			-- Set the displayed amount based on settings
 			if ProfessionShoppingList_Settings["showRemaining"] == false then
-				itemAmount = colour .. GetCoinTextureString(amount)
+				itemAmount = colour .. C_CurrencyInfo.GetCoinTextureString(amount)
 			else
-				itemAmount = colour .. GetCoinTextureString(math.max(0,amount-GetMoney()))
+				itemAmount = colour .. C_CurrencyInfo.GetCoinTextureString(math.max(0,amount-GetMoney()))
 			end
 		elseif string.find(reagentID, "currency") then
 			local number = string.gsub(reagentID, "currency:", "")
@@ -898,10 +908,6 @@ function app.UpdateRecipes()
 			end
 		end
 
-		recipeRow = {}
-		reagentRow = {}
-		cooldownRow = {}
-
 		if not app.Window.Recipes then
 			app.Window.Recipes = CreateFrame("Button", nil, app.Window.Child)
 			app.Window.Recipes:SetSize(0,16)
@@ -1121,7 +1127,6 @@ function app.UpdateRecipes()
 			end
 		end)
 
-		reagentsSorted = {}
 		for k, v in pairs(app.ReagentQuantities) do
 			if not ProfessionShoppingList_Cache.Reagents[k] then
 				app.CacheItem(k, true)
@@ -1624,7 +1629,6 @@ function app.UpdateRecipes()
 			end
 		end)
 
-		cooldownsSorted = {}
 		for k, v in pairs(ProfessionShoppingList_Data.Cooldowns) do
 			local timedone = v.start + v.cooldown
 			cooldownsSorted[#cooldownsSorted+1] = {id = k, recipeID = v.recipeID, start = v.start, cooldown = v.cooldown, name = v.name, user = v.user, time = timedone, maxCharges = v.maxCharges, charges = v.charges}
@@ -2707,7 +2711,7 @@ function app.CacheItem(itemID, save)
 	if save then
 		item:ContinueOnItemLoad(function()
 			-- Get item info
-			_, itemLink, _, _, _, _, _, _, _, fileID = C_Item.GetItemInfo(itemID)
+			local _, itemLink, _, _, _, _, _, _, _, fileID = C_Item.GetItemInfo(itemID)
 
 			-- Write the info to the cache
 			ProfessionShoppingList_Cache.Reagents[itemID] = {link = itemLink, icon = fileID}
@@ -3096,7 +3100,7 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID)
 			
 			-- Grab the reagents it provides
 			local simulatedSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
-			simulatedRequiredReagents = simulatedSimulationMode.recipeData.reagentData.requiredReagents
+			local simulatedRequiredReagents = simulatedSimulationMode.recipeData.reagentData.requiredReagents
 	
 			if simulatedRequiredReagents then
 				local reagents = {}
