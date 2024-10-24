@@ -3229,7 +3229,7 @@ app.Event:Register("MERCHANT_SHOW", function()
 			if vendorIndex == 0 then do return end end
 
 			local itemLink = GetMerchantItemLink(vendorIndex)
-			local _, _, itemPrice = GetMerchantItemInfo(vendorIndex)
+			local _, _, itemPrice = C_MerchantFrame.GetItemInfo(vendorIndex)
 
 			-- Add this as a fake recipe
 			local key = "vendor:" .. merchant .. ":" .. itemID
