@@ -3093,7 +3093,6 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID)
 		end
 	end
 
-	-- List custom reagents for simulated recipes
 	local simRecipe = false
 	-- Don't track simulated reagents if CraftSim and Testflight both have their simulation mode active
 	-- This would give errors if either addon isn't enabled, but for now app.SimCount() only includes these two anyway
@@ -3106,8 +3105,8 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID)
 			addons = addons .. v
 		end
 		app.Print(L.ERROR_MULTISIM, addons)
-	-- Make sure we only do this for the profession window, and to not grab sim reagents for tracking place orders
-	elseif app.SimCount() == 1 and originalRecipeID ~= app.SelectedRecipe.PlaceOrder.recipeID then
+	-- List custom reagents for simulated recipes
+	elseif app.SimCount() >= 1 then
 		if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
 			-- Grab the reagents it provides
 			local simulatedSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
