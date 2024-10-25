@@ -3095,11 +3095,20 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID)
 
 	-- List custom reagents for simulated recipes
 	local simRecipe = false
+	-- Don't track simulated reagents if CraftSim and Testflight both have their simulation mode active
+	-- This would give errors if either addon isn't enabled, but for now app.SimCount() only includes these two anyway
+	if app.SimCount() > 1 and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive and TestFlight.enabled then
+		local addons = ""
+		for k, v in pairs(app.SimAddOns) do
+			if k > 1 then
+				addons = addons .. ", "
+			end
+			addons = addons .. v
+		end
+		app.Print(L.ERROR_MULTISIM, addons)
 	-- Make sure we only do this for the profession window, and to not grab sim reagents for tracking place orders
-	if app.SimCount() == 1 and originalRecipeID ~= app.SelectedRecipe.PlaceOrder.recipeID then
+	elseif app.SimCount() == 1 and originalRecipeID ~= app.SelectedRecipe.PlaceOrder.recipeID then
 		if C_AddOns.IsAddOnLoaded("CraftSim") and CraftSimAPI.GetCraftSim().SIMULATION_MODE.isActive then
-			simRecipe = true
-			
 			-- Grab the reagents it provides
 			local simulatedSimulationMode = CraftSimAPI.GetCraftSim().SIMULATION_MODE
 			local simulatedRequiredReagents = simulatedSimulationMode.recipeData.reagentData.requiredReagents
@@ -3121,12 +3130,12 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID)
 				end
 	
 				-- Save the reagents into a fake recipe
+				simRecipe = true
 				ProfessionShoppingList_Cache.SimulatedRecipes[recipeID] = reagents
 			else
 				app.Print(L.ERROR_CRAFTSIM)
 			end
-		-- And don't make it a sim recipe for TestFlight if it's an order, it can't be optimised and returns the wrong quality info :/
-		elseif C_AddOns.IsAddOnLoaded("TestFlight") and originalRecipeID ~= app.SelectedRecipe.MakeOrder.spellID then
+		elseif C_AddOns.IsAddOnLoaded("TestFlight") and TestFlight.enabled then
 			-- Let the game track the recipe temporarily, so we can grab TestFlight's info
 			app.Flag["trackingRecipes"] = true
 			C_TradeSkillUI.SetRecipeTracked(originalRecipeID, true, recraft or false)
@@ -3139,15 +3148,6 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID)
 			C_TradeSkillUI.SetRecipeTracked(originalRecipeID, false, recraft or false)
 			app.Flag["trackingRecipes"] = false
 		end
-	elseif app.SimCount() > 1 then
-		local addons = ""
-		for k, v in pairs(app.SimAddOns) do
-			if k > 1 then
-				addons = addons .. ", "
-			end
-			addons = addons .. v
-		end
-		--app.Print(L.ERROR_MULTISIM, addons)
 	end
 
 	-- Track recipe
