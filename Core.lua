@@ -814,21 +814,23 @@ function app.UpdateCooldowns()
 		if #app.Rows.Cooldown >= 1 then
 			for i, row in ipairs(app.Rows.Cooldown) do
 				local rowID = row:GetID()
-				local cooldownRemaining = ProfessionShoppingList_Data.Cooldowns[rowID].start + ProfessionShoppingList_Data.Cooldowns[rowID].cooldown - GetServerTime()
-				local days, hours, minutes
+				if ProfessionShoppingList_Data.Cooldowns[rowID] then
+					local cooldownRemaining = ProfessionShoppingList_Data.Cooldowns[rowID].start + ProfessionShoppingList_Data.Cooldowns[rowID].cooldown - GetServerTime()
+					local days, hours, minutes
 
-				days = math.floor(cooldownRemaining/(60*60*24))
-				hours = math.floor((cooldownRemaining - (days*60*60*24))/(60*60))
-				minutes = math.floor((cooldownRemaining - ((days*60*60*24) + (hours*60*60)))/60)
+					days = math.floor(cooldownRemaining/(60*60*24))
+					hours = math.floor((cooldownRemaining - (days*60*60*24))/(60*60))
+					minutes = math.floor((cooldownRemaining - ((days*60*60*24) + (hours*60*60)))/60)
 
-				if cooldownRemaining <= 0 then
-					row.text2:SetText(L.READY)
-				elseif cooldownRemaining < 60*60 then
-					row.text2:SetText(minutes .. L.MINUTES)
-				elseif cooldownRemaining < 60*60*24 then
-					row.text2:SetText(hours .. L.HOURS .. " " .. minutes .. L.MINUTES)
-				else
-					row.text2:SetText(days .. L.DAYS .. " " .. hours .. L.HOURS .. " " .. minutes .. L.MINUTES)
+					if cooldownRemaining <= 0 then
+						row.text2:SetText(L.READY)
+					elseif cooldownRemaining < 60*60 then
+						row.text2:SetText(minutes .. L.MINUTES)
+					elseif cooldownRemaining < 60*60*24 then
+						row.text2:SetText(hours .. L.HOURS .. " " .. minutes .. L.MINUTES)
+					else
+						row.text2:SetText(days .. L.DAYS .. " " .. hours .. L.HOURS .. " " .. minutes .. L.MINUTES)
+					end
 				end
 
 				app.Rows.CooldownWidth = math.max(row.icon:GetStringWidth()+row.text1:GetStringWidth()+row.text2:GetStringWidth(), app.Rows.CooldownWidth)
