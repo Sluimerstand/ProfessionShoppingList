@@ -174,6 +174,7 @@ function app.KnowledgeTracker()
 					-- If anything is missing, try again
 					if not itemLink or (v.renown and not factionName) or (v.sourceType == "zone" and not zoneName) then
 						RunNextFrame(kpTooltip)
+						app.Debug("kpTooltip() 1")
 						do return end
 					end
 
@@ -217,6 +218,7 @@ function app.KnowledgeTracker()
 						-- If anything missing, try again
 						if not questTitle or not factionTitle then
 							RunNextFrame(kpTooltip)
+							app.Debug("kpTooltip() 2")
 							do return end
 						end
 	
@@ -249,6 +251,7 @@ function app.KnowledgeTracker()
 						-- If anything is missing, try again
 						if not itemLink or not zone then
 							RunNextFrame(kpTooltip)
+							app.Debug("kpTooltip() 3")
 							do return end
 						end
 					else

@@ -71,6 +71,7 @@ function app.CreateAuctionatorButton()
 						-- Try again if error
 						if itemName == nil then
 							RunNextFrame(makeShoppingList)
+							app.Debug("makeShoppingList() 1")
 							do return end
 						end
 
@@ -86,6 +87,7 @@ function app.CreateAuctionatorButton()
 						if not ProfessionShoppingList_Cache.ReagentTiers[reagentID] then
 							app.CacheItem(reagentID, true)
 							RunNextFrame(makeShoppingList)
+							app.Debug("makeShoppingList() 2")
 							do return end
 						end
 
