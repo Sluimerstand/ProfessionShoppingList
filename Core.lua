@@ -3758,12 +3758,14 @@ function app.Reset(arg)
 		ProfessionShoppingList_Library = {}
 		app.Print(L.RESET_DONE)
 	elseif arg == "cache" then
+		app.Clear()
 		ProfessionShoppingList_Cache = nil
 		app.Print(L.RESET_DONE, L.REQUIRES_RELOAD)
 	elseif arg == "character" then
 		ProfessionShoppingList_CharacterData = nil
 		app.Print(L.RESET_DONE, L.REQUIRES_RELOAD)
 	elseif arg == "all" then
+		app.Clear()
 		ProfessionShoppingList_Settings = nil
 		ProfessionShoppingList_Data = nil
 		ProfessionShoppingList_Library = nil
