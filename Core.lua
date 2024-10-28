@@ -335,10 +335,14 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 					local numCriteria = GetAchievementNumCriteria(achievementID)
 					local _, criteriaType = GetAchievementCriteriaInfo(achievementID, 1, true)
 
+					-- Let's add a staggered delay, because caching items is a fucking nightmare
+					local delay = 0
+
 					-- If the asset type is a (crafting) spell
 					if criteriaType == 29 then
 						-- Make sure that we check the only criteria if numCriteria was evaluated to be 0
 						if numCriteria == 0 then numCriteria = 1 end
+
 						-- For each criteria, track the SpellID
 						for i = 1, numCriteria, 1 do
 							local _, criteriaType, completed, quantity, reqQuantity, _, _, assetID = GetAchievementCriteriaInfo(achievementID, i, true)
@@ -350,7 +354,12 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 									numTrack = reqQuantity - quantity
 								end
 								-- Add the recipe
-								app.TrackRecipe(assetID, numTrack)
+								if numTrack >= 1 then
+									delay = delay + 0.5
+									C_Timer.After(delay, function()
+										app.TrackRecipe(assetID, numTrack)
+									end)
+								end
 							end
 						end
 					-- Chromatic Calibration: Cranial Cannons
@@ -359,7 +368,9 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 							-- Set the update handler to active, to prevent multiple list updates from freezing the game
 							app.Flag["changingRecipes"] = true
 							-- Until the last one in the series
-							if i == numCriteria then app.Flag["changingRecipes"] = false end
+							if i == numCriteria then
+								app.Flag["changingRecipes"] = false
+							end
 
 							local _, criteriaType, completed, _, _, _, _, assetID = GetAchievementCriteriaInfo(achievementID, i)
 
@@ -374,7 +385,12 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 							elseif i == 8 then assetID = 198971 end
 
 							-- If the criteria has not yet been completed, add the recipe
-							if completed == false then app.TrackRecipe(assetID, 1) end
+							if completed == false then
+								delay = delay + 0.5
+								C_Timer.After(delay, function()
+									app.TrackRecipe(assetID, 1)
+								end)
+							end
 						end
 					else
 						app.Print(L.INVALID_ACHIEVEMENT)
