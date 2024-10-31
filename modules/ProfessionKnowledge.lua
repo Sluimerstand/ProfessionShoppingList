@@ -262,6 +262,15 @@ function app.KnowledgeTracker()
 					app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. icon .. " |cffffffff" .. itemLink .. " (" .. zone .. ")|r"
 				end
 			end
+
+			-- Catchup knowledge
+			for k, v in ipairs(app.ProfessionKnowledge[skillLineID]) do
+				if v.type == "catchup" then
+					local catchupKnowledge = C_CurrencyInfo.GetCurrencyInfo(v.currency).maxQuantity-C_CurrencyInfo.GetCurrencyInfo(v.currency).quantity
+					-- Add text
+					app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n\n|r" .. L.CATCHUP_KNOWLEDGE .. "|cffffffff " .. catchupKnowledge
+				end
+			end
 		end
 	end
 

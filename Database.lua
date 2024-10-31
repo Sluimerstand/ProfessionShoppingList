@@ -570,6 +570,9 @@ app.ProfessionKnowledge[2871] = {	-- The War Within Alchemy
 	{ quest = 83845, type = "world", item = 226270, zone = 2215 },	-- Sanctified Mortar and Pestle
 	{ quest = 83847, type = "world", item = 226272, zone = 2255 },	-- Dark Apothecary's Vial
 	{ quest = 83846, type = "world", item = 226271, zone = 2213 },	-- Nerubian Mixing Salts
+
+	-- Catchup knowledge
+	{ quest = 0, type = "catchup", currency = 3057 }
 }
 app.ProfessionKnowledge[2872] = {	-- The War Within Blacksmithing
 	-- Vendors
@@ -588,6 +591,9 @@ app.ProfessionKnowledge[2872] = {	-- The War Within Blacksmithing
 	{ quest = 83853, type = "world", item = 226281, zone = 2215 },	-- Radiant Tongs
 	{ quest = 83855, type = "world", item = 226283, zone = 2255 },	-- Spiderling's Wire Brush
 	{ quest = 83854, type = "world", item = 226282, zone = 2213 },	-- Nerubian Smith's Kit
+
+	-- Catchup knowledge
+	{ quest = 0, type = "catchup", currency = 3058 }
 }
 app.ProfessionKnowledge[2874] = {	-- The War Within Enchanting
 	-- Vendors
@@ -606,6 +612,9 @@ app.ProfessionKnowledge[2874] = {	-- The War Within Enchanting
 	{ quest = 83863, type = "world", item = 226289, zone = 2215 },	-- Enchanted Arathi Scroll
 	{ quest = 83865, type = "world", item = 226291, zone = 2255 },	-- Void Shard
 	{ quest = 83864, type = "world", item = 226290, zone = 2213 },	-- Book of Dark Magic
+
+	-- Catchup knowledge
+	{ quest = 0, type = "catchup", currency = 3059 }
 }
 app.ProfessionKnowledge[2875] = {	-- The War Within Engineering
 	-- Vendors
@@ -624,6 +633,9 @@ app.ProfessionKnowledge[2875] = {	-- The War Within Engineering
 	{ quest = 83871, type = "world", item = 226297, zone = 2215 },	-- Arathi Safety Gloves
 	{ quest = 83872, type = "world", item = 226298, zone = 2255 },	-- Puppeted Mechanical Spider
 	{ quest = 83873, type = "world", item = 226299, zone = 2213 },	-- Emptied Venom Canister
+
+	-- Catchup knowledge
+	{ quest = 0, type = "catchup", currency = 3060 }
 }
 app.ProfessionKnowledge[2877] = {	-- The War Within Herbalism
 	-- Vendors
@@ -642,6 +654,9 @@ app.ProfessionKnowledge[2877] = {	-- The War Within Herbalism
 	{ quest = 83879, type = "world", item = 226305, zone = 2215 },	-- Arathi Herb Pruner
 	{ quest = 83880, type = "world", item = 226306, zone = 2213 },	-- Web-Entangled Lotus
 	{ quest = 83881, type = "world", item = 226307, zone = 2213 },	-- Tunneler's Shovel
+
+	-- Catchup knowledge
+	{ quest = 0, type = "catchup", currency = 3061 }
 }
 app.ProfessionKnowledge[2878] = {	-- The War Within Inscription
 	-- Vendors
@@ -660,6 +675,9 @@ app.ProfessionKnowledge[2878] = {	-- The War Within Inscription
 	{ quest = 83887, type = "world", item = 226313, zone = 2215 },	-- Calligrapher's Chiseled Marker
 	{ quest = 83888, type = "world", item = 226314, zone = 2255 },	-- Nerubian Texts
 	{ quest = 83889, type = "world", item = 226315, zone = 2213 },	-- Venomancer's Ink Well
+
+	-- Catchup knowledge
+	{ quest = 0, type = "catchup", currency = 3062 }
 }
 app.ProfessionKnowledge[2879] = {	-- The War Within Jewelcrafting
 	-- Vendors
@@ -678,6 +696,9 @@ app.ProfessionKnowledge[2879] = {	-- The War Within Jewelcrafting
 	{ quest = 83895, type = "world", item = 226321, zone = 2215 },	-- Inscribed Sunstone Gem
 	{ quest = 83897, type = "world", item = 226323, zone = 2255 },	-- Hardened Jewel Setter's Vise
 	{ quest = 83896, type = "world", item = 226322, zone = 2213 },	-- Heavy Gem Sorting Gloves
+
+	-- Catchup knowledge
+	{ quest = 0, type = "catchup", currency = 3063 }
 }
 app.ProfessionKnowledge[2880] = {	-- The War Within Leatherworking
 	-- Vendors
@@ -696,6 +717,9 @@ app.ProfessionKnowledge[2880] = {	-- The War Within Leatherworking
 	{ quest = 83903, type = "world", item = 226329, zone = 2215 },	-- Holy Arathi Leather Strap
 	{ quest = 83905, type = "world", item = 226331, zone = 2255 },	-- Preserved Bug-Skinner Gloves
 	{ quest = 83904, type = "world", item = 226330, zone = 2213 },	-- Nerubian Hide Preserver
+
+	-- Catchup knowledge
+	{ quest = 0, type = "catchup", currency = 3064 }
 }
 app.ProfessionKnowledge[2881] = {	-- The War Within Mining
 	-- Vendors
@@ -714,6 +738,9 @@ app.ProfessionKnowledge[2881] = {	-- The War Within Mining
 	{ quest = 83911, type = "world", item = 226337, zone = 2215 },	-- Chunk of Holy Ore
 	{ quest = 83913, type = "world", item = 226339, zone = 2255 },	-- Dark Bug-Filled Ore
 	{ quest = 83912, type = "world", item = 226338, zone = 2213 },	-- Nerubian Shale Fragments
+
+	-- Catchup knowledge
+	{ quest = 0, type = "catchup", currency = 3065 }
 }
 app.ProfessionKnowledge[2882] = {	-- The War Within Skinning
 	-- Vendors
@@ -733,6 +760,9 @@ app.ProfessionKnowledge[2882] = {	-- The War Within Skinning
 	{ quest = 83921, type = "world", item = 226347, zone = 2255 },	-- Silk-Lined Shell Slicer
 	{ quest = 83920, type = "world", item = 226346, zone = 2213 },	-- Nerubian Hide Pouch
 
+	-- Catchup knowledge
+	{ quest = 0, type = "catchup", currency = 3066 }
+
 }
 app.ProfessionKnowledge[2883] = {	-- The War Within Tailoring
 	-- Vendors
@@ -751,4 +781,7 @@ app.ProfessionKnowledge[2883] = {	-- The War Within Tailoring
 	{ quest = 83927, type = "world", item = 226353, zone = 2215 },	-- Royal Outfitter's Protractor
 	{ quest = 83928, type = "world", item = 226354, zone = 2255 },	-- Nerubian Quilt
 	{ quest = 83929, type = "world", item = 226355, zone = 2213 },	-- Nerubian's Pincushion
+
+	-- Catchup knowledge
+	{ quest = 0, type = "catchup", currency = 3067 }
 }
