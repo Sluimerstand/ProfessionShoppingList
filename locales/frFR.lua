@@ -113,9 +113,13 @@ L.THAUMATURGY_TWW =						"Transmutagène mercurien : Aqirite, Chitine sinistre, 
 										"Transmutagène instable : Lance d’Arathor, Floraison bénie, Minerai de griffefer, Cuir chargé par la tempête"
 
 L.BUTTON_COOKINGFIRE =					app.IconLMB .. " : " .. BINDING_NAME_TARGETSELF .. "\n" ..
-										app.IconRMB .. " : " .. STATUS_TEXT_TARGET .. "."
+										app.IconRMB .. " : " .. STATUS_TEXT_TARGET
 L.BUTTON_COOKINGPET =					app.IconLMB .. " : Invoquer cette mascotte\n" ..
 										app.IconRMB .. " : Passer d'une mascotte à l'autre"
+-- L.BUTTON_CHEFSHAT =						app.IconLMB .. ": Use the"
+-- L.BUTTON_THERMALANVIL =					app.IconLMB .. ": Use a"
+L.BUTTON_ALVIN =						app.IconLMB .. " : Invoquer cette mascotte"
+-- L.BUTTON_LIGHTFORGE =					app.IconLMB .. ": Cast"
 
 -- Track new mogs
 L.BUTTON_TRACKNEW =						"Suivre les apparences inconnues"
