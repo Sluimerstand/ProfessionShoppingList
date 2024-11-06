@@ -318,9 +318,6 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 					local numCriteria = GetAchievementNumCriteria(achievementID)
 					local _, criteriaType = GetAchievementCriteriaInfo(achievementID, 1, true)
 
-					-- Let's add a staggered delay, because caching items is a fucking nightmare
-					local delay = 0
-
 					-- If the asset type is a (crafting) spell
 					if criteriaType == 29 then
 						-- Make sure that we check the only criteria if numCriteria was evaluated to be 0
@@ -338,10 +335,7 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 								end
 								-- Add the recipe
 								if numTrack >= 1 then
-									delay = delay + 0
-									C_Timer.After(delay, function()
-										app.TrackRecipe(assetID, numTrack)
-									end)
+									app.TrackRecipe(assetID, numTrack)
 								end
 							end
 						end
@@ -369,10 +363,7 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 
 							-- If the criteria has not yet been completed, add the recipe
 							if completed == false then
-								delay = delay + 0.5
-								C_Timer.After(delay, function()
-									app.TrackRecipe(assetID, 1)
-								end)
+								app.TrackRecipe(assetID, 1)
 							end
 						end
 					else
