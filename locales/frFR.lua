@@ -147,6 +147,7 @@ L.RENOWN =								RENOWN_LEVEL_LABEL	-- "Renown "
 L.WORLD =								"Monde"
 L.HIDDEN_PROFESSION_MASTER =			"Hidden Profession Master"
 -- L.CATCHUP_KNOWLEDGE =					"Available catch-up knowledge:"
+-- L.LOADING =								SEARCH_LOADING_TEXT
 
 -- Tweaks
 L.CATALYSTBUTTON_LABEL =				"Catalyseur instantané" -- maybe need review in fr_FR

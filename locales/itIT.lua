@@ -147,6 +147,7 @@ if GetLocale() ~= "itIT" then return end
 -- L.WORLD =								"World"
 -- L.HIDDEN_PROFESSION_MASTER =			"Hidden Profession Master"
 -- L.CATCHUP_KNOWLEDGE =					"Available catch-up knowledge:"
+-- L.LOADING =								SEARCH_LOADING_TEXT
 
 -- Tweaks
 -- L.CATALYSTBUTTON_LABEL =				"Instantly Catalyze"

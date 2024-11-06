@@ -183,7 +183,7 @@ function app.KnowledgeTracker()
 							status = "|cff238823"
 						end
 					elseif v.sourceType == "zone" then
-						zoneName = C_Map.GetMapInfo(v.source).name
+						zoneName = C_Map.GetMapInfo(v.source).name or ""
 					end
 
 					-- Add text
@@ -215,8 +215,8 @@ function app.KnowledgeTracker()
 	
 					if v.type == "renown" then
 						-- Quest and faction info
-						local questTitle = C_QuestLog.GetTitleForQuestID(v.quest)
-						local factionTitle = C_Reputation.GetFactionDataByID(v.faction).name
+						local questTitle = C_QuestLog.GetTitleForQuestID(v.quest) or ""
+						local factionTitle = C_Reputation.GetFactionDataByID(v.faction).name or ""
 						local status
 						if C_MajorFactions.GetRenownLevels(v.faction)[v.renown].locked then
 							status = "|cffD222D"
@@ -242,7 +242,7 @@ function app.KnowledgeTracker()
 
 				if v.type == "world" then
 					-- Zone name
-					local zone = C_Map.GetMapInfo(v.zone).name
+					local zone = C_Map.GetMapInfo(v.zone).name or ""
 
 					-- Item link
 					local _, itemLink
@@ -286,12 +286,21 @@ function app.KnowledgeTracker()
 	-- Refresh and show the tooltip on mouse-over
 	app.KnowledgePointTracker:SetScript("OnEnter", function(self)
 		kpTooltip()
-		-- Add a slight delay, which is needed to compile the tooltip
-		C_Timer.After(0.5, function()
+
+		if not app.Flag[skillLineID] then
+			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+			GameTooltip:SetText(L.LOADING)
+			GameTooltip:Show()
+			-- Add a slight delay, which is needed to compile the tooltip
+			C_Timer.After(1, function()
+				GameTooltip:SetText(app.KnowledgePointTooltip)
+			end)
+			app.Flag[skillLineID] = true
+		else
 			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
 			GameTooltip:SetText(app.KnowledgePointTooltip)
 			GameTooltip:Show()
-		end)
+		end
 	end)
 	-- Hide the tooltip when not mouse-over
 	app.KnowledgePointTracker:SetScript("OnLeave", function()
