@@ -245,7 +245,9 @@ function app.HideOribos()
 
 				-- Try again if we failed, but only 10 times max
 				if removed < 10 then
-					C_Timer.After(1, function() RunNextFrame(removeMessage) end)
+					C_Timer.After(1, function()
+						RunNextFrame(removeMessage)
+					end)
 				end
 			end
 			removeMessage()

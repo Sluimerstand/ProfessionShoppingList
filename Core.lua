@@ -338,7 +338,7 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 								end
 								-- Add the recipe
 								if numTrack >= 1 then
-									delay = delay + 0.5
+									delay = delay + 0
 									C_Timer.After(delay, function()
 										app.TrackRecipe(assetID, numTrack)
 									end)
@@ -615,11 +615,19 @@ function app.UpdateNumbers()
 
 		if not ProfessionShoppingList_Cache.Reagents[reagentID] then
 			-- Cache item
+			app.CacheItem(reagentID)
+
 			if not C_Item.IsItemDataCachedByID(reagentID) then
-				app.CacheItem(reagentID, true)
-				RunNextFrame(app.UpdateNumbers)
-				app.Debug("app.UpdateNumbers()")
-				do return end
+				app.Debug("app.UpdateNumbers(" .. reagentID .. ")")
+
+				C_Item.RequestLoadItemDataByID(reagentID)
+				local item = Item:CreateFromItemID(reagentID)
+				
+				item:ContinueOnItemLoad(function()
+					app.UpdateNumbers()
+				end)
+
+				return
 			end
 		else
 			-- Read the info from the cache
@@ -1131,9 +1139,21 @@ function app.UpdateRecipes()
 		local reagentsSorted = {}
 		for k, v in pairs(app.ReagentQuantities) do
 			if not ProfessionShoppingList_Cache.Reagents[k] then
-				app.CacheItem(k, true)
-				app.UpdateRecipes()
-				do return end
+				-- Cache item
+				app.CacheItem(k)
+
+				if not C_Item.IsItemDataCachedByID(k) then
+					app.Debug("app.UpdateRecipes(" .. k .. ")")
+
+					C_Item.RequestLoadItemDataByID(k)
+					local item = Item:CreateFromItemID(k)
+					
+					item:ContinueOnItemLoad(function()
+						app.UpdateRecipes()
+					end)
+
+					return
+				end
 			end
 			reagentsSorted[#reagentsSorted+1] = {reagentID = k, quantity = v, icon = ProfessionShoppingList_Cache.Reagents[k].icon, link = ProfessionShoppingList_Cache.Reagents[k].link}
 		end
@@ -1237,17 +1257,21 @@ function app.UpdateRecipes()
 							-- Get info
 							local function getInfo()
 								-- Cache item
-								if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+								if not C_Item.IsItemDataCachedByID(reagentID) then
+									app.Debug("getInfo(" .. reagentID.. ")")
+
+									C_Item.RequestLoadItemDataByID(reagentID)
+									local item = Item:CreateFromItemID(reagentID)
+									
+									item:ContinueOnItemLoad(function()
+										getInfo()
+									end)
+
+									return
+								end
 
 								-- Get item info
 								local itemName, itemLink = C_Item.GetItemInfo(reagentID)
-
-								-- Try again if error
-								if itemName == nil or itemLink == nil then
-									RunNextFrame(getInfo)
-									app.Debug("getInfo()")
-									do return end
-								end
 
 								-- Add text
 								pslOption1:SetText(pslOption1:GetText() .. reagentAmount .. "× " .. itemLink .. "\n")
@@ -1288,17 +1312,21 @@ function app.UpdateRecipes()
 								-- Get info
 								local function getInfo()
 									-- Cache item
-									if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+									if not C_Item.IsItemDataCachedByID(reagentID) then
+										app.Debug("getInfo(" .. reagentID.. ")")
+
+										C_Item.RequestLoadItemDataByID(reagentID)
+										local item = Item:CreateFromItemID(reagentID)
+										
+										item:ContinueOnItemLoad(function()
+											getInfo()
+										end)
+
+										return
+									end
 
 									-- Get item info
 									local itemName, itemLink = C_Item.GetItemInfo(reagentID)
-
-									-- Try again if error
-									if itemName == nil or itemLink == nil then
-										RunNextFrame(getInfo)
-										app.Debug("getInfo()")
-										do return end
-									end
 
 									-- Add text
 									pslOption2:SetText(pslOption2:GetText() .. reagentAmount .. "× " .. itemLink .. "\n")
@@ -1340,17 +1368,21 @@ function app.UpdateRecipes()
 								-- Get info
 								local function getInfo()
 									-- Cache item
-									if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
-									
+									if not C_Item.IsItemDataCachedByID(reagentID) then
+										app.Debug("getInfo(" .. reagentID.. ")")
+
+										C_Item.RequestLoadItemDataByID(reagentID)
+										local item = Item:CreateFromItemID(reagentID)
+										
+										item:ContinueOnItemLoad(function()
+											getInfo()
+										end)
+
+										return
+									end
+
 									-- Get item info
 									local itemName, itemLink = C_Item.GetItemInfo(reagentID)
-
-									-- Try again if error
-									if itemName == nil or itemLink == nil then
-										RunNextFrame(getInfo)
-										app.Debug("getInfo()")
-										do return end
-									end
 
 									-- Add text
 									pslOption3:SetText(pslOption3:GetText() .. reagentAmount .. "× " .. itemLink .. "\n")
@@ -1392,17 +1424,21 @@ function app.UpdateRecipes()
 								-- Get info
 								local function getInfo()
 									-- Cache item
-									if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+									if not C_Item.IsItemDataCachedByID(reagentID) then
+										app.Debug("getInfo(" .. reagentID.. ")")
+
+										C_Item.RequestLoadItemDataByID(reagentID)
+										local item = Item:CreateFromItemID(reagentID)
+										
+										item:ContinueOnItemLoad(function()
+											getInfo()
+										end)
+
+										return
+									end
 
 									-- Get item info
 									local itemName, itemLink = C_Item.GetItemInfo(reagentID)
-
-									-- Try again if error
-									if itemName == nil or itemLink == nil then
-										RunNextFrame(getInfo)
-										app.Debug("getInfo()")
-										do return end
-									end
 
 									-- Add text
 									pslOption4:SetText(pslOption4:GetText() .. reagentAmount .. "× " .. itemLink .. "\n")
@@ -1441,17 +1477,21 @@ function app.UpdateRecipes()
 								-- Get info
 								local function getInfo()
 									-- Cache item
-									if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+									if not C_Item.IsItemDataCachedByID(reagentID) then
+										app.Debug("getInfo(" .. reagentID.. ")")
+
+										C_Item.RequestLoadItemDataByID(reagentID)
+										local item = Item:CreateFromItemID(reagentID)
+										
+										item:ContinueOnItemLoad(function()
+											getInfo()
+										end)
+
+										return
+									end
 
 									-- Get item info
 									local itemName, itemLink = C_Item.GetItemInfo(reagentID)
-
-									-- Try again if error
-									if itemName == nil or itemLink == nil then
-										RunNextFrame(getInfo)
-										app.Debug("getInfo()")
-										do return end
-									end
 
 									-- Add text
 									pslOption5:SetText(pslOption5:GetText() .. reagentAmount .. "× " .. itemLink .. "\n")
@@ -1490,17 +1530,21 @@ function app.UpdateRecipes()
 								-- Get info
 								local function getInfo()
 									-- Cache item
-									if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+									if not C_Item.IsItemDataCachedByID(reagentID) then
+										app.Debug("getInfo(" .. reagentID.. ")")
+
+										C_Item.RequestLoadItemDataByID(reagentID)
+										local item = Item:CreateFromItemID(reagentID)
+										
+										item:ContinueOnItemLoad(function()
+											getInfo()
+										end)
+
+										return
+									end
 
 									-- Get item info
 									local itemName, itemLink = C_Item.GetItemInfo(reagentID)
-
-									-- Try again if error
-									if itemName == nil or itemLink == nil then
-										RunNextFrame(getInfo)
-										app.Debug("getInfo()")
-										do return end
-									end
 
 									-- Add text
 									pslOption6:SetText(pslOption6:GetText() .. reagentAmount .. "× " .. itemLink .. "\n")
@@ -2739,11 +2783,14 @@ app.Event:Register("TRADE_SKILL_SHOW", function()
 	end
 end)
 
-function app.CacheItem(itemID, save)
+-- Save an item to our cache
+function app.CacheItem(itemID)
+	-- Cache the item by asking the server to give us the info
+	C_Item.RequestLoadItemDataByID(itemID)
 	local item = Item:CreateFromItemID(itemID)
+	app.Debug("app.CacheItem(" .. itemID .. ")")
 			
 	-- And when the item is cached
-	if save then
 		item:ContinueOnItemLoad(function()
 			-- Get item info
 			local _, itemLink, _, _, _, _, _, _, _, fileID = C_Item.GetItemInfo(itemID)
@@ -2763,11 +2810,10 @@ function app.CacheItem(itemID, save)
 				end
 			end
 		end)
-	end
 end
 
 -- Get reagents for recipe
-function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qualityTier)
+function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft)
 	-- Grab all the reagent info from the API
 	local reagentsTable
 
@@ -2785,9 +2831,6 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 	else
 		reagentsTable = C_TradeSkillUI.GetRecipeSchematic(recipeID, recraft or false).reagentSlotSchematics
 	end
-
-	-- Check which quality to use
-	local reagentQuality = qualityTier or ProfessionShoppingList_Settings["reagentQuality"]
 
 	-- For every reagent, do
 	for numReagent, reagentInfo in pairs(reagentsTable) do
@@ -2829,9 +2872,9 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 			if ProfessionShoppingList_Cache.ReagentTiers[0] then ProfessionShoppingList_Cache.ReagentTiers[0] = nil end
 
 			-- Check which quality reagent to use
-			if reagentQuality == 3 and reagentID3 ~= 0 then
+			if ProfessionShoppingList_Settings["reagentQuality"] == 3 and reagentID3 ~= 0 then
 				reagentID = reagentID3
-			elseif reagentQuality == 2 and reagentID2 ~= 0 then
+			elseif ProfessionShoppingList_Settings["reagentQuality"] == 2 and reagentID2 ~= 0 then
 				reagentID = reagentID2
 			else
 				reagentID = reagentID1
@@ -2839,7 +2882,21 @@ function app.GetReagents(reagentVariable, recipeID, recipeQuantity, recraft, qua
 
 			-- Add the reagentID to the reagent cache
 			if not ProfessionShoppingList_Cache.Reagents[reagentID] then
-				app.CacheItem(reagentID, true)
+				-- Cache item
+				app.CacheItem(reagentID)
+
+				if not C_Item.IsItemDataCachedByID(reagentID) then
+					app.Debug("app.GetReagents(" .. reagentID .. ")")
+
+					C_Item.RequestLoadItemDataByID(reagentID)
+					local item = Item:CreateFromItemID(reagentID)
+					
+					item:ContinueOnItemLoad(function()
+						app.GetReagents(reagentVariable, craftingRecipeID, recipeQuantity, recraft or false)
+					end)
+
+					return
+				end
 			end
 
 			-- Add the info to the specified variable, if it's not 0 and not a simulated recipe
@@ -3035,7 +3092,7 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID)
 
 	-- 2 = Salvage, recipes without reagents | Disable these, cause they shouldn't be tracked
 	if C_TradeSkillUI.GetRecipeSchematic(recipeID,false).recipeType == 2 or C_TradeSkillUI.GetRecipeSchematic(recipeID,false).reagentSlotSchematics[1] == nil then
-		do return end
+		return
 	end
 	
 	-- Adjust the recipeID for SL legendary crafts, if a custom rank is entered
@@ -3065,19 +3122,21 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID)
 		local _, itemLink
 		if itemID ~= nil then
 			-- Cache item
-			if not C_Item.IsItemDataCachedByID(itemID) then local item = Item:CreateFromItemID(itemID) end
+			if not C_Item.IsItemDataCachedByID(itemID) then
+				app.Debug("app.TrackRecipe(" .. itemID .. ")")
+
+				C_Item.RequestLoadItemDataByID(itemID)
+				local item = Item:CreateFromItemID(itemID)
+				
+				item:ContinueOnItemLoad(function()
+					app.TrackRecipe(recipeID, recipeQuantity, recraft or false, orderID)
+				end)
+
+				return
+			end
 
 			-- Get item info
 			_, itemLink = C_Item.GetItemInfo(itemID)
-
-			-- Try again if error
-			if itemLink == nil then
-				RunNextFrame(function()
-					app.TrackRecipe(recipeID, recipeQuantity, recraft or false, orderID)
-					app.Debug("TrackRecipe()")
-				end)
-				do return end
-			end
 		-- Exception for stuff like Abominable Stitching
 		else
 			itemLink = C_TradeSkillUI.GetRecipeSchematic(recipeID,false).name
@@ -3270,7 +3329,9 @@ app.Event:Register("MERCHANT_SHOW", function()
 			end
 
 			-- Stop the function if the vendor does not have the item that is being Alt+clicked
-			if vendorIndex == 0 then do return end end
+			if vendorIndex == 0 then
+				return
+			end
 
 			local itemLink = GetMerchantItemLink(vendorIndex)
 			local _, _, itemPrice = C_MerchantFrame.GetItemInfo(vendorIndex)

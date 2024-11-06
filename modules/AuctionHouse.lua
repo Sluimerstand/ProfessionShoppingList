@@ -63,17 +63,25 @@ function app.CreateAuctionatorButton()
 					-- Ignore tracked gold and currency costs
 					if type(reagentID) == "number" then
 						-- Cache item
-						if not C_Item.IsItemDataCachedByID(reagentID) then local item = Item:CreateFromItemID(reagentID) end
+						if not ProfessionShoppingList_Cache.ReagentTiers[reagentID] then
+							app.CacheItem(reagentID)
+						end
+
+						if not C_Item.IsItemDataCachedByID(reagentID) then
+							app.Debug("makeShoppingList(" .. reagentID .. ")")
+			
+							C_Item.RequestLoadItemDataByID(reagentID)
+							local item = Item:CreateFromItemID(reagentID)
+							
+							item:ContinueOnItemLoad(function()
+								makeShoppingList()
+							end)
+			
+							return
+						end
 						
 						-- Get item info
 						local itemName = C_Item.GetItemInfo(reagentID)
-				
-						-- Try again if error
-						if itemName == nil then
-							RunNextFrame(makeShoppingList)
-							app.Debug("makeShoppingList() 1")
-							do return end
-						end
 
 						-- Index simulated reagents, whose quality is not subject to our quality setting
 						local simulatedReagents = {}
@@ -81,14 +89,6 @@ function app.CreateAuctionatorButton()
 							for k2, v2 in pairs(v) do
 								simulatedReagents[k2] = v2
 							end
-						end
-
-						-- Cache item if not cached already
-						if not ProfessionShoppingList_Cache.ReagentTiers[reagentID] then
-							app.CacheItem(reagentID, true)
-							RunNextFrame(makeShoppingList)
-							app.Debug("makeShoppingList() 2")
-							do return end
 						end
 
 						-- Set reagent quality to 2 or 3 if applicable and the user has this set, otherwise don't specify quality

@@ -156,9 +156,23 @@ function app.KnowledgeTracker()
 				end
 
 				if v.type == "vendor" then
+					-- Cache item
+					if not C_Item.IsItemDataCachedByID(v.item) then
+						app.Debug("kpTooltip1(" .. v.item .. ")")
+		
+						C_Item.RequestLoadItemDataByID(v.item)
+						local item = Item:CreateFromItemID(v.item)
+						
+						item:ContinueOnItemLoad(function()
+							kpTooltip()
+						end)
+		
+						return
+					end
+
 					-- Item link
-					if not C_Item.IsItemDataCachedByID(v.item) then local item = Item:CreateFromItemID(v.item) end
 					local _, itemLink = C_Item.GetItemInfo(v.item)
+
 					-- Grab faction name if applicable
 					local factionName, status, zoneName
 					if v.renown then
@@ -170,12 +184,6 @@ function app.KnowledgeTracker()
 						end
 					elseif v.sourceType == "zone" then
 						zoneName = C_Map.GetMapInfo(v.source).name
-					end
-					-- If anything is missing, try again
-					if not itemLink or (v.renown and not factionName) or (v.sourceType == "zone" and not zoneName) then
-						RunNextFrame(kpTooltip)
-						app.Debug("kpTooltip() 1")
-						do return end
 					end
 
 					-- Add text
@@ -215,13 +223,7 @@ function app.KnowledgeTracker()
 						else
 							status = "|cff238823"
 						end
-						-- If anything missing, try again
-						if not questTitle or not factionTitle then
-							RunNextFrame(kpTooltip)
-							app.Debug("kpTooltip() 2")
-							do return end
-						end
-	
+
 						-- Add text
 						app.KnowledgePointTooltip = app.KnowledgePointTooltip .. "\n" .. icon .. " " .. "|cffffff00|Hquest:" .. v.quest .. "62|h[" .. questTitle .. "]|h|r" .. "|cffffffff (" .. factionTitle .. " - " .. status .. L.RENOWN .. v.renown .. "|r)|r"
 					end
@@ -245,15 +247,22 @@ function app.KnowledgeTracker()
 					-- Item link
 					local _, itemLink
 					if v.item then
-						if not C_Item.IsItemDataCachedByID(v.item) then local item = Item:CreateFromItemID(v.item) end
-						_, itemLink = C_Item.GetItemInfo(v.item)
-
-						-- If anything is missing, try again
-						if not itemLink or not zone then
-							RunNextFrame(kpTooltip)
-							app.Debug("kpTooltip() 3")
-							do return end
+						-- Cache item
+						if not C_Item.IsItemDataCachedByID(v.item) then
+							app.Debug("kpTooltip2(" .. v.item .. ")")
+			
+							C_Item.RequestLoadItemDataByID(v.item)
+							local item = Item:CreateFromItemID(v.item)
+							
+							item:ContinueOnItemLoad(function()
+								kpTooltip()
+							end)
+			
+							return
 						end
+
+						-- Item link
+						_, itemLink = C_Item.GetItemInfo(v.item)
 					else
 						itemLink = L.HIDDEN_PROFESSION_MASTER
 					end
@@ -278,7 +287,7 @@ function app.KnowledgeTracker()
 	app.KnowledgePointTracker:SetScript("OnEnter", function(self)
 		kpTooltip()
 		-- Add a slight delay, which is needed to compile the tooltip
-		C_Timer.After(0.2, function()
+		C_Timer.After(0.5, function()
 			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
 			GameTooltip:SetText(app.KnowledgePointTooltip)
 			GameTooltip:Show()
