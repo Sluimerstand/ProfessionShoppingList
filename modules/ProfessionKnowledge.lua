@@ -287,21 +287,19 @@ function app.KnowledgeTracker()
 	app.KnowledgePointTracker:SetScript("OnEnter", function(self)
 		kpTooltip()
 
+	GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
 		if not app.Flag[skillLineID] then
-			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
 			GameTooltip:SetText(L.LOADING)
-			GameTooltip:Show()
-			-- Add a slight delay, which is needed to compile the tooltip
 			C_Timer.After(1, function()
 				GameTooltip:SetText(app.KnowledgePointTooltip)
 			end)
 			app.Flag[skillLineID] = true
 		else
-			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
 			GameTooltip:SetText(app.KnowledgePointTooltip)
-			GameTooltip:Show()
 		end
 	end)
+	GameTooltip:Show()
+
 	-- Hide the tooltip when not mouse-over
 	app.KnowledgePointTracker:SetScript("OnLeave", function()
 		GameTooltip:Hide()
