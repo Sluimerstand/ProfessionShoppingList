@@ -24,18 +24,18 @@ L.WINDOW_HEADER_RECIPES =				PROFESSIONS_RECIPES_TAB	-- "Recettes"
 L.WINDOW_HEADER_ITEMS =					ITEMS	-- "Objets"
 L.WINDOW_HEADER_REAGENTS =				PROFESSIONS_COLUMN_HEADER_REAGENTS	-- "Composants"
 L.WINDOW_HEADER_COSTS =					"Coûts"
--- L.WINDOW_HEADER_COOLDOWNS =				"Cooldowns"
+L.WINDOW_HEADER_COOLDOWNS =				"Temps de recharge"
 
 L.WINDOW_TOOLTIP_RECIPES =				"Maj " .. app.IconLMB .. "|cffFFFFFF : Poste la recette\n|r" ..
 										"Ctrl " .. app.IconLMB .. "|cffFFFFFF : Ouvre la recette (si connue)\n|r" ..
 										"Alt " .. app.IconLMB .. "|cffFFFFFF : Essaie de créer cette recette (autant de fois que vous l'avez suivie)\n\n|r" ..
-										app.IconRMB .. "|cffFFFFFF : Retire 1 de la recette suivie\n|r" ..
+										app.IconRMB .. "|cffFFFFFF : Retire 1 unité de la recette suivie\n|r" ..
 										"Ctrl " .. app.IconRMB .. "|cffFFFFFF : Retirer toutes les recettes sélectionnées"
 L.WINDOW_TOOLTIP_REAGENTS =				"Maj " .. app.IconLMB .. "|cffFFFFFF : Poste le composant\n|r" ..
 										"Ctrl " .. app.IconLMB .. "|cffFFFFFF : Ajoute une recette pour le sous-composant sélectionné, s'il existe et est mis en cache"
 L.WINDOW_TOOLTIP_COOLDOWNS =			"Maj " .. app.IconRMB .. "|cffFFFFFF : Supprime le rappel de temps de recharge\n|r" ..
 										"Ctrl " .. app.IconLMB .. "|cffFFFFFF : Ouvre la recette (si connue)\n|r" ..
-										"Alt " .. app.IconLMB .. "|cffFFFFFF : Essaie de réaliser cette recette"
+										"Alt " .. app.IconLMB .. "|cffFFFFFF : Essaie de créer cette recette"
 
 L.CLEAR_CONFIRMATION =					"Cela effacera toutes les recettes."
 L.CONFIRMATION =						"Souhaitez-vous poursuivre ?"
@@ -116,10 +116,10 @@ L.BUTTON_COOKINGFIRE =					app.IconLMB .. " : " .. BINDING_NAME_TARGETSELF .. "\
 										app.IconRMB .. " : " .. STATUS_TEXT_TARGET
 L.BUTTON_COOKINGPET =					app.IconLMB .. " : Invoquer cette mascotte\n" ..
 										app.IconRMB .. " : Passer d'une mascotte à l'autre"
--- L.BUTTON_CHEFSHAT =						app.IconLMB .. ": Use the"
--- L.BUTTON_THERMALANVIL =					app.IconLMB .. ": Use a"
+L.BUTTON_CHEFSHAT =						app.IconLMB .. " : Utiliser l'"
+L.BUTTON_THERMALANVIL =					app.IconLMB .. ": Utiliser une"
 L.BUTTON_ALVIN =						app.IconLMB .. " : Invoquer cette mascotte"
--- L.BUTTON_LIGHTFORGE =					app.IconLMB .. ": Cast"
+L.BUTTON_LIGHTFORGE =					app.IconLMB .. " : Lancer"
 
 -- Track new mogs
 L.BUTTON_TRACKNEW =						"Suivre les apparences inconnues"
@@ -145,12 +145,12 @@ L.PROFESSION_KNOWLEDGE =				"connaissances"
 L.VENDORS =								"Vendeurs"
 L.RENOWN =								RENOWN_LEVEL_LABEL	-- "Renown "
 L.WORLD =								"Monde"
-L.HIDDEN_PROFESSION_MASTER =			"Hidden Profession Master"
--- L.CATCHUP_KNOWLEDGE =					"Available catch-up knowledge:"
+L.HIDDEN_PROFESSION_MASTER =			"Maître de métier masqué"
+L.CATCHUP_KNOWLEDGE =					"Connaissances de rattrapage disponibles :"
 -- L.LOADING =								SEARCH_LOADING_TEXT
 
 -- Tweaks
-L.CATALYSTBUTTON_LABEL =				"Catalyseur instantané" -- maybe need review in fr_FR
+L.CATALYSTBUTTON_LABEL =				"Catalyseur instantané"
 
 -- Chat feedback
 L.INVALID_PARAMETERS =					"Paramètres non valides"
