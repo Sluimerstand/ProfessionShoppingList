@@ -2782,25 +2782,25 @@ function app.CacheItem(itemID)
 	app.Debug("app.CacheItem(" .. itemID .. ")")
 			
 	-- And when the item is cached
-		item:ContinueOnItemLoad(function()
-			-- Get item info
-			local _, itemLink, _, _, _, _, _, _, _, fileID = C_Item.GetItemInfo(itemID)
+	item:ContinueOnItemLoad(function()
+		-- Get item info
+		local _, itemLink, _, _, _, _, _, _, _, fileID = C_Item.GetItemInfo(itemID)
 
-			-- Write the info to the cache
-			ProfessionShoppingList_Cache.Reagents[itemID] = {link = itemLink, icon = fileID}
+		-- Write the info to the cache
+		ProfessionShoppingList_Cache.Reagents[itemID] = {link = itemLink, icon = fileID}
 
-			-- Also create a Tier entry, which will not be complete, but will be overwritten with the accurate info if it is available
-			if not ProfessionShoppingList_Cache.ReagentTiers[itemID] then
-				local quality = C_TradeSkillUI.GetItemReagentQualityByItemInfo(itemID)
-				if quality == 3 then
-					ProfessionShoppingList_Cache.ReagentTiers[itemID] = { one = 0, two = 0, three = itemID }
-				elseif quality == 2 then
-					ProfessionShoppingList_Cache.ReagentTiers[itemID] = { one = 0, two = itemID, three = 0 }
-				else
-					ProfessionShoppingList_Cache.ReagentTiers[itemID] = { one = itemID, two = 0, three = 0 }
-				end
+		-- Also create a Tier entry, which will not be complete, but will be overwritten with the accurate info if it is available
+		if not ProfessionShoppingList_Cache.ReagentTiers[itemID] then
+			local quality = C_TradeSkillUI.GetItemReagentQualityByItemInfo(itemID)
+			if quality == 3 then
+				ProfessionShoppingList_Cache.ReagentTiers[itemID] = { one = 0, two = 0, three = itemID }
+			elseif quality == 2 then
+				ProfessionShoppingList_Cache.ReagentTiers[itemID] = { one = 0, two = itemID, three = 0 }
+			else
+				ProfessionShoppingList_Cache.ReagentTiers[itemID] = { one = itemID, two = 0, three = 0 }
 			end
-		end)
+		end
+	end)
 end
 
 -- Get reagents for recipe
