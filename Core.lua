@@ -3540,32 +3540,51 @@ end)
 -- TRACK NEW MOGS --
 --------------------
 
--- Scan the tooltip for the appearance text, localised
-function app.GetAppearanceInfo(itemLinkie, searchString)
-	-- Grab the original value for this setting
-	local cvar = C_CVar.GetCVarInfo("missingTransmogSourceInItemTooltips")
-	
-	-- Enable this CVar, because we need it
-	C_CVar.SetCVar("missingTransmogSourceInItemTooltips", 1)
-
-	-- Get our tooltip information
-	local tooltip = C_TooltipInfo.GetHyperlink(itemLinkie)
-
-	-- Return the CVar to its original setting
-	C_CVar.SetCVar("missingTransmogSourceInItemTooltips", cvar)
-
-	-- Read all the lines as plain text
-	if tooltip["lines"] then
-		for k, v in ipairs(tooltip["lines"]) do
-			-- And if the transmog text line was found
-			if v["leftText"] and v["leftText"]:find(searchString) then
-				return true
-			end
-		end
+-- Get an item's SourceID (thank you Plusmouse!)
+function app.GetSourceID(itemLink)
+	local _, sourceID = C_TransmogCollection.GetItemInfo(itemLink)
+	if sourceID then
+		return sourceID
 	end
 
-	-- Otherwise
-	return false
+	local _, sourceID = C_TransmogCollection.GetItemInfo((C_Item.GetItemInfoInstant(itemLink)))
+	return sourceID
+end
+
+-- Check if an item's appearance is collected (thank you Plusmouse!)
+function api.IsAppearanceCollected(itemLink)
+	local sourceID = app.GetSourceID(itemLink)
+	if not sourceID then
+		return
+	else
+		local subClass = select(7, C_Item.GetItemInfoInstant(itemLink))
+		local sourceInfo = C_TransmogCollection.GetSourceInfo(sourceID)
+		local allSources = C_TransmogCollection.GetAllAppearanceSources(sourceInfo.visualID)
+		if #allSources == 0 then
+			allSources = {sourceID}
+	  	end
+
+		local anyCollected = false
+		for _, alternateSourceID in ipairs(allSources) do
+			local altInfo = C_TransmogCollection.GetSourceInfo(alternateSourceID)
+			local altSubClass = select(7, C_Item.GetItemInfoInstant(altInfo.itemID))
+			if altInfo.isCollected and altSubClass == subClass then
+				anyCollected = true
+				break
+			end
+		end
+		return anyCollected
+	end
+end
+
+-- Check if an item's source is collected (thank you Plusmouse!)
+function api.IsSourceCollected(itemLink)
+	local sourceID = app.GetSourceID(itemLink)
+	if not sourceID then
+		return nil
+	else
+		return C_TransmogCollection.PlayerHasTransmogItemModifiedAppearance(sourceID)
+	end
 end
 
 -- Get all visible recipes
@@ -3612,8 +3631,7 @@ function app.TrackUnlearnedMog()
 				local _, itemLink = C_Item.GetItemInfo(itemID)
 
 				-- If the appearance is unlearned, track the recipe (taking our collection mode into account)
-				if app.GetAppearanceInfo(itemLink, TRANSMOGRIFY_TOOLTIP_APPEARANCE_UNKNOWN)
-				or (ProfessionShoppingList_Settings["collectMode"] == 2 and app.GetAppearanceInfo(itemLink, TRANSMOGRIFY_TOOLTIP_ITEM_UNKNOWN_APPEARANCE_KNOWN)) then
+				if not api.IsAppearanceCollected(itemLink) or (ProfessionShoppingList_Settings["collectMode"] == 2 and not api.IsSourceCollected(itemLink)) then
 					app.TrackRecipe(recipeID, 1)
 					added = added + 1
 				end
