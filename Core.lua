@@ -3540,6 +3540,34 @@ end)
 -- TRACK NEW MOGS --
 --------------------
 
+-- Scan the tooltip for any text
+function app.GetTooltipText(itemLinkie, searchString)
+	-- Grab the original value for this setting
+	local cvar = C_CVar.GetCVarInfo("missingTransmogSourceInItemTooltips")
+	
+	-- Enable this CVar, because we need it
+	C_CVar.SetCVar("missingTransmogSourceInItemTooltips", 1)
+
+	-- Get our tooltip information
+	local tooltip = C_TooltipInfo.GetHyperlink(itemLinkie)
+
+	-- Return the CVar to its original setting
+	C_CVar.SetCVar("missingTransmogSourceInItemTooltips", cvar)
+
+	-- Read all the lines as plain text
+	if tooltip["lines"] then
+		for k, v in ipairs(tooltip["lines"]) do
+			-- And if the transmog text line was found
+			if v["leftText"] and v["leftText"]:find(searchString) then
+				return true
+			end
+		end
+	end
+
+	-- Otherwise
+	return false
+end
+
 -- Get an item's SourceID (thank you Plusmouse!)
 function app.GetSourceID(itemLink)
 	local _, sourceID = C_TransmogCollection.GetItemInfo(itemLink)
@@ -3555,7 +3583,11 @@ end
 function api.IsAppearanceCollected(itemLink)
 	local sourceID = app.GetSourceID(itemLink)
 	if not sourceID then
-		return
+		if app.GetTooltipText(itemLink, TRANSMOGRIFY_TOOLTIP_APPEARANCE_UNKNOWN) or app.GetTooltipText(itemLink, TRANSMOGRIFY_TOOLTIP_ITEM_UNKNOWN_APPEARANCE_KNOWN) then
+			return false
+		else
+			return true	-- Should be nil if the item does not have an appearance, but for our purposes this is fine
+		end
 	else
 		local subClass = select(7, C_Item.GetItemInfoInstant(itemLink))
 		local sourceInfo = C_TransmogCollection.GetSourceInfo(sourceID)
@@ -3581,7 +3613,11 @@ end
 function api.IsSourceCollected(itemLink)
 	local sourceID = app.GetSourceID(itemLink)
 	if not sourceID then
-		return nil
+		if app.GetTooltipText(itemLink, TRANSMOGRIFY_TOOLTIP_APPEARANCE_UNKNOWN) or app.GetTooltipText(itemLink, TRANSMOGRIFY_TOOLTIP_ITEM_UNKNOWN_APPEARANCE_KNOWN) then
+			return false
+		else
+			return true	-- Should be nil if the item does not have an appearance, but for our purposes this is fine
+		end
 	else
 		return C_TransmogCollection.PlayerHasTransmogItemModifiedAppearance(sourceID)
 	end
