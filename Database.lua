@@ -20,228 +20,228 @@ app.IconArrow = "|TInterface\\AddOns\\ProfessionShoppingList\\assets\\UI-RaidFra
 app.IconLMB = "|TInterface\\TutorialFrame\\UI-Tutorial-Frame:12:12:0:0:512:512:10:65:228:283|t"
 app.IconRMB = "|TInterface\\TutorialFrame\\UI-Tutorial-Frame:12:12:0:0:512:512:10:65:330:385|t"
 app.IconProfession = {
-	[0] = "|TInterface\\MoneyFrame\\UI-GoldIcon:0|t"	-- Vendor
-	[1] = "|TInterface\\AddOns\\ProfessionShoppingList\\assets\\hammer-32:0|t"	-- Crafting order
-	[164] = "|TInterface\\Icons\\ui_profession_blacksmithing:0|t"
-	[165] = "|TInterface\\Icons\\ui_profession_leatherworking:0|t"
-	[171] = "|TInterface\\Icons\\ui_profession_alchemy:0|t"
-	[182] = "|TInterface\\Icons\\ui_profession_herbalism:0|t"
-	[185] = "|TInterface\\Icons\\ui_profession_cooking:0|t"
-	[186] = "|TInterface\\Icons\\ui_profession_mining:0|t"
-	[197] = "|TInterface\\Icons\\ui_profession_tailoring:0|t"
-	[202] = "|TInterface\\Icons\\ui_profession_engineering:0|t"
-	[333] = "|TInterface\\Icons\\ui_profession_enchanting:0|t"
-	[356] = "|TInterface\\Icons\\ui_profession_fishing:0|t"
-	[393] = "|TInterface\\Icons\\ui_profession_skinning:0|t"
-	[755] = "|TInterface\\Icons\\ui_profession_jewelcrafting:0|t"
-	[773] = "|TInterface\\Icons\\ui_profession_inscription:0|t"
-	[999] = "|TInterface\\Icons\\inv_misc_questionmark:0|t"
+	[0] = "|TInterface\\MoneyFrame\\UI-GoldIcon:0|t",	-- Vendor
+	[1] = "|TInterface\\AddOns\\ProfessionShoppingList\\assets\\hammer-32:0|t",	-- Crafting order
+	[164] = "|TInterface\\Icons\\ui_profession_blacksmithing:0|t",
+	[165] = "|TInterface\\Icons\\ui_profession_leatherworking:0|t",
+	[171] = "|TInterface\\Icons\\ui_profession_alchemy:0|t",
+	[182] = "|TInterface\\Icons\\ui_profession_herbalism:0|t",
+	[185] = "|TInterface\\Icons\\ui_profession_cooking:0|t",
+	[186] = "|TInterface\\Icons\\ui_profession_mining:0|t",
+	[197] = "|TInterface\\Icons\\ui_profession_tailoring:0|t",
+	[202] = "|TInterface\\Icons\\ui_profession_engineering:0|t",
+	[333] = "|TInterface\\Icons\\ui_profession_enchanting:0|t",
+	[356] = "|TInterface\\Icons\\ui_profession_fishing:0|t",
+	[393] = "|TInterface\\Icons\\ui_profession_skinning:0|t",
+	[755] = "|TInterface\\Icons\\ui_profession_jewelcrafting:0|t",
+	[773] = "|TInterface\\Icons\\ui_profession_inscription:0|t",
+	[999] = "|TInterface\\Icons\\inv_misc_questionmark:0|t",
 }
 
 -- Shadowlands Legendary craft SpellIDs
 app.slLegendaryRecipeIDs = {
-	[307705] = { rank = 1, one = 307705, two = 332006, three = 332041, four = 338976 }
-	[307712] = { rank = 1, one = 307712, two = 332013, three = 332048, four = 338968 }
-	[307710] = { rank = 1, one = 307710, two = 332011, three = 332046, four = 338970 }
-	[307708] = { rank = 1, one = 307708, two = 332009, three = 332044, four = 338972 }
-	[307709] = { rank = 1, one = 307709, two = 332010, three = 332045, four = 338971 }
-	[307707] = { rank = 1, one = 307707, two = 332008, three = 332043, four = 338974 }
-	[307711] = { rank = 1, one = 307711, two = 332012, three = 332047, four = 338969 }
-	[307706] = { rank = 1, one = 307706, two = 332007, three = 332042, four = 338975 }
-	[309205] = { rank = 1, one = 309205, two = 332021, three = 332056, four = 338986 }
-	[309200] = { rank = 1, one = 309200, two = 332016, three = 332051, four = 338981 }
-	[309201] = { rank = 1, one = 309201, two = 332017, three = 332052, four = 338982 }
-	[309202] = { rank = 1, one = 309202, two = 332018, three = 332053, four = 338983 }
-	[309203] = { rank = 1, one = 309203, two = 332019, three = 332054, four = 338984 }
-	[309198] = { rank = 1, one = 309198, two = 332014, three = 332049, four = 338980 }
-	[309199] = { rank = 1, one = 309199, two = 332015, three = 332050, four = 338979 }
-	[309204] = { rank = 1, one = 309204, two = 332020, three = 332055, four = 338985 }
-	[309213] = { rank = 1, one = 309213, two = 332029, three = 332064, four = 338994 }
-	[309208] = { rank = 1, one = 309208, two = 332024, three = 332059, four = 338989 }
-	[309209] = { rank = 1, one = 309209, two = 332025, three = 332060, four = 338990 }
-	[309210] = { rank = 1, one = 309210, two = 332026, three = 332061, four = 338991 }
-	[309211] = { rank = 1, one = 309211, two = 332027, three = 332062, four = 338992 }
-	[309206] = { rank = 1, one = 309206, two = 332022, three = 332057, four = 338988 }
-	[309207] = { rank = 1, one = 309207, two = 332023, three = 332058, four = 338987 }
-	[309212] = { rank = 1, one = 309212, two = 332028, three = 332063, four = 338993 }
-	[310885] = { rank = 1, one = 310885, two = 332037, three = 332072, four = 339003 }
-	[310886] = { rank = 1, one = 310886, two = 332038, three = 332073, four = 339004 }
-	[310880] = { rank = 1, one = 310880, two = 332032, three = 332067, four = 338995 }
-	[310882] = { rank = 1, one = 310882, two = 332034, three = 332069, four = 339000 }
-	[310881] = { rank = 1, one = 310881, two = 332033, three = 332068, four = 338998 }
-	[310883] = { rank = 1, one = 310883, two = 332035, three = 332070, four = 339001 }
-	[310879] = { rank = 1, one = 310879, two = 332031, three = 332066, four = 338996 }
-	[310878] = { rank = 1, one = 310878, two = 332030, three = 332065, four = 338997 }
-	[310884] = { rank = 1, one = 310884, two = 332036, three = 332071, four = 339002 }
-	[327920] = { rank = 1, one = 327920, two = 332039, three = 332074, four = 338978 }
-	[327921] = { rank = 1, one = 327921, two = 332040, three = 332075, four = 338977 }
-	[332006] = { rank = 2, one = 307705, two = 332006, three = 332041, four = 338976 }
-	[332013] = { rank = 2, one = 307712, two = 332013, three = 332048, four = 338968 }
-	[332011] = { rank = 2, one = 307710, two = 332011, three = 332046, four = 338970 }
-	[332009] = { rank = 2, one = 307708, two = 332009, three = 332044, four = 338972 }
-	[332010] = { rank = 2, one = 307709, two = 332010, three = 332045, four = 338971 }
-	[332008] = { rank = 2, one = 307707, two = 332008, three = 332043, four = 338974 }
-	[332012] = { rank = 2, one = 307711, two = 332012, three = 332047, four = 338969 }
-	[332007] = { rank = 2, one = 307706, two = 332007, three = 332042, four = 338975 }
-	[332021] = { rank = 2, one = 309205, two = 332021, three = 332056, four = 338986 }
-	[332016] = { rank = 2, one = 309200, two = 332016, three = 332051, four = 338981 }
-	[332017] = { rank = 2, one = 309201, two = 332017, three = 332052, four = 338982 }
-	[332018] = { rank = 2, one = 309202, two = 332018, three = 332053, four = 338983 }
-	[332019] = { rank = 2, one = 309203, two = 332019, three = 332054, four = 338984 }
-	[332014] = { rank = 2, one = 309198, two = 332014, three = 332049, four = 338980 }
-	[332015] = { rank = 2, one = 309199, two = 332015, three = 332050, four = 338979 }
-	[332020] = { rank = 2, one = 309204, two = 332020, three = 332055, four = 338985 }
-	[332029] = { rank = 2, one = 309213, two = 332029, three = 332064, four = 338994 }
-	[332024] = { rank = 2, one = 309208, two = 332024, three = 332059, four = 338989 }
-	[332025] = { rank = 2, one = 309209, two = 332025, three = 332060, four = 338990 }
-	[332026] = { rank = 2, one = 309210, two = 332026, three = 332061, four = 338991 }
-	[332027] = { rank = 2, one = 309211, two = 332027, three = 332062, four = 338992 }
-	[332022] = { rank = 2, one = 309206, two = 332022, three = 332057, four = 338988 }
-	[332023] = { rank = 2, one = 309207, two = 332023, three = 332058, four = 338987 }
-	[332028] = { rank = 2, one = 309212, two = 332028, three = 332063, four = 338993 }
-	[332037] = { rank = 2, one = 310885, two = 332037, three = 332072, four = 339003 }
-	[332038] = { rank = 2, one = 310886, two = 332038, three = 332073, four = 339004 }
-	[332032] = { rank = 2, one = 310880, two = 332032, three = 332067, four = 338995 }
-	[332034] = { rank = 2, one = 310882, two = 332034, three = 332069, four = 339000 }
-	[332033] = { rank = 2, one = 310881, two = 332033, three = 332068, four = 338998 }
-	[332035] = { rank = 2, one = 310883, two = 332035, three = 332070, four = 339001 }
-	[332031] = { rank = 2, one = 310879, two = 332031, three = 332066, four = 338996 }
-	[332030] = { rank = 2, one = 310878, two = 332030, three = 332065, four = 338997 }
-	[332036] = { rank = 2, one = 310884, two = 332036, three = 332071, four = 339002 }
-	[332039] = { rank = 2, one = 327920, two = 332039, three = 332074, four = 338978 }
-	[332040] = { rank = 2, one = 327921, two = 332040, three = 332075, four = 338977 }
-	[332041] = { rank = 3, one = 307705, two = 332006, three = 332041, four = 338976 }
-	[332048] = { rank = 3, one = 307712, two = 332013, three = 332048, four = 338968 }
-	[332046] = { rank = 3, one = 307710, two = 332011, three = 332046, four = 338970 }
-	[332044] = { rank = 3, one = 307708, two = 332009, three = 332044, four = 338972 }
-	[332045] = { rank = 3, one = 307709, two = 332010, three = 332045, four = 338971 }
-	[332043] = { rank = 3, one = 307707, two = 332008, three = 332043, four = 338974 }
-	[332047] = { rank = 3, one = 307711, two = 332012, three = 332047, four = 338969 }
-	[332042] = { rank = 3, one = 307706, two = 332007, three = 332042, four = 338975 }
-	[332056] = { rank = 3, one = 309205, two = 332021, three = 332056, four = 338986 }
-	[332051] = { rank = 3, one = 309200, two = 332016, three = 332051, four = 338981 }
-	[332052] = { rank = 3, one = 309201, two = 332017, three = 332052, four = 338982 }
-	[332053] = { rank = 3, one = 309202, two = 332018, three = 332053, four = 338983 }
-	[332054] = { rank = 3, one = 309203, two = 332019, three = 332054, four = 338984 }
-	[332049] = { rank = 3, one = 309198, two = 332014, three = 332049, four = 338980 }
-	[332050] = { rank = 3, one = 309199, two = 332015, three = 332050, four = 338979 }
-	[332055] = { rank = 3, one = 309204, two = 332020, three = 332055, four = 338985 }
-	[332064] = { rank = 3, one = 309213, two = 332029, three = 332064, four = 338994 }
-	[332059] = { rank = 3, one = 309208, two = 332024, three = 332059, four = 338989 }
-	[332060] = { rank = 3, one = 309209, two = 332025, three = 332060, four = 338990 }
-	[332061] = { rank = 3, one = 309210, two = 332026, three = 332061, four = 338991 }
-	[332062] = { rank = 3, one = 309211, two = 332027, three = 332062, four = 338992 }
-	[332057] = { rank = 3, one = 309206, two = 332022, three = 332057, four = 338988 }
-	[332058] = { rank = 3, one = 309207, two = 332023, three = 332058, four = 338987 }
-	[332063] = { rank = 3, one = 309212, two = 332028, three = 332063, four = 338993 }
-	[332072] = { rank = 3, one = 310885, two = 332037, three = 332072, four = 339003 }
-	[332073] = { rank = 3, one = 310886, two = 332038, three = 332073, four = 339004 }
-	[332067] = { rank = 3, one = 310880, two = 332032, three = 332067, four = 338995 }
-	[332069] = { rank = 3, one = 310882, two = 332034, three = 332069, four = 339000 }
-	[332068] = { rank = 3, one = 310881, two = 332033, three = 332068, four = 338998 }
-	[332070] = { rank = 3, one = 310883, two = 332035, three = 332070, four = 339001 }
-	[332066] = { rank = 3, one = 310879, two = 332031, three = 332066, four = 338996 }
-	[332065] = { rank = 3, one = 310878, two = 332030, three = 332065, four = 338997 }
-	[332071] = { rank = 3, one = 310884, two = 332036, three = 332071, four = 339002 }
-	[332074] = { rank = 3, one = 327920, two = 332039, three = 332074, four = 338978 }
-	[332075] = { rank = 3, one = 327921, two = 332040, three = 332075, four = 338977 }
-	[338976] = { rank = 4, one = 307705, two = 332006, three = 332041, four = 338976 }
-	[338968] = { rank = 4, one = 307712, two = 332013, three = 332048, four = 338968 }
-	[338970] = { rank = 4, one = 307710, two = 332011, three = 332046, four = 338970 }
-	[338972] = { rank = 4, one = 307708, two = 332009, three = 332044, four = 338972 }
-	[338971] = { rank = 4, one = 307709, two = 332010, three = 332045, four = 338971 }
-	[338974] = { rank = 4, one = 307707, two = 332008, three = 332043, four = 338974 }
-	[338969] = { rank = 4, one = 307711, two = 332012, three = 332047, four = 338969 }
-	[338975] = { rank = 4, one = 307706, two = 332007, three = 332042, four = 338975 }
-	[338986] = { rank = 4, one = 309205, two = 332021, three = 332056, four = 338986 }
-	[338981] = { rank = 4, one = 309200, two = 332016, three = 332051, four = 338981 }
-	[338982] = { rank = 4, one = 309201, two = 332017, three = 332052, four = 338982 }
-	[338983] = { rank = 4, one = 309202, two = 332018, three = 332053, four = 338983 }
-	[338984] = { rank = 4, one = 309203, two = 332019, three = 332054, four = 338984 }
-	[338980] = { rank = 4, one = 309198, two = 332014, three = 332049, four = 338980 }
-	[338979] = { rank = 4, one = 309199, two = 332015, three = 332050, four = 338979 }
-	[338985] = { rank = 4, one = 309204, two = 332020, three = 332055, four = 338985 }
-	[338994] = { rank = 4, one = 309213, two = 332029, three = 332064, four = 338994 }
-	[338989] = { rank = 4, one = 309208, two = 332024, three = 332059, four = 338989 }
-	[338990] = { rank = 4, one = 309209, two = 332025, three = 332060, four = 338990 }
-	[338991] = { rank = 4, one = 309210, two = 332026, three = 332061, four = 338991 }
-	[338992] = { rank = 4, one = 309211, two = 332027, three = 332062, four = 338992 }
-	[338988] = { rank = 4, one = 309206, two = 332022, three = 332057, four = 338988 }
-	[338987] = { rank = 4, one = 309207, two = 332023, three = 332058, four = 338987 }
-	[338993] = { rank = 4, one = 309212, two = 332028, three = 332063, four = 338993 }
-	[339003] = { rank = 4, one = 310885, two = 332037, three = 332072, four = 339003 }
-	[339004] = { rank = 4, one = 310886, two = 332038, three = 332073, four = 339004 }
-	[338995] = { rank = 4, one = 310880, two = 332032, three = 332067, four = 338995 }
-	[339000] = { rank = 4, one = 310882, two = 332034, three = 332069, four = 339000 }
-	[338998] = { rank = 4, one = 310881, two = 332033, three = 332068, four = 338998 }
-	[339001] = { rank = 4, one = 310883, two = 332035, three = 332070, four = 339001 }
-	[338996] = { rank = 4, one = 310879, two = 332031, three = 332066, four = 338996 }
-	[338997] = { rank = 4, one = 310878, two = 332030, three = 332065, four = 338997 }
-	[339002] = { rank = 4, one = 310884, two = 332036, three = 332071, four = 339002 }
-	[338978] = { rank = 4, one = 327920, two = 332039, three = 332074, four = 338978 }
-	[338977] = { rank = 4, one = 327921, two = 332040, three = 332075, four = 338977 }
+	[307705] = { rank = 1, one = 307705, two = 332006, three = 332041, four = 338976 },
+	[307712] = { rank = 1, one = 307712, two = 332013, three = 332048, four = 338968 },
+	[307710] = { rank = 1, one = 307710, two = 332011, three = 332046, four = 338970 },
+	[307708] = { rank = 1, one = 307708, two = 332009, three = 332044, four = 338972 },
+	[307709] = { rank = 1, one = 307709, two = 332010, three = 332045, four = 338971 },
+	[307707] = { rank = 1, one = 307707, two = 332008, three = 332043, four = 338974 },
+	[307711] = { rank = 1, one = 307711, two = 332012, three = 332047, four = 338969 },
+	[307706] = { rank = 1, one = 307706, two = 332007, three = 332042, four = 338975 },
+	[309205] = { rank = 1, one = 309205, two = 332021, three = 332056, four = 338986 },
+	[309200] = { rank = 1, one = 309200, two = 332016, three = 332051, four = 338981 },
+	[309201] = { rank = 1, one = 309201, two = 332017, three = 332052, four = 338982 },
+	[309202] = { rank = 1, one = 309202, two = 332018, three = 332053, four = 338983 },
+	[309203] = { rank = 1, one = 309203, two = 332019, three = 332054, four = 338984 },
+	[309198] = { rank = 1, one = 309198, two = 332014, three = 332049, four = 338980 },
+	[309199] = { rank = 1, one = 309199, two = 332015, three = 332050, four = 338979 },
+	[309204] = { rank = 1, one = 309204, two = 332020, three = 332055, four = 338985 },
+	[309213] = { rank = 1, one = 309213, two = 332029, three = 332064, four = 338994 },
+	[309208] = { rank = 1, one = 309208, two = 332024, three = 332059, four = 338989 },
+	[309209] = { rank = 1, one = 309209, two = 332025, three = 332060, four = 338990 },
+	[309210] = { rank = 1, one = 309210, two = 332026, three = 332061, four = 338991 },
+	[309211] = { rank = 1, one = 309211, two = 332027, three = 332062, four = 338992 },
+	[309206] = { rank = 1, one = 309206, two = 332022, three = 332057, four = 338988 },
+	[309207] = { rank = 1, one = 309207, two = 332023, three = 332058, four = 338987 },
+	[309212] = { rank = 1, one = 309212, two = 332028, three = 332063, four = 338993 },
+	[310885] = { rank = 1, one = 310885, two = 332037, three = 332072, four = 339003 },
+	[310886] = { rank = 1, one = 310886, two = 332038, three = 332073, four = 339004 },
+	[310880] = { rank = 1, one = 310880, two = 332032, three = 332067, four = 338995 },
+	[310882] = { rank = 1, one = 310882, two = 332034, three = 332069, four = 339000 },
+	[310881] = { rank = 1, one = 310881, two = 332033, three = 332068, four = 338998 },
+	[310883] = { rank = 1, one = 310883, two = 332035, three = 332070, four = 339001 },
+	[310879] = { rank = 1, one = 310879, two = 332031, three = 332066, four = 338996 },
+	[310878] = { rank = 1, one = 310878, two = 332030, three = 332065, four = 338997 },
+	[310884] = { rank = 1, one = 310884, two = 332036, three = 332071, four = 339002 },
+	[327920] = { rank = 1, one = 327920, two = 332039, three = 332074, four = 338978 },
+	[327921] = { rank = 1, one = 327921, two = 332040, three = 332075, four = 338977 },
+	[332006] = { rank = 2, one = 307705, two = 332006, three = 332041, four = 338976 },
+	[332013] = { rank = 2, one = 307712, two = 332013, three = 332048, four = 338968 },
+	[332011] = { rank = 2, one = 307710, two = 332011, three = 332046, four = 338970 },
+	[332009] = { rank = 2, one = 307708, two = 332009, three = 332044, four = 338972 },
+	[332010] = { rank = 2, one = 307709, two = 332010, three = 332045, four = 338971 },
+	[332008] = { rank = 2, one = 307707, two = 332008, three = 332043, four = 338974 },
+	[332012] = { rank = 2, one = 307711, two = 332012, three = 332047, four = 338969 },
+	[332007] = { rank = 2, one = 307706, two = 332007, three = 332042, four = 338975 },
+	[332021] = { rank = 2, one = 309205, two = 332021, three = 332056, four = 338986 },
+	[332016] = { rank = 2, one = 309200, two = 332016, three = 332051, four = 338981 },
+	[332017] = { rank = 2, one = 309201, two = 332017, three = 332052, four = 338982 },
+	[332018] = { rank = 2, one = 309202, two = 332018, three = 332053, four = 338983 },
+	[332019] = { rank = 2, one = 309203, two = 332019, three = 332054, four = 338984 },
+	[332014] = { rank = 2, one = 309198, two = 332014, three = 332049, four = 338980 },
+	[332015] = { rank = 2, one = 309199, two = 332015, three = 332050, four = 338979 },
+	[332020] = { rank = 2, one = 309204, two = 332020, three = 332055, four = 338985 },
+	[332029] = { rank = 2, one = 309213, two = 332029, three = 332064, four = 338994 },
+	[332024] = { rank = 2, one = 309208, two = 332024, three = 332059, four = 338989 },
+	[332025] = { rank = 2, one = 309209, two = 332025, three = 332060, four = 338990 },
+	[332026] = { rank = 2, one = 309210, two = 332026, three = 332061, four = 338991 },
+	[332027] = { rank = 2, one = 309211, two = 332027, three = 332062, four = 338992 },
+	[332022] = { rank = 2, one = 309206, two = 332022, three = 332057, four = 338988 },
+	[332023] = { rank = 2, one = 309207, two = 332023, three = 332058, four = 338987 },
+	[332028] = { rank = 2, one = 309212, two = 332028, three = 332063, four = 338993 },
+	[332037] = { rank = 2, one = 310885, two = 332037, three = 332072, four = 339003 },
+	[332038] = { rank = 2, one = 310886, two = 332038, three = 332073, four = 339004 },
+	[332032] = { rank = 2, one = 310880, two = 332032, three = 332067, four = 338995 },
+	[332034] = { rank = 2, one = 310882, two = 332034, three = 332069, four = 339000 },
+	[332033] = { rank = 2, one = 310881, two = 332033, three = 332068, four = 338998 },
+	[332035] = { rank = 2, one = 310883, two = 332035, three = 332070, four = 339001 },
+	[332031] = { rank = 2, one = 310879, two = 332031, three = 332066, four = 338996 },
+	[332030] = { rank = 2, one = 310878, two = 332030, three = 332065, four = 338997 },
+	[332036] = { rank = 2, one = 310884, two = 332036, three = 332071, four = 339002 },
+	[332039] = { rank = 2, one = 327920, two = 332039, three = 332074, four = 338978 },
+	[332040] = { rank = 2, one = 327921, two = 332040, three = 332075, four = 338977 },
+	[332041] = { rank = 3, one = 307705, two = 332006, three = 332041, four = 338976 },
+	[332048] = { rank = 3, one = 307712, two = 332013, three = 332048, four = 338968 },
+	[332046] = { rank = 3, one = 307710, two = 332011, three = 332046, four = 338970 },
+	[332044] = { rank = 3, one = 307708, two = 332009, three = 332044, four = 338972 },
+	[332045] = { rank = 3, one = 307709, two = 332010, three = 332045, four = 338971 },
+	[332043] = { rank = 3, one = 307707, two = 332008, three = 332043, four = 338974 },
+	[332047] = { rank = 3, one = 307711, two = 332012, three = 332047, four = 338969 },
+	[332042] = { rank = 3, one = 307706, two = 332007, three = 332042, four = 338975 },
+	[332056] = { rank = 3, one = 309205, two = 332021, three = 332056, four = 338986 },
+	[332051] = { rank = 3, one = 309200, two = 332016, three = 332051, four = 338981 },
+	[332052] = { rank = 3, one = 309201, two = 332017, three = 332052, four = 338982 },
+	[332053] = { rank = 3, one = 309202, two = 332018, three = 332053, four = 338983 },
+	[332054] = { rank = 3, one = 309203, two = 332019, three = 332054, four = 338984 },
+	[332049] = { rank = 3, one = 309198, two = 332014, three = 332049, four = 338980 },
+	[332050] = { rank = 3, one = 309199, two = 332015, three = 332050, four = 338979 },
+	[332055] = { rank = 3, one = 309204, two = 332020, three = 332055, four = 338985 },
+	[332064] = { rank = 3, one = 309213, two = 332029, three = 332064, four = 338994 },
+	[332059] = { rank = 3, one = 309208, two = 332024, three = 332059, four = 338989 },
+	[332060] = { rank = 3, one = 309209, two = 332025, three = 332060, four = 338990 },
+	[332061] = { rank = 3, one = 309210, two = 332026, three = 332061, four = 338991 },
+	[332062] = { rank = 3, one = 309211, two = 332027, three = 332062, four = 338992 },
+	[332057] = { rank = 3, one = 309206, two = 332022, three = 332057, four = 338988 },
+	[332058] = { rank = 3, one = 309207, two = 332023, three = 332058, four = 338987 },
+	[332063] = { rank = 3, one = 309212, two = 332028, three = 332063, four = 338993 },
+	[332072] = { rank = 3, one = 310885, two = 332037, three = 332072, four = 339003 },
+	[332073] = { rank = 3, one = 310886, two = 332038, three = 332073, four = 339004 },
+	[332067] = { rank = 3, one = 310880, two = 332032, three = 332067, four = 338995 },
+	[332069] = { rank = 3, one = 310882, two = 332034, three = 332069, four = 339000 },
+	[332068] = { rank = 3, one = 310881, two = 332033, three = 332068, four = 338998 },
+	[332070] = { rank = 3, one = 310883, two = 332035, three = 332070, four = 339001 },
+	[332066] = { rank = 3, one = 310879, two = 332031, three = 332066, four = 338996 },
+	[332065] = { rank = 3, one = 310878, two = 332030, three = 332065, four = 338997 },
+	[332071] = { rank = 3, one = 310884, two = 332036, three = 332071, four = 339002 },
+	[332074] = { rank = 3, one = 327920, two = 332039, three = 332074, four = 338978 },
+	[332075] = { rank = 3, one = 327921, two = 332040, three = 332075, four = 338977 },
+	[338976] = { rank = 4, one = 307705, two = 332006, three = 332041, four = 338976 },
+	[338968] = { rank = 4, one = 307712, two = 332013, three = 332048, four = 338968 },
+	[338970] = { rank = 4, one = 307710, two = 332011, three = 332046, four = 338970 },
+	[338972] = { rank = 4, one = 307708, two = 332009, three = 332044, four = 338972 },
+	[338971] = { rank = 4, one = 307709, two = 332010, three = 332045, four = 338971 },
+	[338974] = { rank = 4, one = 307707, two = 332008, three = 332043, four = 338974 },
+	[338969] = { rank = 4, one = 307711, two = 332012, three = 332047, four = 338969 },
+	[338975] = { rank = 4, one = 307706, two = 332007, three = 332042, four = 338975 },
+	[338986] = { rank = 4, one = 309205, two = 332021, three = 332056, four = 338986 },
+	[338981] = { rank = 4, one = 309200, two = 332016, three = 332051, four = 338981 },
+	[338982] = { rank = 4, one = 309201, two = 332017, three = 332052, four = 338982 },
+	[338983] = { rank = 4, one = 309202, two = 332018, three = 332053, four = 338983 },
+	[338984] = { rank = 4, one = 309203, two = 332019, three = 332054, four = 338984 },
+	[338980] = { rank = 4, one = 309198, two = 332014, three = 332049, four = 338980 },
+	[338979] = { rank = 4, one = 309199, two = 332015, three = 332050, four = 338979 },
+	[338985] = { rank = 4, one = 309204, two = 332020, three = 332055, four = 338985 },
+	[338994] = { rank = 4, one = 309213, two = 332029, three = 332064, four = 338994 },
+	[338989] = { rank = 4, one = 309208, two = 332024, three = 332059, four = 338989 },
+	[338990] = { rank = 4, one = 309209, two = 332025, three = 332060, four = 338990 },
+	[338991] = { rank = 4, one = 309210, two = 332026, three = 332061, four = 338991 },
+	[338992] = { rank = 4, one = 309211, two = 332027, three = 332062, four = 338992 },
+	[338988] = { rank = 4, one = 309206, two = 332022, three = 332057, four = 338988 },
+	[338987] = { rank = 4, one = 309207, two = 332023, three = 332058, four = 338987 },
+	[338993] = { rank = 4, one = 309212, two = 332028, three = 332063, four = 338993 },
+	[339003] = { rank = 4, one = 310885, two = 332037, three = 332072, four = 339003 },
+	[339004] = { rank = 4, one = 310886, two = 332038, three = 332073, four = 339004 },
+	[338995] = { rank = 4, one = 310880, two = 332032, three = 332067, four = 338995 },
+	[339000] = { rank = 4, one = 310882, two = 332034, three = 332069, four = 339000 },
+	[338998] = { rank = 4, one = 310881, two = 332033, three = 332068, four = 338998 },
+	[339001] = { rank = 4, one = 310883, two = 332035, three = 332070, four = 339001 },
+	[338996] = { rank = 4, one = 310879, two = 332031, three = 332066, four = 338996 },
+	[338997] = { rank = 4, one = 310878, two = 332030, three = 332065, four = 338997 },
+	[339002] = { rank = 4, one = 310884, two = 332036, three = 332071, four = 339002 },
+	[338978] = { rank = 4, one = 327920, two = 332039, three = 332074, four = 338978 },
+	[338977] = { rank = 4, one = 327921, two = 332040, three = 332075, four = 338977 },
 }
 
 -- NYI recipes
 app.nyiRecipes = {
-	[2336] = true	-- Elixir of Tongues
-	[2671] = true	-- Rough Bronze Bracers
-	[7636] = true	-- Green Woolen Robe
-	[8366] = true	-- Ironforge Chain
-	[8368] = true	-- Ironforge Gauntlets
-	[8778] = true	-- Boots of Darkness
-	[9942] = true	-- Mithril Scale Gloves
-	[9957] = true	-- Orcish War Leggings
-	[9972] = true	-- Ornate Mithril Breastplate
-	[9979] = true	-- Ornate Mithril Boots
-	[9980] = true	-- Ornate Mithril Helm
-	[10550] = true	-- Nightscape Cloak
-	[12062] = true	-- Stormcloth Pants
-	[12063] = true	-- Stormcloth Gloves
-	[12068] = true	-- Stormcloth Vest
-	[12083] = true	-- Stormcloth Headband
-	[12087] = true	-- Stormcloth Shoulders
-	[12090] = true	-- Stormcloth Boots
-	[16960] = true	-- Thorium Greatsword
-	[16965] = true	-- Bleakwood Hew
-	[16967] = true	-- Inlaid Thorium Hammer
-	[16980] = true	-- Rune Edge
-	[16986] = true	-- Blood Talon
-	[16987] = true	-- Darkspear
-	[17632] = true	-- Alchemist's Stone
-	[19106] = true	-- Onyxia Scale Breastplate
-	[21924] = true	-- Runecloth Robe
-	[24315] = true	-- Heavy Netherweave Net
-	[28021] = true	-- Arcane Dust
-	[29120] = true	-- Truefaith Vestments
-	[30342] = true	-- Red Smoke Flare
-	[30343] = true	-- Blue Smoke Flare
-	[30549] = true	-- Critter Enlarger
-	[30555] = true	-- Remote Mail Terminal
-	[35518] = true	-- Bracers of Nimble Thought
-	[35522] = true	-- Mantle of Nimble Thought
-	[35525] = true	-- Swiftheal Mantle
-	[35526] = true	-- Swiftheal Wraps
-	[35544] = true	-- Hands of Eternal Light
-	[35548] = true	-- Robe of Eternal Light
-	[35551] = true	-- Sunfire Handwraps
-	[35552] = true	-- Sunfire Robe
-	[36665] = true	-- Netherflame Robe
-	[36667] = true	-- Netherflame Belt
-	[36668] = true	-- Netherflame Boots
-	[36669] = true	-- Lifeblood Leggings
-	[36670] = true	-- Lifeblood Belt
-	[36672] = true	-- Lifeblood Bracers
-	[41133] = true	-- Swiftsteel Shoulders
-	[41135] = true	-- Dawnsteel Shoulders
-	[44438] = true	-- Shoveltusk Soup
-	[45547] = true	-- Succulent Orca Stew
-	[46142] = true	-- Sunblessed Breastplate
-	[168851] = true	-- Miniature Flying Carpet
-	[169669] = true	-- Hexweave Cloth
-	[173415] = true	-- Murloc Chew Toy
-	[382977] = true	-- Pandaria Prospecting (not NYI, but returns Shadowed Alloy)
-	[382978] = true	-- Pandaria Prospecting (not NYI, but returns Infurious Alloy)
+	[2336] = true,	-- Elixir of Tongues
+	[2671] = true,	-- Rough Bronze Bracers
+	[7636] = true,	-- Green Woolen Robe
+	[8366] = true,	-- Ironforge Chain
+	[8368] = true,	-- Ironforge Gauntlets
+	[8778] = true,	-- Boots of Darkness
+	[9942] = true,	-- Mithril Scale Gloves
+	[9957] = true,	-- Orcish War Leggings
+	[9972] = true,	-- Ornate Mithril Breastplate
+	[9979] = true,	-- Ornate Mithril Boots
+	[9980] = true,	-- Ornate Mithril Helm
+	[10550] = true,	-- Nightscape Cloak
+	[12062] = true,	-- Stormcloth Pants
+	[12063] = true,	-- Stormcloth Gloves
+	[12068] = true,	-- Stormcloth Vest
+	[12083] = true,	-- Stormcloth Headband
+	[12087] = true,	-- Stormcloth Shoulders
+	[12090] = true,	-- Stormcloth Boots
+	[16960] = true,	-- Thorium Greatsword
+	[16965] = true,	-- Bleakwood Hew
+	[16967] = true,	-- Inlaid Thorium Hammer
+	[16980] = true,	-- Rune Edge
+	[16986] = true,	-- Blood Talon
+	[16987] = true,	-- Darkspear
+	[17632] = true,	-- Alchemist's Stone
+	[19106] = true,	-- Onyxia Scale Breastplate
+	[21924] = true,	-- Runecloth Robe
+	[24315] = true,	-- Heavy Netherweave Net
+	[28021] = true,	-- Arcane Dust
+	[29120] = true,	-- true,faith Vestments
+	[30342] = true,	-- Red Smoke Flare
+	[30343] = true,	-- Blue Smoke Flare
+	[30549] = true,	-- Critter Enlarger
+	[30555] = true,	-- Remote Mail Terminal
+	[35518] = true,	-- Bracers of Nimble Thought
+	[35522] = true,	-- Mantle of Nimble Thought
+	[35525] = true,	-- Swiftheal Mantle
+	[35526] = true,	-- Swiftheal Wraps
+	[35544] = true,	-- Hands of Eternal Light
+	[35548] = true,	-- Robe of Eternal Light
+	[35551] = true,	-- Sunfire Handwraps
+	[35552] = true,	-- Sunfire Robe
+	[36665] = true,	-- Netherflame Robe
+	[36667] = true,	-- Netherflame Belt
+	[36668] = true,	-- Netherflame Boots
+	[36669] = true,	-- Lifeblood Leggings
+	[36670] = true,	-- Lifeblood Belt
+	[36672] = true,	-- Lifeblood Bracers
+	[41133] = true,	-- Swiftsteel Shoulders
+	[41135] = true,	-- Dawnsteel Shoulders
+	[44438] = true,	-- Shoveltusk Soup
+	[45547] = true,	-- Succulent Orca Stew
+	[46142] = true,	-- Sunblessed Breastplate
+	[168851] = true,	-- Miniature Flying Carpet
+	[169669] = true,	-- Hexweave Cloth
+	[173415] = true,	-- Murloc Chew Toy
+	[382977] = true,	-- Pandaria Prospecting (not NYI, but returns Shadowed Alloy)
+	[382978] = true,	-- Pandaria Prospecting (not NYI, but returns Infurious Alloy)
 }
 
 -- Profession Knowledge
@@ -276,7 +276,7 @@ app.ProfessionKnowledge = {
 		{ quest = 78264, type = "world", item = 210184, zone = 2200 },	-- Half-Filled Dreamless Sleep Potion
 		{ quest = 78269, type = "world", item = 210185, zone = 2200 },	-- Splash Potion of Narcolepsy
 		{ quest = 78275, type = "world", item = 210190, zone = 2200 },	-- Blazeroot
-	}
+	},
 	[2822] = {	-- Dragonflight Blacksmithing
 		-- Vendors
 		{ quest = 71894, type = "vendor", item = 200972, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -309,7 +309,7 @@ app.ProfessionKnowledge = {
 		{ quest = 78417, type = "world", item = 210464, zone = 2200 },	-- Amirdrassil Defender's Shield
 		{ quest = 78418, type = "world", item = 210465, zone = 2200 },	-- Deathstalker Chassis
 		{ quest = 78419, type = "world", item = 210466, zone = 2200 },	-- Flamesworn Render
-	}
+	},
 	[2825] = {	-- Dragonflight Enchanting
 		-- Vendors
 		{ quest = 71895, type = "vendor", item = 200976, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -343,7 +343,7 @@ app.ProfessionKnowledge = {
 		{ quest = 78310, type = "world", item = 210234, zone = 2200 },	-- Essence of Dreams
 
 		
-	}
+	},
 	[2827] = {	-- Dragonflight Engineering
 		-- Vendors
 		{ quest = 71896, type = "vendor", item = 200977, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -374,7 +374,7 @@ app.ProfessionKnowledge = {
 		{ quest = 78278, type = "world", item = 210193, zone = 2200 },	-- Experimental Dreamcatcher
 		{ quest = 78279, type = "world", item = 210194, zone = 2200 },	-- Insomniotron
 		{ quest = 78281, type = "world", item = 210197, zone = 2200 },	-- Unhatched Battery
-	}
+	},
 	[2832] = {	-- Dragonflight Herbalism
 		-- Vendors
 		{ quest = 71897, type = "vendor", item = 200980, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -392,7 +392,7 @@ app.ProfessionKnowledge = {
 
 		-- Treasures
 		{ quest = 70253, type = "world", zone = 2023 },	-- Hidden Master
-	}
+	},
 	[2828] = {	-- Dragonflight Inscription
 		-- Vendors
 		{ quest = 71898, type = "vendor", item = 200973, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -424,7 +424,7 @@ app.ProfessionKnowledge = {
 		{ quest = 78411, type = "world", item = 210458, zone = 2200 },	-- Winnie's Notes on Flora and Fauna
 		{ quest = 78412, type = "world", item = 210459, zone = 2200 },	-- Grove Keeper's Pillar
 		{ quest = 78413, type = "world", item = 210460, zone = 2200 },	-- Primalist Shadowbinding Rune
-	}
+	},
 	[2829] = {	-- Dragonflight Jewelcrafting
 		-- Vendors
 		{ quest = 71899, type = "vendor", item = 200978, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -456,7 +456,7 @@ app.ProfessionKnowledge = {
 		{ quest = 78282, type = "world", item = 210200, zone = 2200 },	-- Petrified Hope
 		{ quest = 78283, type = "world", item = 210201, zone = 2200 },	-- Handful of Pebbles
 		{ quest = 78285, type = "world", item = 210202, zone = 2200 },	-- Coalesced Dreamstone
-	}
+	},
 	[2830] = {	-- Dragonflight Leatherworking
 		-- Vendors
 		{ quest = 71900, type = "vendor", item = 200979, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -487,7 +487,7 @@ app.ProfessionKnowledge = {
 		{ quest = 78298, type = "world", item = 210208, zone = 2200 },	-- Tuft of Dreamsaber Fur
 		{ quest = 78299, type = "world", item = 210211, zone = 2200 },	-- Molted Fearie Dragon Scales
 		{ quest = 78305, type = "world", item = 210215, zone = 2200 },	-- Dreamtalon Claw
-	}
+	},
 	[2833] = {	-- Dragonflight Mining
 		-- Vendors
 		{ quest = 71901, type = "vendor", item = 200981, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -505,7 +505,7 @@ app.ProfessionKnowledge = {
 
 		-- Treasures
 		{ quest = 70258, type = "world", zone = 2025 },	-- Hidden Master
-	}
+	},
 	[2834] = {	-- Dragonflight Skinning
 		-- Vendors
 		{ quest = 71902, type = "vendor", item = 200982, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -523,7 +523,7 @@ app.ProfessionKnowledge = {
 
 		-- Treasures
 		{ quest = 70259, type = "world", zone = 2022 },	-- Hidden Master
-	}
+	},
 	[2831] = {	-- Dragonflight Tailoring
 		-- Vendors
 		{ quest = 71903, type = "vendor", item = 200975, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -555,7 +555,7 @@ app.ProfessionKnowledge = {
 		{ quest = 78414, type = "world", item = 210461, zone = 2200 },	-- Exceedingly Soft Wildercloth
 		{ quest = 78415, type = "world", item = 210462, zone = 2200 },	-- Plush Pillow
 		{ quest = 78416, type = "world", item = 210463, zone = 2200 },	-- Snuggle Buddy
-	}
+	},
 	[2871] = {	-- The War Within Alchemy
 		-- Vendors
 		{ quest = 81146, type = "vendor", item = 227409, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -575,8 +575,8 @@ app.ProfessionKnowledge = {
 		{ quest = 83846, type = "world", item = 226271, zone = 2213 },	-- Nerubian Mixing Salts
 
 		-- Catchup knowledge
-		{ quest = 0, type = "catchup", currency = 3057 }
-	}
+		{ quest = 0, type = "catchup", currency = 3057 },
+	},
 	[2872] = {	-- The War Within Blacksmithing
 		-- Vendors
 		{ quest = 84226, type = "vendor", item = 227407, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -596,8 +596,8 @@ app.ProfessionKnowledge = {
 		{ quest = 83854, type = "world", item = 226282, zone = 2213 },	-- Nerubian Smith's Kit
 
 		-- Catchup knowledge
-		{ quest = 0, type = "catchup", currency = 3058 }
-	}
+		{ quest = 0, type = "catchup", currency = 3058 },
+	},
 	[2874] = {	-- The War Within Enchanting
 		-- Vendors
 		{ quest = 81076, type = "vendor", item = 227411, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -617,8 +617,8 @@ app.ProfessionKnowledge = {
 		{ quest = 83864, type = "world", item = 226290, zone = 2213 },	-- Book of Dark Magic
 
 		-- Catchup knowledge
-		{ quest = 0, type = "catchup", currency = 3059 }
-	}
+		{ quest = 0, type = "catchup", currency = 3059 },
+	},
 	[2875] = {	-- The War Within Engineering
 		-- Vendors
 		{ quest = 84229, type = "vendor", item = 227412, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -638,8 +638,8 @@ app.ProfessionKnowledge = {
 		{ quest = 83873, type = "world", item = 226299, zone = 2213 },	-- Emptied Venom Canister
 
 		-- Catchup knowledge
-		{ quest = 0, type = "catchup", currency = 3060 }
-	}
+		{ quest = 0, type = "catchup", currency = 3060 },
+	},
 	[2877] = {	-- The War Within Herbalism
 		-- Vendors
 		{ quest = 81422, type = "vendor", item = 227415, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -659,8 +659,8 @@ app.ProfessionKnowledge = {
 		{ quest = 83881, type = "world", item = 226307, zone = 2213 },	-- Tunneler's Shovel
 
 		-- Catchup knowledge
-		{ quest = 0, type = "catchup", currency = 3061 }
-	}
+		{ quest = 0, type = "catchup", currency = 3061 },
+	},
 	[2878] = {	-- The War Within Inscription
 		-- Vendors
 		{ quest = 80749, type = "vendor", item = 227408, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -680,8 +680,8 @@ app.ProfessionKnowledge = {
 		{ quest = 83889, type = "world", item = 226315, zone = 2213 },	-- Venomancer's Ink Well
 
 		-- Catchup knowledge
-		{ quest = 0, type = "catchup", currency = 3062 }
-	}
+		{ quest = 0, type = "catchup", currency = 3062 },
+	},
 	[2879] = {	-- The War Within Jewelcrafting
 		-- Vendors
 		{ quest = 81259, type = "vendor", item = 227413, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -701,8 +701,8 @@ app.ProfessionKnowledge = {
 		{ quest = 83896, type = "world", item = 226322, zone = 2213 },	-- Heavy Gem Sorting Gloves
 
 		-- Catchup knowledge
-		{ quest = 0, type = "catchup", currency = 3063 }
-	}
+		{ quest = 0, type = "catchup", currency = 3063 },
+	},
 	[2880] = {	-- The War Within Leatherworking
 		-- Vendors
 		{ quest = 80978, type = "vendor", item = 227414, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -722,8 +722,8 @@ app.ProfessionKnowledge = {
 		{ quest = 83904, type = "world", item = 226330, zone = 2213 },	-- Nerubian Hide Preserver
 
 		-- Catchup knowledge
-		{ quest = 0, type = "catchup", currency = 3064 }
-	}
+		{ quest = 0, type = "catchup", currency = 3064 },
+	},
 	[2881] = {	-- The War Within Mining
 		-- Vendors
 		{ quest = 81390, type = "vendor", item = 227416, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -743,8 +743,8 @@ app.ProfessionKnowledge = {
 		{ quest = 83912, type = "world", item = 226338, zone = 2213 },	-- Nerubian Shale Fragments
 
 		-- Catchup knowledge
-		{ quest = 0, type = "catchup", currency = 3065 }
-	}
+		{ quest = 0, type = "catchup", currency = 3065 },
+	},
 	[2882] = {	-- The War Within Skinning
 		-- Vendors
 		{ quest = 84232, type = "vendor", item = 227417, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -764,9 +764,9 @@ app.ProfessionKnowledge = {
 		{ quest = 83920, type = "world", item = 226346, zone = 2213 },	-- Nerubian Hide Pouch
 
 		-- Catchup knowledge
-		{ quest = 0, type = "catchup", currency = 3066 }
+		{ quest = 0, type = "catchup", currency = 3066 },
 
-	}
+	},
 	[2883] = {	-- The War Within Tailoring
 		-- Vendors
 		{ quest = 80871, type = "vendor", item = 227410, source = ARTISANS_CONSORTIUM, sourceType = "static" },
@@ -786,6 +786,6 @@ app.ProfessionKnowledge = {
 		{ quest = 83929, type = "world", item = 226355, zone = 2213 },	-- Nerubian's Pincushion
 
 		-- Catchup knowledge
-		{ quest = 0, type = "catchup", currency = 3067 }
-	}
+		{ quest = 0, type = "catchup", currency = 3067 },
+	},
 }
