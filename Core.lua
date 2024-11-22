@@ -3545,7 +3545,7 @@ function app.GetTooltipText(itemLinkie, searchString)
 	-- Grab the original value for this setting
 	local cvar = C_CVar.GetCVarInfo("missingTransmogSourceInItemTooltips")
 	
-	-- Enable this CVar, because we need it
+	-- Enable this CVar, because we need it if checking for the Blizz text, which we do as a fallback
 	C_CVar.SetCVar("missingTransmogSourceInItemTooltips", 1)
 
 	-- Get our tooltip information
@@ -3557,7 +3557,7 @@ function app.GetTooltipText(itemLinkie, searchString)
 	-- Read all the lines as plain text
 	if tooltip["lines"] then
 		for k, v in ipairs(tooltip["lines"]) do
-			-- And if the transmog text line was found
+			-- And if the search string was found
 			if v["leftText"] and v["leftText"]:find(searchString) then
 				return true
 			end
