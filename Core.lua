@@ -3555,7 +3555,7 @@ function app.GetTooltipText(itemLinkie, searchString)
 	C_CVar.SetCVar("missingTransmogSourceInItemTooltips", cvar)
 
 	-- Read all the lines as plain text
-	if tooltip["lines"] then
+	if tooltip and tooltip["lines"] then
 		for k, v in ipairs(tooltip["lines"]) do
 			-- And if the search string was found
 			if v["leftText"] and v["leftText"]:find(searchString) then
