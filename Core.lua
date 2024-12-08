@@ -3230,17 +3230,27 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID)
 				app.Print(L.ERROR_CRAFTSIM)
 			end
 		elseif C_AddOns.IsAddOnLoaded("TestFlight") and TestFlight.enabled then
-			-- Let the game track the recipe temporarily, so we can grab TestFlight's info
-			app.Flag["trackingRecipes"] = true
-			C_TradeSkillUI.SetRecipeTracked(originalRecipeID, true, recraft or false)
+			local allocationTable
+			if ProfessionsCustomerOrdersFrame and ProfessionsCustomerOrdersFrame:IsShown() then
+				allocationTable = ProfessionsCustomerOrdersFrame.Form.transaction.allocationTbls
+			elseif ProfessionsFrame and ProfessionsFrame:IsShown() then
+				allocationTable = ProfessionsFrame.CraftingPage.SchematicForm.transaction.allocationTbls
+			end
 
+			local reagents = {}
+			for k, v in pairs(allocationTable) do
+				if v.allocs then
+					for k2, v2 in pairs(v.allocs) do
+						if v2.reagent then
+							reagents[v2.reagent.itemID] = v2.quantity
+						end
+					end
+				end
+			end
+			
 			-- Save the reagents into a fake recipe
 			simRecipe = true
-			ProfessionShoppingList_Cache.SimulatedRecipes[recipeID] = TestFlight.Reagents:GetTrackedBySource()
-
-			-- Untrack the recipe from the game
-			C_TradeSkillUI.SetRecipeTracked(originalRecipeID, false, recraft or false)
-			app.Flag["trackingRecipes"] = false
+			ProfessionShoppingList_Cache.SimulatedRecipes[recipeID] = reagents
 		end
 	end
 
