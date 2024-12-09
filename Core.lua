@@ -3233,6 +3233,8 @@ function app.TrackRecipe(recipeID, recipeQuantity, recraft, orderID)
 			local allocationTable
 			if ProfessionsCustomerOrdersFrame and ProfessionsCustomerOrdersFrame:IsShown() then
 				allocationTable = ProfessionsCustomerOrdersFrame.Form.transaction.allocationTbls
+			elseif ProfessionsFrame and ProfessionsFrame:IsShown() and orderID then
+				allocationTable = ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm.transaction.allocationTbls
 			elseif ProfessionsFrame and ProfessionsFrame:IsShown() then
 				allocationTable = ProfessionsFrame.CraftingPage.SchematicForm.transaction.allocationTbls
 			end
