@@ -473,7 +473,7 @@ app.ProfessionKnowledge = {
 		{ quest = 72326, type = "renown", faction = 2511, renown = 24 },
 
 		-- Treasures
-		{ quest = 70254, type = "world", zone = 2023 },					-- Hidden Master
+		{ quest = 70256, type = "world", zone = 2023 },					-- Hidden Master
 		{ quest = 70280, type = "world", item = 198667, zone = 2022 },	-- Spare Djaradin Tools
 		{ quest = 70308, type = "world", item = 198711, zone = 2022 },	-- Poacher's Pack
 		{ quest = 70266, type = "world", item = 198658, zone = 2024 },	-- Decay-Infused Tanning Oil
