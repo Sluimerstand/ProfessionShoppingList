@@ -302,4 +302,7 @@ function app.SettingsTweaks()
 	local variable, name, tooltip = "qualityAssurance", L.SETTINGS_QA_TITLE, L.SETTINGS_QA_TOOLTIP
 	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
+	setting:SetValueChangedCallback(function()
+		app.HideFrameSettings()
+	end)
 end
