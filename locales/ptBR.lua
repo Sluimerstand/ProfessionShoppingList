@@ -262,9 +262,5 @@ if GetLocale() ~= "ptBR" then return end
 -- L.SETTINGS_QUEUESOUND_TOOLTIP =			"Play the Deadly Boss Mods style queue sound when any queue pops, including battlegrounds and pet battles."
 -- L.SETTINGS_HANDYNOTESFIX_TITLE =		"Disable HandyNotes Alt " .. app.IconRMB
 -- L.SETTINGS_HANDYNOTESFIX_TOOLTIP =		"Let " .. app.NameShort .. " disable HandyNotes' keybind on the map, re-enabling it for TomTom waypoints instead.\n\n" .. L.REQUIRES_RELOAD
--- L.SETTINGS_ORIBOSEXCHANGEFIX_TITLE =	"Fix Oribos Exchange Tooltip"
--- L.SETTINGS_ORIBOSEXCHANGEFIX_TOOLTIP =	"Let " .. app.NameShort .. " simplify and fix the tooltip provided by the Oribos Exchange AddOn:\n" ..
--- 										"- Round to the nearest gold.\n" ..
--- 										"- Fix recipe prices.\n" ..
--- 										"- Fix profession window prices.\n" ..
--- 										"- Show battle pet prices inside the existing tooltip."
+-- L.SETTINGS_QA_TITLE =					"Quality Assurance"
+-- L.SETTINGS_QA_TOOLTIP =					"Since the game lacks QA, let's add some of our own. Remove title spam on login and the <Right click for Frame Settings> on tooltips.\n\n" .. L.REQUIRES_RELOAD

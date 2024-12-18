@@ -15,6 +15,7 @@ local L = app.locales
 app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 	if addOnName == appName then
 		app.DisableHandyNotesAltRMB()
+		app.HideFrameSettings()
 		app.SettingsTweaks()
 	end
 end)
@@ -149,6 +150,71 @@ app.Event:Register("PLAYER_INTERACTION_MANAGER_FRAME_HIDE", function(type)
 	end
 end)
 
+-----------------------
+-- Quality Assurance --
+-----------------------
+
+-- Remove title spam
+app.Event:Register("PLAYER_LOGIN", function()
+	-- Only run this if the setting is enabled
+	if ProfessionShoppingList_Settings["qualityAssurance"] then
+		local loginTime = GetTime()
+		-- Hide dumb titles
+		local function removeMessage()
+			local message = string.sub(NEW_TITLE_EARNED, 1, -7)
+			-- Remove the message if it contains the message string above
+			ChatFrame1:RemoveMessagesByPredicate(function(m)
+				return m:find(message) ~= nil
+			end)
+			-- Try again if we failed, but only for a little while
+			if loginTime < GetTime() + 10 then
+				C_Timer.After(1, function()
+					removeMessage()
+				end)
+			else
+				return
+			end
+		end
+		removeMessage()
+	end
+end)
+
+-- Remove <Right click for Frame Settings>
+function app.HideFrameSettings()
+	if ProfessionShoppingList_Settings["qualityAssurance"] then
+		GameTooltip:HookScript("OnUpdate", function(self)
+			local lineRemoved = false
+			local previousLine = nil -- Keep track of the previous line
+			
+			-- Iterate through all tooltip lines
+			for i = 1, self:NumLines() do
+				local line = _G[self:GetName() .. "TextLeft" .. i]
+				if line then
+					local text = line:GetText()
+					-- Check if the line matches the text you want to remove
+					if text and text:find("<Right click for Frame Settings>") then
+						-- Hide the previous line
+						if previousLine then
+							previousLine:SetText("")
+							previousLine:Hide()
+						end
+						-- Hide the current line
+						line:SetText("")
+						line:Hide()
+						lineRemoved = true
+					end
+				end
+				previousLine = line -- Update the previous line reference
+			end
+			
+			-- Recalculate tooltip size if a line was removed
+			if lineRemoved then
+				self:Show()
+			end
+		end)
+	end
+end
+
 --------------
 -- SETTINGS --
 --------------
@@ -230,6 +296,10 @@ function app.SettingsTweaks()
 	Settings.CreateCheckbox(category, setting, tooltip)
 
 	local variable, name, tooltip = "handyNotes", L.SETTINGS_HANDYNOTESFIX_TITLE, L.SETTINGS_HANDYNOTESFIX_TOOLTIP
+	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
+	Settings.CreateCheckbox(category, setting, tooltip)
+
+	local variable, name, tooltip = "qualityAssurance", L.SETTINGS_QA_TITLE, L.SETTINGS_QA_TOOLTIP
 	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
 end
