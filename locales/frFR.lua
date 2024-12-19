@@ -262,5 +262,11 @@ L.SETTINGS_QUEUESOUND_TITLE =			"Jouer un son pour la file d'attente"
 L.SETTINGS_QUEUESOUND_TOOLTIP =			"Joue le son de la file d'attente comme celui de « Deadly Boss Mods » lorsque n'importe quelle file d'attente s'ouvre, y compris les champs de bataille et les combats de mascottes."
 L.SETTINGS_HANDYNOTESFIX_TITLE =		"Désactiver HandyNotes Alt " .. app.IconRMB
 L.SETTINGS_HANDYNOTESFIX_TOOLTIP =		"Permettre à " .. app.NameShort .. " de désactiver le raccourci clavier d'HandyNotes sur la carte, en le réactivant pour les points de passages TomTom à la place.\n\n" .. L.REQUIRES_RELOAD
+L.SETTINGS_ORIBOSEXCHANGEFIX_TITLE =	"Corriger l'info-bulle de l'échange d'Oribos"
+L.SETTINGS_ORIBOSEXCHANGEFIX_TOOLTIP =	app.NameShort .. " simplifie et corrige l'info-bulle fournie par l'AddOn Oribos Exchange :\n" ..
+										"- Arrondit à l'or le plus proche\n" ..
+										"- Corrige les prix des recettes\n" ..
+										"- Corrige les prix dans la fenêtre des professions\n" ..
+										"- Affiche les prix des mascottes de combat dans l'infobulle existante"
 -- L.SETTINGS_QA_TITLE =					"Quality Assurance"
 -- L.SETTINGS_QA_TOOLTIP =					"Since the game lacks QA, let's add some of our own. Remove title spam on login and the <Right click for Frame Settings> on tooltips.\n\n" .. L.REQUIRES_RELOAD
