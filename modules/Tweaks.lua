@@ -315,7 +315,7 @@ app.Event:Register("PLAYER_LOGIN", function()
 				return m:find(message) ~= nil
 			end)
 			-- Try again if we failed, but only for a little while
-			if loginTime + 20 < GetTime() then
+			if loginTime + 20 > GetTime() then
 				C_Timer.After(1, function()
 					removeMessage()
 				end)
