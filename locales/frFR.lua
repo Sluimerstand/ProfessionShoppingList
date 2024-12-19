@@ -269,4 +269,4 @@ L.SETTINGS_ORIBOSEXCHANGEFIX_TOOLTIP =	app.NameShort .. " simplifie et corrige l
 										"- Corrige les prix dans la fenêtre des professions\n" ..
 										"- Affiche les prix des mascottes de combat dans l'infobulle existante"
 -- L.SETTINGS_QA_TITLE =					"Quality Assurance"
--- L.SETTINGS_QA_TOOLTIP =					"Since the game lacks QA, let's add some of our own. Remove title spam on login and the <Right click for Frame Settings> on tooltips.\n\n" .. L.REQUIRES_RELOAD
+-- L.SETTINGS_QA_TOOLTIP =					"Since the game lacks QA, let's add some of our own. Removes title spam on login.\n\n" .. L.REQUIRES_RELOAD
