@@ -269,4 +269,4 @@ if GetLocale() ~= "zhCN" then return end
 -- 										"- Fix profession window prices.\n" ..
 -- 										"- Show battle pet prices inside the existing tooltip."
 -- L.SETTINGS_QA_TITLE =					"Quality Assurance"
--- L.SETTINGS_QA_TOOLTIP =					"Since the game lacks QA, let's add some of our own. Removes title spam on login.\n\n" .. L.REQUIRES_RELOAD
+-- L.SETTINGS_QA_TOOLTIP =					"Since the game lacks QA, let's add some of our own. Remove title spam on login and the <Right click for Frame Settings> on tooltips.\n\n" .. L.REQUIRES_RELOAD

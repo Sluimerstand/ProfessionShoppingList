@@ -17,6 +17,7 @@ app.Event:Register("ADDON_LOADED", function(addOnName, containsBindings)
 		app.UnderminePrices()
 		app.HideOribos()
 		app.DisableHandyNotesAltRMB()
+		app.HideFrameSettings()
 		app.SettingsTweaks()
 	end
 end)
@@ -314,7 +315,7 @@ app.Event:Register("PLAYER_LOGIN", function()
 				return m:find(message) ~= nil
 			end)
 			-- Try again if we failed, but only for a little while
-			if loginTime + 20 > GetTime() then
+			if loginTime < GetTime() + 10 then
 				C_Timer.After(1, function()
 					removeMessage()
 				end)
@@ -325,6 +326,42 @@ app.Event:Register("PLAYER_LOGIN", function()
 		removeMessage()
 	end
 end)
+
+-- Remove <Right click for Frame Settings>
+function app.HideFrameSettings()
+	if ProfessionShoppingList_Settings["qualityAssurance"] then
+		GameTooltip:HookScript("OnUpdate", function(self)
+			local lineRemoved = false
+			local previousLine = nil -- Keep track of the previous line
+			
+			-- Iterate through all tooltip lines
+			for i = 1, self:NumLines() do
+				local line = _G[self:GetName() .. "TextLeft" .. i]
+				if line then
+					local text = line:GetText()
+					-- Check if the line matches the text you want to remove
+					if text and text:find("<Right click for Frame Settings>") then
+						-- Hide the previous line
+						if previousLine then
+							previousLine:SetText("")
+							previousLine:Hide()
+						end
+						-- Hide the current line
+						line:SetText("")
+						line:Hide()
+						lineRemoved = true
+					end
+				end
+				previousLine = line -- Update the previous line reference
+			end
+			
+			-- Recalculate tooltip size if a line was removed
+			if lineRemoved then
+				self:Show()
+			end
+		end)
+	end
+end
 
 --------------
 -- SETTINGS --
