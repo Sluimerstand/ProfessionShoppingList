@@ -315,7 +315,7 @@ app.Event:Register("PLAYER_LOGIN", function()
 				return m:find(message) ~= nil
 			end)
 			-- Try again if we failed, but only for a little while
-			if loginTime < GetTime() + 10 then
+			if loginTime + 20 < GetTime() then
 				C_Timer.After(1, function()
 					removeMessage()
 				end)
@@ -457,4 +457,7 @@ function app.SettingsTweaks()
 	local variable, name, tooltip = "qualityAssurance", L.SETTINGS_QA_TITLE, L.SETTINGS_QA_TOOLTIP
 	local setting = Settings.RegisterAddOnSetting(category, appName .. "_" .. variable, variable, ProfessionShoppingList_Settings, Settings.VarType.Boolean, name, true)
 	Settings.CreateCheckbox(category, setting, tooltip)
+	setting:SetValueChangedCallback(function()
+		app.HideFrameSettings()
+	end)
 end
