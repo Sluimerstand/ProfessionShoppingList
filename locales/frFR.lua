@@ -117,7 +117,7 @@ L.BUTTON_COOKINGFIRE =					app.IconLMB .. " : " .. BINDING_NAME_TARGETSELF .. "\
 L.BUTTON_COOKINGPET =					app.IconLMB .. " : Invoquer cette mascotte\n" ..
 										app.IconRMB .. " : Passer d'une mascotte à l'autre"
 L.BUTTON_CHEFSHAT =						app.IconLMB .. " : Utiliser l'"
-L.BUTTON_THERMALANVIL =					app.IconLMB .. ": Utiliser une"
+L.BUTTON_THERMALANVIL =					app.IconLMB .. " : Utiliser une"
 L.BUTTON_ALVIN =						app.IconLMB .. " : Invoquer cette mascotte"
 L.BUTTON_LIGHTFORGE =					app.IconLMB .. " : Lancer"
 
@@ -267,6 +267,6 @@ L.SETTINGS_ORIBOSEXCHANGEFIX_TOOLTIP =	app.NameShort .. " simplifie et corrige l
 										"- Arrondit à l'or le plus proche\n" ..
 										"- Corrige les prix des recettes\n" ..
 										"- Corrige les prix dans la fenêtre des professions\n" ..
-										"- Affiche les prix des mascottes de combat dans l'infobulle existante"
--- L.SETTINGS_QA_TITLE =					"Quality Assurance"
--- L.SETTINGS_QA_TOOLTIP =					"Since the game lacks QA, let's add some of our own. Remove title spam on login and the <Right click for Frame Settings> on tooltips.\n\n" .. L.REQUIRES_RELOAD
+										"- Affiche les prix des mascottes de combat dans l'info-bulle existante"
+L.SETTINGS_QA_TITLE =					"Jouer sans problème"
+L.SETTINGS_QA_TOOLTIP =					"Puisque le jeu a encore quelques problèmes, essayons de les corriger par nous même ! Lors de la connexion, supprime le spam « Vous avez mérité le titre ... » et supprime le texte <Clic droit pour les paramètres de bordure.> dans l'info-bulle des différentes frame\n\n" .. L.REQUIRES_RELOAD
